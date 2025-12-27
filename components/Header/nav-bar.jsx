@@ -33,14 +33,13 @@ const NavBar = () => {
 
   return (
     <header
-      ref={navRef}
       className="
-        fixed top-0 left-0 w-full h-[85px] z-[1000]
-        bg-[linear-gradient(135deg,#4169e1_0%,#1e3a8a_100%)]
-        shadow-[0_4px_15px_rgba(0,0,0,0.15)]
-        flex items-center justify-between
-        px-6 md:px-10 transition-all duration-300
-      "
+    fixed top-0 left-0 w-full h-[85px] z-[1000]
++   bg-[#1e3a8a] md:bg-[linear-gradient(135deg,#4169e1_0%,#1e3a8a_100%)]
+    shadow-[0_4px_15px_rgba(0,0,0,0.15)]
+    flex items-center justify-between
+    px-6 md:px-10 transition-all duration-300
+  "
     >
       {/* LOGO */}
       <Link href="/" className="flex items-center">
@@ -124,9 +123,11 @@ const DesktopNav = () => {
         label="Programs"
         active={activeDropdown === "Programs"}
         onToggle={() => toggleDropdown("Programs")}
-        items={["Scholarships", "Universities"]}
+        items={["Scholarships", "Universities", "Visa Guidance"]}
       />
 
+      <NavItem label="Why Us" link="/why-us" />
+      <NavItem label="Success Stories" link="/success-stories" />
       <NavItem label="Contact Us" link="/contact" />
     </ul>
   );
@@ -155,49 +156,43 @@ const DesktopDropdown = ({ label, active, onToggle, items }) => (
     >
       {label}
       <FaAngleDown
-        className={`transition-transform duration-200 ${
-          active ? "rotate-180" : ""
-        }`}
+        className={`transition-transform ${active ? "rotate-180" : ""}`}
       />
     </button>
 
     <ul
       className={`
         absolute top-full left-0 min-w-[220px] bg-white rounded-xl shadow-xl
-        py-2 z-[999] transition-all duration-200 overflow-hidden
+        py-2 z-[999] transition-all
         ${active ? "opacity-100 visible" : "opacity-0 invisible"}
       `}
     >
       {items.map((item, i) => (
-        <span
+        <Link
           key={i}
-          className="
-            block px-4 py-3 text-gray-700 font-medium 
-            hover:bg-blue-600 hover:text-white transition-all cursor-pointer
-          "
+          href={`/${item.toLowerCase().replace(/\s+/g, "-")}`}
+          className="block px-4 py-3 text-gray-700 hover:bg-blue-600 hover:text-white transition"
         >
           {item}
-        </span>
+        </Link>
       ))}
     </ul>
   </li>
 );
 
 /* ============================================================
-                    MOBILE MENU (SOLID BLUE)
+                    MOBILE MENU
 ============================================================ */
 
 const MobileMenu = ({ open, setOpen }) => (
   <div
     className={`
       fixed top-0 right-0 h-full w-[78%]
-      bg-[#1e3a8a]
-      shadow-2xl p-6 z-[2000]
-      transform transition-all duration-300
+      bg-[#1e3a8a] p-6 z-[2000]
+      transition-all duration-300
       ${open ? "translate-x-0" : "translate-x-full"}
     `}
   >
-    {/* CLOSE BUTTON */}
     <button
       className="text-white text-3xl absolute top-5 right-5"
       onClick={() => setOpen(false)}
@@ -205,45 +200,27 @@ const MobileMenu = ({ open, setOpen }) => (
       <FaTimes />
     </button>
 
-    {/* LINKS */}
-    <div className="mt-16 flex flex-col gap-6 text-white font-medium">
+    <div className="mt-16 flex flex-col gap-6 text-white">
       <MobileNavItem label="Home" link="/" />
 
       <MobileDropdown
         label="Countries"
-        items={[
-          "USA",
-          "UK",
-          "Canada",
-          "Australia",
-          "Germany",
-          "New Zealand",
-          "Other Countries",
-        ]}
+        items={["USA", "UK", "Canada", "Australia", "Germany"]}
       />
-
       <MobileDropdown
         label="Courses"
-        items={[
-          "Engineering & Technology",
-          "Business & Management",
-          "Medicine & Healthcare",
-          "Arts & Humanities",
-          "Computer Science & IT",
-          "Law",
-          "Hospitality & Tourism",
-        ]}
+        items={["Engineering", "Business", "Medicine", "IT", "Law"]}
       />
-
       <MobileDropdown
         label="Programs"
-        items={["Scholarships", "Universities"]}
+        items={["Scholarships", "Universities", "Visa Guidance"]}
       />
 
+      <MobileNavItem label="Why Us" link="/why-us" />
+      <MobileNavItem label="Success Stories" link="/success-stories" />
       <MobileNavItem label="Contact Us" link="/contact" />
     </div>
 
-    {/* BUTTONS */}
     <div className="mt-10 flex flex-col gap-4">
       <ButtonGreen text="Sign-up" link="/signup" full />
       <ButtonOrange text="Login" link="/login" full />
@@ -252,10 +229,7 @@ const MobileMenu = ({ open, setOpen }) => (
 );
 
 const MobileNavItem = ({ label, link }) => (
-  <Link
-    href={link}
-    className="text-white text-lg border-b border-white/10 pb-2"
-  >
+  <Link href={link} className="text-lg border-b border-white/10 pb-2">
     {label}
   </Link>
 );
@@ -267,37 +241,25 @@ const MobileDropdown = ({ label, items }) => {
     <div>
       <button
         onClick={() => setOpen(!open)}
-        className="flex justify-between items-center text-white text-lg border-b border-white/10 pb-2 w-full"
+        className="flex justify-between items-center text-lg border-b border-white/10 pb-2 w-full"
       >
         {label}
-        <FaAngleDown
-          className={`${open ? "rotate-180" : ""} transition duration-300`}
-        />
+        <FaAngleDown className={`${open ? "rotate-180" : ""} transition`} />
       </button>
 
-      <div
-        className={`
-          mt-3 overflow-hidden transition-all duration-300
-          ${open ? "max-h-64" : "max-h-0"}
-        `}
-      >
-        <div className="flex flex-col gap-2">
+      {open && (
+        <div className="mt-3 ml-2 flex flex-col gap-2">
           {items.map((item, i) => (
-            <span
+            <Link
               key={i}
-              className="
-                text-white text-[15px] px-4 py-3 
-                rounded-xl bg-[#243b77]
-                border border-white/10
-                hover:bg-[#3355aa]
-                transition-all duration-200 cursor-pointer ml-2
-              "
+              href={`/${item.toLowerCase().replace(/\s+/g, "-")}`}
+              className="bg-[#243b77] px-4 py-2 rounded-lg hover:bg-[#3355aa]"
             >
               {item}
-            </span>
+            </Link>
           ))}
         </div>
-      </div>
+      )}
     </div>
   );
 };
@@ -309,11 +271,9 @@ const MobileDropdown = ({ label, items }) => {
 const ButtonGreen = ({ text, link, full }) => (
   <Link
     href={link}
-    className={`
-      bg-green-500 text-white font-semibold px-5 py-2 rounded-lg 
-      shadow-md hover:shadow-lg hover:-translate-y-[2px] transition 
-      text-center ${full ? "w-full" : ""}
-    `}
+    className={`bg-green-500 px-5 py-2 rounded-lg text-white font-semibold text-center ${
+      full && "w-full"
+    }`}
   >
     {text}
   </Link>
@@ -322,11 +282,9 @@ const ButtonGreen = ({ text, link, full }) => (
 const ButtonOrange = ({ text, link, full }) => (
   <Link
     href={link}
-    className={`
-      bg-orange-500 text-white font-semibold px-5 py-2 rounded-lg 
-      shadow-md hover:shadow-lg hover:-translate-y-[2px] transition 
-      text-center ${full ? "w-full" : ""}
-    `}
+    className={`bg-orange-500 px-5 py-2 rounded-lg text-white font-semibold text-center ${
+      full && "w-full"
+    }`}
   >
     {text}
   </Link>
