@@ -9,6 +9,9 @@ import {
   ShieldCheck,
 } from "lucide-react";
 
+import UniversityCard from "./UniversityCard";
+import { universityData } from "@/components/UniversityDetail/universityData";
+
 const programs = [
   {
     icon: Laptop,
@@ -51,7 +54,7 @@ const programs = [
 const TopPrograms = () => {
   return (
     <section className="w-full py-20 px-6 bg-[#F7F9FC] flex flex-col items-center">
-      {/* Heading */}
+      {/* ================= PROGRAMS SECTION ================= */}
       <div className="text-center mb-14 max-w-3xl">
         <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-[#2F4F4F]">
           Top Programs Students Choose
@@ -64,60 +67,64 @@ const TopPrograms = () => {
         <div className="w-24 h-[3px] rounded-full bg-gradient-to-r from-[#4169E1] to-[#32CD32] mx-auto mt-4" />
       </div>
 
-      {/* Cards */}
-      <div
-        className="
-          grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 
-          gap-10 w-full max-w-[1200px]
-        "
-      >
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 w-full max-w-[1200px]">
         {programs.map((program, i) => {
           const Icon = program.icon;
 
           return (
             <div
               key={i}
-              className="
-                bg-white 
-                rounded-2xl p-8
-                shadow-[0_4px_15px_rgba(0,0,0,0.08)]
-                hover:shadow-[0_10px_30px_rgba(0,0,0,0.12)]
-                transition-all duration-300 
-                cursor-pointer
-                hover:-translate-y-2
-                border border-gray-100
-              "
+              className="bg-white rounded-2xl p-8 shadow-[0_4px_15px_rgba(0,0,0,0.08)]
+              hover:shadow-[0_10px_30px_rgba(0,0,0,0.12)]
+              transition-all duration-300 cursor-pointer hover:-translate-y-2
+              border border-gray-100"
             >
-              {/* Icon */}
               <div className="flex justify-center mb-5">
                 <div
-                  className="
-                    w-16 h-16 rounded-xl flex items-center justify-center
-                    bg-[#4169E110] border border-[#4169E140]
-                    text-[#4169E1] shadow-sm
-                  "
+                  className="w-16 h-16 rounded-xl flex items-center justify-center
+                  bg-[#4169E110] border border-[#4169E140]
+                  text-[#4169E1] shadow-sm"
                 >
                   <Icon size={32} />
                 </div>
               </div>
 
-              {/* Title */}
               <h3 className="text-xl font-semibold text-[#2F4F4F] text-center mb-2">
                 {program.title}
               </h3>
 
-              {/* Short highlight */}
               <p className="text-[#4169E1] text-sm font-medium text-center mb-3">
                 {program.short}
               </p>
 
-              {/* Description */}
               <p className="text-gray-600 text-sm leading-6 text-center">
                 {program.desc}
               </p>
             </div>
           );
         })}
+      </div>
+
+      {/* ================= UNIVERSITIES SECTION ================= */}
+      <div className="w-full max-w-[1200px] mt-28">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-extrabold text-[#2F4F4F]">
+            Top Universities Worldwide
+          </h2>
+
+          <p className="text-gray-600 mt-3">
+            Choose from globally ranked universities trusted by students
+            worldwide.
+          </p>
+
+          <div className="w-24 h-[3px] rounded-full bg-gradient-to-r from-[#FF8C00] to-[#32CD32] mx-auto mt-4" />
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
+          {universityData.map((uni) => (
+            <UniversityCard key={uni.slug} uni={uni} />
+          ))}
+        </div>
       </div>
     </section>
   );

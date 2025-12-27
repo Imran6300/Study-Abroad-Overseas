@@ -124,6 +124,9 @@ export default function CircularGallery({
 
   /** DRAGGING */
   const onPointerDown = (e) => {
+    // ✅ DO NOT start drag if clicking link or button
+    if (e.target.closest("a, button")) return;
+
     isDragging.current = true;
     dragStartX.current = e.clientX;
     dragStartOffset.current = offsetRef.current;
