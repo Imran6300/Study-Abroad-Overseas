@@ -1,12 +1,14 @@
+// CircularGalary.jsx
 "use client";
 import React, { useState, useRef, useEffect } from "react";
 import Card from "./Card";
 
 export default function CircularGallery({
   items,
-  cardWidth = 350,
+  cardWidth = 400,
   gap = 30,
   autoSpeed = 1,
+  scrollEase = 0.8,
 }) {
   const containerRef = useRef(null);
   const isDragging = useRef(false);
@@ -18,8 +20,32 @@ export default function CircularGallery({
 
   const [, triggerRerender] = useState(false);
 
+  const [responsiveCardWidth, setResponsiveCardWidth] = useState(cardWidth);
+
+  // Make cardWidth responsive based on viewport (Tailwind breakpoints)
+  useEffect(() => {
+    const updateCardWidth = () => {
+      if (window.innerWidth < 640) {
+        // sm
+        setResponsiveCardWidth(280);
+      } else if (window.innerWidth < 768) {
+        // md
+        setResponsiveCardWidth(320);
+      } else if (window.innerWidth < 1024) {
+        // lg
+        setResponsiveCardWidth(360);
+      } else {
+        setResponsiveCardWidth(cardWidth);
+      }
+    };
+
+    updateCardWidth();
+    window.addEventListener("resize", updateCardWidth);
+    return () => window.removeEventListener("resize", updateCardWidth);
+  }, [cardWidth]);
+
   const itemCount = items.length;
-  const galleryWidth = itemCount * (cardWidth + gap);
+  const galleryWidth = itemCount * (responsiveCardWidth + gap);
 
   /** UPDATE POSITIONS */
   const updatePositions = () => {
@@ -28,11 +54,11 @@ export default function CircularGallery({
     const cards = containerRef.current.querySelectorAll(".gallery-card");
 
     cards.forEach((card, i) => {
-      let baseX = i * (cardWidth + gap);
+      let baseX = i * (responsiveCardWidth + gap);
       let x = baseX - offsetRef.current;
 
-      if (x < -cardWidth) x += galleryWidth;
-      if (x > galleryWidth - cardWidth) x -= galleryWidth;
+      if (x < -responsiveCardWidth) x += galleryWidth;
+      if (x > galleryWidth - responsiveCardWidth) x -= galleryWidth;
 
       card.style.transform = `translateX(${x}px) translateY(0%)`;
     });
@@ -48,7 +74,7 @@ export default function CircularGallery({
 
       if (!isDragging.current) {
         if (Math.abs(velocity.current) > 0.1) {
-          offsetRef.current += velocity.current;
+          offsetRef.current += velocity.current * scrollEase;
           velocity.current *= 0.95;
         } else {
           offsetRef.current += autoSpeed;
@@ -64,7 +90,7 @@ export default function CircularGallery({
 
     requestAnimationFrame(animate);
     triggerRerender(true);
-  }, [autoSpeed, galleryWidth]);
+  }, [autoSpeed, galleryWidth, scrollEase, responsiveCardWidth]);
 
   /** WHEEL SCROLL */
   const wheelVelocity = useRef(0);
@@ -73,7 +99,7 @@ export default function CircularGallery({
   const wheelAnimate = () => {
     if (!wheelAnimating.current) return;
 
-    offsetRef.current += wheelVelocity.current;
+    offsetRef.current += wheelVelocity.current * scrollEase;
     wheelVelocity.current *= 0.93;
 
     updatePositions();
@@ -87,6 +113,7 @@ export default function CircularGallery({
   };
 
   const onWheel = (e) => {
+    e.preventDefault(); // Prevent page scroll on wheel
     wheelVelocity.current += e.deltaY * 0.02;
 
     if (!wheelAnimating.current) {
@@ -103,7 +130,9 @@ export default function CircularGallery({
     lastX.current = e.clientX;
     velocity.current = 0;
 
-    containerRef.current.style.cursor = "grabbing";
+    if (containerRef.current) {
+      containerRef.current.style.cursor = "grabbing";
+    }
   };
 
   const onPointerMove = (e) => {
@@ -123,14 +152,16 @@ export default function CircularGallery({
 
   const onPointerUp = () => {
     isDragging.current = false;
-    containerRef.current.style.cursor = "grab";
+    if (containerRef.current) {
+      containerRef.current.style.cursor = "grab";
+    }
   };
 
   return (
     <div
       ref={containerRef}
       className="
-        relative w-full h-[600px] overflow-hidden select-none
+        relative w-full h-[450px] sm:h-[500px] md:h-[550px] lg:h-[600px] overflow-hidden select-none
         flex items-center justify-center
         will-change-transform translate-z-0
         cursor-grab
@@ -145,15 +176,15 @@ export default function CircularGallery({
         <div
           key={i}
           className="
-    gallery-card
-    absolute left-0
-    user-select-none
-    [backface-visibility:hidden]
-    [perspective:1000px]
-    [transform-style:preserve-3d]
-  "
+            gallery-card
+            absolute left-0
+            user-select-none
+            [backface-visibility:hidden]
+            [perspective:1000px]
+            [transform-style:preserve-3d]
+          "
           style={{
-            width: `${cardWidth}px`,
+            width: `${responsiveCardWidth}px`,
             transition: isDragging.current ? "none" : "scale 0.2s ease-out",
             scale: isDragging.current ? 1.05 : 1,
             pointerEvents: isDragging.current ? "none" : "auto",
