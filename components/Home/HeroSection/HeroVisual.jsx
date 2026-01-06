@@ -20,6 +20,7 @@ export default function HeroVisual() {
           rounded-[28px]
           shadow-[0_25px_60px_rgba(0,0,0,0.12)]
           overflow-hidden relative
+          mt-20
         "
       >
         <img

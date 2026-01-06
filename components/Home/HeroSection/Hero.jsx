@@ -18,7 +18,8 @@ export default function Hero() {
   return (
     <div
       className="
-        min-h-screen w-full overflow-hidden relative flex items-center justify-center
+        min-h-screen w-full overflow-hidden relative
+        flex items-center justify-center
         bg-[radial-gradient(circle_at_20%_20%,#eef4ff,#e9f8ff,#f8f5ff)]
         font-[Poppins]
       "
@@ -32,7 +33,7 @@ export default function Hero() {
 
       {/* ⭐ DESKTOP ONLY MOUSE GLOW */}
       <div
-        className="absolute inset-0 pointer-events-none transition-all duration-300 hidden md:block"
+        className="absolute inset-0 pointer-events-none hidden md:block"
         style={{
           background: `radial-gradient(
             550px at ${mouse.x}px ${mouse.y}px,
@@ -42,22 +43,29 @@ export default function Hero() {
         }}
       />
 
-      {/* ⭐ MOBILE HERO SECTION */}
+      {/* ⭐ MOBILE HERO (UNCHANGED) */}
       <div className="w-full block md:hidden relative z-[3]">
         <MobileHero />
       </div>
 
-      {/* ⭐ DESKTOP GRID HERO */}
-      <div
-        className="
-          hidden md:grid 
-          w-[90%] max-w-[1500px]
-          grid-cols-[1.1fr_1fr] gap-[3rem]
-          items-center relative z-[3]
-        "
-      >
-        <HeroContent />
-        <HeroVisual />
+      {/* ⭐ DESKTOP HERO — GLOBAL 90% SCALE */}
+      <div className="hidden md:flex justify-center w-full relative z-[3]">
+        <div
+          style={{
+            transform: "scale(0.9)", // 🔥 90% SIZE (EXACT)
+            transformOrigin: "center top", // 🔥 NO LAYOUT SHIFT
+          }}
+          className="
+            grid
+            w-[90%] max-w-[1500px]
+            grid-cols-[1.1fr_1fr]
+            gap-[3rem]
+            items-center
+          "
+        >
+          <HeroContent />
+          <HeroVisual />
+        </div>
       </div>
     </div>
   );

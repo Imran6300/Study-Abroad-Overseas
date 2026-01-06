@@ -7,7 +7,7 @@ import Link from "next/link";
 import { FaAngleDown, FaBars, FaTimes } from "react-icons/fa";
 
 /* ============================================================
-                        MAIN NAVBAR
+                        MAIN NAVBAR (Scaled Wrapper)
 ============================================================ */
 export default function NavBar() {
   const navRef = useRef(null);
@@ -71,66 +71,78 @@ export default function NavBar() {
 
   return (
     <>
-      {/* NAVBAR */}
-      <header
-        ref={navRef}
-        className={`
-          fixed top-0 left-0 w-full h-[85px] z-[1000]
-
-          /* Always solid on mobile */
-          bg-[#0f2a5f] backdrop-blur-none
-
-          /* Glass only on desktop AND only when menu closed */
-          md:${mobileOpen ? "bg-[#0f2a5f]" : "bg-[#0f2a5f]/80"}
-          md:${mobileOpen ? "backdrop-blur-none" : "backdrop-blur-xl"}
-
-          border-b border-white/10
-          shadow-[0_10px_30px_rgba(0,0,0,0.15)]
-          flex items-center justify-between
-          px-6 md:px-12
-          transition-all duration-300
-        `}
+      {/* SCALED NAVBAR CONTAINER */}
+      <div
+        className="fixed top-0 left-0 w-full z-[1000]"
+        style={{
+          transform: "scale(0.9)",
+          transformOrigin: "top left",
+          width: "111.111%", // 1 / 0.9 ≈ 111.111% to counteract scaling shrinkage
+          height: "111.111%",
+          pointerEvents: mobileOpen ? "auto" : "auto", // always interactive
+        }}
       >
-        {/* LOGO */}
-        <Link href="/" className="flex items-center">
-          <motion.img
-            src="/logo.png"
-            alt="Logo"
-            className="
-              w-[55px] h-[55px]
-              rounded-full object-cover
-              shadow-lg ring-2 ring-white/10
-            "
-            initial={{ rotate: -180, scale: 0.85, opacity: 0 }}
-            animate={{ rotate: 0, scale: 1, opacity: 1 }}
-            whileHover={{ scale: 1.05 }}
-            transition={{ duration: 0.9, ease: "easeOut" }}
-          />
-        </Link>
+        {/* NAVBAR */}
+        <header
+          ref={navRef}
+          className={`
+            fixed top-0 left-0 w-full h-[85px]
 
-        {/* DESKTOP NAV */}
-        <MemoizedDesktopNav />
+            /* Always solid on mobile */
+            bg-[#0f2a5f] backdrop-blur-none
 
-        {/* DESKTOP BUTTONS */}
-        <div className="hidden md:flex items-center gap-4">
-          <ButtonGreen text="Sign Up" link="/signup" />
-          <ButtonOrange text="Login" link="/login" />
-        </div>
+            /* Glass only on desktop AND only when menu closed */
+            md:${mobileOpen ? "bg-[#0f2a5f]" : "bg-[#0f2a5f]/80"}
+            md:${mobileOpen ? "backdrop-blur-none" : "backdrop-blur-xl"}
 
-        {/* MOBILE BURGER */}
-        <button
-          ref={burgerRef}
-          className="md:hidden text-white text-3xl"
-          onClick={() => setMobileOpen(true)}
-          aria-label="Open mobile menu"
-          aria-expanded={mobileOpen}
-          aria-controls="mobile-menu"
+            border-b border-white/10
+            shadow-[0_10px_30px_rgba(0,0,0,0.15)]
+            flex items-center justify-between
+            px-6 md:px-12
+            transition-all duration-300
+          `}
         >
-          <FaBars />
-        </button>
-      </header>
+          {/* LOGO */}
+          <Link href="/" className="flex items-center">
+            <motion.img
+              src="/logo.png"
+              alt="Logo"
+              className="
+                w-[55px] h-[55px]
+                rounded-full object-cover
+                shadow-lg ring-2 ring-white/10
+              "
+              initial={{ rotate: -180, scale: 0.85, opacity: 0 }}
+              animate={{ rotate: 0, scale: 1, opacity: 1 }}
+              whileHover={{ scale: 1.05 }}
+              transition={{ duration: 0.9, ease: "easeOut" }}
+            />
+          </Link>
 
-      {/* MOBILE MENU (OUTSIDE HEADER = FIXES TRANSPARENCY BUG) */}
+          {/* DESKTOP NAV */}
+          <MemoizedDesktopNav />
+
+          {/* DESKTOP BUTTONS */}
+          <div className="hidden md:flex items-center gap-4">
+            <ButtonGreen text="Sign Up" link="/signup" />
+            <ButtonOrange text="Login" link="/login" />
+          </div>
+
+          {/* MOBILE BURGER */}
+          <button
+            ref={burgerRef}
+            className="md:hidden text-white text-3xl"
+            onClick={() => setMobileOpen(true)}
+            aria-label="Open mobile menu"
+            aria-expanded={mobileOpen}
+            aria-controls="mobile-menu"
+          >
+            <FaBars />
+          </button>
+        </header>
+      </div>
+
+      {/* MOBILE MENU - Outside the scaled wrapper to avoid scaling it */}
       <MobileMenu open={mobileOpen} onClose={closeMobileMenu} />
     </>
   );
@@ -182,7 +194,7 @@ const MemoizedDesktopNav = memo(() => {
 MemoizedDesktopNav.displayName = "MemoizedDesktopNav";
 
 /* ============================================================
-                    NAV ITEMS
+                    NAV ITEMS & DROPDOWNS (unchanged)
 ============================================================ */
 const NavItem = ({ label, link }) => (
   <Link
@@ -236,22 +248,23 @@ const DesktopDropdown = ({ label, active, onToggle, items }) => (
   </li>
 );
 
+/* ============================================================
+                      MOBILE MENU (unchanged, outside scale)
+============================================================ */
 const MobileMenu = ({ open, onClose }) => {
   const [render, setRender] = useState(false);
   const menuRef = useRef(null);
   const firstLinkRef = useRef(null);
 
-  // Mount first, then animate
   useEffect(() => {
     if (open) {
       setRender(true);
     } else {
-      const timeout = setTimeout(() => setRender(false), 400); // Slightly longer to allow full exit animation
+      const timeout = setTimeout(() => setRender(false), 400);
       return () => clearTimeout(timeout);
     }
   }, [open]);
 
-  // Basic focus management: trap focus in menu when open
   useEffect(() => {
     if (!open || !menuRef.current) return;
 
@@ -261,22 +274,16 @@ const MobileMenu = ({ open, onClose }) => {
     const firstElement = firstLinkRef.current || focusableElements[0];
     const lastElement = focusableElements[focusableElements.length - 1];
 
-    if (firstElement) {
-      firstElement.focus();
-    }
+    if (firstElement) firstElement.focus();
 
     const handleKeyDown = (e) => {
       if (e.key === "Tab") {
-        if (e.shiftKey) {
-          if (document.activeElement === firstElement) {
-            e.preventDefault();
-            lastElement.focus();
-          }
-        } else {
-          if (document.activeElement === lastElement) {
-            e.preventDefault();
-            firstElement.focus();
-          }
+        if (e.shiftKey && document.activeElement === firstElement) {
+          e.preventDefault();
+          lastElement.focus();
+        } else if (!e.shiftKey && document.activeElement === lastElement) {
+          e.preventDefault();
+          firstElement.focus();
         }
       }
     };
@@ -288,33 +295,9 @@ const MobileMenu = ({ open, onClose }) => {
   if (!render) return null;
 
   const panelVariants = {
-    hidden: {
-      x: "100%",
-      opacity: 0,
-      scale: 0.95,
-      transition: {
-        duration: 0.3,
-        ease: [0.25, 0.46, 0.45, 0.94], // Custom ease for smooth, bouncy feel
-      },
-    },
-    visible: {
-      x: 0,
-      opacity: 1,
-      scale: 1,
-      transition: {
-        duration: 0.3,
-        ease: [0.25, 0.46, 0.45, 0.94],
-      },
-    },
-    exit: {
-      x: "100%",
-      opacity: 0,
-      scale: 0.95,
-      transition: {
-        duration: 0.25,
-        ease: [0.25, 0.1, 0.25, 1], // Slightly faster exit for snappiness
-      },
-    },
+    hidden: { x: "100%", opacity: 0, scale: 0.95 },
+    visible: { x: 0, opacity: 1, scale: 1 },
+    exit: { x: "100%", opacity: 0, scale: 0.95 },
   };
 
   const backdropVariants = {
@@ -322,34 +305,18 @@ const MobileMenu = ({ open, onClose }) => {
     visible: { opacity: 1 },
     exit: { opacity: 0 },
   };
-
   const containerVariants = {
-    hidden: { opacity: 1 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.08, // Stagger for menu items
-        delayChildren: 0.1,
-      },
-    },
+    visible: { transition: { staggerChildren: 0.08, delayChildren: 0.1 } },
   };
-
   const itemVariants = {
     hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.3, ease: "easeOut" },
-    },
+    visible: { opacity: 1, y: 0 },
   };
-
-  const closeMenu = () => onClose();
 
   return (
     <AnimatePresence mode="wait">
       {open && (
         <div className="fixed inset-0 z-[2000]" ref={menuRef}>
-          {/* BACKDROP */}
           <motion.div
             key="backdrop"
             className="absolute inset-0 bg-black/40"
@@ -357,25 +324,24 @@ const MobileMenu = ({ open, onClose }) => {
             initial="hidden"
             animate="visible"
             exit="exit"
-            onClick={closeMenu}
+            onClick={onClose}
           />
 
-          {/* SLIDE PANEL */}
           <motion.div
             key="panel"
-            className="absolute top-0 right-0 h-full w-[80%] bg-[#0f2a5f] p-6 z-[2000]"
+            className="absolute top-0 right-0 h-full w-[80%] bg-[#0f2a5f] p-6"
             variants={panelVariants}
             initial="hidden"
             animate="visible"
             exit="exit"
+            transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
           >
             <motion.button
-              className="text-white text-3xl absolute top-5 right-5 hover:opacity-80 transition-opacity"
-              onClick={closeMenu}
+              className="text-white text-3xl absolute top-5 right-5 hover:opacity-80"
+              onClick={onClose}
               initial={{ scale: 0, rotate: -180 }}
               animate={{ scale: 1, rotate: 0 }}
               exit={{ scale: 0, rotate: 180 }}
-              transition={{ duration: 0.2, ease: "easeInOut" }}
             >
               <FaTimes />
             </motion.button>
@@ -391,42 +357,42 @@ const MobileMenu = ({ open, onClose }) => {
                   ref={firstLinkRef}
                   label="Home"
                   link="/"
-                  onClick={closeMenu}
+                  onClick={onClose}
                 />
               </motion.div>
               <motion.div variants={itemVariants}>
                 <MobileDropdown
                   label="Countries"
                   items={["USA", "UK", "Canada"]}
-                  onClick={closeMenu}
+                  onClick={onClose}
                 />
               </motion.div>
               <motion.div variants={itemVariants}>
                 <MobileDropdown
                   label="Courses"
                   items={["Engineering", "Business", "IT"]}
-                  onClick={closeMenu}
+                  onClick={onClose}
                 />
               </motion.div>
               <motion.div variants={itemVariants}>
                 <MobileDropdown
                   label="Programs"
                   items={["Scholarships", "Visa Guidance"]}
-                  onClick={closeMenu}
+                  onClick={onClose}
                 />
               </motion.div>
               <motion.div variants={itemVariants}>
                 <MobileNavItem
                   label="Why Us"
                   link="/why-us"
-                  onClick={closeMenu}
+                  onClick={onClose}
                 />
               </motion.div>
               <motion.div variants={itemVariants}>
                 <MobileNavItem
                   label="Contact"
                   link="/contact"
-                  onClick={closeMenu}
+                  onClick={onClose}
                 />
               </motion.div>
             </motion.div>
@@ -436,20 +402,15 @@ const MobileMenu = ({ open, onClose }) => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
-              transition={{ duration: 0.3, delay: 0.2 }}
+              transition={{ delay: 0.2 }}
             >
               <ButtonGreen
                 text="Sign Up"
                 link="/signup"
                 full
-                onClick={closeMenu}
+                onClick={onClose}
               />
-              <ButtonOrange
-                text="Login"
-                link="/login"
-                full
-                onClick={closeMenu}
-              />
+              <ButtonOrange text="Login" link="/login" full onClick={onClose} />
             </motion.div>
           </motion.div>
         </div>
@@ -463,7 +424,7 @@ const MobileNavItem = React.forwardRef(({ label, link, onClick }, ref) => (
     ref={ref}
     href={link}
     onClick={onClick}
-    className="text-lg border-b border-white/10 pb-2 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-blue-900"
+    className="text-lg border-b border-white/10 pb-2 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-[#0f2a5f]"
   >
     {label}
   </Link>
@@ -473,19 +434,16 @@ MobileNavItem.displayName = "MobileNavItem";
 
 const MobileDropdown = ({ label, items, onClick }) => {
   const [open, setOpen] = useState(false);
-
   return (
     <div>
       <button
         onClick={() => setOpen(!open)}
-        className="flex justify-between w-full text-lg border-b border-white/10 pb-2 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-blue-900"
+        className="flex justify-between w-full text-lg border-b border-white/10 pb-2"
         aria-expanded={open}
-        aria-haspopup="true"
       >
         {label}
         <FaAngleDown className={`transition ${open ? "rotate-180" : ""}`} />
       </button>
-
       {open && (
         <div className="mt-3 ml-2 flex flex-col gap-2">
           {items.map((item, i) => (
@@ -493,7 +451,7 @@ const MobileDropdown = ({ label, items, onClick }) => {
               key={i}
               href={`/${item.toLowerCase().replace(/\s+/g, "-")}`}
               onClick={onClick}
-              className="bg-[#1b3a7a] px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-blue-900"
+              className="bg-[#1b3a7a] px-4 py-2 rounded-lg"
             >
               {item}
             </Link>
@@ -505,7 +463,7 @@ const MobileDropdown = ({ label, items, onClick }) => {
 };
 
 /* ============================================================
-                      BUTTONS
+                      BUTTONS (unchanged)
 ============================================================ */
 const ButtonGreen = ({ text, link, full, onClick }) => (
   <Link
@@ -513,7 +471,7 @@ const ButtonGreen = ({ text, link, full, onClick }) => (
     onClick={onClick}
     className={`bg-green-500 hover:bg-green-600 px-5 py-2 rounded-xl text-white font-semibold text-center ${
       full && "w-full"
-    } focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-blue-900`}
+    } focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-[#0f2a5f]`}
   >
     {text}
   </Link>
@@ -525,7 +483,7 @@ const ButtonOrange = ({ text, link, full, onClick }) => (
     onClick={onClick}
     className={`bg-orange-500 hover:bg-orange-600 px-5 py-2 rounded-xl text-white font-semibold text-center ${
       full && "w-full"
-    } focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-blue-900`}
+    } focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-[#0f2a5f]`}
   >
     {text}
   </Link>
