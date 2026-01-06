@@ -73,34 +73,26 @@ export default function NavBar() {
     <>
       {/* SCALED NAVBAR CONTAINER */}
       <div
-        className="fixed top-0 left-0 w-full z-[1000]"
+        className="fixed top-0 left-0 w-full z-[1000] pointer-events-none"
         style={{
           transform: "scale(0.9)",
           transformOrigin: "top left",
-          width: "111.111%", // 1 / 0.9 ≈ 111.111% to counteract scaling shrinkage
-          height: "111.111%",
-          pointerEvents: mobileOpen ? "auto" : "auto", // always interactive
+          width: "111.111%",
         }}
       >
         {/* NAVBAR */}
         <header
           ref={navRef}
-          className={`
-            fixed top-0 left-0 w-full h-[85px]
-
-            /* Always solid on mobile */
-            bg-[#0f2a5f] backdrop-blur-none
-
-            /* Glass only on desktop AND only when menu closed */
-            md:${mobileOpen ? "bg-[#0f2a5f]" : "bg-[#0f2a5f]/80"}
-            md:${mobileOpen ? "backdrop-blur-none" : "backdrop-blur-xl"}
-
-            border-b border-white/10
-            shadow-[0_10px_30px_rgba(0,0,0,0.15)]
-            flex items-center justify-between
-            px-6 md:px-12
-            transition-all duration-300
-          `}
+          className="
+      pointer-events-auto   /* 👈 re-enable only navbar */
+      fixed top-0 left-0 w-full h-[85px]
+      bg-[#0f2a5f]
+      border-b border-white/10
+      shadow-[0_10px_30px_rgba(0,0,0,0.15)]
+      flex items-center justify-between
+      px-6 md:px-12
+      transition-all duration-300
+    "
         >
           {/* LOGO */}
           <Link href="/" className="flex items-center">
