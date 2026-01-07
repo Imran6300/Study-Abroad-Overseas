@@ -1,4 +1,6 @@
-export default function FloatingCard({ position, strong, text }) {
+import { memo } from "react";
+
+function FloatingCard({ position, strong, text }) {
   return (
     <div
       className={`
@@ -21,8 +23,9 @@ export default function FloatingCard({ position, strong, text }) {
       >
         {strong}
       </strong>
-
       <span className="text-[#333]">{text}</span>
     </div>
   );
 }
+
+export default memo(FloatingCard);

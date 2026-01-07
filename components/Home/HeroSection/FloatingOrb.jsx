@@ -1,4 +1,6 @@
-export default function FloatingOrb({ type }) {
+import { memo } from "react";
+
+function FloatingOrb({ type }) {
   const base =
     "absolute rounded-full blur-[120px] opacity-[0.35] animate-float";
 
@@ -9,5 +11,7 @@ export default function FloatingOrb({ type }) {
       "w-[500px] h-[500px] bg-[linear-gradient(135deg,#4169e1,#32cd32)] top-[40%] left-[50%]",
   };
 
-  return <div className={`${base} ${styles[type]}`}></div>;
+  return <div className={`${base} ${styles[type]}`} />;
 }
+
+export default memo(FloatingOrb);

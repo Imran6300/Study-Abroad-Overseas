@@ -2,30 +2,42 @@
 
 import HeroSearch from "./HeroSearch";
 import TextType from "../../Animations/TextType";
-import FadeContent from "../../Animations/FadeContent";
+import { LazyMotion, m } from "framer-motion";
+import { memo } from "react";
 
-export default function HeroContent() {
+// Faster, snappier transition
+const transition = { duration: 0.5, ease: "easeOut" };
+
+function HeroContent() {
   return (
-    <div
-      className="
-        flex flex-col gap-[1rem] z-[5]
-        pt-[6rem]
-        max-[1200px]:items-center
-        max-[1200px]:pt-[5rem]
-        max-[768px]:pt-[4.5rem]
-        max-[480px]:pt-[4rem]
-      "
+    <LazyMotion
+      features={() => import("framer-motion").then((mod) => mod.domAnimation)}
     >
-      {/* SEARCH BAR */}
-      <FadeContent duration={900} delay={200}>
-        <div className="my-[1.5rem] w-full max-w-[560px] max-[768px]:max-w-full">
+      <div
+        className="
+          flex flex-col gap-[1rem] z-[5]
+          pt-[6rem]
+          max-[1200px]:items-center
+          max-[1200px]:pt-[5rem]
+          max-[768px]:pt-[4.5rem]
+          max-[480px]:pt-[4rem]
+        "
+      >
+        {/* SEARCH BAR */}
+        <m.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ ...transition, delay: 0.1 }}
+          className="my-[1.5rem] w-full max-w-[560px] max-[768px]:max-w-full"
+        >
           <HeroSearch />
-        </div>
-      </FadeContent>
+        </m.div>
 
-      {/* TITLE */}
-      <FadeContent duration={900} delay={400}>
-        <h1
+        {/* TITLE */}
+        <m.h1
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ ...transition, delay: 0.2 }}
           className="
             font-extrabold text-[#111]
             leading-[1.15]
@@ -39,12 +51,13 @@ export default function HeroContent() {
           </span>
           <br />
           with Confidence.
-        </h1>
-      </FadeContent>
+        </m.h1>
 
-      {/* SUBTITLE */}
-      <FadeContent duration={900} delay={600}>
-        <p
+        {/* SUBTITLE */}
+        <m.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ ...transition, delay: 0.3 }}
           className="
             text-[#444] leading-[1.7]
             w-[85%]
@@ -56,33 +69,38 @@ export default function HeroContent() {
         >
           Your trusted partner for admissions, student visas, scholarships,
           career planning, and global opportunities — all in one place.
-        </p>
-      </FadeContent>
+        </m.p>
 
-      {/* ROTATING TEXT */}
-      <FadeContent duration={900} delay={800}>
-        <TextType
-          text={[
-            "🌍 Study in 100+ Countries",
-            "🎓 5000+ Students Placed Successfully",
-            "🏛️ Top 200 University Partners",
-            "💰 $75M+ Scholarship Grants Approved",
-          ]}
-          typingSpeed={40}
-          pauseDuration={1600}
-          showCursor={true}
-          cursorCharacter="▋"
+        {/* ROTATING TEXT */}
+        <m.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ ...transition, delay: 0.4 }}
           className="
             text-[#4169e1] font-semibold
             text-[clamp(1rem,1.2vw,1.4rem)]
             max-[768px]:text-center
           "
-        />
-      </FadeContent>
+        >
+          <TextType
+            text={[
+              "Study in 100+ Countries",
+              "5000+ Students Placed Successfully",
+              "Top 200 University Partners",
+              "$75M+ Scholarship Grants Approved",
+            ]}
+            typingSpeed={40}
+            pauseDuration={1600}
+            showCursor={true}
+            cursorCharacter="▋"
+          />
+        </m.div>
 
-      {/* BUTTONS */}
-      <FadeContent duration={900} delay={1000}>
-        <div
+        {/* BUTTONS */}
+        <m.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ ...transition, delay: 0.5 }}
           className="
             flex gap-[1rem] mt-[0.8rem]
             flex-wrap justify-start
@@ -116,8 +134,10 @@ export default function HeroContent() {
           >
             Explore Destinations
           </button>
-        </div>
-      </FadeContent>
-    </div>
+        </m.div>
+      </div>
+    </LazyMotion>
   );
 }
+
+export default memo(HeroContent);

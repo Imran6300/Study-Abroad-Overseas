@@ -1,15 +1,11 @@
 "use client";
 
 import FloatingCard from "./FloatingCard";
+import { memo } from "react";
 
-export default function HeroVisual() {
+function HeroVisual() {
   return (
-    <div
-      className="
-        relative flex justify-center items-center
-        max-[1200px]:flex-col
-      "
-    >
+    <div className="relative flex justify-center items-center max-[1200px]:flex-col">
       {/* HERO IMAGE BOX */}
       <div
         className="
@@ -23,30 +19,33 @@ export default function HeroVisual() {
           mt-20
         "
       >
+        {/* Preload the image for instant load */}
+        <link rel="preload" href="/HeroImage.png" as="image" />
+
         <img
-          src="HeroImage.png"
+          src="/HeroImage.png" // Now served from /public → super fast
           alt="Student"
           className="
             absolute top-0 left-0 w-full h-full object-cover
             rounded-[28px]
             animate-imgFloat
           "
+          loading="eager" // Forces immediate load (highest priority)
+          fetchPriority="high" // Modern browsers: treat as critical resource
         />
       </div>
 
-      {/* FLOATING CARDS — hidden on <=1200px exactly like original */}
+      {/* FLOATING CARDS */}
       <FloatingCard
         position="top-[12%] left-[-5%]"
         strong="98.7%"
         text="Visa Approval Rate"
       />
-
       <FloatingCard
         position="bottom-[15%] right-[-3%]"
         strong="4.9★"
         text="Student Satisfaction"
       />
-
       <FloatingCard
         position="top-[45%] left-[-10%]"
         strong="24/7"
@@ -55,3 +54,5 @@ export default function HeroVisual() {
     </div>
   );
 }
+
+export default memo(HeroVisual);

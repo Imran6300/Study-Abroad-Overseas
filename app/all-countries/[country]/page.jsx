@@ -1,8 +1,11 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { motion } from "framer-motion";
+import Image from "next/image";
+import { LazyMotion, domAnimation, m } from "framer-motion";
+import { memo } from "react";
 
+/* ================= ANIMATIONS ================= */
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
   visible: {
@@ -12,9 +15,7 @@ const fadeUp = {
   },
 };
 
-/* ============================================================
-   COUNTRY PAGE CONTENT
-============================================================ */
+/* ================= STATIC DATA ================= */
 const COUNTRY_PAGE_DATA = {
   hero: {
     description:
@@ -145,153 +146,163 @@ const COUNTRY_PAGE_DATA = {
 };
 
 export default function CountryDetail() {
-  const { country } = useParams();
-  const slug = country.toLowerCase();
+  const params = useParams();
+  const country = Array.isArray(params.country)
+    ? params.country[0]
+    : params.country;
+  const slug = (country ?? "usa").toLowerCase();
   const countryName = slug
     .replace(/-/g, " ")
     .replace(/\b\w/g, (l) => l.toUpperCase());
+
   const data = COUNTRY_PAGE_DATA;
-  const hero = data.heroImages[slug];
+  const hero = data.heroImages[slug] || data.heroImages.usa;
   const universities = data.universitiesByCountry[slug];
 
   return (
-    <main className="bg-[#020617] text-white min-h-screen relative">
-      {/* HERO */}
-      <section className="relative h-[75vh] min-h-[520px] overflow-hidden">
-        {hero && (
-          <img
+    <LazyMotion features={domAnimation}>
+      <main className="bg-[#020617] text-white min-h-screen relative">
+        {/* HERO */}
+        <section className="relative h-[75vh] min-h-[520px] overflow-hidden">
+          <Image
             src={hero.src}
-            alt={countryName}
-            className="absolute inset-0 w-full h-full object-cover"
+            alt={`Study in ${countryName}`}
+            fill
+            priority
+            sizes="100vw"
+            placeholder="blur" // Instant low-quality preview
+            blurDataURL="/countries/placeholder.jpg" // Optional: add a tiny base64 or let Next.js auto-generate
+            className="object-cover"
             style={{ objectPosition: hero.position }}
           />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/55 to-[#020617]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/55 to-[#020617]" />
 
-        <div className="relative z-10 h-full flex items-center">
-          <div className="max-w-7xl mx-auto px-6">
-            <motion.h1
-              variants={fadeUp}
-              initial="hidden"
-              animate="visible"
-              className="text-4xl md:text-5xl lg:text-6xl font-bold"
-            >
-              Study in {countryName}
-            </motion.h1>
-            <motion.p
-              variants={fadeUp}
-              initial="hidden"
-              animate="visible"
-              className="mt-6 text-lg md:text-xl text-gray-200 max-w-4xl"
-            >
-              {data.hero.description} in {countryName}.
-            </motion.p>
+          <div className="relative z-10 h-full flex items-center">
+            <div className="max-w-7xl mx-auto px-6">
+              <m.h1
+                variants={fadeUp}
+                initial="hidden"
+                animate="visible"
+                className="text-4xl md:text-5xl lg:text-6xl font-bold"
+              >
+                Study in {countryName}
+              </m.h1>
+              <m.p
+                variants={fadeUp}
+                initial="hidden"
+                animate="visible"
+                className="mt-6 text-lg md:text-xl text-gray-200 max-w-4xl"
+              >
+                {data.hero.description} in {countryName}.
+              </m.p>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* MAIN CONTENT + SIDEBAR CTA (Desktop) */}
-      <section className="py-16 lg:py-20">
-        <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-[1fr_360px] gap-12">
-          <div className="space-y-16 lg:space-y-20">
-            <ContentBlock title="Popular Courses" items={data.popularCourses} />
-            <ContentBlock title="Career Opportunities" items={data.careers} />
-            <ContentBlock
-              title="Scholarships & Financial Aid"
-              items={data.scholarships}
-            />
-            <ContentBlock
-              title="Eligibility Requirements"
-              items={data.eligibility}
-            />
+        {/* MAIN CONTENT + SIDEBAR CTA */}
+        <section className="py-16 lg:py-20">
+          <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-[1fr_360px] gap-12">
+            <div className="space-y-16 lg:space-y-20">
+              <ContentBlock
+                title="Popular Courses"
+                items={data.popularCourses}
+              />
+              <ContentBlock title="Career Opportunities" items={data.careers} />
+              <ContentBlock
+                title="Scholarships & Financial Aid"
+                items={data.scholarships}
+              />
+              <ContentBlock
+                title="Eligibility Requirements"
+                items={data.eligibility}
+              />
 
-            {/* WHY STUDY */}
-            <motion.div
-              variants={fadeUp}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-            >
-              <h2 className="text-3xl font-bold mb-8">
-                Why Study in {countryName}?
-              </h2>
-              <div className="grid md:grid-cols-2 gap-6">
-                {data.whyStudy.map((item, i) => (
-                  <motion.div
-                    key={item.title}
+              {/* WHY STUDY */}
+              <m.div
+                variants={fadeUp}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+              >
+                <h2 className="text-3xl font-bold mb-8">
+                  Why Study in {countryName}?
+                </h2>
+                <div className="grid md:grid-cols-2 gap-6">
+                  {data.whyStudy.map((item, i) => (
+                    <m.div
+                      key={item.title}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.1 }}
+                      viewport={{ once: true }}
+                      className="bg-[#0B0F19] border border-white/10 rounded-2xl p-6 hover:border-white/20 transition"
+                    >
+                      <h3 className="text-xl font-semibold text-[#38BDF8]">
+                        {item.title}
+                      </h3>
+                      <p className="mt-3 text-gray-300 leading-relaxed">
+                        {item.description}
+                      </p>
+                    </m.div>
+                  ))}
+                </div>
+              </m.div>
+            </div>
+
+            {/* DESKTOP SIDEBAR CTA */}
+            <aside className="hidden lg:block sticky top-28 h-fit">
+              <CTACard data={data.cta} />
+            </aside>
+          </div>
+        </section>
+
+        {/* TOP UNIVERSITIES */}
+        {universities && (
+          <section className="py-20 lg:py-28 border-t border-white/10">
+            <div className="max-w-7xl mx-auto px-6">
+              <m.h2
+                variants={fadeUp}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+                className="text-3xl lg:text-4xl font-bold mb-12 text-center lg:text-left"
+              >
+                Top Universities in {countryName}
+              </m.h2>
+
+              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {universities.map((uni, i) => (
+                  <m.div
+                    key={uni}
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.1 }}
                     viewport={{ once: true }}
-                    className="bg-[#0B0F19] border border-white/10 rounded-2xl p-6 hover:border-white/20 transition"
+                    className="bg-[#0B0F19] border border-white/10 rounded-2xl p-8 text-center hover:border-[#38BDF8]/50 transition"
                   >
-                    <h3 className="text-xl font-semibold text-[#38BDF8]">
-                      {item.title}
-                    </h3>
-                    <p className="mt-3 text-gray-300 leading-relaxed">
-                      {item.description}
-                    </p>
-                  </motion.div>
+                    <p className="font-medium text-lg">{uni}</p>
+                  </m.div>
                 ))}
               </div>
-            </motion.div>
-          </div>
-
-          {/* DESKTOP SIDEBAR CTA */}
-          <aside className="hidden lg:block sticky top-28 h-fit">
-            <CTACard data={data.cta} />
-          </aside>
-        </div>
-      </section>
-
-      {/* TOP UNIVERSITIES */}
-      {universities && (
-        <section className="py-20 lg:py-28 border-t border-white/10">
-          <div className="max-w-7xl mx-auto px-6">
-            <motion.h2
-              variants={fadeUp}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              className="text-3xl lg:text-4xl font-bold mb-12 text-center lg:text-left"
-            >
-              Top Universities in {countryName}
-            </motion.h2>
-
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {universities.map((uni, i) => (
-                <motion.div
-                  key={uni}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.1 }}
-                  viewport={{ once: true }}
-                  className="bg-[#0B0F19] border border-white/10 rounded-2xl p-8 text-center hover:border-[#38BDF8]/50 transition"
-                >
-                  <p className="font-medium text-lg">{uni}</p>
-                </motion.div>
-              ))}
             </div>
-          </div>
-        </section>
-      )}
+          </section>
+        )}
 
-      {/* MOBILE STICKY CTA - ALWAYS VISIBLE ON MOBILE */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 px-4 pb-4 pt-2 bg-gradient-to-t from-[#020617] via-[#020617]/95 to-transparent">
-        <div className="animate-in slide-in-from-bottom-4 duration-500">
-          <CTACard data={data.cta} mobile />
+        {/* MOBILE STICKY CTA */}
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 px-4 pb-4 pt-2 bg-gradient-to-t from-[#020617] via-[#020617]/95 to-transparent">
+          <div className="animate-in slide-in-from-bottom-4 duration-500">
+            <CTACard data={data.cta} mobile />
+          </div>
         </div>
-      </div>
-    </main>
+      </main>
+    </LazyMotion>
   );
 }
 
-/* ============================================================
-   REUSABLE CONTENT BLOCK
-============================================================ */
-function ContentBlock({ title, items }) {
+/* ================= MEMOIZED COMPONENTS ================= */
+const ContentBlock = memo(function ContentBlock({ title, items }) {
   return (
-    <motion.div
+    <m.div
       variants={fadeUp}
       initial="hidden"
       whileInView="visible"
@@ -300,23 +311,20 @@ function ContentBlock({ title, items }) {
       <h2 className="text-2xl lg:text-3xl font-bold mb-8">{title}</h2>
       <ul className="grid sm:grid-cols-2 gap-4">
         {items.map((item) => (
-          <motion.li
+          <m.li
             key={item}
             whileHover={{ scale: 1.02 }}
             className="bg-[#0B0F19] border border-white/10 rounded-xl p-5 hover:border-[#38BDF8]/30 transition"
           >
             <span className="text-gray-200">{item}</span>
-          </motion.li>
+          </m.li>
         ))}
       </ul>
-    </motion.div>
+    </m.div>
   );
-}
+});
 
-/* ============================================================
-   REUSABLE CTA CARD (Desktop + Mobile)
-============================================================ */
-function CTACard({ data, mobile = false }) {
+const CTACard = memo(function CTACard({ data, mobile = false }) {
   return (
     <div
       className={`${
@@ -334,4 +342,4 @@ function CTACard({ data, mobile = false }) {
       </button>
     </div>
   );
-}
+});
