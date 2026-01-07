@@ -6,22 +6,17 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { FaAngleDown, FaBars, FaTimes } from "react-icons/fa";
 
-/* ============================================================
-                        MAIN NAVBAR (Scaled Wrapper)
-============================================================ */
 export default function NavBar() {
   const navRef = useRef(null);
   const burgerRef = useRef(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
 
-  /* 🔒 Lock body scroll when mobile menu is open */
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? "hidden" : "";
     return () => (document.body.style.overflow = "");
   }, [mobileOpen]);
 
-  /* ⬆️⬇️ Hide navbar on scroll (disabled when menu open) */
   useEffect(() => {
     let lastScrollY = window.scrollY;
 
@@ -41,12 +36,10 @@ export default function NavBar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [mobileOpen]);
 
-  // Close mobile menu on route change
   useEffect(() => {
     setMobileOpen(false);
   }, [pathname]);
 
-  // ESC key closes mobile menu
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === "Escape" && mobileOpen) {
@@ -60,7 +53,6 @@ export default function NavBar() {
     }
   }, [mobileOpen]);
 
-  // Basic focus management: focus back to burger on close
   useEffect(() => {
     if (!mobileOpen && burgerRef.current) {
       burgerRef.current.focus();
@@ -71,7 +63,6 @@ export default function NavBar() {
 
   return (
     <>
-      {/* SCALED NAVBAR CONTAINER */}
       <div
         className="fixed top-0 left-0 w-full z-[1000] pointer-events-none"
         style={{
@@ -80,7 +71,6 @@ export default function NavBar() {
           width: "111.111%",
         }}
       >
-        {/* NAVBAR */}
         <header
           ref={navRef}
           className="
@@ -94,7 +84,6 @@ export default function NavBar() {
       transition-all duration-300
     "
         >
-          {/* LOGO */}
           <Link href="/" className="flex items-center">
             <motion.img
               src="/logo.png"
@@ -111,16 +100,13 @@ export default function NavBar() {
             />
           </Link>
 
-          {/* DESKTOP NAV */}
           <MemoizedDesktopNav />
 
-          {/* DESKTOP BUTTONS */}
           <div className="hidden md:flex items-center gap-4">
             <ButtonGreen text="Sign Up" link="/signup" />
             <ButtonOrange text="Login" link="/login" />
           </div>
 
-          {/* MOBILE BURGER */}
           <button
             ref={burgerRef}
             className="md:hidden text-white text-3xl"
@@ -134,15 +120,10 @@ export default function NavBar() {
         </header>
       </div>
 
-      {/* MOBILE MENU - Outside the scaled wrapper to avoid scaling it */}
       <MobileMenu open={mobileOpen} onClose={closeMobileMenu} />
     </>
   );
 }
-
-/* ============================================================
-                      DESKTOP NAV (Memoized)
-============================================================ */
 const MemoizedDesktopNav = memo(() => {
   const [active, setActive] = useState(null);
 
@@ -154,7 +135,15 @@ const MemoizedDesktopNav = memo(() => {
         label="Countries"
         active={active === "Countries"}
         onToggle={() => setActive(active === "Countries" ? null : "Countries")}
-        items={["USA", "UK", "Canada", "Australia", "Germany", "New Zealand"]}
+        items={[
+          "USA",
+          "UK",
+          "Canada",
+          "Australia",
+          "Germany",
+          "China",
+          "All-Countries",
+        ]}
       />
 
       <DesktopDropdown
@@ -185,9 +174,6 @@ const MemoizedDesktopNav = memo(() => {
 
 MemoizedDesktopNav.displayName = "MemoizedDesktopNav";
 
-/* ============================================================
-                    NAV ITEMS & DROPDOWNS (unchanged)
-============================================================ */
 const NavItem = ({ label, link }) => (
   <Link
     href={link}
@@ -226,23 +212,29 @@ const DesktopDropdown = ({ label, active, onToggle, items }) => (
       `}
       role="menu"
     >
-      {items.map((item, i) => (
-        <li key={i} role="menuitem">
-          <Link
-            href={`/${item.toLowerCase().replace(/\s+/g, "-")}`}
-            className="block px-5 py-3 mx-2 rounded-lg text-gray-700 hover:bg-blue-600 hover:text-white"
-          >
-            {item}
-          </Link>
-        </li>
-      ))}
+      {items.map((item, i) => {
+        const slug = item.toLowerCase().replace(/\s+/g, "-");
+        const href =
+          slug === "all-countries"
+            ? "/all-countries"
+            : `/all-countries/${slug}`;
+
+        return (
+          <li key={i} role="menuitem">
+            <Link
+              href={href}
+              onClick={onToggle}
+              className="block px-5 py-3 mx-2 rounded-lg text-gray-700 hover:bg-blue-600 hover:text-white"
+            >
+              {item}
+            </Link>
+          </li>
+        );
+      })}
     </ul>
   </li>
 );
 
-/* ============================================================
-                      MOBILE MENU (unchanged, outside scale)
-============================================================ */
 const MobileMenu = ({ open, onClose }) => {
   const [render, setRender] = useState(false);
   const menuRef = useRef(null);
@@ -438,25 +430,33 @@ const MobileDropdown = ({ label, items, onClick }) => {
       </button>
       {open && (
         <div className="mt-3 ml-2 flex flex-col gap-2">
-          {items.map((item, i) => (
-            <Link
-              key={i}
-              href={`/${item.toLowerCase().replace(/\s+/g, "-")}`}
-              onClick={onClick}
-              className="bg-[#1b3a7a] px-4 py-2 rounded-lg"
-            >
-              {item}
-            </Link>
-          ))}
+          {items.map((item, i) => {
+            const slug = item.toLowerCase().replace(/\s+/g, "-");
+            const href =
+              slug === "all-countries"
+                ? "/all-countries"
+                : `/all-countries/${slug}`;
+
+            return (
+              <Link
+                key={i}
+                href={href}
+                onClick={() => {
+                  setOpen(false);
+                  onClick();
+                }}
+                className="bg-[#1b3a7a] px-4 py-2 rounded-lg"
+              >
+                {item}
+              </Link>
+            );
+          })}
         </div>
       )}
     </div>
   );
 };
 
-/* ============================================================
-                      BUTTONS (unchanged)
-============================================================ */
 const ButtonGreen = ({ text, link, full, onClick }) => (
   <Link
     href={link}
