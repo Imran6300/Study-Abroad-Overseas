@@ -168,7 +168,7 @@ const MemoizedDesktopNav = memo(() => {
         ]}
         getHref={(item) => {
           const slug = item.toLowerCase().replace(/\s+/g, "-");
-          return slug === "all-courses" ? "/all-courses" : `/courses/${slug}`;
+          return slug === "all-courses" ? "/courses" : `/courses/${slug}`;
         }}
       />
 
@@ -383,8 +383,8 @@ const MobileMenu = ({ open, onClose }) => {
                   getHref={(item) => {
                     const slug = item.toLowerCase().replace(/\s+/g, "-");
                     return slug === "all-courses"
-                      ? "/all-courses"
-                      : `/courses/${slug}`;
+                      ? "/courses"
+                      : `/all-courses/${slug}`;
                   }}
                   onClick={onClose}
                 />
