@@ -11,6 +11,7 @@
   "dependencies": {
     "framer-motion": "^12.23.26",
     "gsap": "^3.13.0",
+    "lodash": "^4.17.21",
     "lucide-react": "^0.555.0",
     "next": "^16.1.1",
     "nodemodule": "^0.3.0",

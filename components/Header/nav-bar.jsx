@@ -6,6 +6,14 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { FaAngleDown, FaBars, FaTimes } from "react-icons/fa";
 
+// ✅ FIXED COURSE CATEGORY ROUTES (DO NOT CHANGE TEXT IN UI)
+const COURSE_CATEGORY_MAP = {
+  "Engineering & Technology": "engineering",
+  "Computer Science & IT": "engineering",
+  "Business & Management": "business",
+  "Medicine & Healthcare": "healthcare",
+};
+
 export default function NavBar() {
   const navRef = useRef(null);
   const burgerRef = useRef(null);
@@ -74,7 +82,7 @@ export default function NavBar() {
         <header
           ref={navRef}
           className="
-      pointer-events-auto   /* 👈 re-enable only navbar */
+      pointer-events-auto  
       fixed top-0 left-0 w-full h-[85px]
       bg-[#0f2a5f]
       border-b border-white/10
@@ -132,8 +140,8 @@ const MemoizedDesktopNav = memo(() => {
     <ul className="hidden md:flex items-center gap-8">
       <NavItem label="Home" link="/" />
 
-      {/* Countries Dropdown - keeps existing logic */}
       <DesktopDropdown
+        type="countries"
         label="Countries"
         active={active === "Countries"}
         onToggle={() => setActive(active === "Countries" ? null : "Countries")}
@@ -144,18 +152,12 @@ const MemoizedDesktopNav = memo(() => {
           "Australia",
           "Germany",
           "China",
-          "All-Countries",
+          "All Countries",
         ]}
-        getHref={(item) => {
-          const slug = item.toLowerCase().replace(/\s+/g, "-");
-          return slug === "all-countries"
-            ? "/all-countries"
-            : `/all-countries/${slug}`;
-        }}
       />
 
-      {/* Courses Dropdown - fixed routing */}
       <DesktopDropdown
+        type="courses"
         label="Courses"
         active={active === "Courses"}
         onToggle={() => setActive(active === "Courses" ? null : "Courses")}
@@ -166,21 +168,14 @@ const MemoizedDesktopNav = memo(() => {
           "Computer Science & IT",
           "All Courses",
         ]}
-        getHref={(item) => {
-          const slug = item.toLowerCase().replace(/\s+/g, "-");
-          return slug === "all-courses" ? "/courses" : `/courses/${slug}`;
-        }}
       />
 
-      {/* Programs Dropdown - fixed routing */}
       <DesktopDropdown
+        type="programs"
         label="Programs"
         active={active === "Programs"}
         onToggle={() => setActive(active === "Programs" ? null : "Programs")}
         items={["Scholarships", "Universities", "Visa Guidance"]}
-        getHref={(item) =>
-          `/programs/${item.toLowerCase().replace(/\s+/g, "-")}`
-        }
       />
 
       <NavItem label="Why Us" link="/why-us" />
@@ -207,48 +202,65 @@ const NavItem = ({ label, link }) => (
   </Link>
 );
 
-// Updated DesktopDropdown with getHref prop
-const DesktopDropdown = ({ label, active, onToggle, items, getHref }) => (
-  <li className="relative">
-    <button
-      onClick={onToggle}
-      className="flex items-center gap-2 text-white font-medium px-2 py-2"
-      aria-expanded={active}
-      aria-haspopup="true"
-    >
-      {label}
-      <FaAngleDown
-        className={`transition-transform ${active ? "rotate-180" : ""}`}
-      />
-    </button>
+const DesktopDropdown = ({ type, label, active, onToggle, items }) => {
+  const getHref = (item) => {
+    const slug = item.toLowerCase().replace(/\s+/g, "-");
+    const isAllItem = item.toLowerCase().includes("all");
 
-    <ul
-      className={`
-        absolute top-[120%] left-0 min-w-[240px]
-        bg-white rounded-xl shadow-[0_20px_40px_rgba(0,0,0,0.15)]
-        py-2 transition-all duration-200
-        ${active ? "opacity-100 visible" : "opacity-0 invisible"}
-      `}
-      role="menu"
-    >
-      {items.map((item, i) => {
-        const href = getHref(item);
+    switch (type) {
+      case "countries":
+        return isAllItem ? "/all-countries" : `/all-countries/${slug}`;
 
-        return (
+      case "courses":
+        if (isAllItem) return "/courses";
+        return `/courses/${COURSE_CATEGORY_MAP[item]}`;
+
+      case "programs":
+        return `/programs/${slug}`;
+
+      default:
+        return `/${slug}`;
+    }
+  };
+
+  return (
+    <li className="relative">
+      <button
+        onClick={onToggle}
+        className="flex items-center gap-2 text-white font-medium px-2 py-2"
+        aria-expanded={active}
+        aria-haspopup="true"
+      >
+        {label}
+        <FaAngleDown
+          className={`transition-transform ${active ? "rotate-180" : ""}`}
+        />
+      </button>
+
+      <ul
+        className={`
+          absolute top-[120%] left-0 min-w-[240px]
+          bg-white rounded-xl shadow-[0_20px_40px_rgba(0,0,0,0.15)]
+          py-2 transition-all duration-200
+          ${active ? "opacity-100 visible" : "opacity-0 invisible"}
+        `}
+        role="menu"
+      >
+        {items.map((item, i) => (
           <li key={i} role="menuitem">
             <Link
-              href={href}
+              href={getHref(item)}
               onClick={onToggle}
               className="block px-5 py-3 mx-2 rounded-lg text-gray-700 hover:bg-blue-600 hover:text-white"
             >
               {item}
             </Link>
           </li>
-        );
-      })}
-    </ul>
-  </li>
-);
+        ))}
+      </ul>
+    </li>
+  );
+};
 
 const MobileMenu = ({ open, onClose }) => {
   const [render, setRender] = useState(false);
@@ -361,41 +373,37 @@ const MobileMenu = ({ open, onClose }) => {
               </motion.div>
               <motion.div variants={itemVariants}>
                 <MobileDropdown
+                  type="countries"
                   label="Countries"
-                  items={["USA", "UK", "Canada", "All Countries"]}
-                  getHref={(item) => {
-                    const slug = item.toLowerCase().replace(/\s+/g, "-");
-                    return slug === "all-countries"
-                      ? "/all-countries"
-                      : `/all-countries/${slug}`;
-                  }}
+                  items={[
+                    "USA",
+                    "UK",
+                    "Canada",
+                    "Australia",
+                    "Germany",
+                    "China",
+                  ]}
                   onClick={onClose}
                 />
               </motion.div>
               <motion.div variants={itemVariants}>
                 <MobileDropdown
+                  type="courses"
                   label="Courses"
                   items={[
                     "Engineering & Technology",
                     "Business & Management",
-                    "All Courses",
+                    "Medicine & Healthcare",
+                    "Computer Science & IT",
                   ]}
-                  getHref={(item) => {
-                    const slug = item.toLowerCase().replace(/\s+/g, "-");
-                    return slug === "all-courses"
-                      ? "/courses"
-                      : `/all-courses/${slug}`;
-                  }}
                   onClick={onClose}
                 />
               </motion.div>
               <motion.div variants={itemVariants}>
                 <MobileDropdown
+                  type="programs"
                   label="Programs"
                   items={["Scholarships", "Universities", "Visa Guidance"]}
-                  getHref={(item) =>
-                    `/programs/${item.toLowerCase().replace(/\s+/g, "-")}`
-                  }
                   onClick={onClose}
                 />
               </motion.div>
@@ -403,6 +411,13 @@ const MobileMenu = ({ open, onClose }) => {
                 <MobileNavItem
                   label="Why Us"
                   link="/why-us"
+                  onClick={onClose}
+                />
+              </motion.div>
+              <motion.div variants={itemVariants}>
+                <MobileNavItem
+                  label="Success Stories"
+                  link="/success-stories"
                   onClick={onClose}
                 />
               </motion.div>
@@ -450,9 +465,29 @@ const MobileNavItem = React.forwardRef(({ label, link, onClick }, ref) => (
 
 MobileNavItem.displayName = "MobileNavItem";
 
-// Updated MobileDropdown with getHref prop
-const MobileDropdown = ({ label, items, getHref, onClick }) => {
+const MobileDropdown = ({ type, label, items, onClick }) => {
   const [open, setOpen] = useState(false);
+
+  const getHref = (item) => {
+    const slug = item.toLowerCase().replace(/\s+/g, "-");
+    const isAllItem = item.toLowerCase().includes("all");
+
+    switch (type) {
+      case "countries":
+        return isAllItem ? "/all-countries" : `/all-countries/${slug}`;
+
+      case "courses":
+        if (isAllItem) return "/courses";
+        return `/courses/${COURSE_CATEGORY_MAP[item]}`;
+
+      case "programs":
+        return `/programs/${slug}`;
+
+      default:
+        return `/${slug}`;
+    }
+  };
+
   return (
     <div>
       <button
@@ -465,23 +500,19 @@ const MobileDropdown = ({ label, items, getHref, onClick }) => {
       </button>
       {open && (
         <div className="mt-3 ml-2 flex flex-col gap-2">
-          {items.map((item, i) => {
-            const href = getHref(item);
-
-            return (
-              <Link
-                key={i}
-                href={href}
-                onClick={() => {
-                  setOpen(false);
-                  onClick();
-                }}
-                className="bg-[#1b3a7a] px-4 py-2 rounded-lg"
-              >
-                {item}
-              </Link>
-            );
-          })}
+          {items.map((item, i) => (
+            <Link
+              key={i}
+              href={getHref(item)}
+              onClick={() => {
+                setOpen(false);
+                onClick();
+              }}
+              className="bg-[#1b3a7a] px-4 py-2 rounded-lg"
+            >
+              {item}
+            </Link>
+          ))}
         </div>
       )}
     </div>
