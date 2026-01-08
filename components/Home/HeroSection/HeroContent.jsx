@@ -4,6 +4,7 @@ import HeroSearch from "./HeroSearch";
 import TextType from "../../Animations/TextType";
 import { LazyMotion, m } from "framer-motion";
 import { memo } from "react";
+import Link from "next/link";
 
 // Faster, snappier transition
 const transition = { duration: 0.5, ease: "easeOut" };
@@ -132,7 +133,7 @@ function HeroContent() {
               max-[480px]:w-full
             "
           >
-            Explore Destinations
+            <a href="/all-countries">Explore Destinations</a>
           </button>
         </m.div>
       </div>

@@ -124,6 +124,7 @@ export default function NavBar() {
     </>
   );
 }
+
 const MemoizedDesktopNav = memo(() => {
   const [active, setActive] = useState(null);
 
@@ -131,6 +132,7 @@ const MemoizedDesktopNav = memo(() => {
     <ul className="hidden md:flex items-center gap-8">
       <NavItem label="Home" link="/" />
 
+      {/* Countries Dropdown - keeps existing logic */}
       <DesktopDropdown
         label="Countries"
         active={active === "Countries"}
@@ -144,8 +146,15 @@ const MemoizedDesktopNav = memo(() => {
           "China",
           "All-Countries",
         ]}
+        getHref={(item) => {
+          const slug = item.toLowerCase().replace(/\s+/g, "-");
+          return slug === "all-countries"
+            ? "/all-countries"
+            : `/all-countries/${slug}`;
+        }}
       />
 
+      {/* Courses Dropdown - fixed routing */}
       <DesktopDropdown
         label="Courses"
         active={active === "Courses"}
@@ -155,14 +164,23 @@ const MemoizedDesktopNav = memo(() => {
           "Business & Management",
           "Medicine & Healthcare",
           "Computer Science & IT",
+          "All Courses",
         ]}
+        getHref={(item) => {
+          const slug = item.toLowerCase().replace(/\s+/g, "-");
+          return slug === "all-courses" ? "/all-courses" : `/courses/${slug}`;
+        }}
       />
 
+      {/* Programs Dropdown - fixed routing */}
       <DesktopDropdown
         label="Programs"
         active={active === "Programs"}
         onToggle={() => setActive(active === "Programs" ? null : "Programs")}
         items={["Scholarships", "Universities", "Visa Guidance"]}
+        getHref={(item) =>
+          `/programs/${item.toLowerCase().replace(/\s+/g, "-")}`
+        }
       />
 
       <NavItem label="Why Us" link="/why-us" />
@@ -189,7 +207,8 @@ const NavItem = ({ label, link }) => (
   </Link>
 );
 
-const DesktopDropdown = ({ label, active, onToggle, items }) => (
+// Updated DesktopDropdown with getHref prop
+const DesktopDropdown = ({ label, active, onToggle, items, getHref }) => (
   <li className="relative">
     <button
       onClick={onToggle}
@@ -213,11 +232,7 @@ const DesktopDropdown = ({ label, active, onToggle, items }) => (
       role="menu"
     >
       {items.map((item, i) => {
-        const slug = item.toLowerCase().replace(/\s+/g, "-");
-        const href =
-          slug === "all-countries"
-            ? "/all-countries"
-            : `/all-countries/${slug}`;
+        const href = getHref(item);
 
         return (
           <li key={i} role="menuitem">
@@ -347,21 +362,40 @@ const MobileMenu = ({ open, onClose }) => {
               <motion.div variants={itemVariants}>
                 <MobileDropdown
                   label="Countries"
-                  items={["USA", "UK", "Canada"]}
+                  items={["USA", "UK", "Canada", "All Countries"]}
+                  getHref={(item) => {
+                    const slug = item.toLowerCase().replace(/\s+/g, "-");
+                    return slug === "all-countries"
+                      ? "/all-countries"
+                      : `/all-countries/${slug}`;
+                  }}
                   onClick={onClose}
                 />
               </motion.div>
               <motion.div variants={itemVariants}>
                 <MobileDropdown
                   label="Courses"
-                  items={["Engineering", "Business", "IT"]}
+                  items={[
+                    "Engineering & Technology",
+                    "Business & Management",
+                    "All Courses",
+                  ]}
+                  getHref={(item) => {
+                    const slug = item.toLowerCase().replace(/\s+/g, "-");
+                    return slug === "all-courses"
+                      ? "/all-courses"
+                      : `/courses/${slug}`;
+                  }}
                   onClick={onClose}
                 />
               </motion.div>
               <motion.div variants={itemVariants}>
                 <MobileDropdown
                   label="Programs"
-                  items={["Scholarships", "Visa Guidance"]}
+                  items={["Scholarships", "Universities", "Visa Guidance"]}
+                  getHref={(item) =>
+                    `/programs/${item.toLowerCase().replace(/\s+/g, "-")}`
+                  }
                   onClick={onClose}
                 />
               </motion.div>
@@ -416,7 +450,8 @@ const MobileNavItem = React.forwardRef(({ label, link, onClick }, ref) => (
 
 MobileNavItem.displayName = "MobileNavItem";
 
-const MobileDropdown = ({ label, items, onClick }) => {
+// Updated MobileDropdown with getHref prop
+const MobileDropdown = ({ label, items, getHref, onClick }) => {
   const [open, setOpen] = useState(false);
   return (
     <div>
@@ -431,11 +466,7 @@ const MobileDropdown = ({ label, items, onClick }) => {
       {open && (
         <div className="mt-3 ml-2 flex flex-col gap-2">
           {items.map((item, i) => {
-            const slug = item.toLowerCase().replace(/\s+/g, "-");
-            const href =
-              slug === "all-countries"
-                ? "/all-countries"
-                : `/all-countries/${slug}`;
+            const href = getHref(item);
 
             return (
               <Link
