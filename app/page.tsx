@@ -1,5 +1,5 @@
 import Hero from "../components/Home/HeroSection/Hero";
-import Countries from "../components/Home/Countries/countries";
+import Countries from "../components/Home/Universities/universities";
 import Services from "../components/Home/Services/services";
 import Stories from "../components/Home/SuccessStories/Stories";
 import WhyChooseUs from "../components/Home/WhyChooseUs/whychooseus";

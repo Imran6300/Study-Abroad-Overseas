@@ -9,9 +9,6 @@ import {
   ShieldCheck,
 } from "lucide-react";
 
-import UniversityCard from "./UniversityCard";
-import { universityData } from "@/components/UniversityDetail/universityData";
-
 const programs = [
   {
     icon: Laptop,
@@ -103,28 +100,6 @@ const TopPrograms = () => {
             </div>
           );
         })}
-      </div>
-
-      {/* ================= UNIVERSITIES SECTION ================= */}
-      <div className="w-full max-w-[1200px] mt-28">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-extrabold text-[#2F4F4F]">
-            Top Universities Worldwide
-          </h2>
-
-          <p className="text-gray-600 mt-3">
-            Choose from globally ranked universities trusted by students
-            worldwide.
-          </p>
-
-          <div className="w-24 h-[3px] rounded-full bg-gradient-to-r from-[#FF8C00] to-[#32CD32] mx-auto mt-4" />
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
-          {universityData.map((uni) => (
-            <UniversityCard key={uni.slug} uni={uni} />
-          ))}
-        </div>
       </div>
     </section>
   );

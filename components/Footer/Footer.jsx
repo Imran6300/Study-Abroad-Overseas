@@ -7,6 +7,7 @@ import {
   Facebook,
   Instagram,
   Linkedin,
+  Twitter,
   ArrowRight,
 } from "lucide-react";
 
@@ -40,7 +41,7 @@ export default function Footer() {
 
           {/* Social Icons */}
           <div className="flex items-center gap-4 mt-6">
-            {[Facebook, Instagram, Linkedin].map((Icon, i) => (
+            {[Facebook, Instagram, Linkedin, Twitter].map((Icon, i) => (
               <div
                 key={i}
                 className="
