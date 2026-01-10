@@ -8,18 +8,20 @@ const nextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'plus.unsplash.com',
+        hostname: 'previews.123rf.com',
       },
       {
         protocol: 'https',
-        hostname: 'www.pexels.com',
+        hostname: 'www.shutterstock.com',
       },
+      
+      // Optional: also allow the short domain if you use it somewhere
       {
         protocol: 'https',
-        hostname: 'images.pexels.com',
+        hostname: 'shutterstock.com',
       },
-      // Add more trusted CDNs as needed (e.g., pixabay, freepik thumbs, etc.)
     ],
+      qualities: [68, 72, 75, 78]
   },
 };
 
