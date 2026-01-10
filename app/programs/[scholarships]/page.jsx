@@ -1,18 +1,17 @@
 "use client";
 
 import { useRef } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { motion, useScroll, useSpring, useInView } from "framer-motion";
 import {
   FaGlobeAmericas,
   FaUserGraduate,
   FaRocket,
-  FaArrowRight,
   FaShieldAlt,
   FaLightbulb,
 } from "react-icons/fa";
 
-/* ================= COLOR PALETTE ================= */
 const Palette = {
   royalBlue: "#3B82F6",
   limeGreen: "#10B981",
@@ -23,7 +22,6 @@ const Palette = {
   deepBg: "#0F172A",
 };
 
-/* ================= MAIN PAGE ================= */
 export default function Scholarships() {
   const containerRef = useRef(null);
   const { scrollYProgress } = useScroll();
@@ -41,16 +39,8 @@ export default function Scholarships() {
         style={{ scaleX, backgroundColor: Palette.coral }}
       />
 
-      {/* ================== 1. HERO ================== */}
+      {/* HERO */}
       <section className="relative min-h-screen flex items-center justify-center px-5 sm:px-6 py-16 sm:py-24">
-        <div className="absolute inset-0 z-0 pointer-events-none">
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 80, repeat: Infinity, ease: "linear" }}
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200vw] sm:w-[160vw] lg:w-[140vw] h-[200vw] sm:h-[160vw] lg:h-[140vw] border border-white/5 rounded-full"
-          />
-        </div>
-
         <div className="relative z-10 max-w-7xl mx-auto w-full grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
           <motion.div
             initial={{ opacity: 0, x: -50 }}
@@ -111,7 +101,7 @@ export default function Scholarships() {
             </div>
           </motion.div>
 
-          {/* Hero Visual - hidden on mobile */}
+          {/* Hero Visual - visible only on desktop */}
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -119,39 +109,22 @@ export default function Scholarships() {
             className="relative mt-12 lg:mt-0 hidden lg:block"
           >
             <div
-              className="
-      relative w-full aspect-square max-w-[500px] mx-auto
-      rounded-[50px]
-      p-4 sm:p-6
-      overflow-hidden
-      backdrop-blur-xl
-      bg-white/5
-      border
-      shadow-[0_0_80px_rgba(59,130,246,0.25)]
-    "
+              className="relative w-full aspect-square max-w-[500px] mx-auto rounded-[50px] p-4 sm:p-6 overflow-hidden bg-white/5 border shadow-[0_0_80px_rgba(59,130,246,0.25)]"
               style={{ borderColor: `${Palette.royalBlue}40` }}
             >
-              {/* ambient glow */}
               <div className="absolute inset-0 rounded-[40px] bg-gradient-to-br from-blue-500/20 via-transparent to-emerald-500/20 opacity-60" />
 
-              {/* image wrapper */}
               <div className="relative w-full h-full rounded-[40px] overflow-hidden z-10">
-                <img
+                <Image
                   src="/scholership/scholershipimage.jpg"
                   alt="International students celebrating scholarship success"
-                  className="
-          relative
-          w-full h-full
-          object-contain
-          object-center
-          grayscale
-          hover:grayscale-0
-          transition-all
-          duration-1000
-          rounded-lg
-          rounded-full
-        "
-                  loading="eager"
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 500px"
+                  quality={75}
+                  placeholder="blur"
+                  blurDataURL="data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAb/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAb/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/8QAFRABAQAAAAAAAAAAAAAAAAAAAAb/2gAMAwEAAhEDEQA/AA==="
+                  className="object-contain object-center grayscale hover:grayscale-0 transition-all duration-1000 rounded-full"
+                  priority
                 />
               </div>
             </div>
@@ -159,42 +132,10 @@ export default function Scholarships() {
         </div>
       </section>
 
-      {/* ================== 2. BENTO GRID ================== */}
-      <section className="max-w-7xl mx-auto px-5 sm:px-6 py-20 sm:py-32">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <BentoTile
-            span="sm:col-span-2 lg:col-span-2 lg:row-span-2"
-            icon={<FaGlobeAmericas />}
-            title="Global Reach"
-            desc="12,000+ scholarships & grants across 6 continents"
-            color={Palette.royalBlue}
-          />
-          <BentoTile
-            span=""
-            icon={<FaShieldAlt />}
-            title="Near Perfect Compliance"
-            desc="98.4% zero-rejection documentation success"
-            color={Palette.limeGreen}
-          />
-          <BentoTile
-            span=""
-            icon={<FaLightbulb />}
-            title="AI-Powered Matching"
-            desc="Predictive algorithm finds hidden opportunities"
-            color={Palette.coral}
-          />
-          <BentoTile
-            span=""
-            icon={<FaUserGraduate />}
-            title="Elite Mentorship"
-            desc="Ivy League & Oxbridge alumni advisors"
-            color={Palette.softYellow}
-          />
-        </div>
-      </section>
+      <BentoSection />
 
-      {/* ================== 3. PROCESS PATHWAY ================== */}
-      <section className="py-20 sm:py-32 bg-[#0F172A]/50 backdrop-blur-xl border-y border-white/10">
+      {/* PROCESS PATHWAY */}
+      <section className="py-20 sm:py-32 bg-[#0F172A]/50 border-y border-white/10">
         <div className="max-w-5xl mx-auto px-5 sm:px-6">
           <h2 className="text-4xl sm:text-5xl md:text-6xl font-black text-center mb-12 sm:mb-20 tracking-tighter text-white">
             OUR <span style={{ color: Palette.limeGreen }}>PRECISION</span>{" "}
@@ -228,7 +169,7 @@ export default function Scholarships() {
         </div>
       </section>
 
-      {/* ================== 4. CATEGORIES ================== */}
+      {/* CATEGORIES */}
       <section className="py-20 sm:py-32 bg-[#0F172A]/40">
         <div className="max-w-7xl mx-auto px-5 sm:px-6">
           <h2 className="text-4xl sm:text-5xl md:text-6xl font-black text-center mb-12 sm:mb-16 text-white">
@@ -249,7 +190,7 @@ export default function Scholarships() {
             ].map((title, i) => (
               <div
                 key={i}
-                className="p-6 sm:p-8 rounded-2xl bg-[#172033]/70 backdrop-blur-sm border border-white/10 hover:border-white/30 transition-all text-center"
+                className="p-6 sm:p-8 rounded-2xl bg-[#172033]/70 border border-white/10 hover:border-white/30 transition-all text-center"
               >
                 <h3 className="text-lg sm:text-xl font-bold text-white">
                   {title}
@@ -260,7 +201,7 @@ export default function Scholarships() {
         </div>
       </section>
 
-      {/* ================== 5. RESULTS STATS ================== */}
+      {/* RESULTS STATS */}
       <section className="py-20 sm:py-32">
         <div className="max-w-7xl mx-auto px-5 sm:px-6 text-center">
           <h2 className="text-4xl sm:text-5xl md:text-6xl font-black mb-12 sm:mb-16 text-white">
@@ -291,7 +232,7 @@ export default function Scholarships() {
         </div>
       </section>
 
-      {/* ================== FINAL CTA ================== */}
+      {/* FINAL CTA */}
       <section className="relative py-24 sm:py-40 md:py-48 text-center overflow-hidden">
         <motion.div
           animate={{ scale: [1, 1.3, 1], opacity: [0.15, 0.35, 0.15] }}
@@ -339,18 +280,71 @@ export default function Scholarships() {
 }
 
 /* ================= SUB-COMPONENTS ================= */
-function BentoTile({ span, icon, title, desc, color }) {
+function BentoSection() {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: true });
+  const isInView = useInView(ref, { once: true, amount: 0.2 });
+
+  const tiles = [
+    {
+      span: "sm:col-span-2 lg:col-span-2 lg:row-span-2",
+      icon: <FaGlobeAmericas />,
+      title: "Global Reach",
+      desc: "12,000+ scholarships & grants across 6 continents",
+      color: Palette.royalBlue,
+    },
+    {
+      span: "",
+      icon: <FaShieldAlt />,
+      title: "Near Perfect Compliance",
+      desc: "98.4% zero-rejection documentation success",
+      color: Palette.limeGreen,
+    },
+    {
+      span: "",
+      icon: <FaLightbulb />,
+      title: "AI-Powered Matching",
+      desc: "Predictive algorithm finds hidden opportunities",
+      color: Palette.coral,
+    },
+    {
+      span: "",
+      icon: <FaUserGraduate />,
+      title: "Elite Mentorship",
+      desc: "Ivy League & Oxbridge alumni advisors",
+      color: Palette.softYellow,
+    },
+  ];
 
   return (
-    <motion.div
+    <section
       ref={ref}
-      initial={{ opacity: 0, y: 40 }}
-      animate={isInView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.9 }}
-      className={`${span} group relative p-6 sm:p-8 md:p-10 rounded-3xl border border-white/10 bg-[#172033]/80 backdrop-blur-sm hover:bg-[#1E293B] transition-all duration-500 cursor-default overflow-hidden`}
+      className="max-w-7xl mx-auto px-5 sm:px-6 py-20 sm:py-32"
     >
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {tiles.map((tile, i) => (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, y: 40 }}
+            animate={isInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.8, delay: i * 0.1 }}
+            className={`${tile.span} group relative p-6 sm:p-8 md:p-10 rounded-3xl border border-white/10 bg-[#172033]/80 hover:bg-[#1E293B] transition-all duration-500 cursor-default overflow-hidden`}
+          >
+            <BentoTileContent
+              icon={tile.icon}
+              title={tile.title}
+              desc={tile.desc}
+              color={tile.color}
+            />
+          </motion.div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function BentoTileContent({ icon, title, desc, color }) {
+  return (
+    <>
       <div
         className="absolute top-0 left-0 w-1.5 h-full opacity-0 group-hover:opacity-100 transition-opacity duration-600"
         style={{ backgroundColor: color }}
@@ -371,7 +365,7 @@ function BentoTile({ span, icon, title, desc, color }) {
       >
         {icon}
       </div>
-    </motion.div>
+    </>
   );
 }
 
