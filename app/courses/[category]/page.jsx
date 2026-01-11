@@ -4,6 +4,7 @@ import { useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { Globe, Users, Award, ArrowRight, CheckCircle } from "lucide-react";
+import Link from "next/link";
 
 const categoryData = {
   engineering: {
@@ -69,6 +70,7 @@ const categoryData = {
       ],
     },
   },
+
   business: {
     title: "Business & Management",
     subtitle: "Lead tomorrow's global enterprises",
@@ -161,6 +163,250 @@ const categoryData = {
   },
 };
 
+export const universitiesByCategory = {
+  /* ================= ENGINEERING ================= */
+
+  engineering: {
+    bachelor: [
+      {
+        name: "Massachusetts Institute of Technology",
+        slug: "massachusetts-institute-of-technology",
+        country: "USA",
+        countrySlug: "usa",
+        ranking: "#1 Global",
+      },
+      {
+        name: "Stanford University",
+        slug: "stanford-university",
+        country: "USA",
+        countrySlug: "usa",
+        ranking: "Top 5",
+      },
+      {
+        name: "University of Cambridge",
+        slug: "university-of-cambridge",
+        country: "UK",
+        countrySlug: "uk",
+        ranking: "Top 5",
+      },
+      {
+        name: "University of Melbourne",
+        slug: "university-of-melbourne",
+        country: "Australia",
+        countrySlug: "australia",
+        ranking: "Top 50",
+      },
+    ],
+
+    master: [
+      {
+        name: "University of Toronto",
+        slug: "university-of-toronto",
+        country: "Canada",
+        countrySlug: "canada",
+        ranking: "Top 20",
+      },
+      {
+        name: "Imperial College London",
+        slug: "imperial-college-london",
+        country: "UK",
+        countrySlug: "uk",
+        ranking: "Top 10 Engineering",
+      },
+      {
+        name: "National University of Singapore",
+        slug: "national-university-of-singapore",
+        country: "Singapore",
+        countrySlug: "singapore",
+        ranking: "Top 10 Asia",
+      },
+      {
+        name: "University of New South Wales",
+        slug: "university-of-new-south-wales",
+        country: "Australia",
+        countrySlug: "australia",
+        ranking: "Top 40",
+      },
+    ],
+
+    phd: [
+      {
+        name: "University of California, Berkeley",
+        slug: "university-of-california-berkeley",
+        country: "USA",
+        countrySlug: "usa",
+        ranking: "Research Leader",
+      },
+      {
+        name: "Technical University of Munich",
+        slug: "technical-university-of-munich",
+        country: "Germany",
+        countrySlug: "germany",
+        ranking: "Top EU Research",
+      },
+      {
+        name: "ETH Zurich",
+        slug: "eth-zurich",
+        country: "Switzerland",
+        countrySlug: "switzerland",
+        ranking: "Top Research University",
+      },
+    ],
+  },
+
+  /* ================= BUSINESS ================= */
+
+  business: {
+    bachelor: [
+      {
+        name: "University of Pennsylvania (Wharton)",
+        slug: "university-of-pennsylvania-wharton",
+        country: "USA",
+        countrySlug: "usa",
+        ranking: "#1 Business School",
+      },
+      {
+        name: "London School of Economics",
+        slug: "london-school-of-economics",
+        country: "UK",
+        countrySlug: "uk",
+        ranking: "Top 5 Business",
+      },
+      {
+        name: "University of Sydney",
+        slug: "university-of-sydney",
+        country: "Australia",
+        countrySlug: "australia",
+        ranking: "Top 50",
+      },
+    ],
+
+    master: [
+      {
+        name: "Harvard Business School",
+        slug: "harvard-business-school",
+        country: "USA",
+        countrySlug: "usa",
+        ranking: "#1 MBA",
+      },
+      {
+        name: "INSEAD",
+        slug: "insead",
+        country: "France",
+        countrySlug: "france",
+        ranking: "Top Global MBA",
+      },
+      {
+        name: "London Business School",
+        slug: "london-business-school",
+        country: "UK",
+        countrySlug: "uk",
+        ranking: "Top 5 MBA",
+      },
+      {
+        name: "University of Toronto (Rotman)",
+        slug: "university-of-toronto-rotman",
+        country: "Canada",
+        countrySlug: "canada",
+        ranking: "Top 30 MBA",
+      },
+    ],
+
+    phd: [
+      {
+        name: "University of Chicago Booth",
+        slug: "university-of-chicago-booth",
+        country: "USA",
+        countrySlug: "usa",
+        ranking: "Research-Focused MBA",
+      },
+      {
+        name: "HEC Paris",
+        slug: "hec-paris",
+        country: "France",
+        countrySlug: "france",
+        ranking: "Top EU Business Research",
+      },
+    ],
+  },
+
+  /* ================= HEALTHCARE ================= */
+
+  healthcare: {
+    bachelor: [
+      {
+        name: "University of Melbourne",
+        slug: "university-of-melbourne",
+        country: "Australia",
+        countrySlug: "australia",
+        ranking: "Top Nursing School",
+      },
+      {
+        name: "King's College London",
+        slug: "kings-college-london",
+        country: "UK",
+        countrySlug: "uk",
+        ranking: "Top Healthcare",
+      },
+      {
+        name: "University of Toronto",
+        slug: "university-of-toronto",
+        country: "Canada",
+        countrySlug: "canada",
+        ranking: "Top Public Health",
+      },
+    ],
+
+    master: [
+      {
+        name: "Johns Hopkins University",
+        slug: "johns-hopkins-university",
+        country: "USA",
+        countrySlug: "usa",
+        ranking: "#1 Public Health",
+      },
+      {
+        name: "Imperial College London",
+        slug: "imperial-college-london",
+        country: "UK",
+        countrySlug: "uk",
+        ranking: "Top Medical School",
+      },
+      {
+        name: "University of Michigan",
+        slug: "university-of-michigan",
+        country: "USA",
+        countrySlug: "usa",
+        ranking: "Top Healthcare Management",
+      },
+      {
+        name: "University of Sydney",
+        slug: "university-of-sydney",
+        country: "Australia",
+        countrySlug: "australia",
+        ranking: "Top Global Health",
+      },
+    ],
+
+    phd: [
+      {
+        name: "Harvard University",
+        slug: "harvard-university",
+        country: "USA",
+        countrySlug: "usa",
+        ranking: "Medical Research Leader",
+      },
+      {
+        name: "Karolinska Institute",
+        slug: "karolinska-institute",
+        country: "Sweden",
+        countrySlug: "sweden",
+        ranking: "Nobel Research Hub",
+      },
+    ],
+  },
+};
+
 const degreeTabs = ["bachelor", "master", "phd"].filter(
   (tab) => tab in categoryData.engineering.tabs
 ); // Dynamic but safe
@@ -181,6 +427,7 @@ export default function CourseCategory() {
   }
 
   const programs = data.tabs[activeTab] || [];
+  const universities = universitiesByCategory?.[category]?.[activeTab] || [];
 
   return (
     <section className="min-h-screen bg-[#0b0f1a] text-white">
@@ -298,6 +545,64 @@ export default function CourseCategory() {
           ))}
         </motion.div>
       </div>
+
+      {/* UNIVERSITIES OFFERING THIS PROGRAM */}
+      {universities.length > 0 && (
+        <section className="max-w-7xl mx-auto px-6 mt-32">
+          <motion.h2
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-4xl font-bold mb-6"
+          >
+            Universities Offering This Program
+          </motion.h2>
+
+          <p className="text-gray-400 max-w-2xl mb-12">
+            Study at globally ranked universities known for academic excellence,
+            research impact, and international student success.
+          </p>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch">
+            {universities.map((uni, index) => (
+              <motion.div
+                key={uni.slug}
+                initial={{ opacity: 0, y: 40 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1 }}
+                className="h-full"
+              >
+                <Link
+                  href={`/universities/${uni.slug}`}
+                  className="group flex h-full min-h-[280px] flex-col rounded-3xl border border-white/10 bg-white/5 p-8 hover:border-white/30 hover:shadow-2xl hover:scale-[1.02] transition-all"
+                >
+                  {/* Title */}
+                  <h3 className="text-2xl font-bold mb-3 line-clamp-2">
+                    {uni.name}
+                  </h3>
+
+                  {/* Meta Info */}
+                  <div className="space-y-2 text-gray-300">
+                    <p className="flex items-center gap-2">
+                      <Globe className="w-4 h-4" /> {uni.country}
+                    </p>
+                    <p className="flex items-center gap-2">
+                      <Award className="w-4 h-4" /> {uni.ranking}
+                    </p>
+                  </div>
+
+                  {/* CTA pushed to bottom */}
+                  <span className="mt-auto pt-6 inline-flex items-center gap-3 text-indigo-400 font-semibold group-hover:gap-4 transition-all">
+                    Visit University <ArrowRight className="w-5 h-5" />
+                  </span>
+                </Link>
+              </motion.div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* CTA */}
       <motion.div

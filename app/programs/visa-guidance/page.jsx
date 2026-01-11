@@ -184,7 +184,6 @@ export default function VisaGuidancePage() {
         </div>
       </section>
 
-      {/* ── FINAL CTA ─────────────────────────────────────────── */}
       <section className="py-32 relative overflow-hidden">
         <div className="absolute inset-0">
           <Image
