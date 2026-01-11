@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { FaAngleDown, FaBars, FaTimes } from "react-icons/fa";
 
-// ✅ FIXED COURSE CATEGORY ROUTES (DO NOT CHANGE TEXT IN UI)
+// FIXED COURSE CATEGORY ROUTES (DO NOT CHANGE TEXT IN UI)
 const COURSE_CATEGORY_MAP = {
   "Engineering & Technology": "engineering",
   "Computer Science & IT": "engineering",
@@ -27,19 +27,15 @@ export default function NavBar() {
 
   useEffect(() => {
     let lastScrollY = window.scrollY;
-
     const handleScroll = () => {
       if (!navRef.current || mobileOpen) return;
-
       if (window.scrollY > lastScrollY && window.scrollY > 80) {
         navRef.current.style.transform = "translateY(-100%)";
       } else {
         navRef.current.style.transform = "translateY(0)";
       }
-
       lastScrollY = window.scrollY;
     };
-
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, [mobileOpen]);
@@ -50,11 +46,8 @@ export default function NavBar() {
 
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === "Escape" && mobileOpen) {
-        setMobileOpen(false);
-      }
+      if (e.key === "Escape" && mobileOpen) setMobileOpen(false);
     };
-
     if (mobileOpen) {
       document.addEventListener("keydown", handleKeyDown);
       return () => document.removeEventListener("keydown", handleKeyDown);
@@ -62,9 +55,7 @@ export default function NavBar() {
   }, [mobileOpen]);
 
   useEffect(() => {
-    if (!mobileOpen && burgerRef.current) {
-      burgerRef.current.focus();
-    }
+    if (!mobileOpen && burgerRef.current) burgerRef.current.focus();
   }, [mobileOpen]);
 
   const closeMobileMenu = useCallback(() => setMobileOpen(false), []);
@@ -82,15 +73,15 @@ export default function NavBar() {
         <header
           ref={navRef}
           className="
-      pointer-events-auto  
-      fixed top-0 left-0 w-full h-[85px]
-      bg-[#0f2a5f]
-      border-b border-white/10
-      shadow-[0_10px_30px_rgba(0,0,0,0.15)]
-      flex items-center justify-between
-      px-6 md:px-12
-      transition-all duration-300
-    "
+            pointer-events-auto
+            fixed top-0 left-0 w-full h-[85px]
+            bg-[#0f2a5f]
+            border-b border-white/10
+            shadow-[0_10px_30px_rgba(0,0,0,0.15)]
+            flex items-center justify-between
+            px-6 md:px-12
+            transition-all duration-300
+          "
         >
           <Link href="/" className="flex items-center">
             <motion.img
@@ -133,13 +124,16 @@ export default function NavBar() {
   );
 }
 
+// ────────────────────────────────────────────────────────────────────────
+// DESKTOP NAV (UNCHANGED)
+// ────────────────────────────────────────────────────────────────────────
+
 const MemoizedDesktopNav = memo(() => {
   const [active, setActive] = useState(null);
 
   return (
     <ul className="hidden md:flex items-center gap-8">
       <NavItem label="Home" link="/" />
-
       <DesktopDropdown
         type="countries"
         label="Countries"
@@ -155,7 +149,6 @@ const MemoizedDesktopNav = memo(() => {
           "All Countries",
         ]}
       />
-
       <DesktopDropdown
         type="courses"
         label="Courses"
@@ -169,7 +162,6 @@ const MemoizedDesktopNav = memo(() => {
           "All Courses",
         ]}
       />
-
       <DesktopDropdown
         type="programs"
         label="Programs"
@@ -177,14 +169,12 @@ const MemoizedDesktopNav = memo(() => {
         onToggle={() => setActive(active === "Programs" ? null : "Programs")}
         items={["Scholarships", "Universities", "Visa Guidance"]}
       />
-
       <NavItem label="Why Us" link="/why-us" />
       <NavItem label="Success Stories" link="/success-stories" />
       <NavItem label="Contact" link="/contact" />
     </ul>
   );
 });
-
 MemoizedDesktopNav.displayName = "MemoizedDesktopNav";
 
 const NavItem = ({ label, link }) => (
@@ -206,18 +196,13 @@ const DesktopDropdown = ({ type, label, active, onToggle, items }) => {
   const getHref = (item) => {
     const slug = item.toLowerCase().replace(/\s+/g, "-");
     const isAllItem = item.toLowerCase().includes("all");
-
     switch (type) {
       case "countries":
         return isAllItem ? "/all-countries" : `/all-countries/${slug}`;
-
       case "courses":
-        if (isAllItem) return "/courses";
-        return `/courses/${COURSE_CATEGORY_MAP[item]}`;
-
+        return isAllItem ? "/courses" : `/courses/${COURSE_CATEGORY_MAP[item]}`;
       case "programs":
         return `/programs/${slug}`;
-
       default:
         return `/${slug}`;
     }
@@ -236,7 +221,6 @@ const DesktopDropdown = ({ type, label, active, onToggle, items }) => {
           className={`transition-transform ${active ? "rotate-180" : ""}`}
         />
       </button>
-
       <ul
         className={`
           absolute top-[120%] left-0 min-w-[240px]
@@ -262,263 +246,225 @@ const DesktopDropdown = ({ type, label, active, onToggle, items }) => {
   );
 };
 
+// ────────────────────────────────────────────────────────────────────────
+// IMPROVED MODERN MOBILE MENU (with the 3 requested upgrades)
+// ────────────────────────────────────────────────────────────────────────
+
 const MobileMenu = ({ open, onClose }) => {
-  const [render, setRender] = useState(false);
-  const menuRef = useRef(null);
-  const firstLinkRef = useRef(null);
+  const [activeDropdown, setActiveDropdown] = useState(null);
 
-  useEffect(() => {
-    if (open) {
-      setRender(true);
-    } else {
-      const timeout = setTimeout(() => setRender(false), 400);
-      return () => clearTimeout(timeout);
-    }
-  }, [open]);
-
-  useEffect(() => {
-    if (!open || !menuRef.current) return;
-
-    const focusableElements = menuRef.current.querySelectorAll(
-      'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
-    );
-    const firstElement = firstLinkRef.current || focusableElements[0];
-    const lastElement = focusableElements[focusableElements.length - 1];
-
-    if (firstElement) firstElement.focus();
-
-    const handleKeyDown = (e) => {
-      if (e.key === "Tab") {
-        if (e.shiftKey && document.activeElement === firstElement) {
-          e.preventDefault();
-          lastElement.focus();
-        } else if (!e.shiftKey && document.activeElement === lastElement) {
-          e.preventDefault();
-          firstElement.focus();
-        }
-      }
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [open]);
-
-  if (!render) return null;
-
-  const panelVariants = {
-    hidden: { x: "100%", opacity: 0, scale: 0.95 },
-    visible: { x: 0, opacity: 1, scale: 1 },
-    exit: { x: "100%", opacity: 0, scale: 0.95 },
+  const toggleDropdown = (name) => {
+    setActiveDropdown(activeDropdown === name ? null : name);
   };
 
-  const backdropVariants = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1 },
-    exit: { opacity: 0 },
-  };
-  const containerVariants = {
-    visible: { transition: { staggerChildren: 0.08, delayChildren: 0.1 } },
-  };
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 },
-  };
+  if (!open) return null;
 
   return (
-    <AnimatePresence mode="wait">
+    <AnimatePresence>
       {open && (
-        <div className="fixed inset-0 z-[2000]" ref={menuRef}>
+        <>
           <motion.div
-            key="backdrop"
-            className="absolute inset-0 bg-black/40"
-            variants={backdropVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[1999]"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
             onClick={onClose}
           />
 
           <motion.div
-            key="panel"
-            className="absolute top-0 right-0 h-full w-[80%] bg-[#0f2a5f] p-6"
-            variants={panelVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+            className="fixed inset-y-0 right-0 w-[85%] max-w-[380px] bg-gradient-to-b from-[#0f2a5f] to-[#091d42] shadow-2xl z-[2000] overflow-y-auto"
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ type: "spring", damping: 22, stiffness: 160 }}
           >
-            <motion.button
-              className="text-white text-3xl absolute top-5 right-5 hover:opacity-80"
-              onClick={onClose}
-              initial={{ scale: 0, rotate: -180 }}
-              animate={{ scale: 1, rotate: 0 }}
-              exit={{ scale: 0, rotate: 180 }}
-            >
-              <FaTimes />
-            </motion.button>
-
-            <motion.div
-              className="mt-20 flex flex-col gap-6 text-white"
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
-            >
-              <motion.div variants={itemVariants}>
-                <MobileNavItem
-                  ref={firstLinkRef}
-                  label="Home"
-                  link="/"
-                  onClick={onClose}
+            {/* Sticky Header with logo */}
+            <div className="sticky top-0 z-10 bg-[#0f2a5f]/95 backdrop-blur-lg border-b border-white/10 px-6 py-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <img
+                  src="/logo.png"
+                  alt="StudyAbroad Logo"
+                  className="w-10 h-10 rounded-full ring-2 ring-white/20"
                 />
-              </motion.div>
-              <motion.div variants={itemVariants}>
-                <MobileDropdown
-                  type="countries"
-                  label="Countries"
-                  items={[
-                    "USA",
-                    "UK",
-                    "Canada",
-                    "Australia",
-                    "Germany",
-                    "China",
-                  ]}
-                  onClick={onClose}
-                />
-              </motion.div>
-              <motion.div variants={itemVariants}>
-                <MobileDropdown
-                  type="courses"
-                  label="Courses"
-                  items={[
-                    "Engineering & Technology",
-                    "Business & Management",
-                    "Medicine & Healthcare",
-                    "Computer Science & IT",
-                  ]}
-                  onClick={onClose}
-                />
-              </motion.div>
-              <motion.div variants={itemVariants}>
-                <MobileDropdown
-                  type="programs"
-                  label="Programs"
-                  items={["Scholarships", "Universities", "Visa Guidance"]}
-                  onClick={onClose}
-                />
-              </motion.div>
-              <motion.div variants={itemVariants}>
-                <MobileNavItem
-                  label="Why Us"
-                  link="/why-us"
-                  onClick={onClose}
-                />
-              </motion.div>
-              <motion.div variants={itemVariants}>
-                <MobileNavItem
-                  label="Success Stories"
-                  link="/success-stories"
-                  onClick={onClose}
-                />
-              </motion.div>
-              <motion.div variants={itemVariants}>
-                <MobileNavItem
-                  label="Contact"
-                  link="/contact"
-                  onClick={onClose}
-                />
-              </motion.div>
-            </motion.div>
-
-            <motion.div
-              className="mt-10 flex flex-col gap-4"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 20 }}
-              transition={{ delay: 0.2 }}
-            >
-              <ButtonGreen
-                text="Sign Up"
-                link="/signup"
-                full
+                <span className="text-white font-semibold text-lg">
+                  StudyAbroad
+                </span>
+              </div>
+              <button
                 onClick={onClose}
+                className="p-2 rounded-full hover:bg-white/10 transition-colors text-white/90"
+                aria-label="Close menu"
+              >
+                <FaTimes size={22} />
+              </button>
+            </div>
+
+            {/* Navigation */}
+            <nav className="px-6 pt-8 pb-10 flex flex-col gap-5 text-white">
+              <MobileNavItem label="Home" link="/" onClose={onClose} />
+
+              <MobileDropdown
+                label="Countries"
+                isOpen={activeDropdown === "countries"}
+                onToggle={() => toggleDropdown("countries")}
+                items={[
+                  "USA",
+                  "UK",
+                  "Canada",
+                  "Australia",
+                  "Germany",
+                  "China",
+                  "All Countries",
+                ]}
+                getHref={(item) =>
+                  item.includes("All")
+                    ? "/all-countries"
+                    : `/all-countries/${item.toLowerCase()}`
+                }
+                onClose={onClose}
               />
-              <ButtonOrange text="Login" link="/login" full onClick={onClose} />
-            </motion.div>
+
+              <MobileDropdown
+                label="Courses"
+                isOpen={activeDropdown === "courses"}
+                onToggle={() => toggleDropdown("courses")}
+                items={[
+                  "Engineering & Technology",
+                  "Business & Management",
+                  "Medicine & Healthcare",
+                  "Computer Science & IT",
+                  "All Courses",
+                ]}
+                getHref={(item) =>
+                  item.includes("All")
+                    ? "/courses"
+                    : `/courses/${COURSE_CATEGORY_MAP[item] || "other"}`
+                }
+                onClose={onClose}
+              />
+
+              <MobileDropdown
+                label="Programs"
+                isOpen={activeDropdown === "programs"}
+                onToggle={() => toggleDropdown("programs")}
+                items={["Scholarships", "Universities", "Visa Guidance"]}
+                getHref={(item) =>
+                  `/programs/${item.toLowerCase().replace(/\s+/g, "-")}`
+                }
+                onClose={onClose}
+              />
+
+              <MobileNavItem label="Why Us" link="/why-us" onClose={onClose} />
+              <MobileNavItem
+                label="Success Stories"
+                link="/success-stories"
+                onClose={onClose}
+              />
+              <MobileNavItem
+                label="Contact"
+                link="/contact"
+                onClose={onClose}
+              />
+            </nav>
+
+            {/* Prominent CTA Section */}
+            <div className="px-6 pb-12 pt-4 border-t border-white/10">
+              <p className="text-center text-white/80 text-sm mb-6">
+                Join 50,000+ students already succeeding
+              </p>
+              <div className="grid gap-4">
+                <Link
+                  href="/signup"
+                  onClick={onClose}
+                  className="bg-green-600 hover:bg-green-500 text-white font-semibold py-4 px-8 rounded-xl text-center shadow-xl shadow-green-900/30 transition-all text-lg transform hover:scale-[1.02] active:scale-95"
+                >
+                  Join 50,000+ Students – Free
+                </Link>
+
+                <Link
+                  href="/login"
+                  onClick={onClose}
+                  className="bg-orange-600/30 hover:bg-orange-600/40 border border-orange-500/40 text-orange-200 font-medium py-4 px-8 rounded-xl text-center transition-all"
+                >
+                  Already have account? Login
+                </Link>
+              </div>
+            </div>
           </motion.div>
-        </div>
+        </>
       )}
     </AnimatePresence>
   );
 };
 
-const MobileNavItem = React.forwardRef(({ label, link, onClick }, ref) => (
+// ─── Mobile Helper Components ───────────────────────────────────────────
+
+const MobileNavItem = ({ label, link, onClose }) => (
   <Link
-    ref={ref}
     href={link}
-    onClick={onClick}
-    className="text-lg border-b border-white/10 pb-2 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-[#0f2a5f]"
+    onClick={onClose}
+    className="block py-4 px-5 text-lg font-medium rounded-xl hover:bg-white/10 active:bg-white/15 transition-colors"
   >
     {label}
   </Link>
-));
+);
 
-MobileNavItem.displayName = "MobileNavItem";
+const MobileDropdown = ({
+  label,
+  items,
+  isOpen,
+  onToggle,
+  getHref,
+  onClose,
+}) => (
+  <div className="rounded-xl overflow-hidden bg-white/5 border border-white/10">
+    <button
+      onClick={onToggle}
+      className={`
+        w-full flex justify-between items-center py-4 px-5 text-lg font-medium
+        hover:bg-white/8 transition-colors
+        ${isOpen ? "bg-white/10" : ""}
+      `}
+    >
+      <span>{label}</span>
+      <FaAngleDown
+        className={`transition-transform duration-300 ${
+          isOpen ? "rotate-180" : ""
+        }`}
+      />
+    </button>
 
-const MobileDropdown = ({ type, label, items, onClick }) => {
-  const [open, setOpen] = useState(false);
-
-  const getHref = (item) => {
-    const slug = item.toLowerCase().replace(/\s+/g, "-");
-    const isAllItem = item.toLowerCase().includes("all");
-
-    switch (type) {
-      case "countries":
-        return isAllItem ? "/all-countries" : `/all-countries/${slug}`;
-
-      case "courses":
-        if (isAllItem) return "/courses";
-        return `/courses/${COURSE_CATEGORY_MAP[item]}`;
-
-      case "programs":
-        return `/programs/${slug}`;
-
-      default:
-        return `/${slug}`;
-    }
-  };
-
-  return (
-    <div>
-      <button
-        onClick={() => setOpen(!open)}
-        className="flex justify-between w-full text-lg border-b border-white/10 pb-2"
-        aria-expanded={open}
-      >
-        {label}
-        <FaAngleDown className={`transition ${open ? "rotate-180" : ""}`} />
-      </button>
-      {open && (
-        <div className="mt-3 ml-2 flex flex-col gap-2">
-          {items.map((item, i) => (
-            <Link
-              key={i}
-              href={getHref(item)}
-              onClick={() => {
-                setOpen(false);
-                onClick();
-              }}
-              className="bg-[#1b3a7a] px-4 py-2 rounded-lg"
-            >
-              {item}
-            </Link>
-          ))}
-        </div>
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: "auto", opacity: 1 }}
+          exit={{ height: 0, opacity: 0 }}
+          transition={{ duration: 0.28 }}
+        >
+          <div className="py-3 px-3 bg-black/20 flex flex-col gap-1">
+            {items.map((item) => (
+              <Link
+                key={item}
+                href={getHref(item)}
+                onClick={() => {
+                  onToggle();
+                  onClose();
+                }}
+                className="block px-5 py-3 rounded-lg hover:bg-white/10 active:bg-white/15 transition-colors"
+              >
+                {item}
+              </Link>
+            ))}
+          </div>
+        </motion.div>
       )}
-    </div>
-  );
-};
+    </AnimatePresence>
+  </div>
+);
 
+// Reuse your existing desktop buttons (optional - you can style them too if you want)
 const ButtonGreen = ({ text, link, full, onClick }) => (
   <Link
     href={link}
