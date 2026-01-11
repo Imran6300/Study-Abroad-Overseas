@@ -6,11 +6,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { Search, ArrowRight, X } from "lucide-react";
 
-// Lazy load only needed features
 const loadFeatures = () =>
   import("framer-motion").then((res) => res.domAnimation);
 
-/* ================= ANIMATIONS ================= */
 const container = {
   hidden: { opacity: 0 },
   visible: {
@@ -28,7 +26,6 @@ const fadeUp = {
   },
 };
 
-/* ================= COUNTRY DATA ================= */
 const COUNTRIES = [
   {
     name: "Canada",
@@ -116,7 +113,6 @@ const COUNTRIES = [
   },
 ];
 
-/* ================= SEARCH NORMALIZATION ================= */
 const normalize = (str = "") =>
   str
     .toLowerCase()
@@ -125,8 +121,8 @@ const normalize = (str = "") =>
     .trim();
 
 export default function Countries() {
-  const [searchTerm, setSearchTerm] = useState(""); // what user is typing
-  const [appliedSearch, setAppliedSearch] = useState(""); // only updated on button click
+  const [searchTerm, setSearchTerm] = useState("");
+  const [appliedSearch, setAppliedSearch] = useState("");
   const [selectedRegion, setSelectedRegion] = useState("All Regions");
 
   const handleSearch = () => {
@@ -138,7 +134,6 @@ export default function Countries() {
     setAppliedSearch("");
   };
 
-  /* ================= FILTER LOGIC ================= */
   const filteredCountries = useMemo(() => {
     const query = normalize(appliedSearch);
     const keywords = query.split(" ").filter(Boolean);
