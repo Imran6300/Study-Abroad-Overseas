@@ -15,50 +15,54 @@ export default function Footer() {
   return (
     <footer
       className="
-        bg-gradient-to-b from-[#F4F7FF] to-[#DCE6FF]
-        text-[#1A2433] 
-        pt-20 pb-10 px-6 
+        bg-gradient-to-b from-[#f8faff] to-[#e6efff]
+        text-gray-800 
+        pt-16 pb-10 px-5 sm:px-8
         relative overflow-hidden
       "
     >
-      {/* Soft Glows */}
-      <div className="absolute top-0 right-0 w-80 h-80 bg-[#4169E1]/10 blur-3xl"></div>
-      <div className="absolute bottom-0 left-0 w-80 h-80 bg-[#32CD32]/10 blur-3xl"></div>
+      {/* Subtle background glows */}
+      <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/5 blur-3xl rounded-full"></div>
+      <div className="absolute bottom-0 left-0 w-96 h-96 bg-green-500/5 blur-3xl rounded-full"></div>
 
-      {/* Footer Grid */}
-      <div className="max-w-[1250px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-12 relative z-10">
-        {/* Brand */}
-        <div>
-          <h2 className="text-3xl font-extrabold mb-4">
-            <span className="text-[#4169E1]">Khizar</span>{" "}
-            <span className="text-[#32CD32]">Overseas</span>
+      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-12 relative z-10">
+        {/* Brand + Description */}
+        <div className="space-y-5">
+          <h2 className="text-3xl md:text-3.5xl font-extrabold tracking-tight">
+            <span className="text-[#4169E1]">Khizar</span>
+            <span className="text-[#2ca850]">Overseas</span>
           </h2>
 
-          <p className="text-gray-600 leading-relaxed">
-            Empowering students to study in top global universities with expert
-            guidance, scholarships, and end-to-end support.
+          <p className="text-gray-600 leading-relaxed max-w-sm">
+            Expert guidance for studying at top global universities — profile
+            building, scholarships, visa & end-to-end support.
           </p>
 
           {/* Social Icons */}
-          <div className="flex items-center gap-4 mt-6">
+          <div className="flex items-center gap-4 pt-2">
             {[Facebook, Instagram, Linkedin, Twitter].map((Icon, i) => (
-              <div
+              <a
                 key={i}
+                href="#"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="
-                  p-3 bg-white/60 border border-white/80 
-                  hover:shadow-md transition rounded-xl cursor-pointer
+                  p-2.5 bg-white/70 border border-white/90 
+                  hover:bg-white hover:shadow-md hover:scale-105 
+                  transition-all duration-300 rounded-lg
                 "
+                aria-label={`Visit our ${Icon.name}`}
               >
-                <Icon size={20} className="text-[#4169E1]" />
-              </div>
+                <Icon size={20} className="text-[#4169E1]" strokeWidth={2.2} />
+              </a>
             ))}
           </div>
         </div>
 
         {/* Quick Links */}
         <div>
-          <h3 className="text-xl font-bold mb-4 text-[#4169E1]">Quick Links</h3>
-          <ul className="space-y-3 text-[#1A2433]">
+          <h3 className="text-lg font-bold text-[#4169E1] mb-5">Quick Links</h3>
+          <ul className="space-y-3 text-gray-700">
             {[
               "Countries",
               "Top Programs",
@@ -66,12 +70,11 @@ export default function Footer() {
               "Success Stories",
               "Scholarships",
               "Study Abroad Process",
-            ].map((item, i) => (
-              <li
-                key={i}
-                className="hover:text-[#32CD32] transition cursor-pointer"
-              >
-                {item}
+            ].map((item) => (
+              <li key={item}>
+                <a href="#" className="hover:text-[#2ca850] transition-colors">
+                  {item}
+                </a>
               </li>
             ))}
           </ul>
@@ -79,77 +82,100 @@ export default function Footer() {
 
         {/* Services */}
         <div>
-          <h3 className="text-xl font-bold mb-4 text-[#4169E1]">
+          <h3 className="text-lg font-bold text-[#4169E1] mb-5">
             Our Services
           </h3>
-          <ul className="space-y-3 text-[#1A2433]">
+          <ul className="space-y-3 text-gray-700">
             {[
               "Profile Evaluation",
               "University Shortlisting",
-              "SOP/LOR Assistance",
+              "SOP & LOR Assistance",
               "Visa Filing",
               "Financial Planning",
               "Pre-Departure Support",
-            ].map((item, i) => (
-              <li
-                key={i}
-                className="hover:text-[#32CD32] transition cursor-pointer"
-              >
-                {item}
+            ].map((item) => (
+              <li key={item}>
+                <a href="#" className="hover:text-[#2ca850] transition-colors">
+                  {item}
+                </a>
               </li>
             ))}
           </ul>
         </div>
 
-        {/* Contact */}
-        <div>
-          <h3 className="text-xl font-bold mb-4 text-[#4169E1]">Contact Us</h3>
+        {/* Contact + Subscribe */}
+        <div className="space-y-6">
+          <div>
+            <h3 className="text-lg font-bold text-[#4169E1] mb-5">
+              Contact Us
+            </h3>
 
-          <ul className="space-y-4 text-[#1A2433]">
-            <li className="flex items-center gap-3">
-              <Phone className="text-[#32CD32]" size={20} />
-              +91 7329922309 / 9032176741
-            </li>
+            <ul className="space-y-4 text-gray-700">
+              <li className="flex items-center gap-3">
+                <Phone className="text-[#2ca850]" size={20} />
+                <span>
+                  • +91 73299 22309 <br />• +91 90321 76741
+                </span>
+              </li>
 
-            <li className="flex items-center gap-3">
-              <Mail className="text-[#4169E1]" size={20} />
-              info@studyabroad.com
-            </li>
+              <li className="flex items-center gap-3">
+                <Mail className="text-[#4169E1]" size={20} />
+                <a
+                  href="mailto:info@khizaroverseas.com"
+                  className="hover:text-[#2ca850] transition-colors"
+                >
+                  info@khizaroverseas.com
+                </a>
+              </li>
 
-            <li className="flex items-start gap-3">
-              <MapPin className="text-[#4169E1]" size={20} />
-              <span>
-                Hyderabad, India <br /> Global Offices: UK • Canada • USA
-              </span>
-            </li>
-          </ul>
+              <li className="flex items-start gap-3">
+                <MapPin className="text-[#4169E1] mt-1" size={20} />
+                <div>
+                  <div>Hyderabad, Telangana, India</div>
+                  <div className="text-sm text-gray-500 mt-1">
+                    Global Offices: UK • Canada • USA
+                  </div>
+                </div>
+              </li>
+            </ul>
+          </div>
 
-          {/* Subscribe */}
-          <div className="mt-6">
-            <h4 className="font-semibold mb-2 text-[#1A2433]">
-              Subscribe for Updates
-            </h4>
-
-            <div className="flex items-center bg-white rounded-xl overflow-hidden border border-[#4169E1]/20 shadow-sm">
+          {/* Newsletter */}
+          <div>
+            <h4 className="font-semibold text-gray-800 mb-3">Stay Updated</h4>
+            <form className="flex">
               <input
                 type="email"
-                placeholder="Enter your email"
-                className="w-full bg-transparent text-[#1A2433] px-4 py-3 outline-none placeholder-gray-500"
+                placeholder="Your email address"
+                className="
+                  flex-1 bg-white border border-gray-300 
+                  px-4 py-3 rounded-l-xl text-gray-800 
+                  focus:outline-none focus:border-[#4169E1]/70
+                  placeholder:text-gray-400
+                "
+                required
               />
-              <button className="bg-gradient-to-r from-[#4169E1] to-[#32CD32] px-4 py-3 flex items-center justify-center hover:opacity-90 transition">
-                <ArrowRight size={20} className="text-white" />
+              <button
+                type="submit"
+                className="
+                  bg-gradient-to-r from-[#4169E1] to-[#2ca850]
+                  px-5 py-3 rounded-r-xl text-white
+                  hover:brightness-105 active:scale-98
+                  transition-all flex items-center
+                "
+              >
+                <ArrowRight size={20} />
               </button>
-            </div>
+            </form>
           </div>
         </div>
       </div>
 
-      {/* Divider */}
-      <div className="w-full h-[1px] bg-[#4169E1]/20 my-10"></div>
-
-      {/* Copyright */}
-      <div className="text-center text-[#1A2433] text-sm relative z-10 font-medium">
-        © {new Date().getFullYear()} Khizar Overseas — All Rights Reserved.
+      {/* Divider + Copyright */}
+      <div className="mt-12 pt-10 border-t border-[#4169E1]/15">
+        <div className="text-center text-sm text-gray-600">
+          © {new Date().getFullYear()} Khizar Overseas — All Rights Reserved
+        </div>
       </div>
     </footer>
   );
