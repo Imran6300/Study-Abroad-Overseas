@@ -233,69 +233,73 @@ export default function Services() {
         <motion.section
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, amount: 0.2 }}
+          viewport={{ once: true, margin: "-100px" }}
           variants={sectionVariants}
           className="py-20 md:py-28 bg-gray-50"
         >
           <div className="container mx-auto px-6 lg:px-8">
+            {/* Header */}
             <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              viewport={{ once: true }}
-              className="text-center mb-16"
+              variants={sectionVariants}
+              className="text-center mb-12 md:mb-16"
             >
-              <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-5">
+              <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-4 md:mb-5">
                 Our Core Services
               </h2>
-              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              <p className="text-base md:text-lg text-gray-600 max-w-2xl mx-auto">
                 Comprehensive guidance designed for Indian students — clear,
                 reliable, and focused on results.
               </p>
             </motion.div>
 
+            {/* Grid */}
             <motion.div
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10"
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, amount: 0.1 }}
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 lg:gap-10"
               variants={{
-                visible: { transition: { staggerChildren: 0.15 } },
+                visible: {
+                  transition: { staggerChildren: 0.15 },
+                },
               }}
             >
               {services.map((service, index) => (
                 <motion.div
                   key={index}
                   variants={cardVariants}
-                  initial="hidden"
-                  whileInView="visible"
                   whileHover="hover"
-                  viewport={{ once: true }}
-                  className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 border border-gray-200 flex flex-col h-full"
+                  className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-200 flex flex-col h-full"
                 >
-                  <div className="relative h-48 overflow-hidden">
+                  {/* Image */}
+                  <div className="relative h-44 sm:h-48 overflow-hidden">
                     <Image
                       src={service.image}
-                      alt={service.alt}
+                      alt={service.title}
                       fill
                       className="object-cover"
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                      priority={index < 3} // Prioritize first 3 for LCP
+                      sizes="(max-width: 640px) 100vw,
+                     (max-width: 1024px) 50vw,
+                     33vw"
+                      priority={index < 2}
                     />
                   </div>
-                  <div className="p-7 flex flex-col flex-grow">
-                    <div className="flex items-center gap-3 mb-4">
-                      <span className="text-3xl">{service.icon}</span>
-                      <h3 className="text-xl font-bold text-gray-900">
+
+                  {/* Content */}
+                  <div className="p-6 md:p-7 flex flex-col flex-grow">
+                    <div className="flex items-center gap-3 mb-3 md:mb-4">
+                      <span className="text-2xl md:text-3xl">
+                        {service.icon}
+                      </span>
+                      <h3 className="text-lg md:text-xl font-bold text-gray-900">
                         {service.title}
                       </h3>
                     </div>
-                    <p className="text-gray-700 mb-6 flex-grow leading-relaxed">
+
+                    <p className="text-gray-700 mb-5 flex-grow leading-relaxed text-sm md:text-base">
                       {service.description}
                     </p>
+
                     <Link
                       href="/contact"
-                      className="text-blue-600 font-medium hover:text-blue-800 transition flex items-center gap-2 text-sm mt-auto"
+                      className="text-blue-600 font-medium hover:text-blue-800 transition text-sm mt-auto"
                     >
                       Learn more →
                     </Link>
