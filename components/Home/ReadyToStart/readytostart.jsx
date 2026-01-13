@@ -11,6 +11,12 @@ export default function FinalCTASection() {
     country: "",
   });
 
+  const HandleOnSubmit = (e) => {
+    e.preventDefault();
+    console.log(form);
+    alert("Submitted Successfully");
+  };
+
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -48,112 +54,122 @@ export default function FinalCTASection() {
       </div>
 
       {/* Consultation Form */}
-      <div
-        className="
-        max-w-xl mx-auto bg-white/10 backdrop-blur-xl 
-        border border-white/20 rounded-3xl p-10 shadow-xl
-        animate-slide-up
-      "
+
+      <form
+        autoComplete="off" // keep this on form
+        action="/homeform"
+        method="post"
+        onSubmit={HandleOnSubmit}
       >
-        <div className="grid grid-cols-1 gap-6">
-          {/* NAME */}
-          <div className="relative">
-            <User className="absolute left-4 top-3 text-gray-300 h-5 w-5" />
-            <input
-              name="name"
-              type="text"
-              placeholder="Full Name"
-              value={form.name}
-              onChange={handleChange}
-              className="
-                w-full bg-white/5 text-white placeholder-gray-400 
-                pl-12 pr-4 py-3 rounded-xl outline-none border border-white/20
-                focus:border-[#4169E1] transition
-              "
-            />
-          </div>
+        {/* These two hidden fields trick Chrome into thinking it already "filled" username/password-like data */}
+        <input
+          type="text"
+          autoComplete="username"
+          style={{ display: "none" }}
+          tabIndex={-1}
+          aria-hidden="true"
+        />
+        <input
+          type="password"
+          autoComplete="new-password"
+          style={{ display: "none" }}
+          tabIndex={-1}
+          aria-hidden="true"
+        />
 
-          {/* EMAIL */}
-          <div className="relative">
-            <Mail className="absolute left-4 top-3 text-gray-300 h-5 w-5" />
-            <input
-              name="email"
-              type="email"
-              placeholder="Email Address"
-              value={form.email}
-              onChange={handleChange}
-              className="
-                w-full bg-white/5 text-white placeholder-gray-400
-                pl-12 pr-4 py-3 rounded-xl outline-none border border-white/20
-                focus:border-[#4169E1] transition
-              "
-            />
-          </div>
+        <div className="max-w-xl mx-auto bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-10 shadow-xl animate-slide-up">
+          <div className="grid grid-cols-1 gap-6">
+            {/* NAME */}
+            <div className="relative">
+              <User className="absolute left-4 top-3 text-gray-300 h-5 w-5" />
+              <input
+                name="name"
+                type="text"
+                required
+                placeholder="Full Name"
+                value={form.name}
+                onChange={handleChange}
+                autoComplete="nope" // ← key change
+                className="w-full bg-white/5 text-white placeholder-gray-400 pl-12 pr-4 py-3 rounded-xl outline-none border border-white/20 focus:border-[#4169E1] transition"
+              />
+            </div>
 
-          {/* PHONE */}
-          <div className="relative">
-            <Phone className="absolute left-4 top-3 text-gray-300 h-5 w-5" />
-            <input
-              name="phone"
-              type="tel"
-              placeholder="Phone Number"
-              value={form.phone}
-              onChange={handleChange}
-              className="
-                w-full bg-white/5 text-white placeholder-gray-400
-                pl-12 pr-4 py-3 rounded-xl outline-none border border-white/20
-                focus:border-[#32CD32] transition
-              "
-            />
-          </div>
+            {/* EMAIL */}
+            <div className="relative">
+              <Mail className="absolute left-4 top-3 text-gray-300 h-5 w-5" />
+              <input
+                name="email"
+                type="email"
+                required
+                placeholder="Email Address"
+                value={form.email}
+                onChange={handleChange}
+                autoComplete="nope" // ← key change
+                className="w-full bg-white/5 text-white placeholder-gray-400 pl-12 pr-4 py-3 rounded-xl outline-none border border-white/20 focus:border-[#4169E1] transition"
+              />
+            </div>
 
-          {/* COUNTRY */}
-          <div className="relative">
-            <Globe2 className="absolute left-4 top-3 text-gray-300 h-5 w-5" />
-            <input
-              name="country"
-              type="text"
-              placeholder="Preferred Country (USA, UK, Canada...)"
-              value={form.country}
-              onChange={handleChange}
-              className="
-                w-full bg-white/5 text-white placeholder-gray-400
-                pl-12 pr-4 py-3 rounded-xl outline-none border border-white/20
-                focus:border-[#32CD32] transition
-              "
-            />
-          </div>
+            {/* PHONE */}
+            <div className="relative">
+              <Phone className="absolute left-4 top-3 text-gray-300 h-5 w-5" />
+              <input
+                name="phone"
+                type="tel"
+                required
+                placeholder="Phone Number"
+                pattern="[0-9]{10}"
+                value={form.phone}
+                onChange={handleChange}
+                autoComplete="nope" // ← key change
+                className="w-full bg-white/5 text-white placeholder-gray-400 pl-12 pr-4 py-3 rounded-xl outline-none border border-white/20 focus:border-[#32CD32] transition"
+              />
+            </div>
 
-          {/* CTA BUTTON */}
-          <button
-            onClick={() => alert("This Feature Will Come Soon!")}
-            className="
+            {/* COUNTRY – can also get suggestions sometimes */}
+            <div className="relative">
+              <Globe2 className="absolute left-4 top-3 text-gray-300 h-5 w-5" />
+              <input
+                name="country"
+                type="text"
+                placeholder="Preferred Country (USA, UK, Canada...)"
+                onChange={handleChange}
+                value={form.country}
+                autoComplete="nope" // ← optional but good
+                className="w-full bg-white/5 text-white placeholder-gray-400 pl-12 pr-4 py-3 rounded-xl outline-none border border-white/20 focus:border-[#32CD32] transition"
+              />
+            </div>
+            {/* CTA BUTTON */}
+            <button
+              type="submit"
+              className="
               w-full py-4 text-lg font-semibold text-white rounded-xl
               bg-gradient-to-r from-[#4169E1] to-[#32CD32]
               shadow-[0_10px_40px_rgba(65,105,225,0.35)]
               hover:scale-[1.03] transition-all hover:shadow-[0_15px_50px_rgba(65,105,225,0.5)]
               flex items-center justify-center gap-2
             "
-          >
-            <Send size={20} />
-            Book Free Counseling Call
-          </button>
+            >
+              <Send size={20} />
+              Book Free Counseling Call
+            </button>
 
-          {/* WhatsApp Button */}
-          <a
-            href="https://wa.me/91XXXXXXXXXX"
-            target="_blank"
-            className="
+            {/* WhatsApp Button */}
+            <a
+              href="https://wa.me/91XXXXXXXXXX"
+              onClick={() => alert("This Feature Is Comming Soon")}
+              target="_blank"
+              className="
               w-full py-4 text-lg font-semibold text-white rounded-xl
               bg-[#25D366] shadow-[0_10px_40px_rgba(0,0,0,0.25)]
               hover:scale-[1.03] transition-all flex items-center justify-center gap-2
             "
-          >
-            <MessageCircle size={22} />
-            Chat on WhatsApp
-          </a>
+            >
+              <MessageCircle size={22} />
+              Chat on WhatsApp
+            </a>
+          </div>
         </div>
-      </div>
+      </form>
 
       {/* Footer Message */}
       <p className="text-center mt-10 text-gray-400 text-sm animate-fade-in">

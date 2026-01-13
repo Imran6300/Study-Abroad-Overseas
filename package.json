@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@reduxjs/toolkit": "^2.11.2",
     "framer-motion": "^12.23.26",
     "gsap": "^3.13.0",
     "lodash": "^4.17.21",
@@ -17,7 +18,8 @@
     "nodemodule": "^0.3.0",
     "react": "19.2.0",
     "react-dom": "19.2.0",
-    "react-icons": "^5.5.0"
+    "react-icons": "^5.5.0",
+    "react-redux": "^9.2.0"
   },
   "devDependencies": {
     "@types/node": "^20",

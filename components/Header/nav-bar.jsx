@@ -3,8 +3,14 @@
 import React, { useEffect, useRef, useState, useCallback, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
-import Link from "next/link";
 import { FaAngleDown, FaBars, FaTimes } from "react-icons/fa";
+import Link from "next/link";
+
+//redux
+
+import { useSelector, useDispatch } from "react-redux";
+import { logout } from "@/store/authSlice";
+import { useRouter } from "next/navigation";
 
 // FIXED COURSE CATEGORY ROUTES (DO NOT CHANGE TEXT IN UI)
 const COURSE_CATEGORY_MAP = {
@@ -15,6 +21,20 @@ const COURSE_CATEGORY_MAP = {
 };
 
 export default function NavBar() {
+  const dispatch = useDispatch();
+  const router = useRouter();
+  const { isLoggedIn, user, authChecked } = useSelector((state) => state.auth);
+
+  const handleLogout = async () => {
+    await fetch("http://localhost:3020/auth/logout", {
+      method: "POST",
+      credentials: "include",
+    });
+
+    dispatch(logout());
+    router.push("/login");
+  };
+
   const navRef = useRef(null);
   const burgerRef = useRef(null);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -59,6 +79,7 @@ export default function NavBar() {
   }, [mobileOpen]);
 
   const closeMobileMenu = useCallback(() => setMobileOpen(false), []);
+  if (!authChecked) return null;
 
   return (
     <>
@@ -102,8 +123,18 @@ export default function NavBar() {
           <MemoizedDesktopNav />
 
           <div className="hidden md:flex items-center gap-4">
-            <ButtonGreen text="Sign Up" link="/signup" />
-            <ButtonOrange text="Login" link="/login" />
+            {!isLoggedIn ? (
+              <>
+                <ButtonGreen text="Sign Up" link="/signup" />
+                <ButtonOrange text="Login" link="/login" />
+              </>
+            ) : (
+              <LogoutButton
+                text="Logout"
+                link="/logout"
+                onClick={handleLogout}
+              />
+            )}
           </div>
 
           <button
@@ -487,4 +518,18 @@ const ButtonOrange = ({ text, link, full, onClick }) => (
   >
     {text}
   </Link>
+);
+
+const LogoutButton = ({ text, full, onClick }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className={`bg-red-500 hover:bg-red-600 
+      px-5 py-2 rounded-xl text-white font-semibold text-center 
+      ${full && "w-full"} 
+      focus:outline-none focus:ring-2 focus:ring-red-500 
+      focus:ring-offset-2 focus:ring-offset-[#0f2a5f]`}
+  >
+    {text}
+  </button>
 );

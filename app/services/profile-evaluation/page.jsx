@@ -167,6 +167,7 @@ export default function ProfileEvaluation() {
                   onChange={handleChange}
                   className="input"
                   required
+                  autoComplete="new-password"
                 />
                 <input
                   name="email"
@@ -175,6 +176,7 @@ export default function ProfileEvaluation() {
                   value={data.email}
                   onChange={handleChange}
                   className="input"
+                  autoComplete="new-password"
                   required
                 />
                 <input
@@ -182,6 +184,7 @@ export default function ProfileEvaluation() {
                   placeholder="Phone / WhatsApp Number *"
                   value={data.phone}
                   onChange={handleChange}
+                  autoComplete="new-password"
                   className="input"
                   required
                 />

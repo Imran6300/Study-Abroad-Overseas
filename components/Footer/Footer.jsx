@@ -38,27 +38,19 @@ export default function Footer() {
           {/* Socials */}
           <div className="flex gap-4 pt-2">
             <a
-              href="https://facebook.com"
+              href="https://www.facebook.com/profile.php?id=61553895275238&rdid=Peg2Nkx4KdECSUkD&share_url=https%3A%2F%2Fwww.facebook.com%2Fshare%2F1DNf4akFXe%2F#"
               target="_blank"
               aria-label="Facebook"
             >
               <Facebook className="text-[#4169E1]" />
             </a>
-            <a
-              href="https://instagram.com"
-              target="_blank"
-              aria-label="Instagram"
-            >
+            <a href="" target="_blank" aria-label="Instagram">
               <Instagram className="text-[#4169E1]" />
             </a>
-            <a
-              href="https://linkedin.com"
-              target="_blank"
-              aria-label="LinkedIn"
-            >
+            <a href="" target="_blank" aria-label="LinkedIn">
               <Linkedin className="text-[#4169E1]" />
             </a>
-            <a href="https://twitter.com" target="_blank" aria-label="Twitter">
+            <a href="" target="_blank" aria-label="Twitter">
               <Twitter className="text-[#4169E1]" />
             </a>
           </div>
@@ -153,6 +145,12 @@ export default function Footer() {
 
           <div className="space-y-4">
             <a
+              href="tel:+919032176741"
+              className="flex gap-3 hover:text-[#2ca850]"
+            >
+              <Phone /> +91 7329822309
+            </a>
+            <a
               href="tel:+917329922309"
               className="flex gap-3 hover:text-[#2ca850]"
             >
@@ -167,7 +165,7 @@ export default function Footer() {
             </a>
 
             <a
-              href="mailto:info@khizaroverseas.com"
+              href="mailto:Consultant@gmail.com"
               className="flex gap-3 hover:text-[#2ca850]"
             >
               <Mail /> info@khizaroverseas.com
