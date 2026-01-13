@@ -408,21 +408,33 @@ const MobileMenu = ({ open, onClose }) => {
                 Join 50,000+ students already succeeding
               </p>
               <div className="grid gap-4">
-                <Link
-                  href="/signup"
-                  onClick={onClose}
-                  className="bg-green-600 hover:bg-green-500 text-white font-semibold py-4 px-8 rounded-xl text-center shadow-xl shadow-green-900/30 transition-all text-lg transform hover:scale-[1.02] active:scale-95"
-                >
-                  Join 50,000+ Students – Free
-                </Link>
+                {!isLoggedIn ? (
+                  <>
+                    <Link
+                      href="/signup"
+                      onClick={onClose}
+                      className="bg-green-600 hover:bg-green-500 text-white font-semibold py-4 px-8 rounded-xl text-center shadow-xl shadow-green-900/30 transition-all text-lg transform hover:scale-[1.02] active:scale-95"
+                    >
+                      Join 50,000+ Students – Free
+                    </Link>
 
-                <Link
-                  href="/login"
-                  onClick={onClose}
-                  className="bg-orange-600/30 hover:bg-orange-600/40 border border-orange-500/40 text-orange-200 font-medium py-4 px-8 rounded-xl text-center transition-all"
-                >
-                  Already have account? Login
-                </Link>
+                    <Link
+                      href="/login"
+                      onClick={onClose}
+                      className="bg-orange-600/30 hover:bg-orange-600/40 border border-orange-500/40 text-orange-200 font-medium py-4 px-8 rounded-xl text-center transition-all"
+                    >
+                      Already have account? Login
+                    </Link>
+                  </>
+                ) : (
+                  <Link
+                    href="/logout"
+                    onClick={onClose}
+                    className="bg-orange-600/30 hover:bg-orange-600/40 border border-orange-500/40 text-orange-200 font-medium py-4 px-8 rounded-xl text-center transition-all"
+                  >
+                    Logout
+                  </Link>
+                )}
               </div>
             </div>
           </motion.div>
