@@ -22,14 +22,17 @@ export default function LoginPage() {
     dispatch(authStart());
 
     try {
-      const res = await fetch("http://localhost:3020/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include", // 🔥 REQUIRED for sessions
-        body: JSON.stringify({ email, password }),
-      });
+      const res = await fetch(
+        "https://overseas-backend-production.up.railway.app/auth/login",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include", // 🔥 REQUIRED for sessions
+          body: JSON.stringify({ email, password }),
+        }
+      );
 
       const data = await res.json();
 

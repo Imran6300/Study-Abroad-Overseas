@@ -37,12 +37,15 @@ export default function SignupPage() {
     dispatch(authStart());
 
     try {
-      const res = await fetch("http://localhost:3020/auth/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(formData),
-      });
+      const res = await fetch(
+        "https://overseas-backend-production.up.railway.app/auth/signup",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify(formData),
+        }
+      );
 
       const data = await res.json();
 

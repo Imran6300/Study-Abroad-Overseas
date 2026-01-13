@@ -26,10 +26,13 @@ export default function NavBar() {
   const { isLoggedIn, user, authChecked } = useSelector((state) => state.auth);
 
   const handleLogout = async () => {
-    await fetch("http://localhost:3020/auth/logout", {
-      method: "POST",
-      credentials: "include",
-    });
+    await fetch(
+      "https://overseas-backend-production.up.railway.app/auth/logout",
+      {
+        method: "POST",
+        credentials: "include",
+      }
+    );
 
     dispatch(logout());
     router.push("/login");
