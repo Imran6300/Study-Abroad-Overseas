@@ -1,9 +1,21 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { motion } from "framer-motion";
 
-const COUNTRIES = ["USA", "UK", "Canada", "Australia", "Germany", "Ireland"];
+const COUNTRIES = [
+  "USA",
+  "UK",
+  "Canada",
+  "Australia",
+  "Germany",
+  "China",
+  "Ireland",
+];
+
+// Helper: convert country name → URL slug
+const toSlug = (country) => country.toLowerCase().replace(/\s+/g, "-");
 
 export default function ProfileEvaluation() {
   const [step, setStep] = useState(1);
@@ -114,18 +126,22 @@ export default function ProfileEvaluation() {
             </div>
           </div>
 
+          {/* Country Links */}
           <div className="mt-12 p-6 rounded-2xl bg-white/80 shadow-md border border-gray-100">
             <p className="font-semibold text-gray-800 mb-3 text-lg">
               Popular Study Destinations We Cover
             </p>
             <div className="flex flex-wrap gap-3">
               {COUNTRIES.map((c) => (
-                <span
+                <Link
                   key={c}
-                  className="px-5 py-2.5 rounded-full bg-blue-50 text-blue-700 text-sm font-medium hover:bg-blue-100 transition-colors"
+                  href={`/all-countries/${toSlug(c)}`}
+                  className="px-5 py-2.5 rounded-full bg-blue-50 text-blue-700 
+                             text-sm font-medium hover:bg-blue-100 
+                             hover:scale-105 transition-all"
                 >
                   {c}
-                </span>
+                </Link>
               ))}
             </div>
           </div>
@@ -150,6 +166,7 @@ export default function ProfileEvaluation() {
             ))}
           </div>
 
+          {/* Step 1 */}
           {step === 1 && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -167,7 +184,6 @@ export default function ProfileEvaluation() {
                   onChange={handleChange}
                   className="input"
                   required
-                  autoComplete="new-password"
                 />
                 <input
                   name="email"
@@ -176,7 +192,6 @@ export default function ProfileEvaluation() {
                   value={data.email}
                   onChange={handleChange}
                   className="input"
-                  autoComplete="new-password"
                   required
                 />
                 <input
@@ -184,7 +199,6 @@ export default function ProfileEvaluation() {
                   placeholder="Phone / WhatsApp Number *"
                   value={data.phone}
                   onChange={handleChange}
-                  autoComplete="new-password"
                   className="input"
                   required
                 />
@@ -199,6 +213,7 @@ export default function ProfileEvaluation() {
             </motion.div>
           )}
 
+          {/* Step 2 */}
           {step === 2 && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -225,7 +240,7 @@ export default function ProfileEvaluation() {
 
                 <input
                   name="education"
-                  placeholder="Highest Qualification (e.g., B.Tech CSE 2024)"
+                  placeholder="Highest Qualification"
                   value={data.education}
                   onChange={handleChange}
                   className="input"
@@ -247,7 +262,7 @@ export default function ProfileEvaluation() {
               <div className="flex justify-between items-center mt-10">
                 <button
                   onClick={() => setStep(1)}
-                  className="text-gray-600 hover:text-gray-800 font-medium transition"
+                  className="text-gray-600 hover:text-gray-800 font-medium"
                 >
                   ← Back
                 </button>
@@ -261,6 +276,7 @@ export default function ProfileEvaluation() {
             </motion.div>
           )}
 
+          {/* Step 3 */}
           {step === 3 && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -284,28 +300,12 @@ export default function ProfileEvaluation() {
                 <option value="not-taken">Not Taken Yet</option>
               </select>
 
-              <p className="text-gray-600 mb-6 leading-relaxed">
-                <strong>What you'll get:</strong> Personalized report with
-                country/university recommendations, visa feasibility,
-                scholarship options, and next steps — delivered via
-                email/WhatsApp within 24–48 hours.
-              </p>
-
               <button
                 onClick={handleSubmit}
-                className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-5 px-8 rounded-xl shadow-xl transition duration-300 text-lg flex items-center justify-center gap-2"
+                className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-5 rounded-xl"
               >
                 Get My Free Evaluation Report →
               </button>
-
-              <p className="text-center text-sm text-gray-500 mt-6">
-                🔒 Your information is 100% confidential and used only for your
-                evaluation
-              </p>
-              <p className="text-center text-sm text-gray-500 mt-2">
-                We'll contact you via WhatsApp for fastest response (most
-                students prefer this)
-              </p>
             </motion.div>
           )}
         </motion.div>
