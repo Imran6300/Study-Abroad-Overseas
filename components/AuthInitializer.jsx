@@ -10,9 +10,12 @@ export default function AuthInitializer({ children }) {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const res = await fetch("http://localhost:3020/auth/me", {
-          credentials: "include",
-        });
+        const res = await fetch(
+          "https://overseas-backend-production.up.railway.app/auth/me",
+          {
+            credentials: "include",
+          }
+        );
 
         if (!res.ok) throw new Error();
 
