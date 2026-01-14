@@ -57,10 +57,10 @@ export default function SignupPage() {
             name: formData.name,
             email: formData.email,
             password: formData.password,
+            confirmpassword: formData.confirmpassword, // ✅ REQUIRED
           }),
         }
       );
-
       const data = await res.json();
 
       if (res.ok && data.success && data.isLoggedIn) {
