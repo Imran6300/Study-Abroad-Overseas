@@ -34,7 +34,17 @@ export default function SignupPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
+    setLoading(true);
     dispatch(authStart());
+
+    // ✅ Frontend validation
+    if (formData.password !== formData.confirmpassword) {
+      setError("Passwords do not match");
+      dispatch(authFail("Passwords do not match"));
+      setLoading(false);
+      return;
+    }
 
     try {
       const res = await fetch(
@@ -43,20 +53,29 @@ export default function SignupPage() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
-          body: JSON.stringify(formData),
+          body: JSON.stringify({
+            name: formData.name,
+            email: formData.email,
+            password: formData.password,
+          }),
         }
       );
 
       const data = await res.json();
 
-      if (data.isLoggedIn) {
+      if (res.ok && data.success && data.isLoggedIn) {
         dispatch(authSuccess(data.user));
         router.push("/");
       } else {
-        dispatch(authFail(data.errors?.[0] || "Signup failed"));
+        const msg = data.errors?.[0] || "Signup failed";
+        setError(msg); // ✅ THIS WAS MISSING
+        dispatch(authFail(msg));
       }
     } catch (err) {
-      dispatch(authFail("Something went wrong"));
+      setError("Server error. Please try again.");
+      dispatch(authFail("Server error"));
+    } finally {
+      setLoading(false);
     }
   };
 
