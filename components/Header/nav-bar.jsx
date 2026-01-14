@@ -153,7 +153,12 @@ export default function NavBar() {
         </header>
       </div>
 
-      <MobileMenu open={mobileOpen} onClose={closeMobileMenu} />
+      <MobileMenu
+        open={mobileOpen}
+        onClose={closeMobileMenu}
+        isLoggedIn={isLoggedIn}
+        handleLogout={handleLogout}
+      />
     </>
   );
 }
@@ -284,7 +289,7 @@ const DesktopDropdown = ({ type, label, active, onToggle, items }) => {
 // IMPROVED MODERN MOBILE MENU (with the 3 requested upgrades)
 // ────────────────────────────────────────────────────────────────────────
 
-const MobileMenu = ({ open, onClose }) => {
+const MobileMenu = ({ open, onClose, isLoggedIn, handleLogout }) => {
   const [activeDropdown, setActiveDropdown] = useState(null);
 
   const toggleDropdown = (name) => {
@@ -427,13 +432,16 @@ const MobileMenu = ({ open, onClose }) => {
                     </Link>
                   </>
                 ) : (
-                  <Link
-                    href="/logout"
-                    onClick={onClose}
-                    className="bg-orange-600/30 hover:bg-orange-600/40 border border-orange-500/40 text-orange-200 font-medium py-4 px-8 rounded-xl text-center transition-all"
+                  <button
+                    onClick={() => {
+                      handleLogout();
+                      onClose();
+                    }}
+                    className="bg-orange-600/30 hover:bg-orange-600/40 border border-orange-500/40
+               text-orange-200 font-medium py-4 px-8 rounded-xl text-center transition-all"
                   >
                     Logout
-                  </Link>
+                  </button>
                 )}
               </div>
             </div>
