@@ -1,4 +1,4 @@
-import { universityItems } from "@/components/Home/Universities/TopCountriesData";
+import { universityItems } from "@/components/Home/Universities/TopUniversitiesData";
 import UniversityDetailLayout from "@/components/UniversityDetail/UniversityDetailLayout";
 
 export default async function Page({ params }) {

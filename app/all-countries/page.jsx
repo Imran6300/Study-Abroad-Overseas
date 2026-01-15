@@ -17,6 +17,8 @@ const container = {
   },
 };
 
+const toSlug = (text = "") => text.toLowerCase().trim().replace(/\s+/g, "-");
+
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
   visible: {
@@ -105,7 +107,7 @@ const COUNTRIES = [
     region: "Asia & Oceania",
   },
   {
-    name: "Dubai/UAE",
+    name: "Dubai",
     desc: "Modern campuses & job opportunities",
     img: "/countries/dubai.jpg",
     flag: "🇦🇪",
@@ -269,7 +271,7 @@ export default function Countries() {
 const CountryCard = memo(function CountryCard({ country, priority }) {
   return (
     <Link
-      href={`/all-countries/${country.name.toLowerCase()}`}
+      href={`/all-countries/${toSlug(country.name)}`}
       className="group block"
     >
       <m.div

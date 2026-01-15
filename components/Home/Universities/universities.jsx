@@ -1,6 +1,8 @@
 // Countries.jsx
 import CircularGallery from "./CircularGalary";
-import { universityItems } from "./TopCountriesData";
+import { universityItems } from "./TopUniversitiesData";
+
+const Top10 = universityItems.filter((item) => item.rank <= 10);
 
 const Countries = () => {
   return (
@@ -35,7 +37,7 @@ const Countries = () => {
       {/* Gallery */}
       <div className="w-full px-4">
         <CircularGallery
-          items={universityItems}
+          items={Top10}
           cardWidth={400}
           borderRadius={5}
           autoSpeed={1}

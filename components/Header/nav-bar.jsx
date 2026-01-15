@@ -20,6 +20,8 @@ const COURSE_CATEGORY_MAP = {
   "Medicine & Healthcare": "healthcare",
 };
 
+const toSlug = (text) => text.toLowerCase().trim().replace(/\s+/g, "-");
+
 export default function NavBar() {
   const dispatch = useDispatch();
   const router = useRouter();
@@ -359,7 +361,7 @@ const MobileMenu = ({ open, onClose, isLoggedIn, handleLogout }) => {
                 getHref={(item) =>
                   item.includes("All")
                     ? "/all-countries"
-                    : `/all-countries/${item.toLowerCase()}`
+                    : `/all-countries/${toSlug(item)}`
                 }
                 onClose={onClose}
               />

@@ -1,5 +1,5 @@
 import SimilarUniversityCard from "./SimilarUniversityCard";
-import { universityItems } from "@/components/Home/Universities/TopCountriesData";
+import { universityItems } from "@/components/Home/Universities/TopUniversitiesData";
 
 export default function UniversityDetailLayout({ uni }) {
   // ✅ SAFE FALLBACKS

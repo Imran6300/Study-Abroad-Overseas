@@ -31,6 +31,11 @@ const COUNTRY_PAGE_DATA = {
     france: { src: "/countries/france.jpg", position: "50% 45%" },
     china: { src: "/countries/china.jpg", position: "50% 50%" },
     italy: { src: "/countries/italy.jpg", position: "50% 55%" },
+    ireland: { src: "/countries/ireland.jpg", position: "50% 55%" },
+    new_zeland: { src: "/countries/newzeland.jpg", position: "50% 50%" }, ///this has problem
+    netherlands: { src: "/countries/netherland.jpg", position: "50% 50%" },
+    singapore: { src: "/countries/singapore.jpg", position: "50% 50%" },
+    dubai: { src: "/countries/dubai.jpg", position: "50% 50%" },
   },
 
   popularCourses: [

@@ -11,7 +11,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { universityItems } from "@/components/Home/Universities/TopCountriesData";
+import { universityItems } from "@/components/Home/Universities/TopUniversitiesData";
 
 const COUNTRIES = [
   "All",
