@@ -664,17 +664,3 @@ const ButtonOrange = ({ text, link, full, onClick }) => (
     {text}
   </Link>
 );
-
-const LogoutButton = ({ text, full, onClick }) => (
-  <button
-    type="button"
-    onClick={onClick}
-    className={`bg-red-500 hover:bg-red-600 
-      px-5 py-2 rounded-xl text-white font-semibold text-center 
-      ${full && "w-full"} 
-      focus:outline-none focus:ring-2 focus:ring-red-500 
-      focus:ring-offset-2 focus:ring-offset-[#0f2a5f]`}
-  >
-    {text}
-  </button>
-);
