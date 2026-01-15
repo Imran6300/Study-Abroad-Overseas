@@ -3,7 +3,14 @@
 import React, { useEffect, useRef, useState, useCallback, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
-import { FaAngleDown, FaBars, FaTimes } from "react-icons/fa";
+import {
+  FaAngleDown,
+  FaBars,
+  FaTimes,
+  FaUserCircle,
+  FaSignOutAlt,
+  FaUser,
+} from "react-icons/fa";
 import Link from "next/link";
 
 //redux
@@ -134,11 +141,7 @@ export default function NavBar() {
                 <ButtonOrange text="Login" link="/login" />
               </>
             ) : (
-              <LogoutButton
-                text="Logout"
-                link="/logout"
-                onClick={handleLogout}
-              />
+              <UserMenu user={user} onLogout={handleLogout} />
             )}
           </div>
 
@@ -160,6 +163,7 @@ export default function NavBar() {
         onClose={closeMobileMenu}
         isLoggedIn={isLoggedIn}
         handleLogout={handleLogout}
+        user={user}
       />
     </>
   );
@@ -217,6 +221,75 @@ const MemoizedDesktopNav = memo(() => {
   );
 });
 MemoizedDesktopNav.displayName = "MemoizedDesktopNav";
+const UserMenu = ({ user, onLogout }) => {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="relative">
+      {/* Trigger */}
+      <button
+        onClick={() => setOpen(!open)}
+        className="
+          flex items-center gap-2
+          text-white font-medium
+          px-3 py-2 rounded-xl
+          hover:bg-white/10 transition
+        "
+      >
+        <FaUserCircle size={26} />
+        <span className="hidden lg:block">{user?.name || "User"}</span>
+        <FaAngleDown
+          className={`transition-transform ${open ? "rotate-180" : ""}`}
+        />
+      </button>
+
+      {/* Dropdown */}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: 10, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.98 }}
+            transition={{ duration: 0.2 }}
+            className="
+              absolute right-0 mt-3 w-48
+              bg-white rounded-xl
+              shadow-[0_20px_40px_rgba(0,0,0,0.2)]
+              overflow-hidden z-50
+            "
+          >
+            <Link
+              href="/profile"
+              className="block px-5 py-3 text-gray-700 hover:bg-blue-600 hover:text-white"
+              onClick={() => setOpen(false)}
+            >
+              Profile
+            </Link>
+
+            <Link
+              href="/dashboard"
+              className="block px-5 py-3 text-gray-700 hover:bg-blue-600 hover:text-white"
+              onClick={() => setOpen(false)}
+            >
+              Dashboard
+            </Link>
+
+            <button
+              onClick={onLogout}
+              className="
+                w-full text-left px-5 py-3
+                text-red-600 hover:bg-red-50
+                font-medium
+              "
+            >
+              Logout
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
 
 const NavItem = ({ label, link }) => (
   <Link
@@ -291,7 +364,7 @@ const DesktopDropdown = ({ type, label, active, onToggle, items }) => {
 // IMPROVED MODERN MOBILE MENU (with the 3 requested upgrades)
 // ────────────────────────────────────────────────────────────────────────
 
-const MobileMenu = ({ open, onClose, isLoggedIn, handleLogout }) => {
+const MobileMenu = ({ open, onClose, isLoggedIn, handleLogout, user }) => {
   const [activeDropdown, setActiveDropdown] = useState(null);
 
   const toggleDropdown = (name) => {
@@ -434,16 +507,14 @@ const MobileMenu = ({ open, onClose, isLoggedIn, handleLogout }) => {
                     </Link>
                   </>
                 ) : (
-                  <button
-                    onClick={() => {
+                  <MobileUserCard
+                    user={user}
+                    onClose={onClose}
+                    onLogout={() => {
                       handleLogout();
                       onClose();
                     }}
-                    className="bg-orange-600/30 hover:bg-orange-600/40 border border-orange-500/40
-               text-orange-200 font-medium py-4 px-8 rounded-xl text-center transition-all"
-                  >
-                    Logout
-                  </button>
+                  />
                 )}
               </div>
             </div>
@@ -455,6 +526,55 @@ const MobileMenu = ({ open, onClose, isLoggedIn, handleLogout }) => {
 };
 
 // ─── Mobile Helper Components ───────────────────────────────────────────
+
+const MobileUserCard = ({ user, onLogout, onClose }) => {
+  return (
+    <div className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-4">
+      {/* User Info */}
+      <div className="flex items-center gap-3">
+        <FaUserCircle size={40} className="text-white/90" />
+        <div>
+          <p className="text-white font-semibold text-lg">
+            {user?.name || "User"}
+          </p>
+          <p className="text-white/60 text-sm">
+            {user?.email || "Welcome back"}
+          </p>
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div className="grid gap-2">
+        <Link
+          href="/profile"
+          onClick={onClose}
+          className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10 transition text-white"
+        >
+          <FaUser />
+          Profile
+        </Link>
+
+        <Link
+          href="/dashboard"
+          onClick={onClose}
+          className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10 transition text-white"
+        >
+          <FaUser />
+          Dashboard
+        </Link>
+
+        <button
+          onClick={onLogout}
+          className="flex items-center gap-3 px-4 py-3 rounded-xl
+          text-red-400 hover:bg-red-500/10 transition"
+        >
+          <FaSignOutAlt />
+          Logout
+        </button>
+      </div>
+    </div>
+  );
+};
 
 const MobileNavItem = ({ label, link, onClose }) => (
   <Link
