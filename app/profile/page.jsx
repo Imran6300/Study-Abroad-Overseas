@@ -1,6 +1,8 @@
 "use client";
 
 import { useSelector } from "react-redux";
+import { useRouter } from "next/navigation";
+
 import { motion } from "framer-motion";
 import {
   User,
@@ -13,7 +15,12 @@ import {
 } from "lucide-react"; // ← add lucide-react icons
 
 export default function ProfilePage() {
-  const { user, loading } = useSelector((state) => state.auth); // assume you might have loading state
+  const { user, loading, isLoggedIn } = useSelector((state) => state.auth); // assume you might have loading state
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isLoggedIn) router.push("/login");
+  }, [isLoggedIn, router]);
 
   const profileData = {
     name: user?.name || "Not provided",
