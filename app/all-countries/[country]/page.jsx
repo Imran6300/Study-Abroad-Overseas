@@ -4,6 +4,7 @@ import { useParams } from "next/navigation";
 import Image from "next/image";
 import { LazyMotion, domAnimation, m } from "framer-motion";
 import { memo } from "react";
+import Link from "next/link";
 
 /* ================= ANIMATIONS ================= */
 const fadeUp = {
@@ -342,9 +343,12 @@ const CTACard = memo(function CTACard({ data, mobile = false }) {
       <p className="mt-3 text-sm lg:text-base text-gray-300 leading-relaxed">
         {data.description}
       </p>
-      <button className="mt-5 w-full bg-[#38BDF8] text-[#020617] py-4 rounded-xl font-bold text-lg hover:bg-[#22D3EE] transform hover:scale-105 transition-all duration-200 shadow-lg">
+      <Link
+        href="/assessment"
+        className="mt-5 block w-full text-center bg-[#38BDF8] text-[#020617] py-4 rounded-xl font-bold text-lg hover:bg-[#22D3EE] transform hover:scale-105 transition-all duration-200 shadow-lg"
+      >
         {data.buttonText}
-      </button>
+      </Link>
     </div>
   );
 });
