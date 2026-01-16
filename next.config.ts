@@ -20,6 +20,10 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'shutterstock.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'media.istockphoto.com',
+      }
     ],
       qualities: [68, 72, 75, 78]
   },

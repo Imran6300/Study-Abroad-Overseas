@@ -82,7 +82,7 @@ export default function Scholarships() {
 
             <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
               <Link
-                href="/apply"
+                href="/assessment"
                 className="group relative px-8 py-5 sm:px-10 sm:py-6 bg-white rounded-2xl overflow-hidden transition-all duration-500 hover:scale-105 shadow-2xl shadow-blue-600/30 text-center font-bold text-lg sm:text-xl"
               >
                 <span className="relative z-10 flex items-center justify-center gap-3 text-black">
@@ -253,7 +253,7 @@ export default function Scholarships() {
 
           <div className="flex flex-col sm:flex-row justify-center gap-5 sm:gap-8">
             <Link
-              href="/apply"
+              href="/assessment"
               className="group relative px-10 sm:px-14 py-6 sm:py-8 rounded-full overflow-hidden transition-all duration-500 hover:scale-105 shadow-2xl shadow-blue-700/50 font-bold text-lg sm:text-2xl bg-white"
             >
               <span className="relative z-10 flex items-center justify-center gap-3 text-black">
