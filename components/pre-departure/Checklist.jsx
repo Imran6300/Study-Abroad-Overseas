@@ -1,5 +1,7 @@
 "use client";
+
 import { useState, useEffect } from "react";
+import { useSelector } from "react-redux";
 
 const checklistData = [
   "Passport & Visa documents",
@@ -15,13 +17,18 @@ const checklistData = [
 ];
 
 export default function Checklist() {
-  const [checked, setChecked] = useState([]);
+  const { isLoggedIn } = useSelector((state) => state.auth);
 
+  const [checked, setChecked] = useState([]);
+  const [showGuestMessage, setShowGuestMessage] = useState(false);
+
+  // Load from localStorage
   useEffect(() => {
     const saved = localStorage.getItem("preDepartureChecklist");
     if (saved) setChecked(JSON.parse(saved));
   }, []);
 
+  // Save to localStorage
   useEffect(() => {
     localStorage.setItem("preDepartureChecklist", JSON.stringify(checked));
   }, [checked]);
@@ -30,6 +37,11 @@ export default function Checklist() {
     setChecked((prev) =>
       prev.includes(item) ? prev.filter((i) => i !== item) : [...prev, item]
     );
+
+    // Show message only once for guest users
+    if (!isLoggedIn && !showGuestMessage) {
+      setShowGuestMessage(true);
+    }
   };
 
   const progress = Math.round((checked.length / checklistData.length) * 100);
@@ -40,44 +52,64 @@ export default function Checklist() {
         Pre-Departure Checklist
       </h2>
 
-      {/* Progress */}
+      {/* Progress Bar */}
       <div className="mt-8">
         <div className="flex justify-between text-sm text-gray-400 mb-2">
           <span>Progress</span>
           <span>{progress}%</span>
         </div>
+
         <div className="h-3 bg-gray-800 rounded-full overflow-hidden">
           <div
             className="h-full bg-[#4169E1] transition-all"
             style={{ width: `${progress}%` }}
           />
         </div>
+
+        {/* Guest Message */}
+        {!isLoggedIn && showGuestMessage && (
+          <p className="mt-3 text-sm text-gray-400">
+            💡 Progress is saved on this device.{" "}
+            <span className="text-[#32CD32] font-medium">Log in</span> to access
+            it from anywhere.
+          </p>
+        )}
+
+        {/* Logged-in reassurance */}
+        {isLoggedIn && (
+          <p className="mt-3 text-sm text-gray-400">
+            ✅ Checklist synced with your account
+          </p>
+        )}
       </div>
 
-      {/* Checklist */}
+      {/* Checklist Items */}
       <div className="mt-10 space-y-4">
-        {checklistData.map((item) => (
-          <label
-            key={item}
-            className="flex items-center gap-4 bg-[#0f172a] p-4 rounded-xl border border-gray-800 cursor-pointer hover:border-[#32CD32]"
-          >
-            <input
-              type="checkbox"
-              checked={checked.includes(item)}
-              onChange={() => toggle(item)}
-              className="w-5 h-5 accent-[#32CD32]"
-            />
-            <span
-              className={`${
-                checked.includes(item)
-                  ? "line-through text-gray-500"
-                  : "text-gray-200"
-              }`}
+        {checklistData.map((item) => {
+          const isChecked = checked.includes(item);
+
+          return (
+            <label
+              key={item}
+              className="flex items-center gap-4 bg-[#0f172a] p-4 rounded-xl border border-gray-800 cursor-pointer hover:border-[#32CD32] transition"
             >
-              {item}
-            </span>
-          </label>
-        ))}
+              <input
+                type="checkbox"
+                checked={isChecked}
+                onChange={() => toggle(item)}
+                className="w-5 h-5 accent-[#32CD32]"
+              />
+
+              <span
+                className={`${
+                  isChecked ? "line-through text-gray-500" : "text-gray-200"
+                }`}
+              >
+                {item}
+              </span>
+            </label>
+          );
+        })}
       </div>
     </section>
   );

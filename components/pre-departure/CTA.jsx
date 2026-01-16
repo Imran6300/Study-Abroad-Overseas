@@ -12,7 +12,7 @@ export default function CTA() {
       </p>
 
       <Link
-        href="/free-assessment"
+        href="/assessment"
         className="inline-block mt-8 px-10 py-4 bg-[#FF8C00] text-black font-semibold rounded-xl hover:opacity-90"
       >
         Talk to an Expert

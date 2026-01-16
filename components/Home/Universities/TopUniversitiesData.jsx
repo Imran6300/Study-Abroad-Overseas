@@ -106,27 +106,6 @@ export const universityItems = [
     acceptanceRate: "17%",
     desc: "The University of Oxford is a world-leading institution known for its unparalleled research excellence, rich history, and immense global influence, standing as one of the most ancient and prestigious universities in the world. Evidence of teaching dates back to 1096, making it the oldest university in the English-speaking world, with organized colleges emerging in the 13th century. Oxford's enduring legacy lies in its tutorial-based education system, where students receive personalized, intensive supervision from leading scholars in small groups or one-on-one sessions, fostering deep critical thinking, debate, and intellectual independence.",
   },
-  {
-    id: 16,
-    rank: 7,
-    slug: "eth-zurich",
-    name: "ETH Zurich (Swiss Federal Institute of Technology)",
-    country: "Switzerland",
-    location: "Zurich, Switzerland",
-    flag: "🇨🇭",
-
-    degree: "Bachelors / Masters / PhD",
-    tuition: "CHF 1,500 – CHF 6,000 / year (estimated)",
-    ranking: "QS World #7 (2026)",
-
-    logo: "/universityeslogos/ethlogo.png",
-    image: "/universitiesimages/ethzurich.jpg",
-
-    students: "22,000+",
-    acceptanceRate: "27% (approx)",
-
-    desc: "ETH Zurich (Swiss Federal Institute of Technology) is Switzerland’s leading technical university, globally renowned for excellence in engineering, science, technology research, and innovation. It consistently ranks among the world’s top institutions due to its strong academic reputation and high-impact research output.",
-  },
 
   {
     id: 8,

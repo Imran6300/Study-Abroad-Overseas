@@ -16,7 +16,7 @@ export default function Hero() {
 
       <div className="mt-10 flex flex-col sm:flex-row justify-center gap-4">
         <Link
-          href="/free-assessment"
+          href="/assessment"
           className="px-8 py-4 rounded-xl bg-[#4169E1] hover:bg-blue-600 transition text-white font-semibold"
         >
           Join Pre-Departure Session

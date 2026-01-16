@@ -109,7 +109,8 @@ function HeroContent() {
             max-[480px]:flex-col max-[480px]:gap-[0.8rem]
           "
         >
-          <button
+          <Link
+            href={"/assessment"}
             className="
               py-[0.95rem] px-[2.2rem]
               rounded-[14px] font-bold text-white
@@ -121,7 +122,7 @@ function HeroContent() {
             "
           >
             Get Free Consultation
-          </button>
+          </Link>
 
           <button
             className="

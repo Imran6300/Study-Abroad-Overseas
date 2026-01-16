@@ -14,7 +14,7 @@ export default function LiveSession() {
         </p>
 
         <Link
-          href="/free-assessment"
+          href="/assessment"
           className="inline-block mt-8 px-8 py-4 bg-[#32CD32] text-black font-semibold rounded-xl hover:opacity-90"
         >
           Reserve Your Seat

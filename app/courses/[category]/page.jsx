@@ -619,11 +619,12 @@ export default function CourseCategory() {
             Free counseling • University shortlisting • Visa guidance •
             Scholarship support
           </p>
-          <button
+          <Link
+            href={"/assessment"}
             className={`px-12 py-6 rounded-full text-xl font-bold bg-gradient-to-r ${data.gradient} shadow-2xl hover:scale-105 transition-transform`}
           >
             Get Free Consultation Now
-          </button>
+          </Link>
         </div>
       </motion.div>
     </section>
