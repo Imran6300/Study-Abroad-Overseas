@@ -183,7 +183,7 @@ export default function Countries() {
             </m.p>
             <m.div variants={fadeUp} className="mt-10">
               <Link
-                href="/contact"
+                href="/assessment"
                 className="inline-flex items-center gap-3 bg-gradient-to-r from-[#38BDF8] to-cyan-500 text-[#020617] px-8 py-4 rounded-full font-bold text-lg shadow-lg hover:shadow-cyan-500/30 transform hover:scale-105 transition-all"
               >
                 Book Free Counseling <ArrowRight size={20} />

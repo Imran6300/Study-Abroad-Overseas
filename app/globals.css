@@ -46,32 +46,47 @@ body::-webkit-scrollbar {
 }
 
 @layer components {
+  /* ===== LIGHT THEME (existing pages) ===== */
   .input {
-    @apply w-full px-5 py-4 border border-gray-300 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition bg-white text-gray-900 placeholder-gray-400;
+    @apply w-full px-5 py-4 border border-gray-300 rounded-xl
+    focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200
+    transition bg-white text-gray-900 placeholder-gray-400;
   }
 
   .btn-primary {
-    @apply bg-gradient-to-r from-blue-600 to-green-500 text-white px-6 py-3 rounded-xl font-semibold hover:opacity-90 transition shadow-md;
+    @apply bg-gradient-to-r from-blue-600 to-green-500
+    text-white px-6 py-3 rounded-xl font-semibold
+    hover:opacity-90 transition shadow-md;
   }
 
-  /* Improved Select / Dropdown styling */
-  select.input {
-    @apply appearance-none bg-white bg-no-repeat bg-right pr-10 cursor-pointer;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E");
+  /* ===== DARK THEME (Free Assessment) ===== */
+  .input-dark {
+    @apply w-full px-4 py-3 rounded-xl
+    bg-[#0B0F1A] border border-gray-700
+    text-white placeholder-gray-500
+    focus:outline-none focus:border-indigo-500
+    focus:ring-2 focus:ring-indigo-500/30
+    transition;
+  }
+
+  .btn-primary-dark {
+    @apply py-3 rounded-xl
+    bg-indigo-600 hover:bg-indigo-500
+    text-white font-semibold transition;
+  }
+
+  .btn-secondary-dark {
+    @apply py-3 rounded-xl
+    bg-gray-700 hover:bg-gray-600
+    text-white transition;
+  }
+
+  /* ===== Select dropdown (dark) ===== */
+  select.input-dark {
+    @apply appearance-none pr-10 cursor-pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E");
     background-position: right 1rem center;
     background-size: 1.5em;
-  }
-
-  select.input:focus {
-    @apply border-blue-500 ring-2 ring-blue-200 bg-white;
-  }
-
-  select.input:hover {
-    @apply border-gray-400 bg-gray-50;
-  }
-
-  /* Optional: Make option text look better (some browsers need this) */
-  select.input option {
-    @apply bg-white text-gray-900;
+    background-repeat: no-repeat;
   }
 }
