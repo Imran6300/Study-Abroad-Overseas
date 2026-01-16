@@ -591,17 +591,26 @@ export default function UniversityShortlisting() {
       </AnimatePresence>
 
       {/* Mobile Filters Bottom Sheet */}
+      {/* Mobile Filters Bottom Sheet */}
       <AnimatePresence>
         {filtersOpen && (
           <motion.div
-            initial={{ y: "100%" }}
-            animate={{ y: 0 }}
-            exit={{ y: "100%" }}
-            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
             className="fixed inset-0 bg-black/60 z-50 lg:hidden"
             onClick={() => setFiltersOpen(false)}
           >
-            <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl max-h-[85vh] overflow-y-auto">
+            {/* Bottom Sheet */}
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl max-h-[85vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()} // 🔥 THIS FIXES IT
+            >
               <div className="p-6">
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-xl font-bold text-[#2f4f4f]">Filters</h2>
@@ -618,7 +627,7 @@ export default function UniversityShortlisting() {
                     <select
                       value={tempCountry}
                       onChange={(e) => setTempCountry(e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg py-2.5 px-3"
+                      className="w-full border border-gray-300 rounded-lg py-3 px-4 text-base"
                     >
                       <option>All Countries</option>
                       <option>Canada</option>
@@ -635,7 +644,7 @@ export default function UniversityShortlisting() {
                     <select
                       value={tempDegree}
                       onChange={(e) => setTempDegree(e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg py-2.5 px-3"
+                      className="w-full border border-gray-300 rounded-lg py-3 px-4 text-base"
                     >
                       <option>All Degrees</option>
                       <option>Bachelors</option>
@@ -651,7 +660,7 @@ export default function UniversityShortlisting() {
                     <select
                       value={tempBudget}
                       onChange={(e) => setTempBudget(e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg py-2.5 px-3"
+                      className="w-full border border-gray-300 rounded-lg py-3 px-4 text-base"
                     >
                       <option>Any Budget</option>
                       <option>Under $15,000</option>
@@ -668,7 +677,7 @@ export default function UniversityShortlisting() {
                   </button>
                 </div>
               </div>
-            </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

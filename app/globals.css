@@ -23,8 +23,10 @@ select:-webkit-autofill:focus {
   transition: background-color 9999s ease-in-out 0s;
 }
 
+/* ===========================
+   Global base styles
+   =========================== */
 
-/* Global styles */
 html {
   font-family: "Poppins", sans-serif;
 }
@@ -45,23 +47,31 @@ body::-webkit-scrollbar {
   display: none;
 }
 
+/* ===========================
+   Component styles
+   =========================== */
+
 @layer components {
-  /* ===== LIGHT THEME (existing pages) ===== */
+  /* ===== LIGHT THEME INPUTS ===== */
   .input {
-    @apply w-full px-5 py-4 border border-gray-300 rounded-xl
-    focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200
-    transition bg-white text-gray-900 placeholder-gray-400;
+    @apply w-full px-4 sm:px-5 py-4
+    border border-gray-300 rounded-xl
+    bg-white text-gray-900 placeholder-gray-400
+    focus:outline-none focus:border-blue-500
+    focus:ring-2 focus:ring-blue-200
+    transition;
   }
 
   .btn-primary {
     @apply bg-gradient-to-r from-blue-600 to-green-500
-    text-white px-6 py-3 rounded-xl font-semibold
-    hover:opacity-90 transition shadow-md;
+    text-white px-6 py-3 rounded-xl
+    font-semibold hover:opacity-90
+    transition shadow-md;
   }
 
-  /* ===== DARK THEME (Free Assessment) ===== */
+  /* ===== DARK THEME INPUTS ===== */
   .input-dark {
-    @apply w-full px-4 py-3 rounded-xl
+    @apply w-full px-4 py-4 rounded-xl
     bg-[#0B0F1A] border border-gray-700
     text-white placeholder-gray-500
     focus:outline-none focus:border-indigo-500
@@ -81,12 +91,45 @@ body::-webkit-scrollbar {
     text-white transition;
   }
 
-  /* ===== Select dropdown (dark) ===== */
-  select.input-dark {
-    @apply appearance-none pr-10 cursor-pointer;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E");
-    background-position: right 1rem center;
-    background-size: 1.5em;
-    background-repeat: no-repeat;
+  /* =================================================
+     MOBILE-SAFE SELECT (CRITICAL FIX)
+     ================================================= */
+
+  /* Use this for ALL <select> elements */
+  .select-mobile {
+    @apply w-full px-4 py-4
+    rounded-xl border border-gray-300
+    bg-white text-gray-900 text-base;
+    appearance: menulist;
+    -webkit-appearance: menulist;
+  }
+
+  /* Dark version */
+  .select-mobile-dark {
+    @apply w-full px-4 py-4
+    rounded-xl border border-gray-700
+    bg-[#0B0F1A] text-white text-base;
+    appearance: menulist;
+    -webkit-appearance: menulist;
+  }
+
+  /* Desktop enhancement only (safe) */
+  @media (min-width: 768px) {
+    .select-mobile {
+      @apply px-5;
+    }
+
+    .select-mobile-dark {
+      @apply px-5;
+    }
+  }
+
+  /* Option styling (fallback safe) */
+  select option {
+    @apply bg-white text-gray-900;
+  }
+
+  select.select-mobile-dark option {
+    @apply bg-[#0B0F1A] text-white;
   }
 }

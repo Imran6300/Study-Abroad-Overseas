@@ -197,34 +197,71 @@ export default function SopLorPage() {
       </section>
 
       {/* Countries Specialization */}
-      <section className="py-20 lg:py-32 px-5 sm:px-8 lg:px-16 bg-black/30 border-y border-white/5">
+      <section className="py-16 sm:py-20 lg:py-32 px-4 sm:px-8 lg:px-16 bg-black/30 border-y border-white/5">
         <div className="max-w-6xl mx-auto">
+          {/* Heading */}
           <motion.h2
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-4xl sm:text-5xl font-black text-center mb-16 text-white"
+            className="
+        text-3xl sm:text-4xl lg:text-5xl 
+        font-black text-center mb-12 sm:mb-16 
+        text-white leading-tight
+      "
           >
             Country-Specific SOP & LOR Mastery
           </motion.h2>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6">
+          {/* Grid */}
+          <div
+            className="
+        grid grid-cols-1 
+        xs:grid-cols-2 
+        sm:grid-cols-3 
+        lg:grid-cols-5 
+        gap-4 sm:gap-6
+      "
+          >
             {["USA", "Canada", "UK", "Australia", "Germany"].map((country) => (
               <motion.div
                 key={country}
                 initial={{ opacity: 0, scale: 0.9 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
-                className="p-8 rounded-3xl bg-black/40 border border-white/10 text-center"
+                whileHover={{ y: -6, scale: 1.03 }}
+                transition={{ duration: 0.3 }}
+                className="
+            p-5 sm:p-6 lg:p-8 
+            rounded-2xl lg:rounded-3xl 
+            bg-black/40 
+            border border-white/10 
+            text-center 
+            backdrop-blur-md
+            hover:border-white/20 
+            transition-all
+          "
               >
-                <p className="text-3xl font-black text-white">{country}</p>
+                <p className="text-xl sm:text-2xl lg:text-3xl font-black text-white">
+                  {country}
+                </p>
               </motion.div>
             ))}
           </div>
 
-          <p className="text-center mt-12 text-lg opacity-85">
-            We know exactly what each country wants: career goals for USA, GTE
-            for Canada, research fit for Germany, and more.
+          {/* Description */}
+          <p
+            className="
+        text-center mt-10 sm:mt-12 
+        text-base sm:text-lg 
+        text-white/80 
+        max-w-3xl mx-auto
+        leading-relaxed
+      "
+          >
+            We know exactly what each country looks for — career clarity for
+            USA, GTE compliance for Canada, research alignment for Germany, and
+            more.
           </p>
         </div>
       </section>

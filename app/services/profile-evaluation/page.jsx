@@ -228,7 +228,7 @@ export default function ProfileEvaluation() {
                   name="country"
                   value={data.country}
                   onChange={handleChange}
-                  className="input"
+                  className="select-mobile"
                 >
                   <option value="">Preferred Study Country (optional)</option>
                   {COUNTRIES.map((c) => (
@@ -250,7 +250,7 @@ export default function ProfileEvaluation() {
                   name="experience"
                   value={data.experience}
                   onChange={handleChange}
-                  className="input"
+                  className="select-mobile"
                 >
                   <option value="">Work Experience</option>
                   <option value="0-1">0–1 Years</option>
@@ -290,7 +290,7 @@ export default function ProfileEvaluation() {
                 name="testStatus"
                 value={data.testStatus}
                 onChange={handleChange}
-                className="input mb-8"
+                className="select-mobile"
               >
                 <option value="">English Test Status</option>
                 <option value="completed">
