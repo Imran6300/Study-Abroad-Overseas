@@ -13,7 +13,7 @@ export const universityItems = [
     logo: "/universityeslogos/mitlogo.png",
     image: "/universitiesimages/MIT.jpg",
     students: "11,800",
-    acceptanceRate: "4%",
+    acceptance: "4%",
     desc: "The Massachusetts Institute of Technology (MIT) is a world-leading private research university located in Cambridge, Massachusetts, United States, renowned globally for its unparalleled excellence in innovation, engineering, technology, entrepreneurship, and groundbreaking research. Founded in 1861 by William Barton Rogers in response to the rapid industrialization of America, MIT was established with a visionary mission: to advance knowledge and educate students in science, technology, and other areas of scholarship that will best serve the nation and the world in the 21st century.",
   },
 
@@ -31,7 +31,7 @@ export const universityItems = [
     logo: "/universityeslogos/imperialcollegelondon.png",
     image: "/universitiesimages/ImperialCollegeLondon.jpeg",
     students: "22,000",
-    acceptanceRate: "16%",
+    acceptance: "16%",
     desc: "Imperial College London is a top global university specializing in science, engineering, medicine, and business, consistently ranked among the world's elite institutions for its relentless focus on research-led education, practical innovation, and real-world impact.Founded in 1907 by royal charter under the vision of Prince Albert (inspired by the Great Exhibition of 1851), Imperial was created by uniting historic institutions: the Royal College of Science, the Royal School of Mines, and the City and Guilds of London Institute.",
   },
 
@@ -49,7 +49,7 @@ export const universityItems = [
     logo: "/universityeslogos/stanforduniversity.png",
     image: "/universitiesimages/stanforduniversity.jpg",
     students: "27,500",
-    acceptanceRate: "3.9%",
+    acceptance: "3.9%",
     desc: "Stanford University is globally renowned for innovation, entrepreneurship, research excellence, and its unparalleled Silicon Valley connections, making it one of the world's most influential and transformative institutions.Founded in 1885 by railroad magnate Leland Stanford and his wife Jane in memory of their late son, the university opened its doors in 1891 with a bold mission: to produce well-rounded graduates equipped to contribute to society through practical, impactful education.",
   },
 
@@ -67,7 +67,7 @@ export const universityItems = [
     logo: "/universityeslogos/harvarduniversity.png",
     image: "/universitiesimages/harwarduniversity.jpg",
     students: "24,500",
-    acceptanceRate: "3.5%",
+    acceptance: "3.5%",
     desc: "Harvard University is the oldest university in the United States, globally known for its unparalleled academic excellence, leadership in education and research, and its profound influence on shaping world leaders, innovators, and thinkers across centuries. Founded in 1636 in Cambridge, Massachusetts, by vote of the Massachusetts Bay Colony's Great and General Court, Harvard was initially established to train Puritan clergy and educate the colony's future leaders.",
   },
 
@@ -85,7 +85,7 @@ export const universityItems = [
     logo: "/universityeslogos/universityofcambridge.png",
     image: "/universitiesimages/universityofcambridge.jpg",
     students: "21,000",
-    acceptanceRate: "21%",
+    acceptance: "21%",
     desc: "The University of Cambridge is one of the world’s oldest and most prestigious institutions, renowned for its profound research impact, academic excellence, and centuries-long tradition of fostering intellectual rigor, innovation, and transformative discovery. Founded in 1209 by scholars fleeing disputes at the University of Oxford, Cambridge is the second-oldest university in the English-speaking world and has operated continuously for over eight centuries.",
   },
 
@@ -103,7 +103,7 @@ export const universityItems = [
     logo: "/universityeslogos/oxfordlogo.png",
     image: "/universitiesimages/oxforduniversity.jpg",
     students: "24,000",
-    acceptanceRate: "17%",
+    acceptance: "17%",
     desc: "The University of Oxford is a world-leading institution known for its unparalleled research excellence, rich history, and immense global influence, standing as one of the most ancient and prestigious universities in the world. Evidence of teaching dates back to 1096, making it the oldest university in the English-speaking world, with organized colleges emerging in the 13th century. Oxford's enduring legacy lies in its tutorial-based education system, where students receive personalized, intensive supervision from leading scholars in small groups or one-on-one sessions, fostering deep critical thinking, debate, and intellectual independence.",
   },
 
@@ -121,7 +121,7 @@ export const universityItems = [
     logo: "/universityeslogos/nationaluniversityofsingapore.png",
     image: "/universitiesimages/NationalUniversityofSingapore.jpeg",
     students: "38,000+",
-    acceptanceRate: "30%",
+    acceptance: "30%",
     desc: "The National University of Singapore (NUS) is Asia’s top university, globally recognized for its exceptional research, innovation, and academic excellence, serving as Singapore's flagship institution and a leading force in higher education across the continent and beyond. Established in its current form in 1980 through the merger of the University of Singapore and Nanyang University (with roots tracing back to 1905 as the Straits Settlements and Federated Malay States Government Medical School), NUS embodies a forward-looking vision: to educate, inspire, and transform through a global approach to education and research, with a distinctive Asian perspective and expertise.",
   },
 
@@ -141,7 +141,7 @@ export const universityItems = [
     logo: "/universityeslogos/ucllogo.jpg",
     image: "/universitiesimages/ucl.jpg",
     students: "42,000+",
-    acceptanceRate: "~30-40%",
+    acceptance: "38%",
     desc: "UCL is a multidisciplinary university excelling in medicine, social sciences, engineering, and arts. Centrally located in London, it promotes global perspectives, diverse research, and impactful real-world applications.",
   },
 
@@ -161,7 +161,7 @@ export const universityItems = [
     logo: "/universityeslogos/universityofcaliforniaberkeley.png",
     image: "/universitiesimages/UniversityofCaliforniaBerkeley.jpeg",
     students: "45,000+",
-    acceptanceRate: "11.7%",
+    acceptance: "11.7%",
     desc: "The University of California, Berkeley (UC Berkeley) is a top public research university globally known for its pioneering innovation, vibrant activism, and exceptional academic excellence, serving as a beacon of progressive thought, groundbreaking discovery, and social impact in the heart of the San Francisco Bay Area. Founded in 1868 as the first campus of the University of California system and named after the philosopher George Berkeley, it emerged as a land-grant institution dedicated to public education, practical knowledge, and advancing human welfare. From its early days, UC Berkeley has embodied the spirit of 'public good' blending rigorous scholarship with a commitment to free speech, civil rights, and societal change—most famously through the Free Speech Movement of the 1960s, which galvanized student activism worldwide and cemented its reputation as a cradle of progressive politics and social justice.",
   },
 
@@ -179,7 +179,7 @@ export const universityItems = [
     logo: "/universityeslogos/tum.png",
     image: "/universitiesimages/technicaluniversityofmunich.jpg",
     students: "48,000+",
-    acceptanceRate: "8%",
+    acceptance: "8%",
     desc: "TUM is Germany’s leading technical university, offering high-quality education with minimal tuition fees.",
   },
 
@@ -197,7 +197,7 @@ export const universityItems = [
     logo: "/universityeslogos/ethzurich.png",
     image: "/universitiesimages/ethzurich.jpg",
     students: "22,000",
-    acceptanceRate: "27%",
+    acceptance: "27%",
     desc: "ETH Zurich is a world-class technical university known for engineering, science, and research excellence.",
   },
 
@@ -215,7 +215,7 @@ export const universityItems = [
     logo: "/universityeslogos/sydney.png",
     image: "/universitiesimages/sydney.jpg",
     students: "73,000+",
-    acceptanceRate: "30%",
+    acceptance: "30%",
     desc: "University of Sydney is Australia’s oldest university with strong academic reputation and global rankings.",
   },
 
@@ -233,7 +233,7 @@ export const universityItems = [
     logo: "/universityeslogos/ubc.png",
     image: "/universitiesimages/ubc.jpg",
     students: "66,000+",
-    acceptanceRate: "52%",
+    acceptance: "52%",
     desc: "The University of British Columbia (UBC) is a top public university in Canada, renowned for its research excellence and stunningly beautiful campuses that blend natural splendor with world-class academic facilities. Established in 1908 and opening its doors in 1915, UBC has grown into one of Canada's leading research-intensive institutions, with a mission to pursue excellence in research, learning, and engagement to foster global citizenship and advance a sustainable, just society across British Columbia, Canada, and the world. Its two primary campuses—Vancouver and Okanagan—offer distinct yet complementary experiences: the flagship Vancouver campus perched on the scenic Point Grey Peninsula overlooking the Pacific Ocean, with snow-capped mountains, forests, and ocean views creating one of the most picturesque university settings globally, and the Okanagan campus in Kelowna, nestled in the heart of British Columbia's wine country amid lakes, vineyards, and mountains, providing a more intimate, innovative community vibe.",
   },
 
@@ -251,7 +251,7 @@ export const universityItems = [
     logo: "/universityeslogos/universityoftokyo.png",
     image: "/universitiesimages/universityoftokyo.jpg",
     students: "28,000+",
-    acceptanceRate: "34%",
+    acceptance: "34%",
     desc: "The University of Tokyo is Japan’s leading university, known for research excellence and strong global rankings.",
   },
 
@@ -269,7 +269,7 @@ export const universityItems = [
     logo: "/universityeslogos/universityoftoronto.png",
     image: "/universitiesimages/universityoftoronto.jpg",
     students: "74,000+",
-    acceptanceRate: "43%",
+    acceptance: "43%",
     desc: "The University of Oxford is a world-leading institution known for its unparalleled research excellence, rich history, and immense global influence, standing as one of the most ancient and prestigious universities in the world. Evidence of teaching dates back to 1096, making it the oldest university in the English-speaking world, with organized colleges emerging in the 13th century. Oxford's enduring legacy lies in its tutorial-based education system, where students receive personalized, intensive supervision from leading scholars in small groups or one-on-one sessions, fostering deep critical thinking, debate, and intellectual independence.",
   },
   {
@@ -286,7 +286,7 @@ export const universityItems = [
     logo: "/universityeslogos/melbourne.png",
     image: "/universitiesimages/universityofmelbourne.jpg",
     students: "52,000+",
-    acceptanceRate: "70%",
+    acceptance: "70%",
     desc: "The University of Melbourne is one of Australia’s top institutions, with exceptional employability outcomes and a formidable global reputation as a leading public research university. Founded in 1853, it is Australia's second-oldest university (after the University of Sydney) and has long been regarded as the nation's premier institution for academic rigor, research impact, and producing highly sought-after graduates who excel in diverse fields worldwide. Located primarily on its historic Parkville campus in the vibrant city of Melbourne—often ranked among the world's most livable cities—the university blends Gothic Revival architecture with state-of-the-art facilities, creating an inspiring environment for intellectual growth and innovation.",
   },
 ];

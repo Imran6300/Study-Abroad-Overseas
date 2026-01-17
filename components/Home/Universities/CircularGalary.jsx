@@ -164,7 +164,8 @@ export default function CircularGallery({
     <div
       ref={containerRef}
       className="
-        relative w-full h-[450px] sm:h-[500px] md:h-[550px] lg:h-[600px] overflow-hidden select-none
+        relative w-full h-[400px] sm:h-[460px] md:h-[500px] lg:h-[600px]
+ overflow-hidden select-none
         flex items-center justify-center
         will-change-transform translate-z-0
         cursor-grab
@@ -185,6 +186,7 @@ export default function CircularGallery({
             [backface-visibility:hidden]
             [perspective:1000px]
             [transform-style:preserve-3d]
+            
           "
           style={{
             width: `${responsiveCardWidth}px`,
