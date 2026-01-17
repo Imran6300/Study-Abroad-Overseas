@@ -24,6 +24,11 @@ const statItem = {
   }),
 };
 
+const colorMap = {
+  "blue-500": "text-blue-500",
+  "green-500": "text-green-500",
+};
+
 export default function WhyChooseUs() {
   return (
     <main className="min-h-screen bg-gray-950 text-gray-200">
@@ -80,7 +85,7 @@ export default function WhyChooseUs() {
                   variants={statItem}
                   className="bg-gray-800/60 backdrop-blur-sm px-8 py-6 rounded-xl border border-gray-700 text-center min-w-[220px]"
                 >
-                  <p className={`text-4xl font-bold text-${stat.color}`}>
+                  <p className={`text-4xl font-bold ${colorMap[stat.color]}`}>
                     {stat.value}
                   </p>
                   <p className="text-gray-400 mt-2">{stat.label}</p>
