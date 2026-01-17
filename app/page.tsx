@@ -10,7 +10,7 @@ import FinalCTASection from "../components/Home/ReadyToStart/readytostart";
 
 export default function Page() {
   return (
-    <main>
+    <main >
       <Hero />
       <Countries />
       <Services />
