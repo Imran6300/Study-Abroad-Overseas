@@ -11,6 +11,7 @@ import {
 
 import { useEffect, useRef, useState } from "react";
 import FadeContent from "@/components/Animations/FadeContent";
+import Link from "next/link";
 
 // ⭐ Stats with animated numbers
 const stats = [
@@ -140,7 +141,7 @@ export default function ScholarshipsFunding() {
         stats.forEach((stat, index) => {
           let start = 0;
           const end = stat.number;
-          const duration = 2000; // Slightly longer for smoother feel
+          const duration = 1400; // Slightly longer for smoother feel
           const increment = end / (duration / 16);
 
           const animate = () => {
@@ -225,7 +226,8 @@ export default function ScholarshipsFunding() {
       {/* ⭐ CTA 1 */}
       <FadeContent blur>
         <div className="text-center mb-20 md:mb-24 relative z-10">
-          <button
+          <Link
+            href={"/assessment"}
             className="
               px-10 py-4 rounded-full font-semibold text-white text-lg
               bg-gradient-to-r from-[#4169E1] to-[#32CD32]
@@ -235,7 +237,7 @@ export default function ScholarshipsFunding() {
             "
           >
             Check Your Scholarship Eligibility →
-          </button>
+          </Link>
           <p className="text-gray-600 mt-3 text-sm">
             Takes only 30 seconds • No charges • Instant result
           </p>
@@ -247,12 +249,12 @@ export default function ScholarshipsFunding() {
         {scholarships.map((item, i) => {
           const Icon = item.icon;
           return (
-            <FadeContent key={i} blur delay={i * 100}>
+            <FadeContent key={i} blur delay={i * 60}>
               <div
                 className="
                   group bg-white/60 backdrop-blur-xl border border-white/30
                   rounded-3xl p-8 md:p-10 shadow-[0_10px_40px_rgba(0,0,0,0.08)]
-                  transition-all duration-500 hover:-translate-y-3
+                  transition-all duration-300 hover:-translate-y-3
                   hover:shadow-[0_20px_60px_rgba(0,0,0,0.12)]
                   flex flex-col h-full min-h-[520px]
                 "
@@ -301,7 +303,7 @@ export default function ScholarshipsFunding() {
       </div>
 
       {/* Footer Note */}
-      <FadeContent blur delay={300}>
+      <FadeContent blur delay={120}>
         <div className="text-center max-w-3xl mx-auto mt-20 text-gray-700 relative z-10">
           <p className="leading-relaxed text-base md:text-lg">
             From fully funded opportunities to tuition reductions and financial
@@ -314,7 +316,7 @@ export default function ScholarshipsFunding() {
       </FadeContent>
 
       {/* ⭐ FAQ Section */}
-      <FadeContent blur delay={400}>
+      <FadeContent blur delay={160}>
         <div className="max-w-3xl mx-auto mt-24 relative z-10">
           <h3 className="text-3xl md:text-4xl font-bold text-center text-[#1A2433] mb-12">
             Frequently Asked Questions
@@ -348,9 +350,10 @@ export default function ScholarshipsFunding() {
       </FadeContent>
 
       {/* ⭐ Final CTA */}
-      <FadeContent blur delay={500}>
+      <FadeContent blur delay={200}>
         <div className="text-center mt-20 relative z-10">
-          <button
+          <Link
+            href={"/assessment"}
             className="
               px-12 py-5 rounded-full text-white text-xl font-semibold
               bg-gradient-to-r from-[#4169E1] to-[#32CD32]
@@ -360,7 +363,7 @@ export default function ScholarshipsFunding() {
             "
           >
             Book Your Free Funding Consultation →
-          </button>
+          </Link>
 
           <p className="text-gray-600 mt-4 text-sm md:text-base">
             Limited slots • Completely free • 1-on-1 Expert Guidance

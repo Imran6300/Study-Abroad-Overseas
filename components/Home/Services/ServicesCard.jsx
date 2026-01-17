@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Link from "next/link";
 
 export default function ServicesCard({ Data }) {
   return (
@@ -69,7 +70,7 @@ export default function ServicesCard({ Data }) {
             transition
           "
             >
-              {item.BtnTitle || "Learn More"}
+              <Link href={item.link}>{item.BtnTitle || "Learn More"}</Link>
             </button>
           </div>
         </motion.div>
