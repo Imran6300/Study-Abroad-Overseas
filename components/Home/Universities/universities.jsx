@@ -2,7 +2,7 @@
 "use client";
 
 import CircularGallery from "./CircularGalary";
-import { universityItems } from "./TopUniversitiesData";
+import { universityItems } from "@/data/universitiesData";
 import Card from "./Card";
 import { useEffect, useRef } from "react";
 
