@@ -11,7 +11,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { universityItems } from "@/components/Home/Universities/TopUniversitiesData";
+import { universityItems } from "@/data/universitiesData";
 
 const COUNTRIES = [
   "All",
@@ -152,7 +152,7 @@ export default function UniversitiesPage() {
 
   const onCountryChange = useCallback(
     (country) => setSelectedCountry(country),
-    []
+    [],
   );
 
   const filteredUniversities = useMemo(() => {
