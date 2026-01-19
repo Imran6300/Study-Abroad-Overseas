@@ -66,7 +66,7 @@ export default function MobileHero() {
           <input
             type="text"
             placeholder="Search universities or programs"
-            className="ml-3 w-full text-sm outline-none"
+            className="ml-3 w-full h-10 text-sm outline-none"
           />
         </div>
       </motion.div>

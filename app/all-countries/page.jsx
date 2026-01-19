@@ -142,7 +142,7 @@ export default function Countries() {
 
     return COUNTRIES.filter((country) => {
       const searchableText = normalize(
-        `${country.name} ${country.desc} ${country.region}`
+        `${country.name} ${country.desc} ${country.region}`,
       );
 
       const matchesSearch =

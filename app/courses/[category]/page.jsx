@@ -408,7 +408,7 @@ export const universitiesByCategory = {
 };
 
 const degreeTabs = ["bachelor", "master", "phd"].filter(
-  (tab) => tab in categoryData.engineering.tabs
+  (tab) => tab in categoryData.engineering.tabs,
 ); // Dynamic but safe
 
 export default function CourseCategory() {
@@ -497,7 +497,7 @@ export default function CourseCategory() {
                 >
                   {tab === "phd" ? "PhD & Research" : tab + "'s"}
                 </button>
-              )
+              ),
           )}
         </div>
 

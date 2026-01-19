@@ -1,10 +1,23 @@
 "use client";
 import { IoSearch } from "react-icons/io5";
+import { useRouter } from "next/navigation";
 
 export default function HeroSearch() {
+  const router = useRouter();
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+
+    const query = e.target.search.value;
+
+    if (!query.trim()) return;
+
+    router.push(`/search?q=${encodeURIComponent(query)}`);
+  };
+
   return (
     <form
-      action="/hero-search"
+      onSubmit={handleSearch}
       method="POST"
       className="
         w-full max-w-[700px] flex flex-col gap-[6px]
@@ -18,16 +31,15 @@ export default function HeroSearch() {
         <i>Find your dream course</i>
       </label>
 
-      {/* Search Row */}
       <div
         className="
           flex h-[60px] w-[120%]
           max-[480px]:h-[45px]
         "
       >
-        {/* Input */}
         <input
           id="search"
+          name="search"
           type="text"
           required
           placeholder="Search countries, courses, colleges, etc"
@@ -39,7 +51,6 @@ export default function HeroSearch() {
           "
         />
 
-        {/* Button */}
         <button
           type="submit"
           className="
