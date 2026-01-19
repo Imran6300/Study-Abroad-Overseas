@@ -5,6 +5,7 @@ import { FaSearch, FaGraduationCap } from "react-icons/fa";
 import { FiChevronRight } from "react-icons/fi";
 import { IoIosRocket } from "react-icons/io";
 import { MdStars } from "react-icons/md";
+import Link from "next/link";
 
 export default function MobileHero() {
   return (
@@ -92,31 +93,14 @@ export default function MobileHero() {
           </div>
         ))}
       </motion.div>
-
-      {/* CTA at the bottom */}
-      {/* <motion.div
-        initial={{ y: 50, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        className="fixed bottom-6 w-[90%] left-1/2 -translate-x-1/2"
-      >
-        <button className="w-full py-4 rounded-2xl bg-gradient-to-r from-[#4A6BFF] to-[#22C55E] text-white font-semibold flex flex-col items-center justify-center gap-1 shadow-xl text-center">
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-white/20 rounded-full">
-              <IoIosRocket className="text-xl" />
-            </div>
-            <span>Book Free Counseling</span>
-          </div>
-
-          <FiChevronRight className="text-xl mt-1" />
-        </button>
-      </motion.div> */}
       {/* CTA centered inside the page */}
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         className="relative z-10 w-full flex justify-center mt-6"
       >
-        <button
+        <Link
+          href={"/assessment"}
           className="w-[85%] py-4 rounded-2xl bg-gradient-to-r from-[#4A6BFF] to-[#22C55E] 
                      text-white font-semibold flex flex-col items-center justify-center 
                      gap-1 shadow-xl text-center"
@@ -127,9 +111,8 @@ export default function MobileHero() {
             </div>
             <span>Book Free Counseling</span>
           </div>
-
           <FiChevronRight className="text-xl mt-1" />
-        </button>
+        </Link>
       </motion.div>
     </div>
   );
