@@ -165,7 +165,7 @@ export default function ScholarshipsFunding() {
           animate();
         });
       },
-      { threshold: 0.4 }
+      { threshold: 0.4 },
     );
 
     if (statsRef.current) observer.observe(statsRef.current);
@@ -225,20 +225,31 @@ export default function ScholarshipsFunding() {
 
       {/* ⭐ CTA 1 */}
       <FadeContent blur>
-        <div className="text-center mb-20 md:mb-24 relative z-10">
+        <div className="text-center mb-16 sm:mb-20 md:mb-24 relative z-10 px-4">
           <Link
-            href={"/assessment"}
+            href="/assessment"
             className="
-              px-10 py-4 rounded-full font-semibold text-white text-lg
-              bg-gradient-to-r from-[#4169E1] to-[#32CD32]
-              shadow-[0_10px_30px_rgba(65,105,225,0.3)]
-              hover:shadow-[0_15px_40px_rgba(65,105,225,0.45)]
-              transition-all duration-300 hover:scale-105 active:scale-100
-            "
+        inline-flex items-center justify-center gap-2
+        w-full sm:w-auto
+        px-6 sm:px-10
+        py-4
+        rounded-full
+        font-semibold
+        text-white
+        text-base sm:text-lg
+        bg-gradient-to-r from-[#4169E1] to-[#32CD32]
+        shadow-[0_8px_24px_rgba(65,105,225,0.3)]
+        transition-all duration-300
+        active:scale-95
+        sm:hover:scale-105
+        sm:hover:shadow-[0_15px_40px_rgba(65,105,225,0.45)]
+      "
           >
-            Check Your Scholarship Eligibility →
+            Check Your Scholarship Eligibility
+            <span className="text-lg sm:text-xl">→</span>
           </Link>
-          <p className="text-gray-600 mt-3 text-sm">
+
+          <p className="text-gray-600 mt-3 text-xs sm:text-sm">
             Takes only 30 seconds • No charges • Instant result
           </p>
         </div>
@@ -351,21 +362,31 @@ export default function ScholarshipsFunding() {
 
       {/* ⭐ Final CTA */}
       <FadeContent blur delay={200}>
-        <div className="text-center mt-20 relative z-10">
+        <div className="text-center mt-14 sm:mt-16 md:mt-20 relative z-10 px-4">
           <Link
-            href={"/assessment"}
+            href="/assessment"
             className="
-              px-12 py-5 rounded-full text-white text-xl font-semibold
-              bg-gradient-to-r from-[#4169E1] to-[#32CD32]
-              shadow-[0_15px_40px_rgba(65,105,225,0.35)]
-              hover:shadow-[0_20px_55px_rgba(65,105,225,0.5)]
-              transition-all duration-300 hover:scale-105 active:scale-100
-            "
+        inline-flex items-center justify-center gap-2
+        w-full sm:w-auto
+        px-6 sm:px-10 md:px-12
+        py-4 sm:py-5
+        rounded-full
+        text-white
+        text-base sm:text-lg md:text-xl
+        font-semibold
+        bg-gradient-to-r from-[#4169E1] to-[#32CD32]
+        shadow-[0_10px_30px_rgba(65,105,225,0.35)]
+        transition-all duration-300
+        active:scale-95
+        sm:hover:scale-105
+        sm:hover:shadow-[0_20px_55px_rgba(65,105,225,0.5)]
+      "
           >
-            Book Your Free Funding Consultation →
+            Book Your Free Funding Consultation
+            <span className="text-lg sm:text-xl md:text-2xl">→</span>
           </Link>
 
-          <p className="text-gray-600 mt-4 text-sm md:text-base">
+          <p className="text-gray-600 mt-3 sm:mt-4 text-xs sm:text-sm md:text-base">
             Limited slots • Completely free • 1-on-1 Expert Guidance
           </p>
         </div>
