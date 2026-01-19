@@ -15,7 +15,7 @@ const MotionLink = motion(Link);
 
 //importing universities data
 
-import { universityItems } from "@/components/Home/Universities/TopUniversitiesData";
+import { universityItems } from "@/data/universitiesData";
 
 // ─── Static data & variants (moved outside component) ────────────────────────────────
 
@@ -86,7 +86,7 @@ export default function UniversityShortlisting() {
   // ─── Memoized derived data ───────────────────────────────────────────────────────────
   const shortlistedUnis = useMemo(
     () => universityItems.filter((uni) => shortlisted.includes(uni.id)),
-    [shortlisted]
+    [shortlisted],
   );
 
   const filteredUnis = useMemo(() => {

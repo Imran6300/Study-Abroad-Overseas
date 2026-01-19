@@ -1,11 +1,11 @@
-import { universityItems } from "@/components/Home/Universities/TopUniversitiesData";
+import { universityItems } from "@/data/universitiesData";
 import UniversityDetailLayout from "@/components/UniversityDetail/UniversityDetailLayout";
 
 export default async function Page({ params }) {
   const { slug } = await params; // ✅ REQUIRED in Next.js 16
 
   const uni = universityItems.find(
-    (u) => u.slug?.trim().toLowerCase() === slug.trim().toLowerCase()
+    (u) => u.slug?.trim().toLowerCase() === slug.trim().toLowerCase(),
   );
 
   if (!uni) {
