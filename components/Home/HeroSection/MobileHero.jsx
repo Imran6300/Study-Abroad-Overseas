@@ -1,13 +1,18 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { FaSearch, FaGraduationCap } from "react-icons/fa";
+import { FaSearch } from "react-icons/fa";
 import { FiChevronRight } from "react-icons/fi";
 import { IoIosRocket } from "react-icons/io";
 import { MdStars } from "react-icons/md";
 import Link from "next/link";
+import { useState } from "react";
+import { useHeroSearch } from "@/hooks/useHeroSearch";
 
 export default function MobileHero() {
+  const { handleSearch } = useHeroSearch();
+  const [search, setSearch] = useState("");
+
   return (
     <div className="relative min-h-[100vh] w-full px-5 pt-28 pb-24 md:hidden overflow-hidden bg-[#F7F9FC]">
       {/* Soft background gradient */}
@@ -38,7 +43,7 @@ export default function MobileHero() {
         </h2>
       </motion.div>
 
-      {/* Glass card — premium style */}
+      {/* Glass card */}
       <motion.div
         initial={{ opacity: 0, y: 25 }}
         animate={{ opacity: 1, y: 0 }}
@@ -55,23 +60,36 @@ export default function MobileHero() {
         </div>
       </motion.div>
 
-      {/* Search bar clean + modern */}
-      <motion.div
+      {/* ✅ FUNCTIONAL SEARCH */}
+      <motion.form
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleSearch(search);
+        }}
         initial={{ opacity: 0, y: 25 }}
         animate={{ opacity: 1, y: 0 }}
         className="relative z-10 mb-5"
       >
-        <div className="flex items-center bg-white rounded-xl shadow px-3 py-2 border border-gray-200">
-          <FaSearch className="text-gray-500" />
+        <div className="flex items-center bg-white rounded-xl shadow px-4 py-3 border border-gray-200">
           <input
             type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
             placeholder="Search universities or programs"
-            className="ml-3 w-full h-10 text-sm outline-none"
+            className="flex-1 h-10 text-base outline-none bg-transparent"
           />
-        </div>
-      </motion.div>
 
-      {/* Stats simplified + premium */}
+          <button
+            type="submit"
+            className="ml-2 p-2 text-gray-500 hover:text-blue-600 focus:text-blue-600 transition-colors"
+            aria-label="Search"
+          >
+            <FaSearch className="w-5 h-5" />
+          </button>
+        </div>
+      </motion.form>
+
+      {/* Stats */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -93,16 +111,17 @@ export default function MobileHero() {
           </div>
         ))}
       </motion.div>
-      {/* CTA centered inside the page */}
+
+      {/* CTA */}
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         className="relative z-10 w-full flex justify-center mt-6"
       >
         <Link
-          href={"/assessment"}
-          className="w-[85%] py-4 rounded-2xl bg-gradient-to-r from-[#4A6BFF] to-[#22C55E] 
-                     text-white font-semibold flex flex-col items-center justify-center 
+          href="/assessment"
+          className="w-[85%] py-4 rounded-2xl bg-gradient-to-r from-[#4A6BFF] to-[#22C55E]
+                     text-white font-semibold flex flex-col items-center justify-center
                      gap-1 shadow-xl text-center"
         >
           <div className="flex items-center gap-2">
