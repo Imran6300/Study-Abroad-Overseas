@@ -1,6 +1,5 @@
 export const metadata = {
-  title: "Login Page | Khizar Overseas",
-  description: "Create your Khizar Overseas account",
+  title: "Login Page",
 };
 
 export default function LoginLayout({ children }) {

@@ -5,10 +5,15 @@ import AuthInitializer from "@/components/AuthInitializer";
 import ReduxProvider from "@/store/ReduxProvider";
 import type { ReactNode } from "react";
 
+// app/layout.jsx
 export const metadata = {
-  title: "Overseas",
-  description: "Study Abroad Website",
+  title: {
+    default: "Khizar Overseas",
+    template: "%s | Khizar Overseas",
+  },
+  description: "Study abroad guidance & university admissions",
 };
+
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
