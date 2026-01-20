@@ -92,7 +92,7 @@ export default function Scholarships() {
               </Link>
 
               <Link
-                href="/consult"
+                href="/contact"
                 className="px-8 py-5 sm:px-10 sm:py-6 border-2 rounded-2xl font-bold text-lg sm:text-xl flex items-center justify-center gap-3 transition-all duration-300 hover:bg-white/10 hover:border-white/40 hover:scale-105"
                 style={{ borderColor: Palette.slate, color: Palette.lightGray }}
               >
@@ -263,7 +263,7 @@ export default function Scholarships() {
             </Link>
 
             <Link
-              href="/consult"
+              href="/contact"
               className="px-10 sm:px-14 py-6 sm:py-8 border-2 rounded-full font-bold text-lg sm:text-2xl transition-all duration-500 hover:scale-105 hover:bg-white/10"
               style={{
                 borderColor: Palette.limeGreen,
