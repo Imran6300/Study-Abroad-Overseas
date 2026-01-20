@@ -38,7 +38,7 @@ export default function CountryDetail({ country }) {
             priority
             sizes="100vw"
             placeholder="blur" // Instant low-quality preview
-            blurDataURL="/countries/placeholder.jpg" // Optional: add a tiny base64 or let Next.js auto-generate
+            blurDataURL="/student.png" // Optional: add a tiny base64 or let Next.js auto-generate
             className="object-cover"
             style={{ objectPosition: hero.position }}
           />
