@@ -1,6 +1,7 @@
 export const COUNTRIES = [
   {
     name: "Canada",
+    slug: "canada",
     desc: "Top unis & strong PR pathways",
     img: "/countries/canada.jpg",
     flag: "🇨🇦",
@@ -8,6 +9,7 @@ export const COUNTRIES = [
   },
   {
     name: "USA",
+    slug: "usa",
     desc: "World-class universities & innovation",
     img: "/countries/usa.jpg",
     flag: "🇺🇸",
@@ -15,6 +17,7 @@ export const COUNTRIES = [
   },
   {
     name: "UK",
+    slug: "uk",
     desc: "Prestigious degrees in 1–3 years",
     img: "/countries/uk.jpg",
     flag: "🇬🇧",
@@ -22,6 +25,7 @@ export const COUNTRIES = [
   },
   {
     name: "Australia",
+    slug: "australia",
     desc: "Great work rights & lifestyle",
     img: "/countries/australia.jpg",
     flag: "🇦🇺",
@@ -29,6 +33,7 @@ export const COUNTRIES = [
   },
   {
     name: "Germany",
+    slug: "germany",
     desc: "Tuition-free or low-cost quality",
     img: "/countries/germany.jpg",
     flag: "🇩🇪",
@@ -36,6 +41,7 @@ export const COUNTRIES = [
   },
   {
     name: "Ireland",
+    slug: "ireland",
     desc: "Tech hub & post-study stay",
     img: "/countries/ireland.jpg",
     flag: "🇮🇪",
@@ -43,6 +49,7 @@ export const COUNTRIES = [
   },
   {
     name: "New Zealand",
+    slug: "new-zealand",
     desc: "Safe & nature-rich education",
     img: "/countries/newzealand.jpg",
     flag: "🇳🇿",
@@ -50,6 +57,7 @@ export const COUNTRIES = [
   },
   {
     name: "France",
+    slug: "france",
     desc: "Affordable & cultural richness",
     img: "/countries/france.jpg",
     flag: "🇫🇷",
@@ -57,6 +65,7 @@ export const COUNTRIES = [
   },
   {
     name: "Italy",
+    slug: "italy",
     desc: "Design, fashion & historic unis",
     img: "/countries/italy.jpg",
     flag: "🇮🇹",
@@ -64,6 +73,7 @@ export const COUNTRIES = [
   },
   {
     name: "Netherlands",
+    slug: "netherlands",
     desc: "English-taught programs & innovation",
     img: "/countries/netherland.jpg",
     flag: "🇳🇱",
@@ -71,6 +81,7 @@ export const COUNTRIES = [
   },
   {
     name: "Singapore",
+    slug: "singapore",
     desc: "Asia's top education & safety",
     img: "/countries/singapore.jpg",
     flag: "🇸🇬",
@@ -78,9 +89,18 @@ export const COUNTRIES = [
   },
   {
     name: "Dubai",
+    slug: "dubai",
     desc: "Modern campuses & job opportunities",
     img: "/countries/dubai.jpg",
     flag: "🇦🇪",
     region: "Middle East",
+  },
+  {
+    name: "China",
+    slug: "china",
+    desc: "High-Tech Universities & Career Growth",
+    img: "/countries/china.jpg",
+    flag: "cn",
+    region: "East Asia",
   },
 ];
