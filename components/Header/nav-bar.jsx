@@ -40,7 +40,7 @@ export default function NavBar() {
       {
         method: "POST",
         credentials: "include",
-      }
+      },
     );
 
     dispatch(logout());
@@ -173,6 +173,8 @@ export default function NavBar() {
 // DESKTOP NAV (UNCHANGED)
 // ────────────────────────────────────────────────────────────────────────
 
+// ... previous imports remain the same
+
 const MemoizedDesktopNav = memo(() => {
   const [active, setActive] = useState(null);
 
@@ -216,6 +218,10 @@ const MemoizedDesktopNav = memo(() => {
       />
       <NavItem label="Why Us" link="/why-us" />
       <NavItem label="Success Stories" link="/success-stories" />
+
+      {/* ← Add Blog here */}
+      <NavItem label="Blog" link="/blog" />
+
       <NavItem label="Contact" link="/contact" />
     </ul>
   );
@@ -473,6 +479,11 @@ const MobileMenu = ({ open, onClose, isLoggedIn, handleLogout, user }) => {
               <MobileNavItem
                 label="Success Stories"
                 link="/success-stories"
+                onClose={onClose}
+              />
+              <MobileNavItem
+                label="Blog"
+                link="/blog"
                 onClose={onClose}
               />
               <MobileNavItem
