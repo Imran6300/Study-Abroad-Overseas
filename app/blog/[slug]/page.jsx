@@ -36,7 +36,7 @@ export default async function Post({ params }) {
   const { frontmatter, content } = post;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50/80">
+    <div className="min-h-screen bg-gradient-to-b  mt-5 from-slate-50 via-white to-slate-50/80">
       {/* Elegant thin accent gradient bar */}
       <div className="h-1 bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 w-full" />
 

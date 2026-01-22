@@ -16,8 +16,8 @@ import Link from "next/link";
 // ⭐ Stats with animated numbers
 const stats = [
   {
-    number: 15,
-    suffix: " Cr+",
+    number: 75,
+    suffix: "M+",
     label: "Total Scholarships Secured",
     isCurrency: true,
   },
