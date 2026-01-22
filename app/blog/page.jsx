@@ -1,31 +1,20 @@
-// app/blog/page.tsx
 import fs from "fs";
 import path from "path";
 import matter from "gray-matter";
-import Link from "next/link";
-import {
-  FaCalendarAlt,
-  FaUser,
-  FaClock,
-  FaArrowRight,
-  FaBookOpen,
-  FaEnvelope,
-  FaGlobeAsia,
-} from "react-icons/fa";
+import BlogClient from "@/components/BlogClient";
 
 const postsDirectory = path.join(process.cwd(), "content/blog");
 
 function getAllPosts() {
   if (!fs.existsSync(postsDirectory)) return [];
 
-  const fileNames = fs.readdirSync(postsDirectory);
-  const posts = fileNames
-    .filter((fileName) => fileName.endsWith(".mdx"))
-    .map((fileName) => {
-      const slug = fileName.replace(/\.mdx$/, "");
-      const fullPath = path.join(postsDirectory, fileName);
-      const fileContents = fs.readFileSync(fullPath, "utf8");
-      const { data } = matter(fileContents);
+  return fs
+    .readdirSync(postsDirectory)
+    .filter((f) => f.endsWith(".mdx"))
+    .map((file) => {
+      const slug = file.replace(".mdx", "");
+      const content = fs.readFileSync(path.join(postsDirectory, file), "utf8");
+      const { data } = matter(content);
 
       return {
         slug,
@@ -38,283 +27,20 @@ function getAllPosts() {
               year: "numeric",
             })
           : "Date unavailable",
+
         author: data.author || "Khizar Team",
         readTime: data.readTime || "5 min read",
         image: data.image || null,
         category: data.category || "General",
       };
     });
-
-  // Sort newest first
-  posts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-
-  return posts;
 }
 
-export default function Blog() {
-  const allPosts = getAllPosts();
+export default function BlogPage() {
+  const posts = getAllPosts();
 
-  const featuredPost = allPosts[0] || null;
-  const recentPosts = allPosts.slice(1);
-
-  const categories = [
-    "Country Guides",
-    "Visa Guidance",
-    "Application Tips",
-    "Scholarships",
-    "Success Stories",
-    "Student Life",
-  ];
-
-  return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Hero */}
-      <section className="relative bg-[#0f2a5f] text-white overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#0f2a5f] via-[#0f2a5f] to-[#091d42] opacity-90" />
-
-        <div className="relative container mx-auto px-6 md:px-12 py-20 md:py-28 max-w-6xl">
-          <div className="max-w-3xl">
-            <span className="inline-block bg-orange-500 text-white text-sm font-semibold px-4 py-1.5 rounded-full mb-6">
-              Study Abroad Insights
-            </span>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6">
-              Your Journey to Global Education Starts Here
-            </h1>
-            <p className="text-xl md:text-2xl text-white/90 mb-10">
-              Expert advice, real student stories, visa secrets & latest updates
-              — all in one place.
-            </p>
-
-            <div className="flex flex-wrap gap-4">
-              <Link
-                href="#latest"
-                className="bg-orange-500 hover:bg-orange-600 text-white font-semibold px-8 py-4 rounded-xl shadow-lg transition transform hover:scale-[1.03]"
-              >
-                Explore Latest Articles
-              </Link>
-              <Link
-                href="/contact"
-                className="bg-transparent border-2 border-white/40 hover:bg-white/10 text-white font-semibold px-8 py-4 rounded-xl transition"
-              >
-                Talk to an Expert
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Categories (sticky bar) */}
-      <section className="py-10 border-b bg-white sticky top-0 z-10 shadow-sm">
-        <div className="container mx-auto px-6 md:px-12 max-w-6xl overflow-x-auto">
-          <div className="flex gap-3 pb-2">
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                className="px-5 py-2.5 bg-gray-100 hover:bg-[#0f2a5f] hover:text-white rounded-full text-sm font-medium whitespace-nowrap transition-colors"
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <div className="container mx-auto px-6 md:px-12 py-16 max-w-7xl">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-16" id="latest">
-            {/* Featured Post */}
-            {featuredPost ? (
-              <article className="bg-white rounded-3xl overflow-hidden shadow-xl border border-gray-100 group">
-                <div className="relative h-64 md:h-96 overflow-hidden">
-                  {featuredPost.image ? (
-                    <img
-                      src={featuredPost.image}
-                      alt={featuredPost.title}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-[#0f2a5f] to-[#091d42] flex items-center justify-center">
-                      <span className="text-white/50 text-2xl">
-                        Featured Article
-                      </span>
-                    </div>
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-                  <div className="absolute bottom-0 left-0 p-8">
-                    <span className="inline-block bg-orange-500 text-white text-xs font-bold px-3 py-1.5 rounded-full mb-4">
-                      {featuredPost.category}
-                    </span>
-                    <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 leading-tight">
-                      {featuredPost.title}
-                    </h2>
-                    <div className="flex items-center gap-6 text-white/90 text-sm">
-                      <span className="flex items-center gap-2">
-                        <FaCalendarAlt /> {featuredPost.date}
-                      </span>
-                      <span className="flex items-center gap-2">
-                        <FaClock /> {featuredPost.readTime}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <div className="p-8 md:p-10">
-                  <p className="text-gray-700 text-lg mb-6 line-clamp-3">
-                    {featuredPost.excerpt}
-                  </p>
-                  <Link
-                    href={`/blog/${featuredPost.slug}`}
-                    className="inline-flex items-center gap-3 text-[#0f2a5f] font-semibold hover:text-orange-600 transition-colors text-lg"
-                  >
-                    Read Full Article <FaArrowRight />
-                  </Link>
-                </div>
-              </article>
-            ) : (
-              <div className="text-center py-12 text-gray-600">
-                <p className="text-xl">
-                  No featured article yet. Check back soon!
-                </p>
-              </div>
-            )}
-
-            {/* Regular Posts Grid */}
-            {recentPosts.length > 0 ? (
-              <div className="grid md:grid-cols-2 gap-8">
-                {recentPosts.map((post) => (
-                  <article
-                    key={post.slug}
-                    className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 group flex flex-col"
-                  >
-                    <div className="relative h-52 overflow-hidden">
-                      {post.image ? (
-                        <img
-                          src={post.image}
-                          alt={post.title}
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-                          <span className="text-gray-400">No image</span>
-                        </div>
-                      )}
-                      <span className="absolute top-4 left-4 bg-[#0f2a5f] text-white text-xs font-bold px-3 py-1.5 rounded-full">
-                        {post.category}
-                      </span>
-                    </div>
-                    <div className="p-6 flex flex-col flex-grow">
-                      <div className="flex items-center gap-4 text-sm text-gray-500 mb-3">
-                        <span className="flex items-center gap-1.5">
-                          <FaCalendarAlt className="text-orange-500" />{" "}
-                          {post.date}
-                        </span>
-                        <span className="flex items-center gap-1.5">
-                          <FaClock className="text-orange-500" />{" "}
-                          {post.readTime}
-                        </span>
-                      </div>
-                      <h3 className="text-xl font-bold text-[#0f2a5f] mb-3 line-clamp-2 group-hover:text-orange-600 transition-colors">
-                        {post.title}
-                      </h3>
-                      <p className="text-gray-600 mb-6 line-clamp-3 flex-grow">
-                        {post.excerpt}
-                      </p>
-                      <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-100">
-                        <span className="text-sm text-gray-500 flex items-center gap-1.5">
-                          <FaUser className="text-orange-500" /> {post.author}
-                        </span>
-                        <Link
-                          href={`/blog/${post.slug}`}
-                          className="text-orange-600 hover:text-orange-700 font-medium flex items-center gap-2"
-                        >
-                          Read <FaArrowRight className="text-sm" />
-                        </Link>
-                      </div>
-                    </div>
-                  </article>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12 text-gray-600">
-                <p>No recent articles yet. New content coming soon!</p>
-              </div>
-            )}
-
-            <div className="text-center mt-12">
-              <button className="bg-[#0f2a5f] hover:bg-[#091d42] text-white font-semibold px-12 py-5 rounded-xl shadow-lg transition transform hover:scale-[1.03]">
-                Load More Articles
-              </button>
-            </div>
-          </div>
-
-          {/* Sidebar */}
-          <aside className="space-y-10 lg:sticky lg:top-24 lg:h-fit">
-            {/* Newsletter */}
-            <div className="bg-gradient-to-br from-[#0f2a5f] to-[#091d42] text-white rounded-2xl p-8 shadow-xl">
-              <FaEnvelope className="text-4xl text-orange-400 mb-4" />
-              <h4 className="text-2xl font-bold mb-3">Stay Updated</h4>
-              <p className="text-white/80 mb-6">
-                Get the latest visa rules, scholarships & success stories
-                directly in your inbox.
-              </p>
-              <form className="space-y-3">
-                <input
-                  type="email"
-                  placeholder="Your email address"
-                  className="w-full px-5 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:border-orange-400"
-                />
-                <button
-                  type="submit"
-                  className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-xl transition"
-                >
-                  Subscribe Now
-                </button>
-              </form>
-            </div>
-
-            {/* Popular Destinations */}
-            <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
-              <h4 className="text-xl font-bold text-[#0f2a5f] mb-6 flex items-center gap-3">
-                <FaGlobeAsia className="text-orange-500" /> Popular Destinations
-              </h4>
-              <div className="grid grid-cols-2 gap-4">
-                {["Canada", "Germany", "Australia", "UK", "USA", "Ireland"].map(
-                  (country) => (
-                    <Link
-                      key={country}
-                      href={`/all-countries/${country.toLowerCase()}`}
-                      className="text-center py-3 bg-gray-50 hover:bg-orange-50 rounded-xl text-[#0f2a5f] font-medium hover:text-orange-600 transition"
-                    >
-                      {country}
-                    </Link>
-                  ),
-                )}
-              </div>
-            </div>
-          </aside>
-        </div>
-      </div>
-
-      {/* Final CTA */}
-      <section className="bg-gradient-to-r from-[#0f2a5f] via-[#0a2550] to-[#091d42] text-white py-20">
-        <div className="container mx-auto px-6 md:px-12 text-center max-w-5xl">
-          <h2 className="text-4xl md:text-5xl font-bold mb-6">
-            Your Dream University is Waiting
-          </h2>
-          <p className="text-xl md:text-2xl mb-10 opacity-90 max-w-3xl mx-auto">
-            Thousands of students have transformed their future with our
-            guidance. Your turn starts now.
-          </p>
-          <Link
-            href="/contact"
-            className="inline-flex items-center gap-3 bg-green-500 hover:bg-green-600 text-white font-bold text-xl px-12 py-6 rounded-xl shadow-2xl transition transform hover:scale-[1.05]"
-          >
-            <FaBookOpen className="text-2xl" /> Book Free Consultation Today
-          </Link>
-        </div>
-      </section>
-    </div>
-  );
+  // 👇 ONLY THIS
+  return <BlogClient posts={posts} />;
 }
 
-export const revalidate = 3600; // ISR - revalidate every hour
+export const revalidate = 3600;
