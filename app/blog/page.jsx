@@ -1,4 +1,7 @@
 // app/blog/page.tsx
+import fs from "fs";
+import path from "path";
+import matter from "gray-matter";
 import Link from "next/link";
 import {
   FaCalendarAlt,
@@ -10,48 +13,49 @@ import {
   FaGlobeAsia,
 } from "react-icons/fa";
 
-export default function Blog() {
-  // Sample data — later fetch from DB / MDX / API
-  const featuredPost = {
-    id: 1,
-    title: "Top 10 Universities in Canada for International Students in 2025",
-    excerpt:
-      "High acceptance rates, generous scholarships, and excellent post-study work options — discover why Canada remains a top choice for Indian students.",
-    date: "January 10, 2025",
-    author: "Khizar Team",
-    readTime: "8 min read",
-    image: "/blog/canada-universities.jpg",
-    slug: "top-10-universities-canada-2025",
-    category: "Country Guides",
-  };
+const postsDirectory = path.join(process.cwd(), "content/blog");
 
-  const posts = [
-    {
-      id: 2,
-      title: "How to Write a Winning Statement of Purpose (SOP) – 2025 Guide",
-      excerpt:
-        "Structure, powerful examples, common pitfalls & insider tips from admission officers.",
-      date: "December 28, 2024",
-      author: "Khizar Team",
-      readTime: "12 min read",
-      image: "/blog/sop-guide.jpg",
-      slug: "sop-guide-2025",
-      category: "Application Tips",
-    },
-    {
-      id: 3,
-      title: "Germany Free Education: 2025 Visa Rules & Blocked Account Update",
-      excerpt:
-        "Tuition-free universities, latest financial proof changes, APS certificate & more.",
-      date: "November 15, 2024",
-      author: "Visa Expert",
-      readTime: "10 min read",
-      image: "/blog/germany-visa.jpg",
-      slug: "germany-free-education-visa-2025",
-      category: "Visa Guidance",
-    },
-    // Add 2–3 more real posts when ready
-  ];
+function getAllPosts() {
+  if (!fs.existsSync(postsDirectory)) return [];
+
+  const fileNames = fs.readdirSync(postsDirectory);
+  const posts = fileNames
+    .filter((fileName) => fileName.endsWith(".mdx"))
+    .map((fileName) => {
+      const slug = fileName.replace(/\.mdx$/, "");
+      const fullPath = path.join(postsDirectory, fileName);
+      const fileContents = fs.readFileSync(fullPath, "utf8");
+      const { data } = matter(fileContents);
+
+      return {
+        slug,
+        title: data.title || "Untitled",
+        excerpt: data.excerpt || "",
+        date: data.date
+          ? new Date(data.date).toLocaleDateString("en-IN", {
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            })
+          : "Date unavailable",
+        author: data.author || "Khizar Team",
+        readTime: data.readTime || "5 min read",
+        image: data.image || null,
+        category: data.category || "General",
+      };
+    });
+
+  // Sort newest first
+  posts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  return posts;
+}
+
+export default function Blog() {
+  const allPosts = getAllPosts();
+
+  const featuredPost = allPosts[0] || null;
+  const recentPosts = allPosts.slice(1);
 
   const categories = [
     "Country Guides",
@@ -99,7 +103,7 @@ export default function Blog() {
         </div>
       </section>
 
-      {/* Categories */}
+      {/* Categories (sticky bar) */}
       <section className="py-10 border-b bg-white sticky top-0 z-10 shadow-sm">
         <div className="container mx-auto px-6 md:px-12 max-w-6xl overflow-x-auto">
           <div className="flex gap-3 pb-2">
@@ -120,92 +124,121 @@ export default function Blog() {
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-16" id="latest">
             {/* Featured Post */}
-            <article className="bg-white rounded-3xl overflow-hidden shadow-xl border border-gray-100 group">
-              <div className="relative h-64 md:h-96 overflow-hidden">
-                <img
-                  src={featuredPost.image}
-                  alt={featuredPost.title}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-                <div className="absolute bottom-0 left-0 p-8">
-                  <span className="inline-block bg-orange-500 text-white text-xs font-bold px-3 py-1.5 rounded-full mb-4">
-                    {featuredPost.category}
-                  </span>
-                  <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 leading-tight">
-                    {featuredPost.title}
-                  </h2>
-                  <div className="flex items-center gap-6 text-white/90 text-sm">
-                    <span className="flex items-center gap-2">
-                      <FaCalendarAlt /> {featuredPost.date}
+            {featuredPost ? (
+              <article className="bg-white rounded-3xl overflow-hidden shadow-xl border border-gray-100 group">
+                <div className="relative h-64 md:h-96 overflow-hidden">
+                  {featuredPost.image ? (
+                    <img
+                      src={featuredPost.image}
+                      alt={featuredPost.title}
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-[#0f2a5f] to-[#091d42] flex items-center justify-center">
+                      <span className="text-white/50 text-2xl">
+                        Featured Article
+                      </span>
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+                  <div className="absolute bottom-0 left-0 p-8">
+                    <span className="inline-block bg-orange-500 text-white text-xs font-bold px-3 py-1.5 rounded-full mb-4">
+                      {featuredPost.category}
                     </span>
-                    <span className="flex items-center gap-2">
-                      <FaClock /> {featuredPost.readTime}
-                    </span>
+                    <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 leading-tight">
+                      {featuredPost.title}
+                    </h2>
+                    <div className="flex items-center gap-6 text-white/90 text-sm">
+                      <span className="flex items-center gap-2">
+                        <FaCalendarAlt /> {featuredPost.date}
+                      </span>
+                      <span className="flex items-center gap-2">
+                        <FaClock /> {featuredPost.readTime}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div className="p-8 md:p-10">
-                <p className="text-gray-700 text-lg mb-6 line-clamp-3">
-                  {featuredPost.excerpt}
+                <div className="p-8 md:p-10">
+                  <p className="text-gray-700 text-lg mb-6 line-clamp-3">
+                    {featuredPost.excerpt}
+                  </p>
+                  <Link
+                    href={`/blog/${featuredPost.slug}`}
+                    className="inline-flex items-center gap-3 text-[#0f2a5f] font-semibold hover:text-orange-600 transition-colors text-lg"
+                  >
+                    Read Full Article <FaArrowRight />
+                  </Link>
+                </div>
+              </article>
+            ) : (
+              <div className="text-center py-12 text-gray-600">
+                <p className="text-xl">
+                  No featured article yet. Check back soon!
                 </p>
-                <Link
-                  href={`/blog/${featuredPost.slug}`}
-                  className="inline-flex items-center gap-3 text-[#0f2a5f] font-semibold hover:text-orange-600 transition-colors text-lg"
-                >
-                  Read Full Article <FaArrowRight />
-                </Link>
               </div>
-            </article>
+            )}
 
             {/* Regular Posts Grid */}
-            <div className="grid md:grid-cols-2 gap-8">
-              {posts.map((post) => (
-                <article
-                  key={post.id}
-                  className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 group flex flex-col"
-                >
-                  <div className="relative h-52 overflow-hidden">
-                    <img
-                      src={post.image}
-                      alt={post.title}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                    <span className="absolute top-4 left-4 bg-[#0f2a5f] text-white text-xs font-bold px-3 py-1.5 rounded-full">
-                      {post.category}
-                    </span>
-                  </div>
-                  <div className="p-6 flex flex-col flex-grow">
-                    <div className="flex items-center gap-4 text-sm text-gray-500 mb-3">
-                      <span className="flex items-center gap-1.5">
-                        <FaCalendarAlt className="text-orange-500" />{" "}
-                        {post.date}
-                      </span>
-                      <span className="flex items-center gap-1.5">
-                        <FaClock className="text-orange-500" /> {post.readTime}
+            {recentPosts.length > 0 ? (
+              <div className="grid md:grid-cols-2 gap-8">
+                {recentPosts.map((post) => (
+                  <article
+                    key={post.slug}
+                    className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 group flex flex-col"
+                  >
+                    <div className="relative h-52 overflow-hidden">
+                      {post.image ? (
+                        <img
+                          src={post.image}
+                          alt={post.title}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                          <span className="text-gray-400">No image</span>
+                        </div>
+                      )}
+                      <span className="absolute top-4 left-4 bg-[#0f2a5f] text-white text-xs font-bold px-3 py-1.5 rounded-full">
+                        {post.category}
                       </span>
                     </div>
-                    <h3 className="text-xl font-bold text-[#0f2a5f] mb-3 line-clamp-2 group-hover:text-orange-600 transition-colors">
-                      {post.title}
-                    </h3>
-                    <p className="text-gray-600 mb-6 line-clamp-3 flex-grow">
-                      {post.excerpt}
-                    </p>
-                    <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-100">
-                      <span className="text-sm text-gray-500 flex items-center gap-1.5">
-                        <FaUser className="text-orange-500" /> {post.author}
-                      </span>
-                      <Link
-                        href={`/blog/${post.slug}`}
-                        className="text-orange-600 hover:text-orange-700 font-medium flex items-center gap-2"
-                      >
-                        Read <FaArrowRight className="text-sm" />
-                      </Link>
+                    <div className="p-6 flex flex-col flex-grow">
+                      <div className="flex items-center gap-4 text-sm text-gray-500 mb-3">
+                        <span className="flex items-center gap-1.5">
+                          <FaCalendarAlt className="text-orange-500" />{" "}
+                          {post.date}
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                          <FaClock className="text-orange-500" />{" "}
+                          {post.readTime}
+                        </span>
+                      </div>
+                      <h3 className="text-xl font-bold text-[#0f2a5f] mb-3 line-clamp-2 group-hover:text-orange-600 transition-colors">
+                        {post.title}
+                      </h3>
+                      <p className="text-gray-600 mb-6 line-clamp-3 flex-grow">
+                        {post.excerpt}
+                      </p>
+                      <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-100">
+                        <span className="text-sm text-gray-500 flex items-center gap-1.5">
+                          <FaUser className="text-orange-500" /> {post.author}
+                        </span>
+                        <Link
+                          href={`/blog/${post.slug}`}
+                          className="text-orange-600 hover:text-orange-700 font-medium flex items-center gap-2"
+                        >
+                          Read <FaArrowRight className="text-sm" />
+                        </Link>
+                      </div>
                     </div>
-                  </div>
-                </article>
-              ))}
-            </div>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12 text-gray-600">
+                <p>No recent articles yet. New content coming soon!</p>
+              </div>
+            )}
 
             <div className="text-center mt-12">
               <button className="bg-[#0f2a5f] hover:bg-[#091d42] text-white font-semibold px-12 py-5 rounded-xl shadow-lg transition transform hover:scale-[1.03]">
@@ -239,7 +272,7 @@ export default function Blog() {
               </form>
             </div>
 
-            {/* Quick Links / Popular Countries */}
+            {/* Popular Destinations */}
             <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
               <h4 className="text-xl font-bold text-[#0f2a5f] mb-6 flex items-center gap-3">
                 <FaGlobeAsia className="text-orange-500" /> Popular Destinations
@@ -283,3 +316,5 @@ export default function Blog() {
     </div>
   );
 }
+
+export const revalidate = 3600; // ISR - revalidate every hour
