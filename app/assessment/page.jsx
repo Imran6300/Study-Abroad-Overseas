@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useSelector } from "react-redux";
 
 import Step1 from "@/components/assessment/step1";
 import Step2 from "@/components/assessment/step2";
@@ -53,6 +54,8 @@ const pageVariants = {
 const TOTAL_STEPS = 4;
 
 export default function FreeAssessmentPage() {
+  const { isLoggedIn, user, authChecked } = useSelector((state) => state.auth);
+
   const [step, setStep] = useState(1);
   const [direction, setDirection] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -161,6 +164,9 @@ export default function FreeAssessmentPage() {
                     data={formData}
                     updateForm={updateForm}
                     nextStep={nextStep}
+                    isLoggedIn={isLoggedIn}
+                    user={user}
+                    authChecked={authChecked}
                   />
                 )}
 
@@ -170,6 +176,9 @@ export default function FreeAssessmentPage() {
                     updateForm={updateForm}
                     nextStep={nextStep}
                     prevStep={prevStep}
+                    isLoggedIn={isLoggedIn}
+                    user={user}
+                    authChecked={authChecked}
                   />
                 )}
 
@@ -179,6 +188,9 @@ export default function FreeAssessmentPage() {
                     updateForm={updateForm}
                     nextStep={nextStep}
                     prevStep={prevStep}
+                    isLoggedIn={isLoggedIn}
+                    user={user}
+                    authChecked={authChecked}
                   />
                 )}
 
@@ -189,6 +201,9 @@ export default function FreeAssessmentPage() {
                     prevStep={prevStep}
                     submit={handleSubmit}
                     loading={loading}
+                    isLoggedIn={isLoggedIn}
+                    user={user}
+                    authChecked={authChecked}
                   />
                 )}
               </motion.div>

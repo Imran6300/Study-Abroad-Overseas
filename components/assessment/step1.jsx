@@ -1,4 +1,28 @@
-export default function Step1({ data, updateForm, nextStep }) {
+import { useEffect } from "react";
+
+export default function Step1({
+  data,
+  updateForm,
+  nextStep,
+  isLoggedIn,
+  user,
+  authChecked,
+}) {
+  // ✅ Prefill from session (safe, non-overwriting)
+  useEffect(() => {
+    if (!authChecked || !isLoggedIn || !user) return;
+
+    const prefillData = {};
+
+    if (!data.name && user.name) prefillData.name = user.name;
+    if (!data.email && user.email) prefillData.email = user.email;
+    if (!data.phone && user.phone) prefillData.phone = user.phone;
+
+    if (Object.keys(prefillData).length > 0) {
+      updateForm(prefillData);
+    }
+  }, [authChecked, isLoggedIn, user]);
+
   return (
     <div className="space-y-5">
       <input
@@ -8,6 +32,7 @@ export default function Step1({ data, updateForm, nextStep }) {
         onChange={(e) => updateForm({ name: e.target.value })}
         className="input"
       />
+
       <input
         type="email"
         placeholder="Email Address"
@@ -15,6 +40,7 @@ export default function Step1({ data, updateForm, nextStep }) {
         onChange={(e) => updateForm({ email: e.target.value })}
         className="input"
       />
+
       <input
         type="tel"
         placeholder="Phone Number"
