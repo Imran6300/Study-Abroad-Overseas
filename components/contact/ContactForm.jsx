@@ -1,145 +1,202 @@
-import {
-  CheckCircle, // CheckCircle2
-} from "lucide-react";
+"use client";
 
+import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
+import { useRouter, usePathname } from "next/navigation";
 import { motion } from "framer-motion";
+import { CheckCircle } from "lucide-react";
 
 const ContactForm = () => {
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const { isLoggedIn, user, authChecked } = useSelector((state) => state.auth);
+  const [loading, setLoading] = useState(false);
+
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    destination: "",
+    courseLevel: "",
+    intake: "",
+    message: "",
+  });
+
+  /* ✅ Safe prefill */
+  useEffect(() => {
+    if (!authChecked || !isLoggedIn || !user) return;
+
+    setForm((prev) => ({
+      ...prev,
+      name: prev.name || user.name || "",
+      email: prev.email || user.email || "",
+      phone: prev.phone || user.phone || "",
+    }));
+  }, [authChecked, isLoggedIn, user]);
+
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!authChecked || loading) return;
+
+    if (!isLoggedIn) {
+      router.push(`/login?redirect=${encodeURIComponent(pathname)}`);
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const res = await fetch("/api/contactform", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+
+      if (!res.ok) throw new Error("Failed");
+
+      console.log("Contact Form Submitted:", form);
+      alert("Request submitted successfully!");
+    } catch (err) {
+      alert("Submission failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <>
-      <motion.form
-        initial={{ opacity: 0, x: 30 }}
-        whileInView={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.7 }}
-        viewport={{ once: true }}
-        className="bg-white/6 backdrop-blur-xl rounded-2xl p-5 xs:p-6 sm:p-8 lg:p-10 border border-white/10 shadow-2xl order-1 lg:order-2"
-      >
-        <h2 className="text-2xl sm:text-3xl font-semibold mb-6 md:mb-8 text-center md:text-left">
-          Start Your Journey Today
-        </h2>
+    <motion.form
+      initial={{ opacity: 0, x: 30 }}
+      whileInView={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.7 }}
+      viewport={{ once: true }}
+      onSubmit={handleSubmit}
+      className="bg-white/6 backdrop-blur-xl rounded-2xl p-5 xs:p-6 sm:p-8 lg:p-10 border border-white/10 shadow-2xl order-1 lg:order-2"
+    >
+      <h2 className="text-2xl sm:text-3xl font-semibold mb-6 text-center md:text-left">
+        Start Your Journey Today
+      </h2>
 
-        <div className="space-y-5 sm:space-y-6">
-          {/* Name + Email */}
-          <div className="grid grid-cols-1 gap-5 xs:gap-6">
-            <input
-              type="text"
-              placeholder="Full Name *"
-              required
-              className="w-full px-4 py-3.5 sm:py-4 text-base rounded-lg bg-black/30 border border-white/20 focus:border-[#32CD32] focus:ring-2 focus:ring-[#32CD32]/30 outline-none transition-all placeholder:text-gray-500 text-white min-h-[52px]"
-            />
-            <input
-              type="email"
-              placeholder="Email Address *"
-              required
-              className="w-full px-4 py-3.5 sm:py-4 text-base rounded-lg bg-black/30 border border-white/20 focus:border-[#32CD32] focus:ring-2 focus:ring-[#32CD32]/30 outline-none transition-all placeholder:text-gray-500 text-white min-h-[52px]"
-            />
-          </div>
+      <div className="space-y-5 sm:space-y-6">
+        {/* Name + Email */}
+        <div className="grid grid-cols-1 gap-5">
+          <input
+            name="name"
+            value={form.name}
+            onChange={handleChange}
+            type="text"
+            placeholder="Full Name *"
+            required
+            className="input"
+          />
+          <input
+            name="email"
+            value={form.email}
+            onChange={handleChange}
+            type="email"
+            placeholder="Email Address *"
+            required
+            className="input"
+          />
+        </div>
 
-          {/* Phone + Destination */}
-          <div className="grid grid-cols-1 gap-5 xs:gap-6">
-            <input
-              type="tel"
-              placeholder="Phone Number (with country code) *"
-              required
-              className="w-full px-4 py-3.5 sm:py-4 text-base rounded-lg bg-black/30 border border-white/20 focus:border-[#32CD32] focus:ring-2 focus:ring-[#32CD32]/30 outline-none transition-all placeholder:text-gray-500 text-white min-h-[52px]"
-            />
-            <select
-              defaultValue=""
-              className="w-full px-4 py-3.5 sm:py-4 text-base rounded-lg bg-black/30 border border-white/20 focus:border-[#32CD32] focus:ring-2 focus:ring-[#32CD32]/30 outline-none text-gray-300 min-h-[52px]"
-            >
-              <option value="" disabled>
-                Preferred Study Destination
-              </option>
-              <option>USA</option>
-              <option>UK</option>
-              <option>Canada</option>
-              <option>Australia</option>
-              <option>Germany</option>
-              <option>Ireland</option>
-              <option>Other</option>
-            </select>
-          </div>
-
-          {/* Course Level + Intake */}
-          <div className="grid grid-cols-1 gap-5 xs:gap-6">
-            <select
-              defaultValue=""
-              className="w-full px-4 py-3.5 sm:py-4 text-base rounded-lg bg-black/30 border border-white/20 focus:border-[#32CD32] focus:ring-2 focus:ring-[#32CD32]/30 outline-none text-gray-300 min-h-[52px]"
-            >
-              <option value="" disabled>
-                Course Level
-              </option>
-              <option>Undergraduate</option>
-              <option>Postgraduate</option>
-              <option>MBA</option>
-              <option>PhD</option>
-              <option>Diploma / Foundation</option>
-            </select>
-
-            <select
-              defaultValue=""
-              className="w-full px-4 py-3.5 sm:py-4 text-base rounded-lg bg-black/30 border border-white/20 focus:border-[#32CD32] focus:ring-2 focus:ring-[#32CD32]/30 outline-none text-gray-300 min-h-[52px]"
-            >
-              <option value="" disabled>
-                Preferred Intake
-              </option>
-              <option>Spring 2026</option>
-              <option>Fall 2026</option>
-              <option>Spring 2027</option>
-              <option>Fall 2027</option>
-              <option>Other</option>
-            </select>
-          </div>
-
-          {/* Message */}
-          <textarea
-            rows={5}
-            placeholder="Your study goals, questions or any specific requirements..."
-            className="w-full px-4 py-3.5 sm:py-4 text-base rounded-lg bg-black/30 border border-white/20 focus:border-[#32CD32] focus:ring-2 focus:ring-[#32CD32]/30 outline-none transition-all placeholder:text-gray-500 text-white resize-y min-h-[140px]"
+        {/* Phone + Destination */}
+        <div className="grid grid-cols-1 gap-5">
+          <input
+            name="phone"
+            value={form.phone}
+            onChange={handleChange}
+            type="tel"
+            placeholder="Phone Number *"
+            required
+            className="input"
           />
 
-          {/* Consent */}
-          <div className="flex items-start gap-3 pt-2">
-            <input
-              type="checkbox"
-              id="consent"
-              required
-              className="mt-1.5 h-5 w-5 accent-[#32CD32] flex-shrink-0"
-            />
-            <label
-              htmlFor="consent"
-              className="text-gray-400 text-sm leading-relaxed"
-            >
-              I agree to the{" "}
-              <a href="/terms" className="text-[#32CD32] hover:underline">
-                Terms
-              </a>{" "}
-              &{" "}
-              <a href="/privacy" className="text-[#32CD32] hover:underline">
-                Privacy Policy
-              </a>
-            </label>
-          </div>
+          <select
+            name="destination"
+            value={form.destination}
+            onChange={handleChange}
+            className="input"
+          >
+            <option value="">Preferred Study Destination</option>
+            <option>USA</option>
+            <option>UK</option>
+            <option>Canada</option>
+            <option>Australia</option>
+            <option>Germany</option>
+            <option>Other</option>
+          </select>
+        </div>
 
-          {/* Submit */}
+        {/* Course Level + Intake */}
+        <div className="grid grid-cols-1 gap-5">
+          <select
+            name="courseLevel"
+            value={form.courseLevel}
+            onChange={handleChange}
+            className="input"
+          >
+            <option value="">Course Level</option>
+            <option>Undergraduate</option>
+            <option>Postgraduate</option>
+            <option>MBA</option>
+            <option>PhD</option>
+            <option>Diploma / Foundation</option>
+          </select>
+
+          <select
+            name="intake"
+            value={form.intake}
+            onChange={handleChange}
+            className="input"
+          >
+            <option value="">Preferred Intake</option>
+            <option>Spring 2026</option>
+            <option>Fall 2026</option>
+            <option>Other</option>
+          </select>
+        </div>
+
+        {/* Message */}
+        <textarea
+          name="message"
+          value={form.message}
+          onChange={handleChange}
+          rows={5}
+          placeholder="Your study goals or questions..."
+          className="input resize-y min-h-[140px]"
+        />
+
+        {/* Submit */}
+        {!authChecked ? (
+          <button disabled className="btn-primary w-full opacity-60">
+            Checking authentication...
+          </button>
+        ) : !isLoggedIn ? (
+          <button type="submit" className="btn-primary w-full">
+            Login / Signup to Continue 🔐
+          </button>
+        ) : (
           <button
             type="submit"
-            className="w-full py-4 px-6 sm:px-8 rounded-full font-semibold text-base sm:text-lg mt-2
-        bg-gradient-to-r from-[#4169E1] via-[#32CD32] to-[#32CD32]
-        hover:from-[#32CD32] hover:to-[#4169E1]
-        shadow-xl shadow-[#32CD32]/20 hover:shadow-[#32CD32]/40
-        transition-all duration-400 hover:scale-[1.02] active:scale-[0.98]"
+            disabled={loading}
+            className="btn-primary w-full"
           >
-            Request Free Consultation →
+            {loading ? "Submitting..." : "Request Free Consultation →"}
           </button>
+        )}
 
-          <p className="text-center text-gray-500 text-xs sm:text-sm mt-4">
-            <CheckCircle size={14} className="inline mr-1.5" />
-            Free • No spam • Usually reply within 24 hours
-          </p>
-        </div>
-      </motion.form>
-    </>
+        <p className="text-center text-gray-500 text-xs mt-4">
+          <CheckCircle size={14} className="inline mr-1.5" />
+          Free • No spam • Secure submission
+        </p>
+      </div>
+    </motion.form>
   );
 };
 
