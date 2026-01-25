@@ -21,7 +21,6 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  /* ================= HANDLE CHANGE ================= */
   const handleChange = (e) => {
     setFormData((prev) => ({
       ...prev,
@@ -29,7 +28,6 @@ export default function SignupPage() {
     }));
   };
 
-  /* ================= HANDLE SUBMIT ================= */
   const dispatch = useDispatch();
 
   const handleSubmit = async (e) => {
@@ -38,7 +36,6 @@ export default function SignupPage() {
     setLoading(true);
     dispatch(authStart());
 
-    // ✅ Frontend validation
     if (formData.password !== formData.confirmpassword) {
       setError("Passwords do not match");
       dispatch(authFail("Passwords do not match"));
@@ -57,9 +54,9 @@ export default function SignupPage() {
             name: formData.name,
             email: formData.email,
             password: formData.password,
-            confirmpassword: formData.confirmpassword, // ✅ REQUIRED
+            confirmpassword: formData.confirmpassword,
           }),
-        }
+        },
       );
       const data = await res.json();
 
@@ -68,7 +65,7 @@ export default function SignupPage() {
         router.push("/");
       } else {
         const msg = data.errors?.[0] || "Signup failed";
-        setError(msg); // ✅ THIS WAS MISSING
+        setError(msg);
         dispatch(authFail(msg));
       }
     } catch (err) {
@@ -82,23 +79,33 @@ export default function SignupPage() {
   return (
     <div
       className="
-        min-h-screen w-full bg-[#F7F9FC] 
-        flex items-start sm:items-center justify-center 
-        px-4 pt-20 sm:pt-8 md:pt-0 pb-10 sm:pb-0
-      "
+    min-h-screen w-full 
+    bg-[#F7F9FC]
+    flex items-center justify-center 
+    px-4 
+    pt-8 sm:pt-10 md:pt-16 lg:pt-20        /* ← increased top padding on desktop */
+    pb-8 sm:pb-10
+  "
     >
-      <div className="w-full max-w-[340px] xs:max-w-[360px] sm:max-w-[380px] md:max-w-[420px]">
+      <div
+        className="
+      w-full max-w-[340px] xs:max-w-[360px] sm:max-w-[380px] md:max-w-[420px]
+      mx-auto
+    "
+      >
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
           className="
-            bg-white rounded-xl shadow-lg border border-gray-200/70
-            p-5 sm:p-6 md:p-7
-          "
+        bg-white rounded-xl shadow-lg border border-gray-200/70
+        p-5 sm:p-6 md:p-7
+        max-h-[85vh] sm:max-h-[88vh] overflow-y-auto
+        scrollbar-thin scrollbar-thumb-gray-300
+      "
         >
           {/* Logo */}
-          <div className="flex items-center gap-2.5 mb-5">
+          <div className="flex items-center gap-2.5 mb-4 sm:mb-5">
             <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#4A6BFF] to-[#22C55E] flex items-center justify-center shadow-sm">
               <FaGraduationCap className="text-white text-base" />
             </div>
@@ -110,18 +117,16 @@ export default function SignupPage() {
           <h2 className="text-base font-semibold text-gray-900">
             Create your account
           </h2>
-          <p className="text-sm text-gray-600 mt-1.5 mb-6">
+          <p className="text-sm text-gray-600 mt-1 mb-5 sm:mb-6">
             Start your journey toward global opportunities
           </p>
 
-          {/* Error */}
           {error && (
-            <p className="text-sm text-red-600 mb-4 bg-red-50 p-2 rounded-md">
+            <p className="text-sm text-red-600 mb-4 bg-red-50 p-2.5 rounded-md">
               {error}
             </p>
           )}
 
-          {/* Form */}
           <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">
@@ -136,6 +141,7 @@ export default function SignupPage() {
                 className="
                   w-full px-4 py-2.5 rounded-lg border border-gray-300 
                   text-sm outline-none focus:border-[#22C55E] focus:ring-1 focus:ring-[#22C55E]/30
+                  transition-colors
                 "
                 required
               />
@@ -154,6 +160,7 @@ export default function SignupPage() {
                 className="
                   w-full px-4 py-2.5 rounded-lg border border-gray-300 
                   text-sm outline-none focus:border-[#22C55E] focus:ring-1 focus:ring-[#22C55E]/30
+                  transition-colors
                 "
                 required
               />
@@ -173,6 +180,7 @@ export default function SignupPage() {
                   className="
                     w-full px-4 py-2.5 rounded-lg border border-gray-300 
                     text-sm outline-none focus:border-[#22C55E] focus:ring-1 focus:ring-[#22C55E]/30
+                    transition-colors
                   "
                   required
                 />
@@ -191,6 +199,7 @@ export default function SignupPage() {
                   className="
                     w-full px-4 py-2.5 rounded-lg border border-gray-300 
                     text-sm outline-none focus:border-[#22C55E] focus:ring-1 focus:ring-[#22C55E]/30
+                    transition-colors
                   "
                   required
                 />
@@ -201,7 +210,7 @@ export default function SignupPage() {
               type="submit"
               disabled={loading}
               className="
-                mt-2 py-3 rounded-lg
+                mt-3 py-3 rounded-lg
                 bg-gradient-to-r from-[#22C55E] to-[#4A6BFF]
                 text-white font-semibold text-sm
                 shadow-md hover:shadow-lg hover:brightness-105
@@ -211,9 +220,19 @@ export default function SignupPage() {
             >
               {loading ? "Creating..." : "Create Account"}
             </button>
+
+            <p className="text-center text-xs text-gray-500 mt-3 leading-relaxed">
+              By signing up you agree to our{" "}
+              <Link
+                href="/privacy-policy"
+                className="text-[#4A6BFF] hover:underline"
+              >
+                Privacy Policy
+              </Link>
+            </p>
           </form>
 
-          <p className="text-center text-sm text-gray-600 mt-6">
+          <p className="text-center text-sm text-gray-600 mt-5 sm:mt-6">
             Already have an account?{" "}
             <Link
               href="/login"
