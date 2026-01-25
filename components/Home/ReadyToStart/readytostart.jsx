@@ -30,13 +30,26 @@ export default function FinalCTASection() {
     }
   }, [authChecked, isLoggedIn, user]);
 
-  const handleOnSubmit = (e) => {
+  const handleOnSubmit = async (e) => {
     e.preventDefault();
     if (!authChecked) return;
 
     if (!isLoggedIn) {
       router.push(`/login?redirect=${encodeURIComponent(pathname)}`);
       return;
+    }
+    try {
+      const res = await fetch("/api/counseling", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+
+      if (!res.ok) throw new Error("Failed");
+
+      alert("Submitted Successfully");
+    } catch (err) {
+      alert("Submission failed");
     }
 
     console.log("Form Data:", form);

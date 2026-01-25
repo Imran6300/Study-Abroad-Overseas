@@ -50,9 +50,12 @@ const pageVariants = {
   }),
 };
 
+const TOTAL_STEPS = 4;
+
 export default function FreeAssessmentPage() {
   const [step, setStep] = useState(1);
   const [direction, setDirection] = useState(1);
+  const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -68,21 +71,41 @@ export default function FreeAssessmentPage() {
     experience: "",
   });
 
+  // ✅ Step bounds protection
   const nextStep = () => {
     setDirection(1);
-    setStep((prev) => prev + 1);
+    setStep((prev) => Math.min(prev + 1, TOTAL_STEPS));
   };
 
   const prevStep = () => {
     setDirection(-1);
-    setStep((prev) => prev - 1);
+    setStep((prev) => Math.max(prev - 1, 1));
   };
 
   const updateForm = (data) => setFormData((prev) => ({ ...prev, ...data }));
 
-  const handleSubmit = () => {
-    console.log("Assessment Submitted:", formData);
-    alert("Assessment submitted successfully!");
+  // ✅ Single success alert + loading protection
+  const handleSubmit = async () => {
+    if (loading) return;
+
+    setLoading(true);
+
+    try {
+      const res = await fetch("/api/assessment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      if (!res.ok) throw new Error("Failed");
+
+      console.log("Assessment Submitted:", formData);
+      alert("Assessment submitted successfully!");
+    } catch (err) {
+      alert("Submission failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -108,12 +131,12 @@ export default function FreeAssessmentPage() {
             <motion.div
               className="bg-indigo-500 h-2 rounded-full"
               initial={{ width: 0 }}
-              animate={{ width: `${(step / 4) * 100}%` }}
+              animate={{ width: `${(step / TOTAL_STEPS) * 100}%` }}
               transition={{ type: "spring", stiffness: 100, damping: 15 }}
             />
           </div>
           <p className="text-sm text-gray-400 mt-2 text-right">
-            Step {step} of 4
+            Step {step} of {TOTAL_STEPS}
           </p>
         </div>
 
@@ -165,6 +188,7 @@ export default function FreeAssessmentPage() {
                     updateForm={updateForm}
                     prevStep={prevStep}
                     submit={handleSubmit}
+                    loading={loading}
                   />
                 )}
               </motion.div>
