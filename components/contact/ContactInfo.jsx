@@ -1,6 +1,16 @@
 import { motion } from "framer-motion";
 
-import { Mail, Phone, MapPin, MessageCircleMore } from "lucide-react";
+import {
+  Mail,
+  Phone,
+  MapPin,
+  Globe, // Globe2,
+  Users, // Users2,
+  Award, // Award2,
+  Quote, // Quote2,
+  MessageCircleMore,
+  CheckCircle, // CheckCircle2
+} from "lucide-react";
 
 const ContactInfo = () => {
   return (

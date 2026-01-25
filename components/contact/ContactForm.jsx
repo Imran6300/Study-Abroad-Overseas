@@ -2,10 +2,11 @@ import {
   CheckCircle, // CheckCircle2
 } from "lucide-react";
 
+import { motion } from "framer-motion";
+
 const ContactForm = () => {
   return (
     <>
-      {/* Right - Form */}
       <motion.form
         initial={{ opacity: 0, x: 30 }}
         whileInView={{ opacity: 1, x: 0 }}

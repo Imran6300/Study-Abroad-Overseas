@@ -12,8 +12,9 @@ export default function Contact() {
       <ContactHeader />
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 md:gap-14 lg:gap-16">
         {/* Left - Contact Info */}
-
+        <ContactInfo />
         {/* Right - Form */}
+        <ContactForm />
       </div>
     </section>
   );
