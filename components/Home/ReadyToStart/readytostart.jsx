@@ -35,7 +35,6 @@ export default function FinalCTASection() {
     if (!authChecked) return;
 
     if (!isLoggedIn) {
-      alert("Please login first to submit the form");
       router.push(`/login?redirect=${encodeURIComponent(pathname)}`);
       return;
     }
