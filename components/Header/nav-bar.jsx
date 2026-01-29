@@ -36,7 +36,7 @@ export default function NavBar() {
 
   const handleLogout = async () => {
     await fetch(
-      "https://overseas-backend-production.up.railway.app/auth/logout",
+      "https://overseas-backend-production-4f18.up.railway.app/auth/logout",
       {
         method: "POST",
         credentials: "include",
@@ -273,7 +273,7 @@ const UserMenu = ({ user, onLogout }) => {
             </Link>
 
             <Link
-              href="/dashboard"
+              href="/dashboard/user"
               className="block px-5 py-3 text-gray-700 hover:bg-blue-600 hover:text-white"
               onClick={() => setOpen(false)}
             >

@@ -45,7 +45,7 @@ export default function SignupPage() {
 
     try {
       const res = await fetch(
-        "https://overseas-backend-production.up.railway.app/auth/signup",
+        "https://overseas-backend-production-4f18.up.railway.app/auth/signup",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

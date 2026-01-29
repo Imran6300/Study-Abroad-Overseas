@@ -11,7 +11,7 @@ export default function AuthInitializer({ children }) {
     const checkAuth = async () => {
       try {
         const res = await fetch(
-          "https://overseas-backend-production.up.railway.app/auth/me",
+          "https://overseas-backend-production-4f18.up.railway.app/auth/me",
           {
             credentials: "include",
           }
