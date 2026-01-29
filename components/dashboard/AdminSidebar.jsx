@@ -1,17 +1,32 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import Link from "next/link";
 import { motion } from "framer-motion";
 
 export default function AdminSidebar() {
   const router = useRouter();
+  const pathname = usePathname();
   const [expanded, setExpanded] = useState(false);
 
   const logout = () => {
     localStorage.removeItem("token");
     router.push("/login");
   };
+
+  // Menu items – realistic for study-abroad / education consultancy admin
+  const menuItems = [
+    { icon: "🏠", label: "Dashboard", href: "/admin" },
+    { icon: "👨‍🎓", label: "Students", href: "/admin/students" },
+    { icon: "🧑‍🏫", label: "Counselors", href: "/admin/counselors" },
+    { icon: "📑", label: "Applications", href: "/admin/applications" },
+    { icon: "🛂", label: "Visa Tracking", href: "/admin/visa" },
+    { icon: "⏰", label: "Deadlines", href: "/admin/deadlines" },
+    { icon: "💰", label: "Revenue", href: "/admin/revenue" },
+    { icon: "📊", label: "Reports", href: "/admin/reports" },
+    { icon: "📋", label: "Logs", href: "/admin/logs" },
+  ];
 
   return (
     <>
@@ -52,10 +67,16 @@ export default function AdminSidebar() {
 
         {/* Navigation */}
         <nav className="flex-1 px-3 space-y-1.5">
-          <SidebarItem icon="🏠" label="Dashboard" expanded={expanded} />
-          <SidebarItem icon="👥" label="Users" expanded={expanded} />
-          <SidebarItem icon="📱" label="Devices" expanded={expanded} />
-          <SidebarItem icon="📋" label="Logs" expanded={expanded} />
+          {menuItems.map((item) => (
+            <SidebarItem
+              key={item.href}
+              icon={item.icon}
+              label={item.label}
+              href={item.href}
+              expanded={expanded}
+              isActive={pathname === item.href || pathname.startsWith(item.href + "/")}
+            />
+          ))}
         </nav>
 
         {/* Logout */}
@@ -79,10 +100,7 @@ export default function AdminSidebar() {
         </div>
       </motion.aside>
 
-      {/* 
-        Invisible spacer that grows/shrinks together with sidebar 
-        → prevents main content from being overlapped / jumped
-      */}
+      {/* Spacer to prevent content jump */}
       <div
         className={`
           hidden md:block
@@ -94,23 +112,28 @@ export default function AdminSidebar() {
   );
 }
 
-function SidebarItem({ icon, label, expanded }) {
+function SidebarItem({ icon, label, href, expanded, isActive = false }) {
   return (
-    <motion.div
-      whileHover={{ scale: 1.03, x: expanded ? 4 : 0 }}
-      whileTap={{ scale: 0.98 }}
-      className={`
-        flex items-center gap-3
-        px-3 py-3 rounded-xl cursor-pointer
-        text-slate-300 hover:text-sky-400
-        hover:bg-sky-950/30 active:bg-sky-950/50
-        transition-all duration-200
-        text-sm font-medium
-        whitespace-nowrap overflow-hidden
-      `}
-    >
-      <span className="text-xl min-w-[24px]">{icon}</span>
-      {expanded && <span>{label}</span>}
-    </motion.div>
+    <Link href={href}>
+      <motion.div
+        whileHover={{ scale: 1.03, x: expanded ? 4 : 0 }}
+        whileTap={{ scale: 0.98 }}
+        className={`
+          flex items-center gap-3
+          px-3 py-3 rounded-xl cursor-pointer
+          text-sm font-medium
+          whitespace-nowrap overflow-hidden
+          transition-all duration-200
+          ${
+            isActive
+              ? "bg-sky-900/40 text-sky-300"
+              : "text-slate-300 hover:text-sky-400 hover:bg-sky-950/30 active:bg-sky-950/50"
+          }
+        `}
+      >
+        <span className="text-xl min-w-[24px]">{icon}</span>
+        {expanded && <span>{label}</span>}
+      </motion.div>
+    </Link>
   );
 }
