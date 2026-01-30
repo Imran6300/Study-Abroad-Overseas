@@ -108,7 +108,7 @@ export default function CounselorsAdminPage() {
       {/* Main content wrapper */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Header */}
-        <DashboardHeader title="Counselors Management" counselorName="Imran" />
+        <DashboardHeader title="Counselors Management" counselorName="Imran" btnName="+ Add New Counselor" />
 
         {/* Scrollable main content */}
         <main className="flex-1 overflow-y-auto p-6 lg:p-8">
@@ -118,19 +118,6 @@ export default function CounselorsAdminPage() {
             animate="show"
             className="space-y-8"
           >
-            {/* Title + Add Button */}
-            <motion.div
-              variants={itemVariants}
-              className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
-            >
-              <motion.button
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                className="bg-sky-600 hover:bg-sky-700 text-white px-5 py-2.5 rounded-lg font-medium shadow-sm transition-colors whitespace-nowrap"
-              >
-                + Add New Counselor
-              </motion.button>
-            </motion.div>
 
             {/* Search Bar */}
             <motion.div variants={itemVariants} className="mb-6">

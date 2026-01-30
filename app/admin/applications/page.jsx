@@ -93,7 +93,7 @@ export default function ApplicationsAdminPage() {
       <AdminSidebar />
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        <DashboardHeader title="Applications Management" counselorName="Imran" />
+        <DashboardHeader title="Applications Management" counselorName="Imran" btnName="+ New Application" />
 
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
           <motion.div
@@ -102,19 +102,6 @@ export default function ApplicationsAdminPage() {
             animate="show"
             className="space-y-6 sm:space-y-8"
           >
-            {/* Title + Button */}
-            <motion.div
-              variants={itemVariants}
-              className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6"
-            >
-              <motion.button
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                className="bg-sky-600 hover:bg-sky-700 text-white px-4 sm:px-5 py-2.5 rounded-lg font-medium shadow-sm transition-colors whitespace-nowrap text-sm sm:text-base"
-              >
-                + New Application
-              </motion.button>
-            </motion.div>
 
             {/* Search */}
             <motion.div variants={itemVariants} className="mb-6">
