@@ -16,15 +16,19 @@ export default function AdminSidebar() {
   };
 
   const menuItems = [
-    { icon: "🏠", label: "Dashboard", href: "/dashboard/admin" },
+    { icon: "🏠", label: "Dashboard", href: "/dashboard/admin-dashboard" },
     { icon: "👨‍🎓", label: "Students", href: "/admin/students" },
     { icon: "🧑‍🏫", label: "Counselors", href: "/admin/counselors" },
     { icon: "📑", label: "Applications", href: "/admin/applications" },
     { icon: "🛂", label: "Visa Tracking", href: "/admin/visa" },
     { icon: "⏰", label: "Deadlines", href: "/admin/deadlines" },
+    //crud
     { icon: "🏫", label: "Universities", href: "/dashboard/universities" },
     { icon: "📚", label: "Courses", href: "/dashboard/courses" },
     { icon: "✨", label: "Success Stories", href: "/dashboard/success-stories" },
+    { icon: "🌍", label: "Countries", href: "/dashboard/countries" },
+    { icon: "📰", label: "Blog", href: "/dashboard/blog" },
+    // analytics
     { icon: "💰", label: "Revenue", href: "/admin/revenue" },
     { icon: "📊", label: "Reports", href: "/admin/reports" },
     { icon: "📋", label: "Logs", href: "/admin/logs" },
