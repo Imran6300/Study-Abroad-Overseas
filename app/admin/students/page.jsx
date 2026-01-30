@@ -97,7 +97,7 @@ export default function StudentsAdminPage() {
       {/* Main content wrapper */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <DashboardHeader title="Student Management" counselorName="Imran" />
+        <DashboardHeader title="Student Management" counselorName="Imran" btnName="+ Add New Student" />
 
         {/* Scrollable main */}
         <main className="flex-1 overflow-y-auto p-6 lg:p-8">

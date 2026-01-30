@@ -23,7 +23,7 @@ export default function AdminSidebar() {
     { icon: "🛂", label: "Visa Tracking", href: "/admin/visa" },
     { icon: "⏰", label: "Deadlines", href: "/admin/deadlines" },
     //crud
-    { icon: "🏫", label: "Universities", href: "/dashboard/universities" },
+    { icon: "🏫", label: "Universities", href: "/admin/universities" },
     { icon: "📚", label: "Courses", href: "/dashboard/courses" },
     { icon: "✨", label: "Success Stories", href: "/dashboard/success-stories" },
     { icon: "🌍", label: "Countries", href: "/dashboard/countries" },
