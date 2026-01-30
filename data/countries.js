@@ -8,6 +8,7 @@ export const COUNTRIES = [
     region: "North America",
   },
   {
+    
     name: "USA",
     slug: "usa",
     desc: "World-class universities & innovation",

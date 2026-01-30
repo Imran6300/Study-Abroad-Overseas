@@ -171,6 +171,14 @@ export default function Footer() {
               <Mail /> info@khizaroverseas.com
             </a>
 
+            
+            <a
+              href="mailto:khizaroverseas.educounsultant@gmail.com"
+              className="flex gap-3 hover:text-[#2ca850]"
+            >
+              <Mail /> khizaroverseas@gmail.com
+            </a>
+
             <div className="flex gap-3">
               <MapPin />
               Hyderabad, Telangana, India

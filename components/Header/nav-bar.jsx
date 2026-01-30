@@ -191,6 +191,7 @@ const MemoizedDesktopNav = memo(() => {
           "UK",
           "Canada",
           "Australia",
+          "Europe",
           "Germany",
           "China",
           "All Countries",

@@ -1,45 +1,75 @@
 // app/admin/counselors/page.jsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
+import { useDebounce } from "use-debounce"; // npm install use-debounce
 import AdminSidebar from "@/components/admindashboard/AdminSidebar";
 import DashboardHeader from "@/components/admindashboard/DashboardHeader";
 
-// Same animation variants as dashboard & students page
+// Animation variants – only container level
 const containerVariants = {
   hidden: { opacity: 0 },
   show: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.08,
-      delayChildren: 0.1,
+      staggerChildren: 0.07,
+      delayChildren: 0.12,
     },
   },
 };
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 20, scale: 0.96 },
+  hidden: { opacity: 0, y: 16 },
   show: {
     opacity: 1,
     y: 0,
-    scale: 1,
-    transition: {
-      type: "spring",
-      stiffness: 140,
-      damping: 17,
-      duration: 0.5,
-    },
+    transition: { duration: 0.45, ease: "easeOut" },
   },
 };
+
+function CounselorRow({ counselor }) {
+  return (
+    <tr className="hover:bg-gray-50 transition-colors duration-150">
+      <td className="px-6 py-4 font-medium text-gray-900">{counselor.name}</td>
+      <td className="px-6 py-4 text-gray-600">{counselor.email}</td>
+      <td className="px-6 py-4 text-gray-600">{counselor.phone}</td>
+      <td className="px-6 py-4 text-gray-600">{counselor.specialization}</td>
+      <td className="px-6 py-4 text-center font-medium text-gray-900">
+        {counselor.assignedStudents}
+      </td>
+      <td className="px-6 py-4 text-center font-medium text-emerald-700">
+        {counselor.successRate}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap">
+        <span
+          className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium ${
+            counselor.status === "Active"
+              ? "bg-green-100 text-green-800"
+              : "bg-gray-100 text-gray-800"
+          }`}
+        >
+          {counselor.status}
+        </span>
+      </td>
+      <td className="px-6 py-4 text-sm font-medium whitespace-nowrap">
+        <button className="text-sky-600 hover:text-sky-800 mr-4">View</button>
+        <button className="text-amber-600 hover:text-amber-800 mr-4">Edit</button>
+        <button className="text-red-600 hover:text-red-800">Delete</button>
+      </td>
+    </tr>
+  );
+}
 
 export default function CounselorsAdminPage() {
   const [counselors, setCounselors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
-  // Mock data — replace with real fetch later
+  const [debouncedSearch] = useDebounce(search, 320);
+
   useEffect(() => {
+    // Replace with real API later → e.g. fetch("/api/counselors")
     const mockCounselors = [
       {
         id: 1,
@@ -74,43 +104,44 @@ export default function CounselorsAdminPage() {
         status: "Active",
         lastActive: "2026-01-25",
       },
-      // Add more mock entries to test scrolling
+      // ... add 50–100 more entries when testing scroll & filter perf
     ];
+
     setCounselors(mockCounselors);
     setLoading(false);
   }, []);
 
-  const filteredCounselors = counselors.filter(
-    (c) =>
-      c.name.toLowerCase().includes(search.toLowerCase()) ||
-      c.email.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredCounselors = useMemo(() => {
+    if (!debouncedSearch?.trim()) return counselors;
+
+    const term = debouncedSearch.toLowerCase();
+    return counselors.filter(
+      (c) =>
+        c.name.toLowerCase().includes(term) ||
+        c.email.toLowerCase().includes(term) ||
+        c.specialization.toLowerCase().includes(term)
+    );
+  }, [counselors, debouncedSearch]);
 
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="text-lg text-gray-600"
-        >
-          Loading counselors...
-        </motion.p>
+        <p className="text-lg text-gray-600 animate-pulse">Loading counselors…</p>
       </div>
     );
   }
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      {/* Fixed Sidebar */}
       <AdminSidebar />
 
-      {/* Main content wrapper */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Top Header */}
-        <DashboardHeader title="Counselors Management" counselorName="Imran" btnName="+ Add New Counselor" />
+        <DashboardHeader
+          title="Counselors Management"
+          counselorName="Imran"
+          btnName="+ Add New Counselor"
+        />
 
-        {/* Scrollable main content */}
         <main className="flex-1 overflow-y-auto p-6 lg:p-8">
           <motion.div
             variants={containerVariants}
@@ -118,15 +149,14 @@ export default function CounselorsAdminPage() {
             animate="show"
             className="space-y-8"
           >
-
-            {/* Search Bar */}
-            <motion.div variants={itemVariants} className="mb-6">
+            {/* Search */}
+            <motion.div variants={itemVariants} className="max-w-md">
               <input
-                type="text"
-                placeholder="Search by name or email..."
+                type="search"
+                placeholder="Search by name, email or specialization…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full max-w-md px-4 py-2.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-shadow"
+                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 shadow-sm transition-all duration-200"
               />
             </motion.div>
 
@@ -145,63 +175,31 @@ export default function CounselorsAdminPage() {
                       <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
                         Specialization
                       </th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 text-center">
                         Assigned Students
                       </th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 text-center">
                         Success Rate
                       </th>
                       <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Status</th>
                       <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200">
+                  <tbody className="divide-y divide-gray-200 bg-white">
                     {filteredCounselors.map((counselor) => (
-                      <motion.tr
-                        key={counselor.id}
-                        variants={itemVariants}
-                        className="hover:bg-gray-50 transition-colors"
-                      >
-                        <td className="px-6 py-4 font-medium text-gray-900">{counselor.name}</td>
-                        <td className="px-6 py-4 text-gray-600">{counselor.email}</td>
-                        <td className="px-6 py-4 text-gray-600">{counselor.phone}</td>
-                        <td className="px-6 py-4 text-gray-600">{counselor.specialization}</td>
-                        <td className="px-6 py-4 text-center font-medium text-gray-900">
-                          {counselor.assignedStudents}
-                        </td>
-                        <td className="px-6 py-4 text-center font-medium text-emerald-700">
-                          {counselor.successRate}
-                        </td>
-                        <td className="px-6 py-4">
-                          <span
-                            className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium ${
-                              counselor.status === "Active"
-                                ? "bg-green-100 text-green-800"
-                                : "bg-gray-100 text-gray-800"
-                            }`}
-                          >
-                            {counselor.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-sm font-medium">
-                          <button className="text-sky-600 hover:text-sky-800 mr-4">View</button>
-                          <button className="text-amber-600 hover:text-amber-800 mr-4">Edit</button>
-                          <button className="text-red-600 hover:text-red-800">Delete</button>
-                        </td>
-                      </motion.tr>
+                      <CounselorRow key={counselor.id} counselor={counselor} />
                     ))}
                   </tbody>
                 </table>
               </div>
             </motion.div>
 
-            {/* Empty state */}
-            {filteredCounselors.length === 0 && (
+            {filteredCounselors.length === 0 && debouncedSearch && (
               <motion.p
                 variants={itemVariants}
                 className="text-center mt-12 text-gray-500 text-lg"
               >
-                No counselors found matching your search.
+                No counselors found matching “{debouncedSearch}”
               </motion.p>
             )}
           </motion.div>
