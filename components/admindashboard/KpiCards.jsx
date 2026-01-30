@@ -1,5 +1,5 @@
 // components/dashboard/KpiCards.jsx
-import AdminCard from "@/components/dashboard/AdminCard";
+import AdminCard from "@/components/admindashboard/AdminCard";
 
 export default function KpiCards() {
   return (

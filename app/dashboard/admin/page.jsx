@@ -1,14 +1,14 @@
 "use client";
 
 import { motion } from "framer-motion";
-import AdminSidebar from "@/components/dashboard/AdminSidebar";
-import DashboardHeader from "@/components/dashboard/DashboardHeader";
-import KpiCards from "@/components/dashboard/KpiCards";
-import StudentPipeline from "@/components/dashboard/StudentPipeline";
-import VisaStatus from "@/components/dashboard/VisaStatus";
-import UpcomingDeadlines from "@/components/dashboard/UpcomingDeadlines";
-import RevenueOverview from "@/components/dashboard/RevenueOverview";
-import TopCounselors from "@/components/dashboard/TopCounselors";
+import AdminSidebar from "@/components/admindashboard/AdminSidebar";
+import DashboardHeader from "@/components/admindashboard/DashboardHeader";
+import KpiCards from "@/components/admindashboard/KpiCards";
+import StudentPipeline from "@/components/admindashboard/StudentPipeline";
+import VisaStatus from "@/components/admindashboard/VisaStatus";
+import UpcomingDeadlines from "@/components/admindashboard/UpcomingDeadlines";
+import RevenueOverview from "@/components/admindashboard/RevenueOverview";
+import TopCounselors from "@/components/admindashboard/TopCounselors";
 
 // Shared variants
 const containerVariants = {

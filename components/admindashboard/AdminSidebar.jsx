@@ -15,14 +15,16 @@ export default function AdminSidebar() {
     router.push("/login");
   };
 
-  // Menu items – realistic for study-abroad / education consultancy admin
   const menuItems = [
-    { icon: "🏠", label: "Dashboard", href: "/admin" },
+    { icon: "🏠", label: "Dashboard", href: "/dashboard/admin" },
     { icon: "👨‍🎓", label: "Students", href: "/admin/students" },
     { icon: "🧑‍🏫", label: "Counselors", href: "/admin/counselors" },
     { icon: "📑", label: "Applications", href: "/admin/applications" },
     { icon: "🛂", label: "Visa Tracking", href: "/admin/visa" },
     { icon: "⏰", label: "Deadlines", href: "/admin/deadlines" },
+    { icon: "🏫", label: "Universities", href: "/dashboard/universities" },
+    { icon: "📚", label: "Courses", href: "/dashboard/courses" },
+    { icon: "✨", label: "Success Stories", href: "/dashboard/success-stories" },
     { icon: "💰", label: "Revenue", href: "/admin/revenue" },
     { icon: "📊", label: "Reports", href: "/admin/reports" },
     { icon: "📋", label: "Logs", href: "/admin/logs" },
@@ -47,11 +49,11 @@ export default function AdminSidebar() {
           text-slate-300
           flex flex-col
           shadow-2xl shadow-black/40
-          overflow-hidden
+          overflow-hidden           // keep this - prevents sidebar itself from scrolling weirdly
         `}
       >
-        {/* Header / Logo */}
-        <div className="px-4 pt-7 pb-10">
+        {/* Header / Logo - fixed at top */}
+        <div className="px-4 pt-7 pb-10 shrink-0">
           <motion.h2
             initial={false}
             animate={{ opacity: expanded ? 1 : 0.9 }}
@@ -65,8 +67,17 @@ export default function AdminSidebar() {
           </motion.h2>
         </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 px-3 space-y-1.5">
+        {/* Navigation - this is now the scrollable part */}
+        <nav
+  className={`
+    flex-1 px-3 space-y-1.5
+    ${expanded ? "overflow-y-auto scrollbar-thin ..." : "overflow-hidden"}
+  `}
+  style={{
+    scrollbarWidth: 'none',           // Firefox
+    msOverflowStyle: 'none',          // IE/Edge legacy
+  }}
+>
           {menuItems.map((item) => (
             <SidebarItem
               key={item.href}
@@ -79,8 +90,8 @@ export default function AdminSidebar() {
           ))}
         </nav>
 
-        {/* Logout */}
-        <div className="px-3 pb-6 mt-auto">
+        {/* Logout - fixed at bottom */}
+        <div className="px-3 pb-6 mt-auto shrink-0">
           <motion.button
             whileHover={{ scale: 1.04 }}
             whileTap={{ scale: 0.97 }}
@@ -100,7 +111,7 @@ export default function AdminSidebar() {
         </div>
       </motion.aside>
 
-      {/* Spacer to prevent content jump */}
+      {/* Spacer */}
       <div
         className={`
           hidden md:block
