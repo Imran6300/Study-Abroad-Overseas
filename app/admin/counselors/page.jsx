@@ -1,4 +1,4 @@
-// app/admin/students/page.jsx
+// app/admin/counselors/page.jsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import AdminSidebar from "@/components/admindashboard/AdminSidebar";
 import DashboardHeader from "@/components/admindashboard/DashboardHeader";
 
-// Shared variants (same as your dashboard)
+// Same animation variants as dashboard & students page
 const containerVariants = {
   hidden: { opacity: 0 },
   show: {
@@ -33,46 +33,57 @@ const itemVariants = {
   },
 };
 
-export default function StudentsAdminPage() {
-  const [students, setStudents] = useState([]);
+export default function CounselorsAdminPage() {
+  const [counselors, setCounselors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
-  // Mock data
+  // Mock data — replace with real fetch later
   useEffect(() => {
-    const mockStudents = [
+    const mockCounselors = [
       {
         id: 1,
-        name: "Ahmed Khan",
-        email: "ahmed@example.com",
-        phone: "+91 98765 43210",
-        origin: "India",
-        target: "Canada",
-        status: "Applied",
-        counselor: "Sara",
-        created: "2025-11-15",
+        name: "Sara Ahmed",
+        email: "sara@overseas.com",
+        phone: "+91 98765 12345",
+        specialization: "Canada, UK",
+        assignedStudents: 28,
+        successRate: "94%",
+        status: "Active",
+        lastActive: "2026-01-29",
       },
       {
         id: 2,
-        name: "Priya Sharma",
-        email: "priya.sharma@gmail.com",
-        phone: "+91 87654 32109",
-        origin: "India",
-        target: "UK",
-        status: "Enrolled",
-        counselor: "John",
-        created: "2025-10-20",
+        name: "John Mathew",
+        email: "john@overseas.com",
+        phone: "+91 87654 98765",
+        specialization: "Australia, USA",
+        assignedStudents: 35,
+        successRate: "89%",
+        status: "Active",
+        lastActive: "2026-01-28",
       },
-      // add more rows for testing scroll
+      {
+        id: 3,
+        name: "Aisha Khan",
+        email: "aisha@overseas.com",
+        phone: "+91 76543 21098",
+        specialization: "Germany, Ireland",
+        assignedStudents: 19,
+        successRate: "92%",
+        status: "Active",
+        lastActive: "2026-01-25",
+      },
+      // Add more mock entries to test scrolling
     ];
-    setStudents(mockStudents);
+    setCounselors(mockCounselors);
     setLoading(false);
   }, []);
 
-  const filteredStudents = students.filter(
-    (s) =>
-      s.name.toLowerCase().includes(search.toLowerCase()) ||
-      s.email.toLowerCase().includes(search.toLowerCase())
+  const filteredCounselors = counselors.filter(
+    (c) =>
+      c.name.toLowerCase().includes(search.toLowerCase()) ||
+      c.email.toLowerCase().includes(search.toLowerCase())
   );
 
   if (loading) {
@@ -83,7 +94,7 @@ export default function StudentsAdminPage() {
           animate={{ opacity: 1 }}
           className="text-lg text-gray-600"
         >
-          Loading students...
+          Loading counselors...
         </motion.p>
       </div>
     );
@@ -91,15 +102,15 @@ export default function StudentsAdminPage() {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      {/* Sidebar */}
+      {/* Fixed Sidebar */}
       <AdminSidebar />
 
       {/* Main content wrapper */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
-        <DashboardHeader title="Student Management" counselorName="Imran" />
+        {/* Top Header */}
+        <DashboardHeader title="Counselors Management" counselorName="Imran" />
 
-        {/* Scrollable main */}
+        {/* Scrollable main content */}
         <main className="flex-1 overflow-y-auto p-6 lg:p-8">
           <motion.div
             variants={containerVariants}
@@ -107,6 +118,19 @@ export default function StudentsAdminPage() {
             animate="show"
             className="space-y-8"
           >
+            {/* Title + Add Button */}
+            <motion.div
+              variants={itemVariants}
+              className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
+            >
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                className="bg-sky-600 hover:bg-sky-700 text-white px-5 py-2.5 rounded-lg font-medium shadow-sm transition-colors whitespace-nowrap"
+              >
+                + Add New Counselor
+              </motion.button>
+            </motion.div>
 
             {/* Search Bar */}
             <motion.div variants={itemVariants} className="mb-6">
@@ -119,7 +143,7 @@ export default function StudentsAdminPage() {
               />
             </motion.div>
 
-            {/* Table Container */}
+            {/* Table */}
             <motion.div
               variants={itemVariants}
               className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200"
@@ -132,34 +156,44 @@ export default function StudentsAdminPage() {
                       <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Email</th>
                       <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Phone</th>
                       <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
-                        Target Country
+                        Specialization
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                        Assigned Students
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                        Success Rate
                       </th>
                       <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Status</th>
                       <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
-                    {filteredStudents.map((student) => (
+                    {filteredCounselors.map((counselor) => (
                       <motion.tr
-                        key={student.id}
+                        key={counselor.id}
                         variants={itemVariants}
                         className="hover:bg-gray-50 transition-colors"
                       >
-                        <td className="px-6 py-4 font-medium text-gray-900">{student.name}</td>
-                        <td className="px-6 py-4 text-gray-600">{student.email}</td>
-                        <td className="px-6 py-4 text-gray-600">{student.phone}</td>
-                        <td className="px-6 py-4 text-gray-600">{student.target}</td>
+                        <td className="px-6 py-4 font-medium text-gray-900">{counselor.name}</td>
+                        <td className="px-6 py-4 text-gray-600">{counselor.email}</td>
+                        <td className="px-6 py-4 text-gray-600">{counselor.phone}</td>
+                        <td className="px-6 py-4 text-gray-600">{counselor.specialization}</td>
+                        <td className="px-6 py-4 text-center font-medium text-gray-900">
+                          {counselor.assignedStudents}
+                        </td>
+                        <td className="px-6 py-4 text-center font-medium text-emerald-700">
+                          {counselor.successRate}
+                        </td>
                         <td className="px-6 py-4">
                           <span
                             className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium ${
-                              student.status === "Enrolled"
+                              counselor.status === "Active"
                                 ? "bg-green-100 text-green-800"
-                                : student.status === "Applied"
-                                ? "bg-blue-100 text-blue-800"
                                 : "bg-gray-100 text-gray-800"
                             }`}
                           >
-                            {student.status}
+                            {counselor.status}
                           </span>
                         </td>
                         <td className="px-6 py-4 text-sm font-medium">
@@ -175,12 +209,12 @@ export default function StudentsAdminPage() {
             </motion.div>
 
             {/* Empty state */}
-            {filteredStudents.length === 0 && (
+            {filteredCounselors.length === 0 && (
               <motion.p
                 variants={itemVariants}
                 className="text-center mt-12 text-gray-500 text-lg"
               >
-                No students found matching your search.
+                No counselors found matching your search.
               </motion.p>
             )}
           </motion.div>
