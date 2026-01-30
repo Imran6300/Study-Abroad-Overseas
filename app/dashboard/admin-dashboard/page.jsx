@@ -50,7 +50,7 @@ export default function AdminDashboard() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: "easeOut" }}
         >
-          <DashboardHeader />
+          <DashboardHeader title={"Admin Dashboard"} counselorName={"Imran"} />
         </motion.div>
 
         <main className="flex-1 p-6 lg:p-8 overflow-auto bg-gray-50">
