@@ -1,9 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
-import ContactForm from "../../components/contact/ContactForm";
-import ContactInfo from "../../components/contact/ContactInfo";
-import ContactHeader from "../../components/contact/ContactHeader";
+import ContactForm from "../../../components/contact/ContactForm";
+import ContactInfo from "../../../components/contact/ContactInfo";
+import ContactHeader from "../../../components/contact/ContactHeader";
 
 export default function Contact() {
   return (
