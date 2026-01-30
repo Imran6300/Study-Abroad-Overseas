@@ -24,10 +24,10 @@ export default function AdminSidebar() {
     { icon: "⏰", label: "Deadlines", href: "/admin/deadlines" },
     //crud
     { icon: "🏫", label: "Universities", href: "/admin/universities" },
-    { icon: "📚", label: "Courses", href: "/dashboard/courses" },
-    { icon: "✨", label: "Success Stories", href: "/dashboard/success-stories" },
-    { icon: "🌍", label: "Countries", href: "/dashboard/countries" },
-    { icon: "📰", label: "Blog", href: "/dashboard/blog" },
+    { icon: "📚", label: "Courses", href: "/admin/courses" },
+    { icon: "✨", label: "Success Stories", href: "/admin/success-stories" },
+    { icon: "🌍", label: "Countries", href: "/admin/countries" },
+    { icon: "📰", label: "Blog", href: "/admin/blog" },
     // analytics
     { icon: "💰", label: "Revenue", href: "/admin/revenue" },
     { icon: "📊", label: "Reports", href: "/admin/reports" },
