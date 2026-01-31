@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
+
 import AdminSidebar from "@/components/admindashboard/AdminSidebar";
 import DashboardHeader from "@/components/admindashboard/DashboardHeader";
 import KpiCards from "@/components/admindashboard/KpiCards";
@@ -10,15 +12,15 @@ import UpcomingDeadlines from "@/components/admindashboard/UpcomingDeadlines";
 import RevenueOverview from "@/components/admindashboard/RevenueOverview";
 import TopCounselors from "@/components/admindashboard/TopCounselors";
 
-// Shared variants
+//imp for addadmin
+import AdminManagementSection from "@/components/admindashboard/addadmin/AdminManagementSection";
+
+
 const containerVariants = {
   hidden: { opacity: 0 },
   show: {
     opacity: 1,
-    transition: {
-      staggerChildren: 0.08,
-      delayChildren: 0.1,
-    },
+    transition: { staggerChildren: 0.08, delayChildren: 0.1 },
   },
 };
 
@@ -28,33 +30,68 @@ const itemVariants = {
     opacity: 1,
     y: 0,
     scale: 1,
-    transition: {
-      type: "spring",
-      stiffness: 140,
-      damping: 17,
-      duration: 0.5,
-    },
+    transition: { type: "spring", stiffness: 140, damping: 17 },
   },
 };
 
-export default function AdminDashboard() {
+export default function AdminPage() {
+  const [showAdminSection, setShowAdminSection] = useState(false);
+
+  // ✅ TEMP STATE (later you can move this to API / context)
+  const [admins, setAdmins] = useState([
+    {
+      id: "1",
+      name: "Imran Khan",
+      email: "imran@khizaroverseas.in",
+      role: "Super Admin",
+    },
+    {
+      id: "2",
+      name: "Sara Ahmed",
+      email: "sara@khizaroverseas.in",
+      role: "Admin",
+    },
+  ]);
+
+  // handlers
+  const handleAdminAdded = (data) => {
+    setAdmins((prev) => [
+      ...prev,
+      { id: Date.now().toString(), ...data },
+    ]);
+  };
+
+  const handleDeleteAdmin = (id) => {
+    if (!confirm("Delete this admin?")) return;
+    setAdmins((prev) => prev.filter((a) => a.id !== id));
+  };
+
   return (
     <div className="flex min-h-screen bg-gray-50">
-      {/* Sidebar usually doesn't need entrance animation */}
       <AdminSidebar />
 
       <div className="flex-1 flex flex-col">
-        {/* Header can have a subtle entrance */}
-        <motion.div
-          initial={{ opacity: 0, y: -12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: "easeOut" }}
-        >
-          <DashboardHeader title={"Admin Dashboard"} counselorName={"Imran"} btnName="+ Add New Admin"/>
-        </motion.div>
+        {/* HEADER */}
+        <DashboardHeader
+          title="Admin Dashboard"
+          counselorName="Imran"
+          btnName="+ Add New Admin"
+          onButtonClick={() => setShowAdminSection(true)}
+        />
 
-        <main className="flex-1 p-6 lg:p-8 overflow-auto bg-gray-50">
-          {/* KPI Cards – usually appear first and fast */}
+        <main className="flex-1 p-6 lg:p-8 overflow-auto">
+          
+          {/* 🔥 ADMIN MANAGEMENT FEATURE */}
+          {showAdminSection && (
+            <AdminManagementSection
+              admins={admins}
+              onClose={() => setShowAdminSection(false)}
+              onAddAdmin={handleAdminAdded}
+              onDeleteAdmin={handleDeleteAdmin}
+            />
+          )}
+
+          {/* NORMAL DASHBOARD CONTENT */}
           <motion.div
             variants={containerVariants}
             initial="hidden"
@@ -64,29 +101,20 @@ export default function AdminDashboard() {
               <KpiCards />
             </motion.div>
 
-            {/* First big row */}
             <motion.div
               variants={containerVariants}
-              initial="hidden"
-              whileInView="show"
-              viewport={{ once: true, margin: "-80px" }}
               className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10"
             >
               <motion.div variants={itemVariants} className="lg:col-span-2">
                 <StudentPipeline />
               </motion.div>
-
               <motion.div variants={itemVariants}>
                 <VisaStatus />
               </motion.div>
             </motion.div>
 
-            {/* Second row */}
             <motion.div
               variants={containerVariants}
-              initial="hidden"
-              whileInView="show"
-              viewport={{ once: true, margin: "-80px" }}
               className="grid grid-cols-1 lg:grid-cols-2 gap-6"
             >
               <motion.div variants={itemVariants}>
@@ -94,13 +122,8 @@ export default function AdminDashboard() {
               </motion.div>
 
               <motion.div variants={itemVariants} className="space-y-6">
-                <motion.div variants={itemVariants}>
-                  <RevenueOverview />
-                </motion.div>
-
-                <motion.div variants={itemVariants}>
-                  <TopCounselors />
-                </motion.div>
+                <RevenueOverview />
+                <TopCounselors />
               </motion.div>
             </motion.div>
           </motion.div>
