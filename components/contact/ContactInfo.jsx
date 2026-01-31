@@ -97,9 +97,9 @@ const ContactInfo = () => {
               className="w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover border-2 border-[#32CD32]/40"
             />
             <div>
-              <h4 className="font-semibold">Dr. Anita Rao</h4>
+              <h4 className="font-semibold">Mohammed Javid Ahmed</h4>
               <p className="text-gray-400 text-sm">
-                10+ years • Certified ICEF Agent
+                10+ years • Certified ABCC Agent
               </p>
             </div>
           </div>
