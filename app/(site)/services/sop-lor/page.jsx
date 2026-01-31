@@ -3,6 +3,7 @@
 "use client";
 import { motion } from "framer-motion";
 import Image from "next/image";
+import Link from "next/link";
 
 const Palette = {
   royalBlue: "#3B82F6",
@@ -64,13 +65,15 @@ export default function SopLorPage() {
             transition={{ duration: 1, delay: 0.5 }}
             className="flex flex-col sm:flex-row justify-center gap-6"
           >
-            <button
+            <Link
+              href="/assessment"
               className="px-10 py-6 rounded-2xl font-bold text-xl shadow-2xl transition-all hover:scale-105"
               style={{ backgroundColor: "white", color: "black" }}
             >
               Free SOP Review Now
-            </button>
-            <button
+            </Link>
+            <Link
+            href="/contact"
               className="px-10 py-6 rounded-2xl font-bold text-xl border-2 transition-all hover:scale-105 hover:bg-white/10"
               style={{
                 borderColor: Palette.royalBlue,
@@ -78,7 +81,7 @@ export default function SopLorPage() {
               }}
             >
               Speak to SOP Expert
-            </button>
+            </Link>
           </motion.div>
         </div>
       </section>
@@ -308,22 +311,24 @@ export default function SopLorPage() {
             transition={{ delay: 0.4 }}
             className="flex flex-col sm:flex-row justify-center gap-6 lg:gap-10"
           >
-            <button
+            <Link
+            href="/assessment"
               className="px-12 py-7 rounded-full font-bold text-2xl shadow-2xl transition-all hover:scale-105"
               style={{ backgroundColor: "white", color: "black" }}
             >
               Start Your SOP & LOR Today
-            </button>
+            </Link>
 
-            <button
+            <Link
               className="px-12 py-7 rounded-full font-bold text-2xl border-2 transition-all hover:bg-white/10 hover:scale-105"
               style={{
                 borderColor: Palette.limeGreen,
                 color: Palette.limeGreen,
               }}
+              href="/assessment"
             >
               Claim Free Profile + SOP Review
-            </button>
+            </Link>
           </motion.div>
         </div>
       </section>

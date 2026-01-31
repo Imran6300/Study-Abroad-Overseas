@@ -4,12 +4,7 @@ import {
   Mail,
   Phone,
   MapPin,
-  Globe, // Globe2,
-  Users, // Users2,
-  Award, // Award2,
-  Quote, // Quote2,
   MessageCircleMore,
-  CheckCircle, // CheckCircle2
 } from "lucide-react";
 
 const ContactInfo = () => {
@@ -63,7 +58,7 @@ const ContactInfo = () => {
               Telangana 500001, India
             </p>
             <p className="text-gray-500 text-xs sm:text-sm mt-3">
-              CIN: U80902TG2010PTC123456 • GST: 36ABCDE1234F1Z5
+              • GST: 36AAUFK0370M2ZS
             </p>
           </div>
         </div>
