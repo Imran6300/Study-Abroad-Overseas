@@ -88,22 +88,24 @@ const ContactInfo = () => {
         </div>
 
         {/* Lead Counselor */}
-        <div className="bg-white/5 backdrop-blur-sm rounded-xl p-5 border border-white/10">
-          <h3 className="font-medium text-lg mb-4">Meet Your Lead Counselor</h3>
-          <div className="flex items-center gap-4">
-            <img
-              src="/team/lead-counselor.jpg"
-              alt="Dr. Anita Rao"
-              className="w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover border-2 border-[#32CD32]/40"
-            />
-            <div>
-              <h4 className="font-semibold">Mohammed Javid Ahmed</h4>
-              <p className="text-gray-400 text-sm">
-                10+ years • Certified ABCC Agent
-              </p>
-            </div>
-          </div>
-        </div>
+<div className="bg-white/5 backdrop-blur-sm rounded-xl p-5 border border-white/10">
+  <h3 className="font-medium text-lg mb-4">Meet Your Lead Counselor</h3>
+  <div className="flex items-center gap-4 sm:gap-5">
+    <div className="shrink-0 w-20 h-24 sm:w-24 sm:h-28 overflow-hidden rounded-lg border-2 border-[#32CD32]/40 bg-gray-800/40">
+      <img
+        src="/team/javid.png"
+        alt="Javid Ahmed Mohammed"
+        className="w-full h-full object-cover"
+      />
+    </div>
+    <div>
+      <h4 className="font-semibold">Mohammed Javid Ahmed</h4>
+      <p className="text-gray-400 text-sm">
+        10+ years • Certified ABCC Agent
+      </p>
+    </div>
+  </div>
+</div>
       </motion.div>
     </>
   );
