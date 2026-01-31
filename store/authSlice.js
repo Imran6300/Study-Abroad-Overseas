@@ -34,6 +34,9 @@ const authSlice = createSlice({
       state.authChecked = true
 
     },
+    authChecked(state) {
+      state.authChecked = true;
+}
   },
 });
 

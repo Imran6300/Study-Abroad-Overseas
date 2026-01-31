@@ -2,6 +2,7 @@ import "./globals.css";
 import type { ReactNode } from "react";
 import ReduxProvider from "@/store/ReduxProvider";
 import AuthInitializer from "@/components/AuthInitializer";
+import AuthGate from "@/components/AuthGate";
 
 export const metadata = {
   title: {
@@ -20,7 +21,9 @@ export default function RootLayout({
     <html lang="en">
       <body className="overflow-x-hidden">
         <ReduxProvider>
-          <AuthInitializer>{children}</AuthInitializer>
+          <AuthInitializer>
+            <AuthGate>{children}</AuthGate>
+          </AuthInitializer>
         </ReduxProvider>
       </body>
     </html>

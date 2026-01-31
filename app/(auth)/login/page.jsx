@@ -34,13 +34,14 @@ export default function LoginPage() {
           headers: { "Content-Type": "application/json" },
           credentials: "include",
           body: JSON.stringify({ email, password }),
-        }
+        },
       );
 
       const data = await res.json();
 
-      if (!res.ok || !data.success) {
-        const msg = data.errors?.[0] || "Invalid email or password";
+      if (!res.ok) {
+        const msg =
+          data?.errors?.[0] || data?.message || "Invalid email or password";
         dispatch(authFail(msg));
         setErrorMsg(msg);
         return;

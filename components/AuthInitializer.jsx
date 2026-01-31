@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
-import { authSuccess, logout } from "@/store/authSlice";
+import { authSuccess } from "@/store/authSlice";
 
 export default function AuthInitializer({ children }) {
   const dispatch = useDispatch();
@@ -17,12 +17,16 @@ export default function AuthInitializer({ children }) {
           }
         );
 
-        if (!res.ok) throw new Error();
-
-        const data = await res.json();
-        dispatch(authSuccess(data.user));
-      } catch {
-        dispatch(logout());
+        if (res.ok) {
+          const data = await res.json();
+          dispatch(authSuccess(data.user));
+        } else {
+          // ❗ IMPORTANT: DO NOT LOGOUT
+          dispatch({ type: "auth/authChecked" });
+        }
+      } catch (err) {
+        // ❗ STILL DO NOT LOGOUT
+        dispatch({ type: "auth/authChecked" });
       }
     };
 
