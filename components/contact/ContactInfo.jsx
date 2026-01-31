@@ -32,12 +32,12 @@ const ContactInfo = () => {
             {
               Icon: Phone,
               title: "Call Us (India)",
-              value: "+91 98765 43210",
+              value: "+91 73298 22309",
             },
             {
               Icon: MessageCircleMore,
               title: "WhatsApp",
-              value: "+91 98765 43211",
+              value: "+91 73299 22309",
             },
             { Icon: Phone, title: "USA Support", value: "+1 (800) 123-4567" },
           ].map(({ Icon, title, value }, i) => (
@@ -56,11 +56,11 @@ const ContactInfo = () => {
           <div>
             <h3 className="font-medium text-base sm:text-lg">Our Office</h3>
             <p className="text-gray-300 text-sm sm:text-base leading-relaxed">
-              Plot No. 123, Road No. 10
+              Shop No.35, 5-4-410
               <br />
-              Banjara Hills, Hyderabad
+              Nampally, Hyderabad
               <br />
-              Telangana 500034, India
+              Telangana 500001, India
             </p>
             <p className="text-gray-500 text-xs sm:text-sm mt-3">
               CIN: U80902TG2010PTC123456 • GST: 36ABCDE1234F1Z5
@@ -71,7 +71,7 @@ const ContactInfo = () => {
         {/* Map */}
         <div className="mt-6 rounded-xl overflow-hidden border border-white/10 shadow-2xl">
           <iframe
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3806.789123456789!2d78.45678901234567!3d17.12345678901234!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bcb99d123456789%3A0xabcde1234567890f!2sBanjara%20Hills%2C%20Hyderabad!5e0!3m2!1sen!2sin!4v1234567890123"
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1537.52881545907!2d78.46932613167367!3d17.39009053324498!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bcb998266df7d49%3A0xa1c01242889df869!2sKhizar%20Tours%20and%20Travels!5e0!3m2!1sen!2sin!4v1769850065685!5m2!1sen!2sin"
             width="100%"
             height="320"
             style={{ border: 0 }}
