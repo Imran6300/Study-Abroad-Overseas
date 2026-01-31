@@ -27,7 +27,7 @@ const ContactInfo = () => {
             {
               Icon: Mail,
               title: "Email Us",
-              value: "support@overseasguide.com",
+              value: "khizaroverseas@gmail.com",
             },
             {
               Icon: Phone,

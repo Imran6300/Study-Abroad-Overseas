@@ -3,6 +3,7 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
+import Image from 'next/image'; // For optimized images
 
 // Very subtle fade + lift animation
 const sectionFade = {
@@ -23,6 +24,59 @@ const statItem = {
     transition: { delay: i * 0.1, duration: 0.6 },
   }),
 };
+
+// Near the top of the file, after imports
+const certifications = [
+  {
+    title: "ApplyBoard Counsellor Course – Canada (ABCC)",
+    description: "Completed specialized training in Canadian study pathways, admissions & student support",
+    imageSrc: "/certificates/sixth.png",
+    alt: "Javid Ahmed Mohammed ApplyBoard Counsellor Course Canada Completion Certificate (Feb 2022)",
+    hoverColor: "blue-600",
+  },
+  {
+    title: "ApplyBoard Counsellor Course – United Kingdom (ABCC)",
+    description: "Certified training on UK education system, visas & ethical student counselling",
+    imageSrc: "/certificates/second.png",
+    alt: "Javid Ahmed Mohammed ApplyBoard Counsellor Course United Kingdom Completion Certificate (Mar 2022)",
+    hoverColor: "green-600",
+  },
+  {
+    title: "ApplyBoard Counsellor Course – United States (ABCC)",
+    description: "Professional development in US higher education recruitment & advising",
+    imageSrc: "/certificates/fourth.png",
+    alt: "Javid Ahmed Mohammed ApplyBoard Counsellor Course United States Completion Certificate (Mar 2022)",
+    hoverColor: "blue-600",
+  },
+  {
+    title: "ApplyBoard Counsellor Course – Australia (ABCC)",
+    description: "Expert training on Australian study options, institutions & compliance",
+    imageSrc: "/certificates/fifth.png",
+    alt: "Javid Ahmed Mohammed ApplyBoard Counsellor Course Australia Completion Certificate (Feb 2022)",
+    hoverColor: "green-600",
+  },
+  {
+    title: "BRITAgent – UKVI Visa & Immigration Assessment",
+    description: "Completed UK visa rules, immigration procedures & compliance module",
+    imageSrc: "/certificates/third.png",
+    alt: "Javid Ahmed Mohammed BRITAgent UKVI Assessment Module Certificate",
+    hoverColor: "blue-600",
+  },
+  {
+    title: "BRITAgent – UKVI Visa Training Module",
+    description: "In-depth training on UK visa application processes & student guidance",
+    imageSrc: "/certificates/first.png",
+    alt: "Javid Ahmed Mohammed BRITAgent UKVI Visa Training Module Certificate",
+    hoverColor: "green-600",
+  },
+  {
+    title: "BRITAgent – Welcome to Northern England Assessment",
+    description: "Certified knowledge of study opportunities in Northern England universities",
+    imageSrc: "/certificates/seventh.png",
+    alt: "Javid Ahmed Mohammed BRITAgent Welcome to Northern England Assessment Module Certificate",
+    hoverColor: "blue-600",
+  },
+];
 
 const colorMap = {
   "blue-500": "text-blue-500",
@@ -368,74 +422,53 @@ export default function WhyChooseUs() {
       </section>
 
       {/* Certifications & Badges */}
-      <section className="py-16 bg-gray-900/50">
-        <motion.div
-          className="container mx-auto px-6 md:px-10 max-w-6xl text-center"
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-          variants={sectionFade}
+
+<section className="py-16 bg-gray-900/50">
+  <motion.div
+    className="container mx-auto px-6 md:px-10 max-w-6xl text-center"
+    initial="hidden"
+    whileInView="visible"
+    viewport={{ once: true }}
+    variants={sectionFade}
+  >
+    <h2 className="text-3xl md:text-4xl font-bold mb-12 text-white">
+      Certified Excellence – Our Accreditations & Awards
+    </h2>
+    <p className="text-gray-400 mb-10 max-w-3xl mx-auto">
+      As certified study abroad consultants in Hyderabad, we're recognized by global bodies for ethical practices, high success rates, and student satisfaction. These badges ensure you're partnering with a proven leader.
+    </p>
+
+    <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
+      {certifications.map((cert, index) => (
+        <div
+          key={cert.title}
+          className={`bg-gray-800 border border-gray-700 rounded-xl p-5 sm:p-6 hover:border-${cert.hoverColor}/50 hover:shadow-xl hover:shadow-${cert.hoverColor.replace('-600', '')}/20 transition-all duration-300 group flex flex-col`}
         >
-          <h2 className="text-3xl md:text-4xl font-bold mb-12 text-white">
-            Certified Excellence – Our Accreditations & Awards
-          </h2>
-          <p className="text-gray-400 mb-10 max-w-3xl mx-auto">
-            As certified study abroad consultants in Hyderabad, we're recognized
-            by global bodies for ethical practices, high success rates, and
-            student satisfaction. These badges ensure you're partnering with a
-            proven leader.
-          </p>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-gray-800 border border-gray-700 rounded-xl p-6 hover:border-blue-600/50 hover:shadow-lg transition-all duration-300 group">
-              <div className="w-16 h-16 bg-blue-900/30 rounded-full flex items-center justify-center mb-4 group-hover:bg-blue-800/40 transition mx-auto">
-                <span className="text-2xl text-blue-500">🏆</span>
-              </div>
-              <h3 className="text-xl font-semibold mb-2 text-white">
-                ICEF Certified Agent
-              </h3>
-              <p className="text-gray-500 text-sm">
-                Global standard for ethical recruitment & training
-              </p>
-            </div>
-
-            <div className="bg-gray-800 border border-gray-700 rounded-xl p-6 hover:border-green-600/50 hover:shadow-lg transition-all duration-300 group">
-              <div className="w-16 h-16 bg-green-900/30 rounded-full flex items-center justify-center mb-4 group-hover:bg-green-800/40 transition mx-auto">
-                <span className="text-2xl text-green-500">📜</span>
-              </div>
-              <h3 className="text-xl font-semibold mb-2 text-white">
-                British Council Partner
-              </h3>
-              <p className="text-gray-500 text-sm">
-                Official advisor for UK study visas & programs
-              </p>
-            </div>
-
-            <div className="bg-gray-800 border border-gray-700 rounded-xl p-6 hover:border-blue-600/50 hover:shadow-lg transition-all duration-300 group">
-              <div className="w-16 h-16 bg-blue-900/30 rounded-full flex items-center justify-center mb-4 group-hover:bg-blue-800/40 transition mx-auto">
-                <span className="text-2xl text-blue-500">⭐</span>
-              </div>
-              <h3 className="text-xl font-semibold mb-2 text-white">
-                IDP Education Affiliate
-              </h3>
-              <p className="text-gray-500 text-sm">
-                Authorized for IELTS & global university placements
-              </p>
-            </div>
-
-            <div className="bg-gray-800 border border-gray-700 rounded-xl p-6 hover:border-green-600/50 hover:shadow-lg transition-all duration-300 group">
-              <div className="w-16 h-16 bg-green-900/30 rounded-full flex items-center justify-center mb-4 group-hover:bg-green-800/40 transition mx-auto">
-                <span className="text-2xl text-green-500">🎖️</span>
-              </div>
-              <h3 className="text-xl font-semibold mb-2 text-white">
-                Top Consultant Award 2024
-              </h3>
-              <p className="text-gray-500 text-sm">
-                Recognized by Education Times for 98.7% success
-              </p>
-            </div>
+          <div className="relative w-full aspect-[3/4] max-h-[260px] mx-auto mb-5 overflow-hidden rounded-lg group-hover:scale-[1.03] transition-transform duration-300 bg-gray-950/50">
+            <Image
+              src={cert.imageSrc}
+              alt={cert.alt}
+              fill
+              className="object-contain p-2" // ← key change: contain + padding to avoid edge cutoff
+              sizes="(max-width: 640px) 90vw, (max-width: 1024px) 45vw, 22vw"
+              quality={85}
+              priority={index < 3} // eager load first 3 for better perceived speed
+            />
           </div>
-        </motion.div>
-      </section>
+
+          <div className="flex-1 flex flex-col justify-between">
+            <h3 className="text-lg sm:text-xl font-semibold mb-2 text-white group-hover:text-${cert.hoverColor}">
+              {cert.title}
+            </h3>
+            <p className="text-gray-400 text-sm leading-relaxed">
+              {cert.description}
+            </p>
+          </div>
+        </div>
+      ))}
+    </div>
+  </motion.div>
+</section>
 
       {/* FAQ */}
       <section className="py-20">
