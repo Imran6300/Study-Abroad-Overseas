@@ -108,6 +108,24 @@ export const universityItems = [
   },
 
   {
+  id: 7, 
+  rank: 7,
+  slug: "eth-zurich",
+  name: "ETH Zurich (Swiss Federal Institute of Technology)",
+  country: "Switzerland",
+  location: "Zurich, Switzerland",
+  flag: "🇨🇭",
+  degree: "Masters / PhD",
+  tuition: "CHF 1,500 – 2,000 / year",  
+  ranking: "QS World #7 (2026)",
+    logo: "/universityeslogos/ethlogo.png",
+    image: "/universitiesimages/ethzurich.jpg",
+  students: "25,000+",
+  acceptance: "~27%",
+  desc: "ETH Zurich is one of the world's leading universities in science, technology, engineering, and mathematics, renowned for its cutting-edge research, innovation, and strong industry ties. Founded in 1855 as the Swiss Federal Polytechnic School, it has produced numerous Nobel laureates (including Albert Einstein, who studied and taught there) and remains a global powerhouse in fields like physics, computer science, robotics, and sustainable technologies. Its focus on interdisciplinary collaboration and real-world problem-solving makes it a top choice for ambitious international students seeking world-class education at affordable tuition.",
+},
+
+  {
     id: 8,
     rank: 8,
     slug: "national-university-of-singapore",
@@ -181,24 +199,6 @@ export const universityItems = [
     students: "48,000+",
     acceptance: "8%",
     desc: "TUM is Germany’s leading technical university, offering high-quality education with minimal tuition fees.",
-  },
-
-  {
-    id: 12,
-    rank: 18,
-    slug: "eth-zurich",
-    name: "ETH Zurich",
-    country: "Switzerland",
-    location: "Zurich, Switzerland",
-    flag: "🇨🇭",
-    degree: "Masters / PhD",
-    tuition: "CHF 1,500 / year",
-    ranking: "QS World Top 20 (2026)",
-    logo: "/universityeslogos/ethzurich.png",
-    image: "/universitiesimages/ethzurich.jpg",
-    students: "22,000",
-    acceptance: "27%",
-    desc: "ETH Zurich is a world-class technical university known for engineering, science, and research excellence.",
   },
 
   {
