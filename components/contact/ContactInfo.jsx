@@ -32,7 +32,7 @@ const ContactInfo = () => {
             {
               Icon: MessageCircleMore,
               title: "WhatsApp",
-              value: "+91 73299 22309",
+              value: "+91 73298 22309",
             },
             { Icon: Phone, title: "USA Support", value: "+1 (800) 123-4567" },
           ].map(({ Icon, title, value }, i) => (
