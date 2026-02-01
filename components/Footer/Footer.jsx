@@ -148,13 +148,13 @@ export default function Footer() {
               href="tel:+919032176741"
               className="flex gap-3 hover:text-[#2ca850]"
             >
-              <Phone /> +91 7329822309
+              <Phone /> +91 73298 22309
             </a>
             <a
               href="tel:+917329922309"
               className="flex gap-3 hover:text-[#2ca850]"
             >
-              <Phone /> +91 73299 22309
+              <Phone /> +91 73298 22309
             </a>
 
             <a
