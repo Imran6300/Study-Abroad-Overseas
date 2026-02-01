@@ -7,7 +7,7 @@ import { X } from "lucide-react";
 
 import AdminSidebar from "@/components/admindashboard/AdminSidebar";
 import DashboardHeader from "@/components/admindashboard/DashboardHeader";
-import AddStudentForm from "@/components/adminform/students";
+import AddStudentForm from "@/components/adminform/addstudents";
 import ConfirmationModal from "@/components/adminform/confirmmsg";
 
 //animations
