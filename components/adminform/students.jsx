@@ -1,7 +1,8 @@
 // components/adminform/AddStudentForm.jsx
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { Upload, X } from "lucide-react";
 
 export default function AddStudentForm({ onSuccess, onCancel }) {
   const [form, setForm] = useState({
@@ -37,11 +38,15 @@ export default function AddStudentForm({ onSuccess, onCancel }) {
     remarks: "",
   });
 
+  // ──── Student Photo State ────
+  const [photoPreview, setPhotoPreview] = useState(null);
+  const [photoFile, setPhotoFile] = useState(null);
+  const fileInputRef = useRef(null);
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
 
     if (type === "checkbox") {
-      // Handle multi-select countries
       setForm((prev) => ({
         ...prev,
         preferredCountries: checked
@@ -53,27 +58,126 @@ export default function AddStudentForm({ onSuccess, onCancel }) {
     }
   };
 
+  // ──── Photo Upload Handler ────
+  const handlePhotoChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validation: image only, max 5MB
+    if (!file.type.startsWith("image/")) {
+      alert("Please select an image file");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Image size should be less than 5MB");
+      return;
+    }
+
+    setPhotoFile(file);
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPhotoPreview(reader.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const removePhoto = () => {
+    setPhotoFile(null);
+    setPhotoPreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Basic required fields check
     if (!form.fullName || !form.email || !form.mobile) {
       alert("Please fill required fields: Full Name, Email, Mobile");
       return;
     }
 
-    // TODO: Replace with real API call
-    // await fetch('/api/students', { method: 'POST', body: JSON.stringify(form) });
+    // Prepare data to send (you can include photoFile in FormData later)
+    const submitData = { ...form, studentPhoto: photoFile };
 
-    console.log("New student submitted:", form);
+    console.log("Submitting new student:", submitData);
 
-    // Send data back to parent component
-    onSuccess(form);
+    onSuccess(submitData);
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
-      {/* PERSONAL DETAILS */}
+      {/* ===================== PHOTO UPLOAD SECTION ===================== */}
+      <div className="bg-gradient-to-br from-sky-50 to-indigo-50 p-6 rounded-2xl border border-sky-100 shadow-sm">
+        <h3 className="text-lg font-semibold mb-5 text-gray-800 flex items-center gap-2">
+          <Upload size={20} className="text-sky-600" />
+          Student Photo
+        </h3>
+
+        <div className="flex flex-col md:flex-row items-center gap-8">
+          {/* Preview Circle */}
+          <div className="relative group">
+            <div className="w-40 h-40 rounded-full overflow-hidden border-4 border-white shadow-xl bg-gray-100 flex items-center justify-center">
+              {photoPreview ? (
+                <img
+                  src={photoPreview}
+                  alt="Student preview"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="text-gray-400 text-sm font-medium text-center px-4">
+                  No photo selected
+                </span>
+              )}
+            </div>
+
+            {/* Hover overlay */}
+            <div className="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="text-white bg-sky-600 hover:bg-sky-700 px-4 py-2 rounded-full text-sm font-medium shadow-md"
+              >
+                Change Photo
+              </button>
+            </div>
+
+            {/* Remove button */}
+            {photoPreview && (
+              <button
+                type="button"
+                onClick={removePhoto}
+                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1.5 shadow-lg hover:bg-red-600 transition-colors"
+              >
+                <X size={16} />
+              </button>
+            )}
+          </div>
+
+          {/* Upload instructions + hidden input */}
+          <div className="flex-1 text-center md:text-left">
+            <p className="text-sm text-gray-600 mb-3">
+              Upload a clear passport-size photo (max 5MB, JPG/PNG)
+            </p>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handlePhotoChange}
+              className="hidden"
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-xl font-medium shadow-md transition-all"
+            >
+              <Upload size={18} />
+              Upload Photo
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ===================== PERSONAL DETAILS ===================== */}
       <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
         <h3 className="text-lg font-semibold mb-5 text-gray-800">Personal Details</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -167,7 +271,7 @@ export default function AddStudentForm({ onSuccess, onCancel }) {
         </div>
       </div>
 
-      {/* CONTACT INFORMATION */}
+      {/* ===================== CONTACT ===================== */}
       <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
         <h3 className="text-lg font-semibold mb-5 text-gray-800">Contact Information</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -187,7 +291,7 @@ export default function AddStudentForm({ onSuccess, onCancel }) {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              WhatsApp / Alternate Number
+              WhatsApp / Alternate
             </label>
             <input
               name="whatsapp"
@@ -199,7 +303,7 @@ export default function AddStudentForm({ onSuccess, onCancel }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Email Address *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Email *</label>
             <input
               type="email"
               name="email"
@@ -226,7 +330,7 @@ export default function AddStudentForm({ onSuccess, onCancel }) {
         </div>
       </div>
 
-      {/* ACADEMIC BACKGROUND */}
+      {/* ===================== ACADEMIC ===================== */}
       <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
         <h3 className="text-lg font-semibold mb-5 text-gray-800">Academic Background</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -263,7 +367,9 @@ export default function AddStudentForm({ onSuccess, onCancel }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Year of Passing</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              Passing Year
+            </label>
             <input
               type="number"
               name="passingYear"
@@ -303,7 +409,7 @@ export default function AddStudentForm({ onSuccess, onCancel }) {
         </div>
       </div>
 
-      {/* STUDY ABROAD PREFERENCES */}
+      {/* ===================== PREFERENCES ===================== */}
       <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
         <h3 className="text-lg font-semibold mb-5 text-gray-800">Study Abroad Preferences</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -400,7 +506,7 @@ export default function AddStudentForm({ onSuccess, onCancel }) {
         </div>
       </div>
 
-      {/* TESTS & ADMIN INFO */}
+      {/* ===================== TESTS & ADMIN INFO ===================== */}
       <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
         <h3 className="text-lg font-semibold mb-5 text-gray-800">Tests & Admin Information</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -453,7 +559,6 @@ export default function AddStudentForm({ onSuccess, onCancel }) {
               <option value="Referral">Referral</option>
               <option value="Walk-in">Walk-in</option>
               <option value="Seminar">Seminar</option>
-              <option value="Other">Other</option>
             </select>
           </div>
 
@@ -468,10 +573,10 @@ export default function AddStudentForm({ onSuccess, onCancel }) {
               className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 bg-white transition-all"
             >
               <option value="">Select Counselor</option>
-              <option value="Imran">Imran</option>
               <option value="Sara">Sara</option>
               <option value="John">John</option>
               <option value="Priya">Priya</option>
+              <option value="Imran">Imran</option>
             </select>
           </div>
 
@@ -491,7 +596,6 @@ export default function AddStudentForm({ onSuccess, onCancel }) {
               <option value="Applications Submitted">Applications Submitted</option>
               <option value="Offer Received">Offer Received</option>
               <option value="Visa Applied">Visa Applied</option>
-              <option value="Visa Approved">Visa Approved</option>
               <option value="Enrolled">Enrolled</option>
             </select>
           </div>
@@ -504,7 +608,7 @@ export default function AddStudentForm({ onSuccess, onCancel }) {
               onChange={handleChange}
               rows={4}
               className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all"
-              placeholder="Any additional notes or comments..."
+              placeholder="Any additional information..."
             />
           </div>
         </div>
@@ -529,3 +633,4 @@ export default function AddStudentForm({ onSuccess, onCancel }) {
     </form>
   );
 }
+

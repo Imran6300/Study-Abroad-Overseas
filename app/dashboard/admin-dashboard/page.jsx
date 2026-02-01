@@ -13,7 +13,7 @@ import RevenueOverview from "@/components/admindashboard/RevenueOverview";
 import TopCounselors from "@/components/admindashboard/TopCounselors";
 
 //imp for addadmin
-import AdminManagementSection from "@/components/admindashboard/addadmin/AdminManagementSection";
+import AdminManagementSection from "@/components/adminform/addadmin/AdminManagementSection";
 
 
 const containerVariants = {
