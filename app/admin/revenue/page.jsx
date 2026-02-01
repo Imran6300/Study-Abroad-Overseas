@@ -8,24 +8,10 @@ import DashboardHeader from "@/components/admindashboard/DashboardHeader";
 import { DollarSign, TrendingUp, Clock, ArrowUpRight, ArrowDownRight } from "lucide-react";
 import Chart from "chart.js/auto";
 
-// Animation variants (same as your other pages)
-const containerVariants = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: { staggerChildren: 0.1, delayChildren: 0.15 },
-  },
-};
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 25, scale: 0.95 },
-  show: {
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    transition: { type: "spring", stiffness: 130, damping: 16, duration: 0.55 },
-  },
-};
+//animation components
+import {containerVariants,itemVariants} from "@/components/Animations/formanimations/animate"
+
 
 export default function RevenuePage() {
   const [revenueData, setRevenueData] = useState({

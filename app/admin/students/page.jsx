@@ -8,50 +8,16 @@ import { X } from "lucide-react";
 import AdminSidebar from "@/components/admindashboard/AdminSidebar";
 import DashboardHeader from "@/components/admindashboard/DashboardHeader";
 import AddStudentForm from "@/components/adminform/students";
+import ConfirmationModal from "@/components/adminform/confirmmsg";
 
-// Animation variants for the whole list
-const containerVariants = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: { staggerChildren: 0.08, delayChildren: 0.1 },
-  },
-};
+//animations
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 20, scale: 0.96 },
-  show: {
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    transition: { type: "spring", stiffness: 140, damping: 17, duration: 0.5 },
-  },
-};
+import {containerVariants,itemVariants,formVariants} from "@/components/Animations/formanimations/animate"
 
-// Beautiful animation for the Add Form section
-const formVariants = {
-  hidden: { opacity: 0, y: -60, scale: 0.92 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    transition: {
-      type: "spring",
-      stiffness: 300,
-      damping: 25,
-      duration: 0.6,
-    },
-  },
-  exit: {
-    opacity: 0,
-    y: -80,
-    scale: 0.88,
-    transition: { duration: 0.4, ease: "easeInOut" },
-  },
-};
+// Animation variants
+
 
 export default function StudentsAdminPage() {
-  const [showAddForm, setShowAddForm] = useState(false);
   const [students, setStudents] = useState([
     {
       id: 1,
@@ -80,75 +46,140 @@ export default function StudentsAdminPage() {
   const [search, setSearch] = useState("");
   const [justAdded, setJustAdded] = useState(false);
 
+  // Modal control states
+  const [mode, setMode] = useState(null);           // ← fixed line
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [showConfirmDelete, setShowConfirmDelete] = useState(false);
+  const [studentToDelete, setStudentToDelete] = useState(null);
+
+  const isFormOpen = mode !== null;
+
+  // ─── Handlers ───
+  const openAdd = () => {
+    setSelectedStudent(null);
+    setMode("add");
+  };
+
+  const openView = (student) => {
+    setSelectedStudent(student);
+    setMode("view");
+  };
+
+  const openEdit = (student) => {
+    setSelectedStudent(student);
+    setMode("edit");
+  };
+
+  const openDeleteConfirm = (student) => {
+    setStudentToDelete(student);
+    setShowConfirmDelete(true);
+  };
+
+  const handleDeleteConfirmed = () => {
+    setStudents((prev) => prev.filter((s) => s.id !== studentToDelete.id));
+    setShowConfirmDelete(false);
+    setStudentToDelete(null);
+  };
+
+  const handleFormSuccess = (formData) => {
+    if (mode === "add") {
+      const newStudent = {
+        id: Date.now(),
+        name: formData.fullName || "Unknown",
+        email: formData.email || "",
+        phone: formData.mobile || "",
+        origin: "India",
+        target: formData.preferredCountries?.[0] || "Not specified",
+        status: formData.currentStatus || "Lead",
+        counselor: formData.assignedCounselor || "Unassigned",
+        created: new Date().toISOString().split("T")[0],
+      };
+      setStudents((prev) => [...prev, newStudent]);
+      setJustAdded(true);
+      setTimeout(() => setJustAdded(false), 3000);
+    } else if (mode === "edit" && selectedStudent) {
+      setStudents((prev) =>
+        prev.map((s) =>
+          s.id === selectedStudent.id
+            ? {
+                ...s,
+                name: formData.fullName || s.name,
+                email: formData.email || s.email,
+                phone: formData.mobile || s.phone,
+                target: formData.preferredCountries?.[0] || s.target,
+                status: formData.currentStatus || s.status,
+                counselor: formData.assignedCounselor || s.counselor,
+              }
+            : s
+        )
+      );
+    }
+
+    // Close modal/form
+    setMode(null);
+    setSelectedStudent(null);
+  };
+
   const filteredStudents = students.filter(
     (s) =>
       s.name.toLowerCase().includes(search.toLowerCase()) ||
       s.email.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleAddStudent = (newStudentData) => {
-    const newStudent = {
-      id: Date.now(),
-      name: newStudentData.fullName || "Unknown",
-      email: newStudentData.email || "",
-      phone: newStudentData.mobile || "",
-      origin: "India",
-      target: newStudentData.preferredCountries?.[0] || "Not specified",
-      status: "Lead",
-      counselor: newStudentData.assignedCounselor || "Unassigned",
-      created: new Date().toISOString().split("T")[0],
-    };
-
-    setStudents((prev) => [...prev, newStudent]);
-    setJustAdded(true);
-    setTimeout(() => setJustAdded(false), 3000);
-    setShowAddForm(false);
-  };
-
   return (
     <div className="flex min-h-screen bg-gray-50 relative">
       <AdminSidebar />
 
       <div className="flex-1 flex flex-col">
-        {/* Header */}
         <DashboardHeader
-          title={showAddForm ? "Add New Student" : "Student Management"}
+          title={
+            mode === "add"
+              ? "Add New Student"
+              : mode === "edit"
+              ? "Edit Student"
+              : mode === "view"
+              ? "View Student"
+              : "Student Management"
+          }
           counselorName="Imran"
-          btnName={showAddForm ? "Back to List" : "+ Add New Student"}
-          onButtonClick={() => setShowAddForm(!showAddForm)}
+          btnName={isFormOpen ? "Close" : "+ Add New Student"}
+          onButtonClick={isFormOpen ? () => setMode(null) : openAdd}
         />
 
         <main className="flex-1 p-6 lg:p-8 overflow-auto bg-gray-50 relative">
-          {/* Backdrop blur when form is open */}
+          {/* Backdrop when form is open */}
           <AnimatePresence>
-            {showAddForm && (
+            {isFormOpen && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 0.4 }}
-                className="fixed inset-0 bg-black/20 backdrop-blur-sm z-10 pointer-events-none"
+                className="fixed inset-0 bg-black/30 backdrop-blur-sm z-10 pointer-events-none"
               />
             )}
           </AnimatePresence>
 
-          {/* Add Form – beautiful entrance/exit */}
+          {/* Form Modal */}
           <AnimatePresence>
-            {showAddForm && (
+            {isFormOpen && (
               <motion.div
                 variants={formVariants}
                 initial="hidden"
                 animate="visible"
                 exit="exit"
-                className="mb-12 relative z-20 max-w-5xl mx-auto"
+                className="relative z-20 max-w-5xl mx-auto mb-12"
               >
                 <div className="bg-white rounded-2xl shadow-2xl border border-gray-200/70 overflow-hidden">
                   <div className="bg-gradient-to-r from-sky-50 via-indigo-50 to-purple-50 px-6 py-5 border-b flex justify-between items-center">
                     <h2 className="text-2xl font-bold text-gray-900 tracking-tight">
-                      Add New Student
+                      {mode === "add"
+                        ? "Add New Student"
+                        : mode === "edit"
+                        ? "Edit Student"
+                        : "Student Details"}
                     </h2>
                     <button
-                      onClick={() => setShowAddForm(false)}
+                      onClick={() => setMode(null)}
                       className="text-gray-700 hover:text-red-600 p-2 rounded-full hover:bg-red-50 transition-colors"
                     >
                       <X size={24} strokeWidth={2.5} />
@@ -157,8 +188,10 @@ export default function StudentsAdminPage() {
 
                   <div className="p-6 lg:p-10">
                     <AddStudentForm
-                      onSuccess={handleAddStudent}
-                      onCancel={() => setShowAddForm(false)}
+                      mode={mode}
+                      initialData={selectedStudent}
+                      onSuccess={handleFormSuccess}
+                      onCancel={() => setMode(null)}
                     />
                   </div>
                 </div>
@@ -166,7 +199,7 @@ export default function StudentsAdminPage() {
             )}
           </AnimatePresence>
 
-          {/* Success message */}
+          {/* Success toast */}
           <AnimatePresence>
             {justAdded && (
               <motion.div
@@ -180,14 +213,14 @@ export default function StudentsAdminPage() {
             )}
           </AnimatePresence>
 
-          {/* Students List – always present, just visually dimmed when form is open */}
+          {/* Student List */}
           <motion.div
             variants={containerVariants}
             initial="hidden"
             animate="show"
-            className={`space-y-8 transition-opacity duration-500 ${showAddForm ? "opacity-70" : "opacity-100"}`}
+            className={`space-y-8 transition-opacity duration-500 ${isFormOpen ? "opacity-70 pointer-events-none" : "opacity-100"}`}
           >
-            {/* Search Bar */}
+            {/* Search */}
             <motion.div variants={itemVariants} className="mb-6">
               <input
                 type="text"
@@ -210,9 +243,7 @@ export default function StudentsAdminPage() {
                       <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Name</th>
                       <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Email</th>
                       <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Phone</th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
-                        Target Country
-                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Target Country</th>
                       <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Status</th>
                       <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Actions</th>
                     </tr>
@@ -241,10 +272,25 @@ export default function StudentsAdminPage() {
                             {student.status}
                           </span>
                         </td>
-                        <td className="px-6 py-4 text-sm font-medium">
-                          <button className="text-sky-600 hover:text-sky-800 mr-4">View</button>
-                          <button className="text-amber-600 hover:text-amber-800 mr-4">Edit</button>
-                          <button className="text-red-600 hover:text-red-800">Delete</button>
+                        <td className="px-6 py-4 text-sm font-medium whitespace-nowrap">
+                          <button
+                            onClick={() => openView(student)}
+                            className="text-sky-600 hover:text-sky-800 mr-4"
+                          >
+                            View
+                          </button>
+                          <button
+                            onClick={() => openEdit(student)}
+                            className="text-amber-600 hover:text-amber-800 mr-4"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => openDeleteConfirm(student)}
+                            className="text-red-600 hover:text-red-800"
+                          >
+                            Delete
+                          </button>
                         </td>
                       </motion.tr>
                     ))}
@@ -255,10 +301,24 @@ export default function StudentsAdminPage() {
 
             {filteredStudents.length === 0 && (
               <motion.p variants={itemVariants} className="text-center mt-12 text-gray-500 text-lg">
-                No students found matching your search.
+                No students found.
               </motion.p>
             )}
           </motion.div>
+
+          {/* Delete Confirmation Modal */}
+          <AnimatePresence>
+            {showConfirmDelete && (
+              <ConfirmationModal
+                title="Delete Student"
+                message={`Are you sure you want to delete ${studentToDelete?.name}? This cannot be undone.`}
+                confirmText="Delete"
+                confirmVariant="danger"
+                onConfirm={handleDeleteConfirmed}
+                onCancel={() => setShowConfirmDelete(false)}
+              />
+            )}
+          </AnimatePresence>
         </main>
       </div>
     </div>

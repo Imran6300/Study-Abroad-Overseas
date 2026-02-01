@@ -8,25 +8,8 @@ import AdminSidebar from "@/components/admindashboard/AdminSidebar";
 import DashboardHeader from "@/components/admindashboard/DashboardHeader";
 
 // Animation variants (container level only)
-const containerVariants = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.07,
-      delayChildren: 0.12,
-    },
-  },
-};
+import {containerVariants,itemVariants} from "@/components/Animations/formanimations/animate"
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 16 },
-  show: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.4, ease: "easeOut" },
-  },
-};
 
 function ApplicationRow({ app }) {
   const stageStyles = {

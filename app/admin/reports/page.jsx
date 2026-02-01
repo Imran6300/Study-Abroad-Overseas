@@ -9,23 +9,7 @@ import { TrendingUp, Users, FileCheck, Globe, DollarSign, BarChart3 } from "luci
 import Chart from "chart.js/auto";
 
 // Animation variants
-const containerVariants = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: { staggerChildren: 0.12, delayChildren: 0.2 },
-  },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 30, scale: 0.94 },
-  show: {
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    transition: { type: "spring", stiffness: 110, damping: 14, duration: 0.65 },
-  },
-};
+import {containerVariants,itemVariants} from "@/components/Animations/formanimations/animate"
 
 export default function ReportsPage() {
   const [loading, setLoading] = useState(true);
