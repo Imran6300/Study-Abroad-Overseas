@@ -154,7 +154,7 @@ export default function Footer() {
               href="tel:+917329922309"
               className="flex gap-3 hover:text-[#2ca850]"
             >
-              <Phone /> +91 73298 22309
+              <Phone /> +91 73299 22309
             </a>
 
             <a
@@ -164,19 +164,19 @@ export default function Footer() {
               <Phone /> +91 90321 76741
             </a>
 
-            <a
+            {/* <a
               href="mailto:Consultant@gmail.com"
               className="flex gap-3 hover:text-[#2ca850]"
             >
               <Mail /> info@khizaroverseas.com
-            </a>
+            </a> */}
 
             
             <a
               href="mailto:khizaroverseas.educounsultant@gmail.com"
               className="flex gap-3 hover:text-[#2ca850]"
             >
-              <Mail /> khizaroverseas@gmail.com
+              <Mail /> khizaroverseas.educonsultant@gmail.com
             </a>
 
             <div className="flex gap-3">
