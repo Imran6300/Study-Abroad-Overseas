@@ -28,7 +28,7 @@ export default function AcademicSection({ form, handleChange }) {
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Stream / Field</label>
             <input
               name="stream"
-              value={form.stream}
+              value={form.stream ?? ""}
               onChange={handleChange}
               className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all"
               placeholder="e.g. Science, Commerce, Computer Science"
@@ -42,7 +42,7 @@ export default function AcademicSection({ form, handleChange }) {
             <input
               type="number"
               name="passingYear"
-              value={form.passingYear}
+              value={form.passingYear ?? ""}
               onChange={handleChange}
               className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all"
               placeholder="2024"
@@ -55,7 +55,7 @@ export default function AcademicSection({ form, handleChange }) {
             </label>
             <input
               name="percentage"
-              value={form.percentage}
+              value={form.percentage ?? ""}
               onChange={handleChange}
               className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all"
               placeholder="85.5% or 8.5 CGPA"
@@ -69,7 +69,7 @@ export default function AcademicSection({ form, handleChange }) {
             <input
               type="number"
               name="backlogs"
-              value={form.backlogs}
+              value={form.backlogs ?? ""}
               onChange={handleChange}
               min="0"
               className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all"
