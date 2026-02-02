@@ -20,7 +20,7 @@ export default function PersonalDetailsSection({ form, handleChange }) {
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Father's Name</label>
             <input
               name="fatherName"
-              value={form.fatherName}
+              value={form.fatherName ?? ""}
               onChange={handleChange}
               className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all"
             />
