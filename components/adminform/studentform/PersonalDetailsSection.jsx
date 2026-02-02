@@ -9,7 +9,7 @@ export default function PersonalDetailsSection({ form, handleChange }) {
             </label>
             <input
               name="fullName"
-              value={form.fullName}
+              value={form.fullName ?? ""}
               onChange={handleChange}
               required
               className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all"
@@ -43,7 +43,7 @@ export default function PersonalDetailsSection({ form, handleChange }) {
             <input
               type="date"
               name="dateOfBirth"
-              value={form.dateOfBirth}
+              value={form.dateOfBirth ?? ""}
               onChange={handleChange}
               required
               className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all"
@@ -72,7 +72,7 @@ export default function PersonalDetailsSection({ form, handleChange }) {
             </label>
             <input
               name="passportNumber"
-              value={form.passportNumber}
+              value={form.passportNumber ?? ""}
               onChange={handleChange}
               className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all"
             />
@@ -85,7 +85,7 @@ export default function PersonalDetailsSection({ form, handleChange }) {
             <input
               type="date"
               name="passportExpiry"
-              value={form.passportExpiry}
+              value={form.passportExpiry ?? ""}
               onChange={handleChange}
               className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all"
             />
