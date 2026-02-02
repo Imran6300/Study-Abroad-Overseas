@@ -9,7 +9,7 @@ export default function TestsAndAdminSection({ form, handleChange }) {
             </label>
             <select
               name="englishTest"
-              value={form.englishTest}
+              value={form.englishTest ?? ""}
               onChange={handleChange}
               className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 bg-white transition-all"
             >
@@ -27,7 +27,7 @@ export default function TestsAndAdminSection({ form, handleChange }) {
             </label>
             <input
               name="englishScore"
-              value={form.englishScore}
+              value={form.englishScore ?? ""}
               onChange={handleChange}
               className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all"
               placeholder="e.g. 7.0 / 100 / 65 / 120"
