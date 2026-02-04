@@ -10,10 +10,11 @@ import {
 } from "@/lib/searchUtils";
 import { COUNTRY_PAGE_DATA } from "@/data/countrydetail";
 import { COUNTRIES } from "@/data/countries";
-import { coursesData } from "@/data/coursesData";
 import { categoryData } from "@/data/coursescategory";
 import { universityItems } from "@/data/universitiesData";
 import { universitiesByCategory } from "@/data/universitybycatogery";
+
+// Normalize function (same as before)
 const normalize = (str = "") => str.toLowerCase().trim().replace(/\s+/g, " ");
 
 export default function HeroSearch() {
@@ -22,11 +23,10 @@ export default function HeroSearch() {
   const courseIndex = useMemo(
     () =>
       buildCourseIndex({
-        coursesData,
-        popularCourses: COUNTRY_PAGE_DATA.popularCourses,
+        popularCourses: COUNTRY_PAGE_DATA.popularCourses || [],
         categoryData,
       }),
-    [],
+    []
   );
 
   const handleSearch = (e) => {
@@ -35,70 +35,73 @@ export default function HeroSearch() {
     const query = e.target.search.value.trim();
     if (!query) return;
 
-    /* ================= COUNTRY (OPTION A – SMART UX) ================= */
+    const normalizedQuery = normalize(query);
+
+    // 1. COUNTRY
     const country = matchCountry(query, COUNTRIES);
-
     if (country) {
-      const queryNorm = query.toLowerCase().trim();
-      const countryNameNorm = country.name.toLowerCase();
-
-      // ✅ Exact country → detail page
+      const countryNameNorm = normalize(country.name);
       if (
-        queryNorm === countryNameNorm ||
-        queryNorm === countryNameNorm.replace(/\s+/g, "")
+        normalizedQuery === countryNameNorm ||
+        normalizedQuery === countryNameNorm.replace(/\s+/g, "")
       ) {
-        const slug = country.name.toLowerCase().replace(/\s+/g, "-");
+        const slug = countryNameNorm.replace(/\s+/g, "-");
         router.push(`/all-countries/${slug}`);
-        return;
+      } else {
+        router.push(`/all-countries?search=${encodeURIComponent(query)}`);
       }
-
-      // 🔍 Partial / descriptive → list page
-      router.push(`/all-countries?search=${encodeURIComponent(query)}`);
       return;
     }
 
-    /* ================= COURSE CATEGORY ================= */
-    const queryNorm = normalize(query);
-
-    // ✅ CATEGORY → CATEGORY PAGE
-    if (Object.keys(categoryData).includes(queryNorm)) {
-      router.push(`/courses/${queryNorm}`);
+    // 2. CATEGORY (direct match)
+    if (Object.keys(categoryData).includes(normalizedQuery)) {
+      router.push(`/courses/${normalizedQuery}`);
       return;
     }
 
-    /* ================= COURSE TITLE ================= */
-    const course = matchCourse(query, courseIndex);
-    if (course) {
-      const courseTitleNorm = course.title.toLowerCase();
+    // 3. COURSE (updated: courseName is now a string)
+    const courseName = matchCourse(query, courseIndex);
+    if (courseName) {
+      const titleNorm = normalize(courseName);
+
+      // Find matching program to get category + slug
+      let foundCategory = null;
+      let foundSlug = null;
+
+      Object.entries(categoryData).forEach(([catKey, cat]) => {
+        Object.values(cat.tabs || {}).forEach((level) => {
+          const match = level.find(
+            (item) => normalize(item.name) === titleNorm && item.slug
+          );
+          if (match) {
+            foundCategory = catKey;
+            foundSlug = match.slug;
+          }
+        });
+      });
 
       // ✅ EXACT COURSE → DETAIL PAGE
-      if (
-        queryNorm === courseTitleNorm ||
-        queryNorm === courseTitleNorm.replace(/\s+/g, "")
-      ) {
-        const slug = courseTitleNorm.replace(/\s+/g, "-");
-        router.push(`/courses/${slug}`);
-        return;
+      if (foundCategory && foundSlug) {
+        router.push(`/courses/${foundCategory}/${foundSlug}`);
+      } else {
+        // Partial / no slug → list page
+        router.push(`/courses?search=${encodeURIComponent(query)}`);
       }
-
-      // 🔍 PARTIAL → COURSE LIST
-      router.push(`/courses?search=${encodeURIComponent(query)}`);
       return;
     }
 
-    /* ================= UNIVERSITY ================= */
+    // 4. UNIVERSITY
     const university = matchUniversity(
       query,
       universityItems,
-      universitiesByCategory,
+      universitiesByCategory
     );
-
     if (university) {
       router.push(`/universities?search=${encodeURIComponent(query)}`);
       return;
     }
 
-    /* ================= FALLBACK ================= */
+    // 5. FALLBACK
     router.push(`/search?q=${encodeURIComponent(query)}`);
   };
 

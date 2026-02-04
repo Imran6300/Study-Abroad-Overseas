@@ -3,10 +3,10 @@
 import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { debounce } from "lodash"; // Install: npm install lodash
+import { debounce } from "lodash";
 
 /* ================= DATA ================= */
-import { coursesData } from "@/data/coursesData";
+import { categoryData } from "@/data/coursescategory"; // ← your main merged data
 
 const CATEGORY_META = {
   all: { label: "All Courses", color: "from-gray-500 to-gray-600" },
@@ -49,7 +49,7 @@ export default function Courses() {
   const [rawSearch, setRawSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
 
-  // Debounce search input to reduce filtering frequency
+  // Debounce search input
   const [search, setSearch] = useState("");
   useEffect(() => {
     const handler = debounce(() => {
@@ -59,21 +59,60 @@ export default function Courses() {
     return () => handler.cancel();
   }, [rawSearch]);
 
-  // Memoize filtered results to prevent recalculation on every render
-  const filteredCourses = useMemo(() => {
-    return coursesData.filter((course) => {
-      const matchesSearch = course.title
-        .toLowerCase()
-        .includes(search.toLowerCase());
-      const matchesCategory =
-        activeCategory === "all" || course.category === activeCategory;
-      return matchesSearch && matchesCategory;
+  // Flatten ALL programs from categoryData into one array
+  const allCourses = useMemo(() => {
+    const courses = [];
+
+    Object.entries(categoryData).forEach(([categoryKey, category]) => {
+      Object.entries(category.tabs || {}).forEach(([levelKey, levelPrograms]) => {
+        (levelPrograms || []).forEach((prog) => {
+          if (prog.name) {
+            courses.push({
+              title: prog.name,
+              category: categoryKey,
+              level: levelKey,
+              slug: prog.slug,
+              desc: prog.shortDesc || "", // if you added shortDesc
+              unis: prog.unis || "",
+              duration: prog.duration || prog.funding || "",
+              fee: prog.fee || "",
+              popular: prog.popular || false,
+            });
+          }
+        });
+      });
     });
-  }, [search, activeCategory]);
+
+    return courses;
+  }, []);
+
+  // Filter based on search & category
+  const filteredCourses = useMemo(() => {
+    let result = allCourses;
+
+    // Category filter
+    if (activeCategory !== "all") {
+      result = result.filter((course) => course.category === activeCategory);
+    }
+
+    // Search filter
+    if (search.trim()) {
+      const searchLower = search.toLowerCase();
+      result = result.filter((course) => {
+        return (
+          course.title.toLowerCase().includes(searchLower) ||
+          (course.desc || "").toLowerCase().includes(searchLower) ||
+          (course.unis || "").toLowerCase().includes(searchLower)
+        );
+      });
+    }
+
+    return result;
+  }, [search, activeCategory, allCourses]);
 
   return (
     <section className="min-h-screen bg-[#0b0f1a] text-white">
-      {/* HERO SECTION - Lightweight animations */}
+      {/* HERO SECTION */}
       <div className="relative border-b border-white/10 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-indigo-900/10 to-transparent pointer-events-none" />
 
@@ -115,7 +154,7 @@ export default function Courses() {
             />
           </motion.div>
 
-          {/* Category Chips - Minimal motion */}
+          {/* Category Chips */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -140,7 +179,7 @@ export default function Courses() {
         </div>
       </div>
 
-      {/* COURSES GRID - Optimized for performance */}
+      {/* COURSES GRID */}
       <div className="max-w-7xl mx-auto px-6 py-24">
         {filteredCourses.length === 0 ? (
           <motion.p
@@ -159,7 +198,7 @@ export default function Courses() {
             className="grid sm:grid-cols-2 lg:grid-cols-3 gap-10"
           >
             {filteredCourses.map((course) => {
-              const meta = CATEGORY_META[course.category];
+              const meta = CATEGORY_META[course.category] || CATEGORY_META.all;
 
               return (
                 <motion.div
@@ -169,7 +208,7 @@ export default function Courses() {
                   className="h-full"
                 >
                   <Link
-                    href={`/courses/${course.category}`}
+                    href={`/courses/${course.category}/${course.slug}`}
                     className="block h-full group"
                   >
                     <div className="relative h-full rounded-3xl p-8 bg-white/5 backdrop-blur-sm border border-white/10 overflow-hidden transition-all duration-500 hover:border-transparent hover:shadow-2xl group-hover:bg-white/8">
@@ -180,7 +219,7 @@ export default function Courses() {
                       <span
                         className={`inline-block px-4 py-2 rounded-full text-xs font-bold bg-gradient-to-r ${meta.color} text-white shadow-md`}
                       >
-                        {meta.label}
+                        {meta.label} • {course.level.toUpperCase()}
                       </span>
 
                       <h3 className="mt-6 text-2xl font-bold group-hover:text-indigo-300 transition-colors">
@@ -188,12 +227,12 @@ export default function Courses() {
                       </h3>
 
                       <p className="mt-3 text-gray-400 leading-relaxed">
-                        {course.desc}
+                        {course.desc || course.unis || "Explore top universities worldwide"}
                       </p>
 
                       <div className="mt-10 flex items-center justify-between">
                         <span className="text-sm text-gray-500">
-                          USA • UK • Canada • Australia
+                          {course.duration || "Varies"} • {course.fee || "Contact for fees"}
                         </span>
                         <span className="text-indigo-400 font-semibold flex items-center gap-2 group-hover:gap-4 transition-all">
                           Explore <span>→</span>

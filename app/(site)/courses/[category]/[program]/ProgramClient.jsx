@@ -4,47 +4,49 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, Globe, Calendar, DollarSign, GraduationCap, Users, Award, ArrowRight } from "lucide-react";
 import Link from "next/link";
+import {coursesData} from "@/data/coursesData"
+
 
 export default function CourseDetailPage({ program, category }) {
   const [activeTab, setActiveTab] = useState("overview");
   const [openAccordion, setOpenAccordion] = useState(null);
 
   // Example data structure – replace with real props/data
-  const course = {
-    name: program?.name || "MSc in Cybersecurity",
-    tagline: "Protect the digital world from tomorrow’s threats",
-    heroImage: program?.heroImage || "https://images.unsplash.com/photo-1555949963-aa79d0ebc8fb?w=1200&q=80",
-    overview: "Master advanced cybersecurity techniques including ethical hacking, digital forensics, threat intelligence, cryptography, and incident response. Designed for aspiring security leaders in a world of increasing cyber risks.",
-    highlights: [
-      "Hands-on labs with real-world attack simulations",
-      "Industry certifications preparation (CISSP, CEH, CompTIA Security+)",
-      "Access to cutting-edge tools & research facilities",
-      "Strong industry partnerships & internship opportunities",
-    ],
-    duration: "1–2 years full-time",
-    tuition: "USD 30,000 – 60,000 per year (varies by university & country)",
-    scholarships: "Up to 100% available – merit-based, need-based, country-specific",
-    entryRequirements: [
-      "Bachelor’s degree in Computer Science, IT, Engineering or related field (minimum 65–70%)",
-      "English proficiency: IELTS 6.5+ / TOEFL 90+ / PTE 58+",
-      "1–2 years relevant work experience preferred (for top-tier universities)",
-      "Strong foundation in programming & networking",
-    ],
-    topUniversities: [
-      { name: "Carnegie Mellon University", location: "USA", ranking: "#1 in Cybersecurity" },
-      { name: "University of Oxford", location: "UK", ranking: "World Top 5" },
-      { name: "Georgia Institute of Technology", location: "USA", ranking: "Top 10" },
-      { name: "Imperial College London", location: "UK", ranking: "Top 10" },
-      { name: "University of Melbourne", location: "Australia", ranking: "Top 15" },
-    ],
-    careerOutcomes: [
-      "Cybersecurity Analyst / Architect",
-      "Ethical Hacker / Penetration Tester",
-      "Security Consultant / Incident Responder",
-      "Chief Information Security Officer (CISO)",
-      "Average starting salary: USD 110,000 – 160,000",
-    ],
-  };
+  // const course = {
+  //   name: program?.name || "MSc in Cybersecurity",
+  //   tagline: "Protect the digital world from tomorrow’s threats",
+  //   heroImage: program?.heroImage || "https://images.unsplash.com/photo-1555949963-aa79d0ebc8fb?w=1200&q=80",
+  //   overview: "Master advanced cybersecurity techniques including ethical hacking, digital forensics, threat intelligence, cryptography, and incident response. Designed for aspiring security leaders in a world of increasing cyber risks.",
+  //   highlights: [
+  //     "Hands-on labs with real-world attack simulations",
+  //     "Industry certifications preparation (CISSP, CEH, CompTIA Security+)",
+  //     "Access to cutting-edge tools & research facilities",
+  //     "Strong industry partnerships & internship opportunities",
+  //   ],
+  //   duration: "1–2 years full-time",
+  //   tuition: "USD 30,000 – 60,000 per year (varies by university & country)",
+  //   scholarships: "Up to 100% available – merit-based, need-based, country-specific",
+  //   entryRequirements: [
+  //     "Bachelor’s degree in Computer Science, IT, Engineering or related field (minimum 65–70%)",
+  //     "English proficiency: IELTS 6.5+ / TOEFL 90+ / PTE 58+",
+  //     "1–2 years relevant work experience preferred (for top-tier universities)",
+  //     "Strong foundation in programming & networking",
+  //   ],
+  //   topUniversities: [
+  //     { name: "Carnegie Mellon University", location: "USA", ranking: "#1 in Cybersecurity" },
+  //     { name: "University of Oxford", location: "UK", ranking: "World Top 5" },
+  //     { name: "Georgia Institute of Technology", location: "USA", ranking: "Top 10" },
+  //     { name: "Imperial College London", location: "UK", ranking: "Top 10" },
+  //     { name: "University of Melbourne", location: "Australia", ranking: "Top 15" },
+  //   ],
+  //   careerOutcomes: [
+  //     "Cybersecurity Analyst / Architect",
+  //     "Ethical Hacker / Penetration Tester",
+  //     "Security Consultant / Incident Responder",
+  //     "Chief Information Security Officer (CISO)",
+  //     "Average starting salary: USD 110,000 – 160,000",
+  //   ],
+  // };
 
   const tabs = [
     { id: "overview", label: "Overview" },
@@ -63,8 +65,8 @@ export default function CourseDetailPage({ program, category }) {
       <div className="relative h-[70vh] min-h-[500px] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0">
           <img
-            src={course.heroImage}
-            alt={course.name}
+            src={courseData.heroImage}
+            alt={courseData.name}
             className="w-full h-full object-cover brightness-[0.45] scale-105"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#0a0e17] via-black/60 to-transparent" />
@@ -81,11 +83,11 @@ export default function CourseDetailPage({ program, category }) {
             </span>
 
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight leading-tight bg-gradient-to-br from-white via-indigo-200 to-blue-300 bg-clip-text text-transparent">
-              {course.name}
+              {courseData.name}
             </h1>
 
             <p className="mt-6 text-xl md:text-2xl text-gray-200/90 max-w-4xl mx-auto font-light">
-              {course.tagline}
+              {courseData.tagline}
             </p>
           </motion.div>
         </div>
@@ -95,8 +97,8 @@ export default function CourseDetailPage({ program, category }) {
       <div className="relative z-10 -mt-20 px-6">
         <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
           {[
-            { icon: Calendar, label: "Duration", value: course.duration },
-            { icon: DollarSign, label: "Tuition", value: course.tuition.split("–")[0] + " +" },
+            { icon: Calendar, label: "Duration", value: courseData.duration },
+            { icon: DollarSign, label: "Tuition", value: courseData.tuition.split("–")[0] + " +" },
             { icon: Award, label: "Scholarships", value: "Up to 100%" },
             { icon: Users, label: "Career Salary", value: "USD 110k+" },
           ].map((stat, i) => (
@@ -147,7 +149,7 @@ export default function CourseDetailPage({ program, category }) {
               <div className="space-y-12">
                 <div className="prose prose-invert max-w-none">
                   <h2 className="text-3xl font-bold mb-6 text-indigo-300">Program Overview</h2>
-                  <p className="text-lg leading-relaxed text-gray-200">{course.overview}</p>
+                  <p className="text-lg leading-relaxed text-gray-200">{courseData.overview}</p>
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-8">
@@ -156,7 +158,7 @@ export default function CourseDetailPage({ program, category }) {
                       <Award className="text-indigo-400" /> Key Highlights
                     </h3>
                     <ul className="space-y-4 text-gray-200">
-                      {course.highlights.map((item, i) => (
+                      {courseData.highlights.map((item, i) => (
                         <li key={i} className="flex items-start gap-3">
                           <div className="mt-1.5 w-2 h-2 rounded-full bg-indigo-500 flex-shrink-0" />
                           {item}
@@ -170,7 +172,7 @@ export default function CourseDetailPage({ program, category }) {
                       <GraduationCap className="text-indigo-400" /> Career Prospects
                     </h3>
                     <ul className="space-y-4 text-gray-200">
-                      {course.careerOutcomes.map((item, i) => (
+                      {courseData.careerOutcomes.map((item, i) => (
                         <li key={i} className="flex items-start gap-3">
                           <div className="mt-1.5 w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0" />
                           {item}
@@ -186,7 +188,7 @@ export default function CourseDetailPage({ program, category }) {
               <div className="space-y-8">
                 <h2 className="text-3xl font-bold mb-8 text-indigo-300">Entry Requirements</h2>
                 <div className="space-y-4">
-                  {course.entryRequirements.map((req, index) => (
+                  {courseData.entryRequirements.map((req, index) => (
                     <div
                       key={index}
                       className="bg-white/5 backdrop-blur-xl rounded-xl p-6 border border-white/10 cursor-pointer"
@@ -213,7 +215,7 @@ export default function CourseDetailPage({ program, category }) {
               <div className="space-y-12">
                 <h2 className="text-3xl font-bold mb-8 text-indigo-300">Top Universities Offering This Program</h2>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {course.topUniversities.map((uni, i) => (
+                  {courseData.topUniversities.map((uni, i) => (
                     <motion.div
                       key={i}
                       initial={{ opacity: 0, y: 20 }}
@@ -246,7 +248,7 @@ export default function CourseDetailPage({ program, category }) {
                     <div>
                       <h3 className="text-2xl font-bold mb-6">Popular Job Roles</h3>
                       <ul className="space-y-4">
-                        {course.careerOutcomes.slice(0, 4).map((role, i) => (
+                        {courseData.careerOutcomes.slice(0, 4).map((role, i) => (
                           <li key={i} className="flex items-center gap-3 text-lg">
                             <div className="w-2 h-2 rounded-full bg-emerald-500" />
                             {role}
