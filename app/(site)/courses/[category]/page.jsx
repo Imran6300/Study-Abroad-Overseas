@@ -37,12 +37,12 @@ export async function generateMetadata({ params }) {
    PAGE
    ============================= */
 export default async function CourseCategoryPage({ params }) {
-  const resolvedParams = await params;
-  const slug = resolvedParams.category;
+  const { category } = await params;
 
-  if (!categoryData[slug]) {
+  if (!categoryData[category]) {
     notFound();
   }
 
-  return <CourseCategory />;
+  return <CourseCategory category={category.toLowerCase()} />;
 }
+
