@@ -9,8 +9,6 @@ export default function CourseDetailPage({ program, category }) {
   const [activeTab, setActiveTab] = useState("overview");
   const [openAccordion, setOpenAccordion] = useState(null);
 
-  // Use the REAL program data passed from server page
-  // Fallbacks ensure nothing crashes if a field is missing
   const course = {
     name: program?.name || "Program Details",
     tagline: program?.tagline || "World-class education abroad",
