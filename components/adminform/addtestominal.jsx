@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from "react";
 import StudentPhotoUpload from "@/components/adminform/studentform/StudentPhotoUpload";
 
 export default function AddSuccessStoryForm({
-  mode = "add",           // "add" | "edit" | "view"
+  mode = "add",
   initialData = null,
   onSuccess,
   onCancel,

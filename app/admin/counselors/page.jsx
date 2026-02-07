@@ -71,7 +71,6 @@ export default function CounselorsAdminPage() {
   const [search, setSearch] = useState("");
   const [debouncedSearch] = useDebounce(search, 320);
 
-  // Modal & form states — same pattern as students page
   const [mode, setMode] = useState(null); // null | "add" | "edit" | "view"
   const [selectedCounselor, setSelectedCounselor] = useState(null);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);

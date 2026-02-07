@@ -10,7 +10,6 @@ import AdminSidebar from "@/components/admindashboard/AdminSidebar";
 import DashboardHeader from "@/components/admindashboard/DashboardHeader";
 import ConfirmationModal from "@/components/adminform/confirmmsg";
 
-// Assume you will create this component (similar to AddStudentForm)
 import AddApplicationForm from "@/components/adminform/addapplication";
 
 // Animations (same as students page)

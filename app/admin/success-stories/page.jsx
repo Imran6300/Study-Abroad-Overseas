@@ -8,8 +8,7 @@ import AdminSidebar from "@/components/admindashboard/AdminSidebar";
 import DashboardHeader from "@/components/admindashboard/DashboardHeader";
 import ConfirmationModal from "@/components/adminform/confirmmsg";
 
-// Assume you will create this component (similar to AddStudentForm)
-import AddSuccessStoryForm from "@/components/adminform/addtestominal"; // ← create this
+import AddSuccessStoryForm from "@/components/adminform/addtestominal"; 
 
 // Animations (same as students page)
 import { containerVariants, itemVariants, formVariants } from "@/components/Animations/formanimations/animate";
@@ -29,13 +28,11 @@ export default function SuccessStoriesPage() {
       published: true,
       dateAdded: "2026-01-15",
     },
-    // ... other mock entries ...
   ]);
 
   const [search, setSearch] = useState("");
   const [justAdded, setJustAdded] = useState(false);
 
-  // Modal control
   const [mode, setMode] = useState(null); // "add" | "edit" | "view" | null
   const [selectedStory, setSelectedStory] = useState(null);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
@@ -43,7 +40,6 @@ export default function SuccessStoriesPage() {
 
   const isFormOpen = mode !== null;
 
-  // ─── Handlers ───
   const openAdd = () => {
     setSelectedStory(null);
     setMode("add");
@@ -54,7 +50,6 @@ export default function SuccessStoriesPage() {
     setMode("edit");
   };
 
-  // Optional: view mode (read-only form or just details)
   const openView = (story) => {
     setSelectedStory(story);
     setMode("view");

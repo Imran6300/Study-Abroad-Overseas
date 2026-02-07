@@ -14,8 +14,6 @@ import ConfirmationModal from "@/components/adminform/confirmmsg";
 
 import {containerVariants,itemVariants,formVariants} from "@/components/Animations/formanimations/animate"
 
-// Animation variants
-
 
 export default function StudentsAdminPage() {
   const [students, setStudents] = useState([

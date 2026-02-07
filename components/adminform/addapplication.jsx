@@ -11,7 +11,7 @@ import TestsAndAdminSection from "./studentform/TestsAndAdminSection";
 import PreferenceSection from "./studentform/PreferencesSection";
 
 export default function AddApplicationForm({
-  mode = "add",           // "add" | "edit" | "view"
+  mode = "add",
   initialData = null,
   onSuccess,
   onCancel,
