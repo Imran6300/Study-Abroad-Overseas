@@ -13,6 +13,10 @@ export default function AddSuccessStoryForm({
   const isViewMode = mode === "view";
 
   const [formData, setFormData] = useState({
+    // Page title/subtitle
+    pageTitle: "",
+    pageSubtitle: "",
+    
     // Page stats (numbers)
     studentsPlaced: 0,
     visaSuccessRate: 0,
@@ -41,6 +45,8 @@ export default function AddSuccessStoryForm({
   useEffect(() => {
     if (initialData) {
       setFormData({
+        pageTitle: initialData.pageTitle || "",
+        pageSubtitle: initialData.pageSubtitle || "",
         studentsPlaced: initialData.studentsPlaced || 0,
         visaSuccessRate: initialData.visaSuccessRate || 0,
         partnerUniversities: initialData.partnerUniversities || 0,
@@ -70,6 +76,10 @@ export default function AddSuccessStoryForm({
 
   const validateForm = () => {
     const newErrors = {};
+    
+    // Title/Subtitle validation
+    if (!formData.pageTitle.trim()) newErrors.pageTitle = "Page title required";
+    if (!formData.pageSubtitle.trim()) newErrors.pageSubtitle = "Page subtitle required";
     
     // Stats validation (optional but must be numbers)
     if (isNaN(formData.studentsPlaced) || formData.studentsPlaced < 0) {
@@ -122,6 +132,42 @@ export default function AddSuccessStoryForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8 max-w-4xl mx-auto p-8 bg-white rounded-xl shadow-sm border border-gray-200">
+      
+      {/* NEW: Page Title & Subtitle Section */}
+      <div className="space-y-6">
+        <div>
+          <label className="block text-lg font-semibold text-gray-800 mb-3 bg-gray-50 px-4 py-2 rounded-lg border border-gray-200">
+            Edit Title <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            name="pageTitle"
+            value={formData.pageTitle}
+            onChange={handleChange}
+            disabled={isViewMode}
+            className={`w-full px-4 py-3 text-xl rounded-lg border border-gray-300 font-bold shadow-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 ${errors.pageTitle ? "border-red-300 bg-red-50" : "hover:border-gray-400"} disabled:bg-gray-50`}
+            placeholder="e.g. Success Stories 2026"
+          />
+          {errors.pageTitle && <p className="text-red-600 font-medium mt-2">{errors.pageTitle}</p>}
+        </div>
+
+        <div>
+          <label className="block text-lg font-semibold text-gray-800 mb-3 bg-gray-50 px-4 py-2 rounded-lg border border-gray-200">
+            Edit Subtitle <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            name="pageSubtitle"
+            value={formData.pageSubtitle}
+            onChange={handleChange}
+            disabled={isViewMode}
+            className={`w-full px-4 py-3 text-lg rounded-lg border border-gray-300 font-semibold shadow-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 ${errors.pageSubtitle ? "border-red-300 bg-red-50" : "hover:border-gray-400"} disabled:bg-gray-50`}
+            placeholder="e.g. 500+ Students Placed | 98% Visa Success"
+          />
+          {errors.pageSubtitle && <p className="text-red-600 font-medium mt-2">{errors.pageSubtitle}</p>}
+        </div>
+      </div>
+
       {/* Page Stats Section - Clean DeadlineForm Style */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6 bg-gray-50 p-8 rounded-xl border border-gray-200">
         <div className="text-center">
@@ -216,9 +262,18 @@ export default function AddSuccessStoryForm({
             {formData.studentName}
           </h1>
           <p className="text-xl font-semibold text-gray-700">{formData.course} at {formData.university}</p>
+          
+          {/* Show title/subtitle in view mode */}
+          {formData.pageTitle && (
+            <p className="text-2xl font-bold text-sky-600 mt-4">{formData.pageTitle}</p>
+          )}
+          {formData.pageSubtitle && (
+            <p className="text-lg text-gray-600 mt-1">{formData.pageSubtitle}</p>
+          )}
         </div>
       )}
 
+      {/* Rest of the form remains exactly the same... */}
       {/* Student Details Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div>
@@ -320,22 +375,6 @@ export default function AddSuccessStoryForm({
         </div>
       </div>
 
-      {/* Short Testimonial */}
-      <div>
-        <label className="block text-lg font-semibold text-gray-800 mb-4 bg-gray-50 px-6 py-3 rounded-lg border border-gray-200">
-          Short Testimonial / Quote <span className="text-red-500">*</span>
-        </label>
-        <textarea
-          name="excerpt"
-          value={formData.excerpt}
-          onChange={handleChange}
-          disabled={isViewMode}
-          rows={4}
-          className={`w-full px-4 py-3 text-lg rounded-lg border border-gray-300 font-semibold shadow-sm resize-vertical focus:ring-2 focus:ring-sky-500 focus:border-sky-500 ${errors.excerpt ? "border-red-300 bg-red-50" : "hover:border-gray-400"} disabled:bg-gray-50`}
-          placeholder="e.g. 'Khizar Overseas made my dream come true! Full scholarship + visa in just 4 months. Highly recommend!'"
-        />
-        {errors.excerpt && <p className="text-red-600 font-medium text-lg mt-3 bg-red-50 p-3 rounded-lg border border-red-200">{errors.excerpt}</p>}
-      </div>
 
       {/* Full Success Story */}
       <div>
@@ -395,7 +434,7 @@ export default function AddSuccessStoryForm({
             onClick={onCancel}
             className="px-8 py-3 border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50 font-semibold transition-all shadow-sm hover:shadow-md"
           >
-            Close
+            ❌ Close
           </button>
         </div>
       )}
