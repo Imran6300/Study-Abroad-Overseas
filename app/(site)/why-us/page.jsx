@@ -87,6 +87,7 @@ export default function WhyChooseUs() {
   return (
     <main className="min-h-screen bg-gray-950 text-gray-200">
       {/* Hero Section */}
+      
       <section className="relative py-20 md:py-28 bg-gradient-to-b from-gray-900 to-gray-950">
         <motion.div
           className="container mx-auto px-6 md:px-10 max-w-6xl"
@@ -95,6 +96,7 @@ export default function WhyChooseUs() {
           viewport={{ once: true, margin: "-100px" }}
           variants={sectionFade}
         >
+          
           <div className="text-center">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 text-white">
               Why <span className="text-blue-600">Khizar Overseas</span> is the
