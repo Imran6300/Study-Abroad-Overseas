@@ -1,26 +1,26 @@
 export const Data = [
   {
     id: "1",
-    name: "Syed Mubashir Ahmed",
-    course: "BTech in Computer Science",
-    university: "University of Oxford",
-    country: "UK",
+    name: "Mohammed Mohsin Ahmed",
+    course: "Mba in Finance",
+    university: "Southern New Hamshire University",
+    country: "USA",
     visa: "Approved",
     scholarship: "Merit-Based Scholarship",
-    year: "2024",
+    year: "2021",
     image: "/student/student1.jpg",
     review:
       "Khizar Overseas supported me at every step of my study abroad journey. From university shortlisting to visa guidance, the process was smooth and well-organized. Their support helped me confidently start my academic life in the UK.",
   },
   {
     id: "2",
-    name: "Syed Mubashir Ahmed",
-    course: "BTech in Artificial Intelligence & ML",
-    university: "Yale University",
+    name: "Mohammed Mubeen Jamal",
+    course: "Business Management Enterpreneurship",
+    university: "Chemeketa Community College Usa",
     country: "USA",
     visa: "Approved",
     scholarship: "University Grant",
-    year: "2024",
+    year: "2021",
     image: "/student/student1.jpg",
 
     review:
@@ -28,13 +28,13 @@ export const Data = [
   },
   {
     id: "3",
-    name: "Syed Mubashir Ahmed",
-    course: "BE in Electronics & Communication",
-    university: "Massachusetts Institute of Technology (MIT)",
+    name: "Mohammed Faiz Uddin",
+    course: "Master Of Science Cybersecurity Engineering",
+    university: "Auburun University",
     country: "USA",
     visa: "Approved in 1st Attempt",
-    scholarship: "$20,000",
-    year: "2024",
+    scholarship: "Merit-Based Scholarship",
+    year: "2022",
     image: "/student/student1.jpg",
 
     review:
@@ -42,13 +42,13 @@ export const Data = [
   },
   {
     id: "4",
-    name: "Syed Mubashir Ahmed",
-    course: "MBBS / MD",
-    university: "Harvard University",
-    country: "USA",
+    name: "Mohammed Abdul Samad",
+    course: "Master Of Business Administration",
+    university: "London Metropolitan University",
+    country: "UK",
     visa: "Approved",
     scholarship: "Need-Based Financial Aid",
-    year: "2025",
+    year: "2024",
     image: "/student/student1.jpg",
 
     review:
