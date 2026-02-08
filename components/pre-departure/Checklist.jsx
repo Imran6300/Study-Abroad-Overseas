@@ -17,7 +17,8 @@ const checklistData = [
 ];
 
 export default function Checklist() {
-  const { isLoggedIn } = useSelector((state) => state.auth);
+  const { user } = useSelector((state) => state.auth);
+  const isLoggedIn = Boolean(user);
 
   const [checked, setChecked] = useState([]);
   const [showGuestMessage, setShowGuestMessage] = useState(false);

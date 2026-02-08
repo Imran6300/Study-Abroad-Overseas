@@ -7,7 +7,9 @@ import { Phone, Mail, User, Globe2, Send, MessageCircle } from "lucide-react";
 export default function FinalCTASection() {
   const router = useRouter();
   const pathname = usePathname();
-  const { isLoggedIn, user, authChecked } = useSelector((state) => state.auth);
+  const {  user, authChecked } = useSelector((state) => state.auth);
+  const isLoggedIn = Boolean(user);
+
 
   const [form, setForm] = useState({
     name: "",

@@ -54,7 +54,8 @@ const pageVariants = {
 const TOTAL_STEPS = 4;
 
 export default function FreeAssessmentPage() {
-  const { isLoggedIn, user, authChecked } = useSelector((state) => state.auth);
+  const { user, authChecked } = useSelector((state) => state.auth);
+  const isLoggedIn = Boolean(user)
 
   const [step, setStep] = useState(1);
   const [direction, setDirection] = useState(1);

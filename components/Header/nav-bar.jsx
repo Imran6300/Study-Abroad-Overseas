@@ -32,7 +32,8 @@ const toSlug = (text) => text.toLowerCase().trim().replace(/\s+/g, "-");
 export default function NavBar() {
   const dispatch = useDispatch();
   const router = useRouter();
-  const { isLoggedIn, user, authChecked } = useSelector((state) => state.auth);
+  const {  user, authChecked } = useSelector((state) => state.auth);
+  const isLoggedIn = Boolean(user);
 
   const handleLogout = async () => {
     await fetch(

@@ -10,8 +10,9 @@ const ContactForm = () => {
   const router = useRouter();
   const pathname = usePathname();
 
-  const { isLoggedIn, user, authChecked } = useSelector((state) => state.auth);
+  const { user, authChecked } = useSelector((state) => state.auth);
   const [loading, setLoading] = useState(false);
+  const isLoggedIn = Boolean(user);
 
   const [form, setForm] = useState({
     name: "",

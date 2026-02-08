@@ -15,7 +15,8 @@ import {
 } from "lucide-react";
 
 export default function ProfilePage() {
-  const { user, isLoggedIn, loading } = useSelector((state) => state.auth);
+  const { user,  loading } = useSelector((state) => state.auth);
+  const isLoggedIn = Boolean(user)
   const router = useRouter();
 
   const [isEditing, setIsEditing] = useState(false);

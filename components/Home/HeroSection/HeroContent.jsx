@@ -86,14 +86,14 @@ function HeroContent() {
           <TextType
             text={[
               "Study in 100+ Countries",
-              "5000+ Students Placed Successfully",
-              "Top 200 University Partners",
-              "$75M+ Scholarship Grants Approved",
+              "1000+ Students Placed Successfully",
+              "Top 200+ University Partners",
+              "$2M+ Scholarship Grants Approved",
             ]}
             typingSpeed={40}
             pauseDuration={1600}
             showCursor={true}
-            cursorCharacter="▋"
+            cursorCharacter="|"
           />
         </m.div>
 

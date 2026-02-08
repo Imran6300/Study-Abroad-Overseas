@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { FaUserGraduate } from "react-icons/fa6";
+
 
 const SuccessCard = ({ student }) => {
   const [flipped, setFlipped] = useState(false);
@@ -16,11 +18,12 @@ const SuccessCard = ({ student }) => {
         <div className="backface-hidden bg-white rounded-2xl p-8 shadow-[0_10px_35px_rgba(0,0,0,0.08)] flex flex-col items-center h-full">
           {/* Image */}
           <div className="w-28 h-28 rounded-xl overflow-hidden shadow-lg mb-6">
-            <img
+            {/* <img
               src={student.image}
               alt={student.name}
               className="w-full h-full object-cover"
-            />
+            /> */}
+            <FaUserGraduate className="w-full h-full object-cover text-[#4169E1]" />
           </div>
 
           {/* Name */}

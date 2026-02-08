@@ -6,8 +6,9 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion"; // For smooth animations
 
 export default function DashboardPage() {
-  const { user, isLoggedIn } = useSelector((state) => state.auth);
+  const { user } = useSelector((state) => state.auth);
   const router = useRouter();
+  const isLoggedIn = Boolean(user);
   const [progress, setProgress] = useState(0);
 
   // Protect route
