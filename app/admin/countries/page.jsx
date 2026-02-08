@@ -1,4 +1,3 @@
-// app/dashboard/countries/page.jsx
 "use client";
 
 import { useState } from "react";
@@ -11,7 +10,6 @@ import DashboardHeader from "@/components/admindashboard/DashboardHeader";
 import AddCountryForm from "@/components/adminform/addcountry"; 
 import ConfirmationModal from "@/components/adminform/confirmmsg";
 
-// Same animations as students page
 import { containerVariants, itemVariants, formVariants } from "@/components/Animations/formanimations/animate";
 
 export default function CountriesPage() {
@@ -20,6 +18,7 @@ export default function CountriesPage() {
       id: 1,
       name: "Canada",
       flag: "https://flagcdn.com/w320/ca.png",
+      image: "https://images.unsplash.com/photo-1503614472-8c93d56e92ce?w=800", // example
       continent: "North America",
       capital: "Ottawa",
       languages: "English, French",
@@ -28,13 +27,12 @@ export default function CountriesPage() {
       featured: true,
       universitiesCount: 38,
     },
-    // ... more mock entries ...
+    // ... more mock entries
   ]);
 
   const [search, setSearch] = useState("");
   const [justAdded, setJustAdded] = useState(false);
 
-  // Modal states – same as students
   const [mode, setMode] = useState(null); // "add" | "edit" | "view" | null
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
@@ -42,7 +40,6 @@ export default function CountriesPage() {
 
   const isFormOpen = mode !== null;
 
-  // Handlers – identical logic
   const openAdd = () => {
     setSelectedCountry(null);
     setMode("add");
@@ -69,38 +66,43 @@ export default function CountriesPage() {
     setCountryToDelete(null);
   };
 
-  const handleFormSuccess = (formData) => {
+  const handleFormSuccess = (submittedData) => {
+    const {
+      name,
+      finalFlagUrl,
+      finalPhotoUrl,
+      // you can add more later: popularCourses, careerOpportunities, etc.
+    } = submittedData;
+
     if (mode === "add") {
       const newCountry = {
         id: Date.now(),
-        name: formData.name || "Unknown",
-        flag: formData.flagUrl || "https://flagcdn.com/w320/xx.png", // or upload logic
-        continent: formData.continent || "",
-        capital: formData.capital || "",
-        languages: formData.languages || "",
-        avgTuitionUSD: formData.avgTuitionUSD || "N/A",
-        visaSuccessRate: formData.visaSuccessRate || "N/A",
-        featured: formData.featured ?? false,
-        universitiesCount: formData.universitiesCount || 0,
+        name: name || "Unknown",
+        flag: finalFlagUrl || "https://flagcdn.com/w320/xx.png",
+        image: finalPhotoUrl || null,
+        continent: "",           // ← add to form if needed
+        capital: "",
+        languages: "",
+        avgTuitionUSD: "N/A",
+        visaSuccessRate: "N/A",
+        featured: false,
+        universitiesCount: 0,
       };
       setCountries((prev) => [...prev, newCountry]);
       setJustAdded(true);
       setTimeout(() => setJustAdded(false), 3000);
-    } else if (mode === "edit" && selectedCountry) {
+    } 
+    else if (mode === "edit" && selectedCountry) {
       setCountries((prev) =>
         prev.map((c) =>
           c.id === selectedCountry.id
             ? {
                 ...c,
-                name: formData.name || c.name,
-                flag: formData.flagUrl || c.flag,
-                continent: formData.continent || c.continent,
-                capital: formData.capital || c.capital,
-                languages: formData.languages || c.languages,
-                avgTuitionUSD: formData.avgTuitionUSD || c.avgTuitionUSD,
-                visaSuccessRate: formData.visaSuccessRate || c.visaSuccessRate,
-                featured: formData.featured ?? c.featured,
-                universitiesCount: formData.universitiesCount || c.universitiesCount,
+                name: name || c.name,
+                flag: finalFlagUrl || c.flag,
+                image: finalPhotoUrl || c.image,
+                // continent: submittedData.continent || c.continent,
+                // etc...
               }
             : c
         )
@@ -138,7 +140,6 @@ export default function CountriesPage() {
         />
 
         <main className="flex-1 p-6 lg:p-8 overflow-auto bg-gray-50 relative">
-          {/* Backdrop */}
           <AnimatePresence>
             {isFormOpen && (
               <motion.div
@@ -150,7 +151,6 @@ export default function CountriesPage() {
             )}
           </AnimatePresence>
 
-          {/* Form Modal – same structure as students */}
           <AnimatePresence>
             {isFormOpen && (
               <motion.div
@@ -190,7 +190,6 @@ export default function CountriesPage() {
             )}
           </AnimatePresence>
 
-          {/* Success toast */}
           <AnimatePresence>
             {justAdded && (
               <motion.div
@@ -204,14 +203,12 @@ export default function CountriesPage() {
             )}
           </AnimatePresence>
 
-          {/* Country List */}
           <motion.div
             variants={containerVariants}
             initial="hidden"
             animate="show"
             className={`space-y-8 transition-opacity duration-500 ${isFormOpen ? "opacity-70 pointer-events-none" : "opacity-100"}`}
           >
-            {/* Search */}
             <motion.div variants={itemVariants} className="mb-6">
               <input
                 type="text"
@@ -222,7 +219,6 @@ export default function CountriesPage() {
               />
             </motion.div>
 
-            {/* Table */}
             <motion.div
               variants={itemVariants}
               className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200"
@@ -232,6 +228,7 @@ export default function CountriesPage() {
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 w-20">Flag</th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 w-24">Image</th>
                       <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Country</th>
                       <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 hidden sm:table-cell">Continent</th>
                       <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 hidden md:table-cell">Capital</th>
@@ -255,6 +252,20 @@ export default function CountriesPage() {
                               onError={(e) => (e.target.src = "https://via.placeholder.com/48x32?text=Flag")}
                             />
                           </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          {country.image ? (
+                            <div className="w-16 h-10 rounded overflow-hidden border border-gray-200 shadow-sm">
+                              <img
+                                src={country.image}
+                                alt={`${country.name} preview`}
+                                className="w-full h-full object-cover"
+                                onError={(e) => (e.target.src = "https://via.placeholder.com/64x40?text=No+Img")}
+                              />
+                            </div>
+                          ) : (
+                            <span className="text-gray-400 text-xs italic">—</span>
+                          )}
                         </td>
                         <td className="px-6 py-4 font-medium text-gray-900">{country.name}</td>
                         <td className="px-6 py-4 text-gray-600 hidden sm:table-cell">{country.continent}</td>
@@ -298,7 +309,6 @@ export default function CountriesPage() {
             )}
           </motion.div>
 
-          {/* Delete Modal */}
           <AnimatePresence>
             {showConfirmDelete && (
               <ConfirmationModal

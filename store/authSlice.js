@@ -1,11 +1,10 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
-  isLoggedIn: false,
-  user: null,
+  user: null,          // null = not logged in
   loading: false,
   error: null,
-  authChecked: false
+  authChecked: false,  // have we checked /auth/me ?
 };
 
 const authSlice = createSlice({
@@ -18,27 +17,30 @@ const authSlice = createSlice({
     },
     authSuccess(state, action) {
       state.loading = false;
-      state.isLoggedIn = true;
-      state.user = action.payload;
-      state.authChecked = true
+      state.user = action.payload;   // user object from backend
+      state.authChecked = true;
     },
     authFail(state, action) {
       state.loading = false;
       state.error = action.payload;
-      state.authChecked = true
-
+      state.authChecked = true;
     },
     logout(state) {
-      state.isLoggedIn = false;
       state.user = null;
-      state.authChecked = true
-
+      state.authChecked = true;
     },
     authChecked(state) {
       state.authChecked = true;
-}
+    },
   },
 });
 
-export const { authStart, authSuccess, authFail, logout } = authSlice.actions;
+export const {
+  authStart,
+  authSuccess,
+  authFail,
+  logout,
+  authChecked,
+} = authSlice.actions;
+
 export default authSlice.reducer;

@@ -1,4 +1,4 @@
-// components/admin/country/CountryBasicInfo.jsx
+// components/admin/country/countryform/CountryBasicInfo.jsx
 export default function CountryBasicInfo({
   formData,
   onChange,
@@ -11,6 +11,24 @@ export default function CountryBasicInfo({
       label: "Country Name",
       required: true,
       placeholder: "e.g. United States of America",
+    },
+    {
+      name: "continent",
+      label: "Continent",
+      required: true,
+      placeholder: "e.g. North America, Europe, Asia, Africa",
+    },
+    {
+      name: "capital",
+      label: "Capital City",
+      required: true,
+      placeholder: "e.g. Washington D.C., Ottawa, London",
+    },
+    {
+      name: "visaSuccessRate",
+      label: "Visa Success Rate",
+      required: true,
+      placeholder: "e.g. 92%, 85-90%, High",
     },
     {
       name: "popularCourses",
@@ -54,17 +72,18 @@ export default function CountryBasicInfo({
       {fields.map((field) => (
         <div key={field.name}>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            {field.label} {field.required && <span className="text-red-500">*</span>}
+            {field.label}
+            {field.required && <span className="text-red-500 ml-1">*</span>}
           </label>
           <input
             type="text"
             name={field.name}
-            value={formData[field.name]}
+            value={formData[field.name] || ""}
             onChange={onChange}
             disabled={isViewMode}
             className={`w-full px-4 py-3 rounded-xl border ${
               errors[field.name] ? "border-red-500" : "border-gray-300"
-            } focus:outline-none focus:ring-2 focus:ring-sky-500 disabled:bg-gray-100`}
+            } focus:outline-none focus:ring-2 focus:ring-sky-500 disabled:bg-gray-100 disabled:cursor-not-allowed`}
             placeholder={field.placeholder}
           />
           {errors[field.name] && (

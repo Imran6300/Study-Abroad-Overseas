@@ -1,4 +1,3 @@
-// components/admin/country/AddCountryForm.jsx
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -10,7 +9,7 @@ import WhyStudyCardsSection from "./countryform/WhyStudyCardsSection";
 import FormActions from "./countryform/FormActions";
 
 export default function AddCountryForm({
-  mode = "add", // "add" | "edit" | "view"
+  mode = "add",
   initialData = null,
   onSuccess,
   onCancel,
@@ -19,6 +18,9 @@ export default function AddCountryForm({
 
   const [formData, setFormData] = useState({
     name: "",
+    continent: "",
+    capital: "",
+    visaSuccessRate: "",
     popularCourses: "",
     careerOpportunities: "",
     scholarships: "",
@@ -37,11 +39,13 @@ export default function AddCountryForm({
 
   const [errors, setErrors] = useState({});
 
-  // Populate form with initial data (edit/view mode)
   useEffect(() => {
     if (initialData) {
       setFormData({
         name: initialData.name || "",
+        continent: initialData.continent || "",
+        capital: initialData.capital || "",
+        visaSuccessRate: initialData.visaSuccessRate || "",
         popularCourses: initialData.popularCourses || "",
         careerOpportunities: initialData.careerOpportunities || "",
         scholarships: initialData.scholarships || "",
@@ -52,8 +56,8 @@ export default function AddCountryForm({
             ? initialData.whyStudyCards
             : [{ title: "", description: "" }],
       });
-      setPhotoPreview(initialData.image || null);
       setFlagPreview(initialData.flag || null);
+      setPhotoPreview(initialData.image || null);
     }
   }, [initialData]);
 
@@ -99,6 +103,11 @@ export default function AddCountryForm({
     const newErrors = {};
 
     if (!formData.name.trim()) newErrors.name = "Country name is required";
+    if (!formData.continent.trim()) newErrors.continent = "Continent is required";
+    if (!formData.capital.trim()) newErrors.capital = "Capital is required";
+    if (!formData.visaSuccessRate.trim())
+      newErrors.visaSuccessRate = "Visa success rate is required";
+
     if (!formData.popularCourses.trim())
       newErrors.popularCourses = "Popular courses required";
     if (!formData.careerOpportunities.trim())
@@ -130,15 +139,26 @@ export default function AddCountryForm({
       (card) => card.description.trim() !== ""
     );
 
+    const finalFlagUrl = flagFile
+      ? flagPreview
+      : flagPreview || initialData?.flag || null;
+    const finalPhotoUrl = photoFile
+      ? photoPreview
+      : photoPreview || initialData?.image || null;
+
     onSuccess({
-      ...formData,
+      name: formData.name,
+      continent: formData.continent,
+      capital: formData.capital,
+      visaSuccessRate: formData.visaSuccessRate,
+      popularCourses: formData.popularCourses,
+      careerOpportunities: formData.careerOpportunities,
+      scholarships: formData.scholarships,
+      eligibilityRequirements: formData.eligibilityRequirements,
+      topUniversities: formData.topUniversities,
       whyStudyCards: cleanedCards,
-      photoFile,
-      photoPreview,
-      existingPhotoUrl: !photoFile && photoPreview ? photoPreview : null,
-      flagFile,
-      flagPreview,
-      existingFlagUrl: !flagFile && flagPreview ? flagPreview : null,
+      finalFlagUrl,
+      finalPhotoUrl,
     });
   };
 
@@ -191,10 +211,7 @@ export default function AddCountryForm({
         isViewMode={isViewMode}
       />
 
-      <FormActions
-        mode={mode}
-        onCancel={onCancel}
-      />
+      <FormActions mode={mode} onCancel={onCancel} />
     </form>
   );
 }
