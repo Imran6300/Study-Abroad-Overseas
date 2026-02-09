@@ -6,20 +6,34 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion"; // For smooth animations
 
 export default function DashboardPage() {
-  const { user } = useSelector((state) => state.auth);
+  const { user,authChecked } = useSelector((state) => state.auth);
   const router = useRouter();
-  const isLoggedIn = Boolean(user);
   const [progress, setProgress] = useState(0);
 
   // Protect route
   useEffect(() => {
-    if (!isLoggedIn) router.push("/login");
-  }, [isLoggedIn, router]);
+    if(authChecked && !user){
+      router.replace("/login")
+    }
+  },[authChecked,user, router]);
 
   // Animate progress bar on mount
   useEffect(() => {
     setProgress(65);
   }, []);
+
+  if (!authChecked) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-[#0A192F] text-white">
+      Loading dashboard...
+    </div>
+  );
+}
+
+if (!user) {
+  return null; // prevents UI flash
+}
+
 
   return (
     <div className="min-h-screen bg-[#0A192F] pt-28 px-4 md:px-8 pb-16">

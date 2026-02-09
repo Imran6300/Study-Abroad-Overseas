@@ -266,7 +266,7 @@ const UserMenu = ({ user, onLogout }) => {
             "
           >
             <Link
-              href="/profile"
+              href="/dashboard/user/profile"
               className="block px-5 py-3 text-gray-700 hover:bg-blue-600 hover:text-white"
               onClick={() => setOpen(false)}
             >
