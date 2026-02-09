@@ -4,15 +4,26 @@ import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { useSelector,useDispatch } from "react-redux";
+import {logout} from "@/store/authSlice";
 
 export default function AdminSidebar() {
+  const dispatch = useDispatch();
   const router = useRouter();
   const pathname = usePathname();
   const [expanded, setExpanded] = useState(false);
 
-  const logout = () => {
-    localStorage.removeItem("token");
-    router.push("/login");
+  const Handlelogout = async() => {
+        await fetch(
+      "https://overseas-backend-production-4f18.up.railway.app/auth/logout",
+      {
+        method: "POST",
+        credentials: "include",
+      },
+    );
+
+    dispatch(logout());
+    router.replace("/login");
   };
 
   const menuItems = [
@@ -99,7 +110,7 @@ export default function AdminSidebar() {
           <motion.button
             whileHover={{ scale: 1.04 }}
             whileTap={{ scale: 0.97 }}
-            onClick={logout}
+            onClick={Handlelogout}
             className={`
               w-full flex items-center gap-3
               px-3 py-3 rounded-xl
