@@ -20,13 +20,15 @@ import ConfirmationModal from "@/components/adminform/confirmmsg";
 
 // normalize role coming from DB / UI
 const normalizeRole = (role = "") =>
-  role.toLowerCase().replace(" ", "_");
+  role.trim().toLowerCase().replace(/\s+/g, "_");
 
 /* ===================== PAGE ===================== */
 
 export default function AdminPage() {
   const [admins, setAdmins] = useState([]);
   const [loadingAdmins, setLoadingAdmins] = useState(true);
+  const [pendingDeleteAdmin, setPendingDeleteAdmin] = useState(null);
+
 
   const [showAdminSection, setShowAdminSection] = useState(false);
   const { user } = useSelector((state) => state.auth);
@@ -111,7 +113,7 @@ const handleDeleteAdmin = (targetAdmin) => {
 
   // ❌ nobody can delete super admin
   if (targetRole === "super_admin") {
-    setModalMessage("You cannot remove Super Admin.");
+    setModalMessage(`You cannot remove ${targetAdmin.name}.`);
     setShowModal(true);
     return;
   }
@@ -119,7 +121,11 @@ const handleDeleteAdmin = (targetAdmin) => {
   // ✅ super admin can delete anyone else
   if (currentRole === "super_admin") {
     setPendingDeleteId(targetAdmin.id);
-    setModalMessage("Are you sure you want to delete this role?");
+    setPendingDeleteAdmin(targetAdmin);
+    setModalMessage(
+  `Are you sure you want to delete ${targetAdmin.name}?`
+);
+
     setShowModal(true);
     return;
   }
@@ -128,7 +134,8 @@ const handleDeleteAdmin = (targetAdmin) => {
   if (currentRole === "admin") {
     if (["editor", "counselor"].includes(targetRole)) {
       setPendingDeleteId(targetAdmin.id);
-      setModalMessage("Are you sure you want to delete this role?");
+      setPendingDeleteAdmin(targetAdmin);
+      setModalMessage(`Are you sure you want to delete ${targetAdmin.name}?`);
       setShowModal(true);
       return;
     }
@@ -144,13 +151,45 @@ const handleDeleteAdmin = (targetAdmin) => {
 };
 
 
-  const confirmDelete = () => {
+const confirmDelete = async () => {
+  if (!pendingDeleteId) return;
+
+  try {
+    const res = await fetch(
+      `https://overseas-backend-production-4f18.up.railway.app/host/admin-users/${pendingDeleteId}`,
+      {
+        method: "DELETE",
+        credentials: "include",
+      }
+    );
+
+    const data = await res.json();
+
+    if (!res.ok) {
+  setModalMessage(data.message || "Delete failed");
+  setPendingDeleteId(null);
+  setPendingDeleteAdmin(null);
+  setShowModal(false);
+  return;
+}
+
+
+    // ✅ backend success → update UI
     setAdmins((prev) =>
       prev.filter((a) => a.id !== pendingDeleteId)
     );
+
+   setPendingDeleteId(null);
+setPendingDeleteAdmin(null);
+setShowModal(false);
+
+  } catch (err) {
+    console.error("Delete error:", err);
+    setModalMessage("Network error. Please try again.");
     setPendingDeleteId(null);
-    setShowModal(false);
-  };
+  }
+};
+
 
   /* ===================== RENDER ===================== */
 
@@ -238,6 +277,7 @@ const handleDeleteAdmin = (targetAdmin) => {
           onCancel={() => {
             setShowModal(false);
             setPendingDeleteId(null);
+            setPendingDeleteAdmin(null);
           }}
         />
       )}
