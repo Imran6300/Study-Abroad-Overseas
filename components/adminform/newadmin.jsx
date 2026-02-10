@@ -71,7 +71,7 @@ export default function AddAdmin({ onSuccess, onCancel }) {
           className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
         >
           <option value="Admin">Admin</option>
-          <option value="Super Admin">Super Admin</option>
+          <option value="Admin">Counselor</option>
           <option value="Editor">Editor</option>
         </select>
       </div>

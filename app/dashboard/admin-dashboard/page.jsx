@@ -11,6 +11,7 @@ import VisaStatus from "@/components/admindashboard/VisaStatus";
 import UpcomingDeadlines from "@/components/admindashboard/UpcomingDeadlines";
 import RevenueOverview from "@/components/admindashboard/RevenueOverview";
 import TopCounselors from "@/components/admindashboard/TopCounselors";
+import { useSelector } from "react-redux";
 
 //imp for addadmin
 import AdminManagementSection from "@/components/adminform/addadmin/AdminManagementSection";
@@ -36,6 +37,8 @@ const itemVariants = {
 
 export default function AdminPage() {
   const [showAdminSection, setShowAdminSection] = useState(false);
+  const {user} = useSelector((state) => state.auth);
+  const CounselorName = user?.name;
 
   // ✅ TEMP STATE (later you can move this to API / context)
   const [admins, setAdmins] = useState([
@@ -74,7 +77,7 @@ export default function AdminPage() {
         {/* HEADER */}
         <DashboardHeader
           title="Admin Dashboard"
-          counselorName="Imran"
+          counselorName={CounselorName}
           btnName="+ Add New Admin"
           onButtonClick={() => setShowAdminSection(true)}
         />

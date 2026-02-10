@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bell, Check, Info, AlertTriangle, X } from "lucide-react";
+import {useSelector} from "react-redux";
 
 export default function DashboardHeader({
   title = "Dashboard",
@@ -18,6 +19,10 @@ export default function DashboardHeader({
 
   const [showNotifications, setShowNotifications] = useState(false);
   const notificationRef = useRef(null);
+  const {user} = useSelector((state) => state.auth)
+  const isSuperAdmin = user?.role === "super_admin";
+  const isAddAdminButton = btnName === "+ Add New Admin";
+
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -209,7 +214,7 @@ export default function DashboardHeader({
             </div>
 
             {/* Primary Action Button (unchanged) */}
-            {btnName && (
+            {btnName && (!isAddAdminButton || isSuperAdmin )&& (
               <motion.button
                 whileHover={{ scale: 1.04, y: -2 }}
                 whileTap={{ scale: 0.96 }}

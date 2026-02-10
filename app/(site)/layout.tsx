@@ -11,21 +11,24 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
   const { user, authChecked } = useSelector((state: any) => state.auth);
   const router = useRouter();
 
+  const isAdmin = ["admin", "super_admin"].includes(user?.role);
+
   useEffect(() => {
     if (!authChecked) return;
 
-    // 🚫 Admin should never access "/"
-    if (user?.role === "admin") {
+    // 🚫 Admin & Super Admin should never access "/"
+    if (isAdmin) {
       router.replace("/dashboard/admin-dashboard");
     }
-  }, [authChecked, user, router]);
+  }, [authChecked, isAdmin, router]);
 
-  // ⛔ Wait until auth check is complete
+  // ⛔ Block rendering until auth is known
   if (!authChecked) {
     return null;
   }
-  
-    if (user?.role === "admin") {
+
+  // ⛔ Prevent admin flash
+  if (isAdmin) {
     return null;
   }
 

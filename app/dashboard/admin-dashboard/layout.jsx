@@ -15,8 +15,8 @@ export default function AdminLayout({ children }) {
     if (!user) {
       router.replace("/login");
     }
-    // Logged in but not admin
-    else if (user.role !== "admin") {
+    // Logged in but NOT admin or super admin
+    else if (user.role !== "admin" && user.role !== "super_admin") {
       router.replace("/dashboard/user");
     }
   }, [authChecked, user, router]);
@@ -31,11 +31,11 @@ export default function AdminLayout({ children }) {
   }
 
   // ⛔ Prevent UI flash
-  if (!user || user.role !== "admin") {
+  if (!user || (user.role !== "admin" && user.role !== "super_admin")) {
     return null;
   }
 
-  // ✅ Admin verified
+  // ✅ Admin / Super Admin verified
   return (
     <div className="flex min-h-screen">
       {children}
