@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState ,useEffect} from "react";
 import { motion } from "framer-motion";
 import { useSelector } from "react-redux";
 
@@ -18,13 +18,6 @@ import ConfirmationModal from "@/components/adminform/confirmmsg";
 
 /* ===================== RBAC CONFIG ===================== */
 
-const ROLE_PERMISSIONS = {
-  super_admin: ["admin", "editor", "counselor"],
-  admin: ["editor", "counselor"],
-  editor: [],
-  counselor: [],
-};
-
 // normalize role coming from DB / UI
 const normalizeRole = (role = "") =>
   role.toLowerCase().replace(" ", "_");
@@ -32,25 +25,14 @@ const normalizeRole = (role = "") =>
 /* ===================== PAGE ===================== */
 
 export default function AdminPage() {
+  const [admins, setAdmins] = useState([]);
+  const [loadingAdmins, setLoadingAdmins] = useState(true);
+
   const [showAdminSection, setShowAdminSection] = useState(false);
   const { user } = useSelector((state) => state.auth);
 
   const CounselorName = user?.name;
 
-  const [admins, setAdmins] = useState([
-    {
-      id: "1",
-      name: "Syed Mubashir",
-      email: "syedmubashir8742@gmail.com",
-      role: "Super Admin",
-    },
-    {
-      id: "2",
-      name: "Sara Ahmed",
-      email: "sara@khizaroverseas.in",
-      role: "Admin",
-    },
-  ]);
 
   /* ===================== MODAL STATE ===================== */
 
@@ -60,12 +42,64 @@ export default function AdminPage() {
 
   /* ===================== HANDLERS ===================== */
 
-  const handleAdminAdded = (data) => {
-    setAdmins((prev) => [
-      ...prev,
-      { id: Date.now().toString(), ...data },
-    ]);
+const handleAdminAdded = async () => {
+  setShowAdminSection(false);
+  setLoadingAdmins(true);
+
+  try {
+    const res = await fetch(
+      "https://overseas-backend-production-4f18.up.railway.app/host/admin-users",
+      { credentials: "include" }
+    );
+    const data = await res.json();
+    if (res.ok) {
+      setAdmins(
+        data.users.map((u) => ({
+          id: u._id,
+          name: u.name,
+          email: u.email,
+          role: u.role,
+        }))
+      );
+    }
+  } finally {
+    setLoadingAdmins(false);
+  }
+};
+
+
+useEffect(() => {
+  const fetchAdmins = async () => {
+    try {
+      const res = await fetch(
+        "https://overseas-backend-production-4f18.up.railway.app/host/admin-users",
+        {
+          credentials: "include",
+        }
+      );
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setAdmins(
+          data.users.map((u) => ({
+            id: u._id,
+            name: u.name,
+            email: u.email,
+            role: u.role,
+          }))
+        );
+      }
+    } catch (err) {
+      console.error("Failed to fetch admins", err);
+    } finally {
+      setLoadingAdmins(false);
+    }
   };
+
+  fetchAdmins();
+}, []);
+
 
   // 🔥 MAIN DELETE LOGIC (RBAC)
 const handleDeleteAdmin = (targetAdmin) => {
