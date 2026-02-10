@@ -27,21 +27,51 @@ export default function AddAdmin({ onSuccess, onCancel }) {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    console.log("Creating user:", form);
+  console.log("Creating user (frontend):", form);
 
-    /**
-     * 🔐 IMPORTANT
-     * Backend MUST still verify:
-     * - only super_admin can create admin
-     */
+  try {
+    const res = await fetch(
+      "https://overseas-backend-production-4f18.up.railway.app/host/admin-access-role",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          // ⚠️ very important (explained below)
+          Authorization: `Bearer ${user?.role}`,
+        },
+        body: JSON.stringify(form),
+      }
+    );
 
-    // await fetch("/api/admin/create-user", { ... })
+    const text = await res.text(); // 👈 read RAW response
+    console.log("RAW RESPONSE:", text);
+    console.log("STATUS:", res.status);
+
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      console.error("Response is not JSON");
+      return;
+    }
+
+    console.log("PARSED RESPONSE:", data);
+
+    if (!res.ok) {
+      alert(data.message || data.error || "Backend rejected request");
+      return;
+    }
 
     onSuccess?.();
-  };
+  } catch (err) {
+    console.error("Request failed:", err);
+  }
+};
+
+
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
