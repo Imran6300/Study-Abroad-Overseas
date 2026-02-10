@@ -23,34 +23,20 @@ export default function AdminManagementSection({
         {/* HEADER */}
         <div className="bg-gradient-to-r from-sky-50 via-indigo-50 to-purple-50 px-6 py-4 border-b flex items-center justify-between">
           <h2 className="text-xl font-semibold text-gray-900">
-            Manage Admins
+            Manage Roles
           </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-600 hover:text-red-600 p-2 rounded-full hover:bg-red-50 transition-colors"
-          >
+          <button onClick={onClose}>
             <X size={22} />
           </button>
         </div>
 
         {/* BODY */}
         <div className="p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-2 gap-10">
-          
-          {/* LEFT: ADD ADMIN FORM */}
-          <div>
-            <h3 className="text-lg font-semibold mb-5 text-gray-800">
-              Add New Admin
-            </h3>
-            <AddAdminForm
-              onSuccess={onAddAdmin}
-              onCancel={onClose}
-            />
-          </div>
+          <AddAdminForm onSuccess={onAddAdmin} onCancel={onClose} />
 
-          {/* RIGHT: ADMIN LIST */}
           <AdminList
             admins={admins}
-            onDelete={onDeleteAdmin}
+            onDelete={onDeleteAdmin}   
           />
         </div>
       </div>

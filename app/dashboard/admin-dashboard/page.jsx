@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { useSelector } from "react-redux";
 
 import AdminSidebar from "@/components/admindashboard/AdminSidebar";
 import DashboardHeader from "@/components/admindashboard/DashboardHeader";
@@ -11,40 +12,36 @@ import VisaStatus from "@/components/admindashboard/VisaStatus";
 import UpcomingDeadlines from "@/components/admindashboard/UpcomingDeadlines";
 import RevenueOverview from "@/components/admindashboard/RevenueOverview";
 import TopCounselors from "@/components/admindashboard/TopCounselors";
-import { useSelector } from "react-redux";
 
-//imp for addadmin
 import AdminManagementSection from "@/components/adminform/addadmin/AdminManagementSection";
+import ConfirmationModal from "@/components/adminform/confirmmsg";
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: { staggerChildren: 0.08, delayChildren: 0.1 },
-  },
+/* ===================== RBAC CONFIG ===================== */
+
+const ROLE_PERMISSIONS = {
+  super_admin: ["admin", "editor", "counselor"],
+  admin: ["editor", "counselor"],
+  editor: [],
+  counselor: [],
 };
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 20, scale: 0.96 },
-  show: {
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    transition: { type: "spring", stiffness: 140, damping: 17 },
-  },
-};
+// normalize role coming from DB / UI
+const normalizeRole = (role = "") =>
+  role.toLowerCase().replace(" ", "_");
+
+/* ===================== PAGE ===================== */
 
 export default function AdminPage() {
   const [showAdminSection, setShowAdminSection] = useState(false);
-  const {user} = useSelector((state) => state.auth);
+  const { user } = useSelector((state) => state.auth);
+
   const CounselorName = user?.name;
 
-  // ✅ TEMP STATE (later you can move this to API / context)
   const [admins, setAdmins] = useState([
     {
       id: "1",
-      name: "Imran Khan",
-      email: "imran@khizaroverseas.in",
+      name: "Syed Mubashir",
+      email: "syedmubashir8742@gmail.com",
       role: "Super Admin",
     },
     {
@@ -55,7 +52,14 @@ export default function AdminPage() {
     },
   ]);
 
-  // handlers
+  /* ===================== MODAL STATE ===================== */
+
+  const [showModal, setShowModal] = useState(false);
+  const [modalMessage, setModalMessage] = useState("");
+  const [pendingDeleteId, setPendingDeleteId] = useState(null);
+
+  /* ===================== HANDLERS ===================== */
+
   const handleAdminAdded = (data) => {
     setAdmins((prev) => [
       ...prev,
@@ -63,10 +67,58 @@ export default function AdminPage() {
     ]);
   };
 
-  const handleDeleteAdmin = (id) => {
-    if (!confirm("Delete this admin?")) return;
-    setAdmins((prev) => prev.filter((a) => a.id !== id));
+  // 🔥 MAIN DELETE LOGIC (RBAC)
+const handleDeleteAdmin = (targetAdmin) => {
+  const currentRole = normalizeRole(user?.role);
+  const targetRole = normalizeRole(targetAdmin.role);
+
+  console.log("CURRENT:", currentRole);
+  console.log("TARGET:", targetRole);
+
+  // ❌ nobody can delete super admin
+  if (targetRole === "super_admin") {
+    setModalMessage("You cannot remove Super Admin.");
+    setShowModal(true);
+    return;
+  }
+
+  // ✅ super admin can delete anyone else
+  if (currentRole === "super_admin") {
+    setPendingDeleteId(targetAdmin.id);
+    setModalMessage("Are you sure you want to delete this role?");
+    setShowModal(true);
+    return;
+  }
+
+  // ❌ admin permissions
+  if (currentRole === "admin") {
+    if (["editor", "counselor"].includes(targetRole)) {
+      setPendingDeleteId(targetAdmin.id);
+      setModalMessage("Are you sure you want to delete this role?");
+      setShowModal(true);
+      return;
+    }
+
+    setModalMessage(`You cannot remove ${targetAdmin.role}.`);
+    setShowModal(true);
+    return;
+  }
+
+  // ❌ everyone else
+  setModalMessage("You are not allowed to delete roles.");
+  setShowModal(true);
+};
+
+
+  const confirmDelete = () => {
+    setAdmins((prev) =>
+      prev.filter((a) => a.id !== pendingDeleteId)
+    );
+    setPendingDeleteId(null);
+    setShowModal(false);
   };
+
+  /* ===================== RENDER ===================== */
 
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -82,8 +134,7 @@ export default function AdminPage() {
         />
 
         <main className="flex-1 p-6 lg:p-8 overflow-auto">
-          
-          {/* 🔥 ADMIN MANAGEMENT FEATURE */}
+          {/* ADMIN MANAGEMENT */}
           {showAdminSection && (
             <AdminManagementSection
               admins={admins}
@@ -93,37 +144,44 @@ export default function AdminPage() {
             />
           )}
 
-          {/* NORMAL DASHBOARD CONTENT */}
+          {/* DASHBOARD CONTENT */}
           <motion.div
-            variants={containerVariants}
+            variants={{
+              hidden: { opacity: 0 },
+              show: {
+                opacity: 1,
+                transition: { staggerChildren: 0.08, delayChildren: 0.1 },
+              },
+            }}
             initial="hidden"
             animate="show"
           >
-            <motion.div variants={itemVariants}>
+            <motion.div
+              variants={{
+                hidden: { opacity: 0, y: 20, scale: 0.96 },
+                show: {
+                  opacity: 1,
+                  y: 0,
+                  scale: 1,
+                  transition: { type: "spring", stiffness: 140, damping: 17 },
+                },
+              }}
+            >
               <KpiCards />
             </motion.div>
 
-            <motion.div
-              variants={containerVariants}
-              className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10"
-            >
-              <motion.div variants={itemVariants} className="lg:col-span-2">
+            <motion.div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
+              <motion.div className="lg:col-span-2">
                 <StudentPipeline />
               </motion.div>
-              <motion.div variants={itemVariants}>
+              <motion.div>
                 <VisaStatus />
               </motion.div>
             </motion.div>
 
-            <motion.div
-              variants={containerVariants}
-              className="grid grid-cols-1 lg:grid-cols-2 gap-6"
-            >
-              <motion.div variants={itemVariants}>
-                <UpcomingDeadlines />
-              </motion.div>
-
-              <motion.div variants={itemVariants} className="space-y-6">
+            <motion.div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <UpcomingDeadlines />
+              <motion.div className="space-y-6">
                 <RevenueOverview />
                 <TopCounselors />
               </motion.div>
@@ -131,6 +189,24 @@ export default function AdminPage() {
           </motion.div>
         </main>
       </div>
+
+      {/* CONFIRM / BLOCK MODAL */}
+      {showModal && (
+        <ConfirmationModal
+          title="Action Restricted"
+          message={modalMessage}
+          confirmText={pendingDeleteId ? "Delete" : "Okay"}
+          cancelText="Close"
+          confirmVariant={pendingDeleteId ? "danger" : "primary"}
+          onConfirm={
+            pendingDeleteId ? confirmDelete : () => setShowModal(false)
+          }
+          onCancel={() => {
+            setShowModal(false);
+            setPendingDeleteId(null);
+          }}
+        />
+      )}
     </div>
   );
 }
