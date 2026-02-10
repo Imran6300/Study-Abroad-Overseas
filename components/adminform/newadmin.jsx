@@ -1,56 +1,84 @@
-// components/adminforms/addadmin.jsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSelector } from "react-redux";
 
 export default function AddAdmin({ onSuccess, onCancel }) {
+  const { user } = useSelector((state) => state.auth);
+  const isSuperAdmin = user?.role === "super_admin";
+
   const [form, setForm] = useState({
     name: "",
     email: "",
     password: "",
-    role: "Admin",
+    role: "", // will be set automatically
   });
 
-  const handleChange = e => {
-    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  // ✅ Set default role based on logged-in user
+  useEffect(() => {
+    setForm((prev) => ({
+      ...prev,
+      role: isSuperAdmin ? "admin" : "counselor",
+    }));
+  }, [isSuperAdmin]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async e => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // TODO: your API call here (fetch / axios / etc)
-    console.log("Creating admin:", form);
 
-    // On success:
+    console.log("Creating user:", form);
+
+    /**
+     * 🔐 IMPORTANT
+     * Backend MUST still verify:
+     * - only super_admin can create admin
+     */
+
+    // await fetch("/api/admin/create-user", { ... })
+
     onSuccess?.();
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
+      {/* Name */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Full Name
+        </label>
         <input
           name="name"
           value={form.name}
           onChange={handleChange}
           required
-          className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+          className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-500"
         />
       </div>
 
+      {/* Email */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Email
+        </label>
         <input
           name="email"
           type="email"
           value={form.email}
           onChange={handleChange}
           required
-          className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+          className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-500"
         />
       </div>
 
+      {/* Password */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Password
+        </label>
         <input
           name="password"
           type="password"
@@ -58,24 +86,28 @@ export default function AddAdmin({ onSuccess, onCancel }) {
           onChange={handleChange}
           required
           minLength={8}
-          className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+          className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-500"
         />
       </div>
 
+      {/* Role */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Role
+        </label>
         <select
           name="role"
           value={form.role}
           onChange={handleChange}
-          className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+          className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-500 bg-white"
         >
-          <option value="Admin">Admin</option>
-          <option value="Admin">Counselor</option>
-          <option value="Editor">Editor</option>
+          {isSuperAdmin && <option value="admin">Admin</option>}
+          <option value="counselor">Counselor</option>
+          <option value="editor">Editor</option>
         </select>
       </div>
 
+      {/* Actions */}
       <div className="flex justify-end gap-3 pt-4">
         <button
           type="button"
@@ -88,7 +120,7 @@ export default function AddAdmin({ onSuccess, onCancel }) {
           type="submit"
           className="px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-lg hover:from-indigo-700 hover:to-blue-700"
         >
-          Create Admin
+          Create User
         </button>
       </div>
     </form>

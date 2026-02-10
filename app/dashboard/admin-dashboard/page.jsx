@@ -16,7 +16,6 @@ import { useSelector } from "react-redux";
 //imp for addadmin
 import AdminManagementSection from "@/components/adminform/addadmin/AdminManagementSection";
 
-
 const containerVariants = {
   hidden: { opacity: 0 },
   show: {
@@ -78,7 +77,7 @@ export default function AdminPage() {
         <DashboardHeader
           title="Admin Dashboard"
           counselorName={CounselorName}
-          btnName="+ Add New Admin"
+          btnName="+ Add Role"
           onButtonClick={() => setShowAdminSection(true)}
         />
 

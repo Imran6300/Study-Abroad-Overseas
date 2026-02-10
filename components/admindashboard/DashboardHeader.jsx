@@ -19,10 +19,6 @@ export default function DashboardHeader({
 
   const [showNotifications, setShowNotifications] = useState(false);
   const notificationRef = useRef(null);
-  const {user} = useSelector((state) => state.auth)
-  const isSuperAdmin = user?.role === "super_admin";
-  const isAddAdminButton = btnName === "+ Add New Admin";
-
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -214,7 +210,7 @@ export default function DashboardHeader({
             </div>
 
             {/* Primary Action Button (unchanged) */}
-            {btnName && (!isAddAdminButton || isSuperAdmin )&& (
+            
               <motion.button
                 whileHover={{ scale: 1.04, y: -2 }}
                 whileTap={{ scale: 0.96 }}
@@ -235,7 +231,6 @@ export default function DashboardHeader({
                 <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></span>
                 <span className="relative z-10">{btnName}</span>
               </motion.button>
-            )}
           </div>
         </div>
       </div>
