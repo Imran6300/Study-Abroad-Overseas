@@ -32,7 +32,7 @@ export default function AdminSidebar() {
 
 const menuItems = [
   // Visible to everyone
-  { icon: "🏠", label: "Dashboard", href: "/dashboard/admin-dashboard" }, // counselor + editor + admin + superadmin
+  { icon: "🏠", label: "Dashboard", href: "/dashboard/admin-dashboard" ,roles:["admin","super_admin"] }, 
 
   // Student & Case Management (counselors need these)
   { icon: "👨‍🎓", label: "Students", href: "/admin/students" ,roles: ["counselor", "admin", "super_admin"]},
@@ -44,16 +44,16 @@ const menuItems = [
   { icon: "🧑‍🏫", label: "Counselors", href: "/admin/counselors" ,roles: ["admin", "super_admin"]},
 
   // Content / Master Data (editor role)
-  { icon: "🏫", label: "Universities", href: "/admin/universities" ,roles: ["editor", "admin", "super_admin"]},     // editor + admin + superadmin
-  { icon: "📚", label: "Courses", href: "/admin/courses",roles: ["editor", "admin", "super_admin"] },               // editor + admin + superadmin
-  { icon: "✨", label: "Success Stories", href: "/admin/success-stories",roles: ["editor", "admin", "super_admin"] },// editor + admin + superadmin
-  { icon: "🌍", label: "Countries", href: "/admin/countries" ,roles: ["editor", "admin", "super_admin"]},           // editor + admin + superadmin
-  { icon: "📰", label: "Blog", href: "/admin/blog" ,roles: ["editor", "admin", "super_admin"]},                     // editor + admin + superadmin
+  { icon: "🏫", label: "Universities", href: "/admin/universities" ,roles: ["editor", "admin", "super_admin"]},
+  { icon: "📚", label: "Courses", href: "/admin/courses",roles: ["editor", "admin", "super_admin"] },
+  { icon: "✨", label: "Success Stories", href: "/admin/success-stories",roles: ["editor", "admin", "super_admin"] },
+  { icon: "🌍", label: "Countries", href: "/admin/countries" ,roles: ["editor", "admin", "super_admin"]},
+  { icon: "📰", label: "Blog", href: "/admin/blog" ,roles: ["editor", "admin", "super_admin"]},
 
   // Analytics & Admin-only
-  { icon: "💰", label: "Revenue", href: "/admin/revenue" ,roles: ["admin", "super_admin"]},               // admin + superadmin
-  { icon: "📊", label: "Reports", href: "/admin/reports",roles: ["admin", "super_admin"] },               // admin + superadmin
-  { icon: "📋", label: "Logs", href: "/admin/logs",roles: ["admin", "super_admin"] },                     // admin + superadmin (or superadmin only)
+  { icon: "💰", label: "Revenue", href: "/admin/revenue" ,roles: ["admin", "super_admin"]},               
+  { icon: "📊", label: "Reports", href: "/admin/reports",roles: ["admin", "super_admin"] },               
+  { icon: "📋", label: "Logs", href: "/admin/logs",roles: ["admin", "super_admin"] },
 ];
 
 const filteredMenu = menuItems.filter(
@@ -98,7 +98,6 @@ const filteredMenu = menuItems.filter(
           </motion.h2>
         </div>
 
-        {/* Navigation - this is now the scrollable part */}
         <nav
           className={`
     flex-1 px-3 space-y-1.5
