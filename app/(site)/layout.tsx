@@ -11,24 +11,33 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
   const { user, authChecked } = useSelector((state: any) => state.auth);
   const router = useRouter();
 
-  const isAdmin = ["admin", "super_admin"].includes(user?.role);
+  const role = user?.role;
+
+  const staffRoles = ["admin", "super_admin", "editor", "counselor"];
+  const isStaff = staffRoles.includes(role);
 
   useEffect(() => {
     if (!authChecked) return;
 
-    // 🚫 Admin & Super Admin should never access "/"
-    if (isAdmin) {
-      router.replace("/dashboard/admin-dashboard");
-    }
-  }, [authChecked, isAdmin, router]);
+    if (!isStaff) return;
 
-  // ⛔ Block rendering until auth is known
+    // 🔥 Role-based redirect
+    if (role === "admin" || role === "super_admin") {
+      router.replace("/dashboard/admin-dashboard");
+    } else if (role === "counselor") {
+      router.replace("/admin/students");
+    } else if (role === "editor") {
+      router.replace("/admin/universities");
+    }
+  }, [authChecked, isStaff, role, router]);
+
+  // ⛔ Block rendering until auth check is complete
   if (!authChecked) {
     return null;
   }
 
-  // ⛔ Prevent admin flash
-  if (isAdmin) {
+  // ⛔ Prevent staff flash on "/"
+  if (isStaff) {
     return null;
   }
 
