@@ -4,17 +4,21 @@ import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { useSelector,useDispatch } from "react-redux";
-import {logout} from "@/store/authSlice";
+import { useSelector, useDispatch } from "react-redux";
+import { logout } from "@/store/authSlice";
 
 export default function AdminSidebar() {
+  const user = useSelector((state) => state.auth.user);
+  if (!user) return null;
+
+
   const dispatch = useDispatch();
   const router = useRouter();
   const pathname = usePathname();
   const [expanded, setExpanded] = useState(false);
 
-  const Handlelogout = async() => {
-        await fetch(
+  const Handlelogout = async () => {
+    await fetch(
       "https://overseas-backend-production-4f18.up.railway.app/auth/logout",
       {
         method: "POST",
@@ -26,24 +30,36 @@ export default function AdminSidebar() {
     router.replace("/login");
   };
 
-  const menuItems = [
-    { icon: "🏠", label: "Dashboard", href: "/dashboard/admin-dashboard" },
-    { icon: "👨‍🎓", label: "Students", href: "/admin/students" },
-    { icon: "🧑‍🏫", label: "Counselors", href: "/admin/counselors" },
-    { icon: "📑", label: "Applications", href: "/admin/applications" },
-    { icon: "🛂", label: "Visa Tracking", href: "/admin/visa" },
-    { icon: "⏰", label: "Deadlines", href: "/admin/deadlines" },
-    //crud
-    { icon: "🏫", label: "Universities", href: "/admin/universities" },
-    { icon: "📚", label: "Courses", href: "/admin/courses" },
-    { icon: "✨", label: "Success Stories", href: "/admin/success-stories" },
-    { icon: "🌍", label: "Countries", href: "/admin/countries" },
-    { icon: "📰", label: "Blog", href: "/admin/blog" },
-    // analytics
-    { icon: "💰", label: "Revenue", href: "/admin/revenue" },
-    { icon: "📊", label: "Reports", href: "/admin/reports" },
-    { icon: "📋", label: "Logs", href: "/admin/logs" },
-  ];
+const menuItems = [
+  // Visible to everyone
+  { icon: "🏠", label: "Dashboard", href: "/dashboard/admin-dashboard" }, // counselor + editor + admin + superadmin
+
+  // Student & Case Management (counselors need these)
+  { icon: "👨‍🎓", label: "Students", href: "/admin/students" ,roles: ["counselor", "admin", "super_admin"]},
+  { icon: "📑", label: "Applications", href: "/admin/applications",roles: ["counselor", "admin", "super_admin"]},     
+  { icon: "🛂", label: "Visa Tracking", href: "/admin/visa",roles: ["counselor", "admin", "super_admin"] },            
+  { icon: "⏰", label: "Deadlines", href: "/admin/deadlines",roles:["counselor", "admin", "super_admin"] },
+
+  // Staff & Team Management (admin level)
+  { icon: "🧑‍🏫", label: "Counselors", href: "/admin/counselors" ,roles: ["admin", "super_admin"]},
+
+  // Content / Master Data (editor role)
+  { icon: "🏫", label: "Universities", href: "/admin/universities" ,roles: ["editor", "admin", "super_admin"]},     // editor + admin + superadmin
+  { icon: "📚", label: "Courses", href: "/admin/courses",roles: ["editor", "admin", "super_admin"] },               // editor + admin + superadmin
+  { icon: "✨", label: "Success Stories", href: "/admin/success-stories",roles: ["editor", "admin", "super_admin"] },// editor + admin + superadmin
+  { icon: "🌍", label: "Countries", href: "/admin/countries" ,roles: ["editor", "admin", "super_admin"]},           // editor + admin + superadmin
+  { icon: "📰", label: "Blog", href: "/admin/blog" ,roles: ["editor", "admin", "super_admin"]},                     // editor + admin + superadmin
+
+  // Analytics & Admin-only
+  { icon: "💰", label: "Revenue", href: "/admin/revenue" ,roles: ["admin", "super_admin"]},               // admin + superadmin
+  { icon: "📊", label: "Reports", href: "/admin/reports",roles: ["admin", "super_admin"] },               // admin + superadmin
+  { icon: "📋", label: "Logs", href: "/admin/logs",roles: ["admin", "super_admin"] },                     // admin + superadmin (or superadmin only)
+];
+
+const filteredMenu = menuItems.filter(
+  (item) => !item.roles || item.roles.includes(user?.role)
+);
+
 
   return (
     <>
@@ -84,23 +100,25 @@ export default function AdminSidebar() {
 
         {/* Navigation - this is now the scrollable part */}
         <nav
-  className={`
+          className={`
     flex-1 px-3 space-y-1.5
     ${expanded ? "overflow-y-auto scrollbar-thin ..." : "overflow-hidden"}
   `}
-  style={{
-    scrollbarWidth: 'none',           // Firefox
-    msOverflowStyle: 'none',          // IE/Edge legacy
-  }}
->
-          {menuItems.map((item) => (
+          style={{
+            scrollbarWidth: "none", // Firefox
+            msOverflowStyle: "none", // IE/Edge legacy
+          }}
+        >
+          {filteredMenu.map((item) => (
             <SidebarItem
               key={item.href}
               icon={item.icon}
               label={item.label}
               href={item.href}
               expanded={expanded}
-              isActive={pathname === item.href || pathname.startsWith(item.href + "/")}
+              isActive={
+                pathname === item.href || pathname.startsWith(item.href + "/")
+              }
             />
           ))}
         </nav>
