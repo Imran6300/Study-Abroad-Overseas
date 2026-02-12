@@ -6,7 +6,9 @@ export default function StepStats({ form, onChange, isViewMode }) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">QS Ranking</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            QS Ranking
+          </label>
           <input
             type="number"
             name="qsRanking"
@@ -19,9 +21,11 @@ export default function StepStats({ form, onChange, isViewMode }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Acceptance Rate (%)</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Acceptance Rate (%)
+          </label>
           <input
-            type="text"
+            type="number"
             name="acceptanceRate"
             value={form.acceptanceRate}
             onChange={onChange}
@@ -32,11 +36,13 @@ export default function StepStats({ form, onChange, isViewMode }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Total Students</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Total Students
+          </label>
           <input
             type="number"
-            name="numStudents"
-            value={form.numStudents}
+            name="totalStudents"
+            value={form.totalStudents}
             onChange={onChange}
             disabled={isViewMode}
             placeholder="e.g. 11500"
@@ -45,11 +51,13 @@ export default function StepStats({ form, onChange, isViewMode }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Tuition Fees (approx.)</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Tuition Fees (approx.)
+          </label>
           <input
             type="text"
-            name="tuitionFees"
-            value={form.tuitionFees}
+            name="tuitionFee"
+            value={form.tuitionFee}
             onChange={onChange}
             disabled={isViewMode}
             placeholder="e.g. $60,000 - $80,000 / year"
@@ -58,7 +66,9 @@ export default function StepStats({ form, onChange, isViewMode }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Students Placed (our record)</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Students Placed (our record)
+          </label>
           <input
             type="number"
             name="studentsPlaced"
