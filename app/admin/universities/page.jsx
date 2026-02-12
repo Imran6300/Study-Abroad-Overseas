@@ -136,7 +136,6 @@ export default function UniversitiesPage() {
       console.error(err);
       // Rollback
       setUniversities((prev) => [...prev, backup]);
-      alert(`Failed to delete: ${err.message}`); // ← replace with toast
     }
   };
 
