@@ -1,7 +1,6 @@
-// app/dashboard/universities/page.jsx
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
@@ -11,11 +10,12 @@ import {
   Trash2,
   ChevronLeft,
   ChevronRight,
+  Loader2,
 } from "lucide-react";
 
 import AdminSidebar from "@/components/admindashboard/AdminSidebar";
 import DashboardHeader from "@/components/admindashboard/DashboardHeader";
-import AddUniversityForm from "@/components/adminform/adduniversity"; // ← fixed case (assuming it's AddUniversityForm)
+import AddUniversityForm from "@/components/adminform/adduniversity"; // fixed case
 import ConfirmationModal from "@/components/adminform/confirmmsg";
 
 import {
@@ -24,7 +24,7 @@ import {
   formVariants,
 } from "@/components/Animations/formanimations/animate";
 
-// Simple debounce utility
+// Simple debounce
 function debounce(fn, delay) {
   let timer;
   return (...args) => {
@@ -36,6 +36,7 @@ function debounce(fn, delay) {
 export default function UniversitiesPage() {
   const [universities, setUniversities] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const [search, setSearch] = useState("");
@@ -46,7 +47,7 @@ export default function UniversitiesPage() {
   const ITEMS_PER_PAGE = 10;
 
   // Form / modal states
-  const [mode, setMode] = useState(null); // null | "add" | "edit" | "view"
+  const [mode, setMode] = useState(null); // null | "add" | "edit"
   const [selectedUniversity, setSelectedUniversity] = useState(null);
 
   // Delete confirmation
@@ -55,7 +56,7 @@ export default function UniversitiesPage() {
 
   const isFormOpen = mode !== null;
 
-  // ─── Fetch universities ───
+  // Fetch all universities
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -65,9 +66,11 @@ export default function UniversitiesPage() {
           "https://overseas-backend-production-4f18.up.railway.app/host/show-university-data",
           { credentials: "include" },
         );
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error(errData.message || "Failed to load universities");
+        }
         const data = await res.json();
-        if (!res.ok)
-          throw new Error(data.message || "Failed to load universities");
         setUniversities(data.universities || []);
       } catch (err) {
         setError(err.message);
@@ -79,13 +82,12 @@ export default function UniversitiesPage() {
     fetchData();
   }, []);
 
-  // Debounce search input
+  // Debounce search
   useEffect(() => {
     const handler = debounce((val) => setDebouncedSearch(val), 400);
     handler(search);
   }, [search]);
 
-  // Reset page when search changes
   useEffect(() => {
     setCurrentPage(1);
   }, [debouncedSearch]);
@@ -110,12 +112,13 @@ export default function UniversitiesPage() {
     if (!universityToDelete?._id) return;
 
     const id = universityToDelete._id;
-    const backup = universityToDelete;
+    const backup = [...universities];
 
-    // Optimistic update
+    // Optimistic UI
     setUniversities((prev) => prev.filter((u) => u._id !== id));
     setShowConfirmDelete(false);
     setUniversityToDelete(null);
+    setActionLoading(true);
 
     try {
       const res = await fetch(
@@ -130,46 +133,47 @@ export default function UniversitiesPage() {
         const errData = await res.json();
         throw new Error(errData.message || "Delete failed");
       }
-
-      // Optional: success toast here later
     } catch (err) {
       console.error(err);
+      setError(err.message);
       // Rollback
-      setUniversities((prev) => [...prev, backup]);
+      setUniversities(backup);
+    } finally {
+      setActionLoading(false);
     }
   };
 
   const handleFormSuccess = (updatedUni) => {
+    if (!updatedUni?._id) return;
+
     if (mode === "add") {
-      setUniversities((prev) => [updatedUni, ...prev]); // newest first
-    } else if (mode === "edit" && updatedUni?._id) {
+      setUniversities((prev) => [updatedUni, ...prev]);
+    } else if (mode === "edit") {
       setUniversities((prev) =>
         prev.map((u) => (u._id === updatedUni._id ? updatedUni : u)),
       );
     }
+
     setMode(null);
     setSelectedUniversity(null);
   };
 
   // Filter & paginate
-  const filteredUniversities = universities.filter(
+  const filtered = universities.filter(
     (u) =>
-      (u.name || "").toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-      (u.country || "").toLowerCase().includes(debouncedSearch.toLowerCase()),
+      u.name?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+      u.country?.toLowerCase().includes(debouncedSearch.toLowerCase()),
   );
 
-  const totalPages = Math.ceil(filteredUniversities.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const paginated = filteredUniversities.slice(
-    startIndex,
-    startIndex + ITEMS_PER_PAGE,
-  );
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const start = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginated = filtered.slice(start, start + ITEMS_PER_PAGE);
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-sky-500 border-t-transparent rounded-full animate-spin" />
+          <Loader2 className="w-12 h-12 text-sky-500 animate-spin" />
           <p className="text-gray-600 font-medium">Loading universities...</p>
         </div>
       </div>
@@ -187,24 +191,22 @@ export default function UniversitiesPage() {
               ? "Add New University"
               : mode === "edit"
                 ? "Edit University"
-                : mode === "view"
-                  ? "View University"
-                  : "University Management"
+                : "University Management"
           }
           counselorName="Imran"
           btnName={isFormOpen ? "Close Form" : "+ Add University"}
           onButtonClick={isFormOpen ? () => setMode(null) : handleAdd}
         />
 
-        <main className="flex-1 p-5 sm:p-6 lg:p-8 overflow-auto">
-          {/* Overlay when form is open */}
+        <main className="flex-1 p-5 sm:p-6 lg:p-8 overflow-auto relative">
+          {/* Backdrop when form is open */}
           <AnimatePresence>
             {isFormOpen && (
               <motion.div
                 initial={{ opacity: 0 }}
-                animate={{ opacity: 0.5 }}
+                animate={{ opacity: 0.4 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 bg-black z-10 pointer-events-none"
+                className="fixed inset-0 bg-black z-40 pointer-events-none"
               />
             )}
           </AnimatePresence>
@@ -229,7 +231,6 @@ export default function UniversitiesPage() {
                     <button
                       onClick={() => setMode(null)}
                       className="p-2 rounded-full hover:bg-gray-200 transition-colors"
-                      aria-label="Close"
                     >
                       <X size={24} className="text-gray-700" />
                     </button>
@@ -255,24 +256,24 @@ export default function UniversitiesPage() {
             animate="show"
             className={`space-y-6 ${isFormOpen ? "opacity-60 pointer-events-none" : ""}`}
           >
-            {/* Search + Add button */}
+            {/* Search */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="relative w-full sm:max-w-md">
                 <Search
-                  size={18}
                   className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                  size={18}
                 />
                 <input
                   type="text"
                   placeholder="Search by name or country..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-sky-500 transition"
                 />
               </div>
             </div>
 
-            {/* Table / Content */}
+            {/* Table */}
             <div className="bg-white rounded-xl shadow border border-gray-200 overflow-hidden">
               {error ? (
                 <div className="p-10 text-center text-red-600 font-medium">
@@ -282,7 +283,7 @@ export default function UniversitiesPage() {
                 <div className="p-12 text-center text-gray-500">
                   {debouncedSearch
                     ? `No universities found for "${debouncedSearch}"`
-                    : "No universities found. Add one to get started!"}
+                    : "No universities yet. Add one to get started!"}
                 </div>
               ) : (
                 <>
@@ -301,9 +302,6 @@ export default function UniversitiesPage() {
                           </th>
                           <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 hidden md:table-cell">
                             City
-                          </th>
-                          <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 hidden lg:table-cell">
-                            Website
                           </th>
                           <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600">
                             QS Rank
@@ -351,24 +349,6 @@ export default function UniversitiesPage() {
                             <td className="px-4 py-3 text-sm text-gray-600 hidden md:table-cell">
                               {uni.city || "—"}
                             </td>
-                            <td className="px-4 py-3 text-sm hidden lg:table-cell">
-                              {uni.website ? (
-                                <a
-                                  href={
-                                    uni.website.startsWith("http")
-                                      ? uni.website
-                                      : `https://${uni.website}`
-                                  }
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-sky-600 hover:underline"
-                                >
-                                  {uni.website}
-                                </a>
-                              ) : (
-                                "—"
-                              )}
-                            </td>
                             <td className="px-4 py-3 text-center text-sm">
                               {uni.qsRanking || "—"}
                             </td>
@@ -391,12 +371,14 @@ export default function UniversitiesPage() {
                                 <button
                                   onClick={() => handleEdit(uni)}
                                   className="text-sky-600 hover:text-sky-800 flex items-center gap-1 transition"
+                                  disabled={actionLoading}
                                 >
                                   <Edit2 size={16} /> Edit
                                 </button>
                                 <button
                                   onClick={() => handleDeleteClick(uni)}
                                   className="text-red-600 hover:text-red-800 flex items-center gap-1 transition"
+                                  disabled={actionLoading}
                                 >
                                   <Trash2 size={16} /> Delete
                                 </button>
@@ -412,19 +394,16 @@ export default function UniversitiesPage() {
                   {totalPages > 1 && (
                     <div className="px-6 py-4 flex flex-col sm:flex-row items-center justify-between border-t gap-4">
                       <div className="text-sm text-gray-600">
-                        Showing {startIndex + 1}–
-                        {Math.min(
-                          startIndex + ITEMS_PER_PAGE,
-                          filteredUniversities.length,
-                        )}{" "}
-                        of {filteredUniversities.length}
+                        Showing {start + 1}–
+                        {Math.min(start + ITEMS_PER_PAGE, filtered.length)} of{" "}
+                        {filtered.length}
                       </div>
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() =>
                             setCurrentPage((p) => Math.max(p - 1, 1))
                           }
-                          disabled={currentPage === 1}
+                          disabled={currentPage === 1 || actionLoading}
                           className="p-2 rounded border disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-50 transition"
                         >
                           <ChevronLeft size={18} />
@@ -436,7 +415,7 @@ export default function UniversitiesPage() {
                           onClick={() =>
                             setCurrentPage((p) => Math.min(p + 1, totalPages))
                           }
-                          disabled={currentPage === totalPages}
+                          disabled={currentPage === totalPages || actionLoading}
                           className="p-2 rounded border disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-50 transition"
                         >
                           <ChevronRight size={18} />
@@ -454,7 +433,7 @@ export default function UniversitiesPage() {
             {showConfirmDelete && (
               <ConfirmationModal
                 title="Delete University"
-                message={`Are you sure you want to delete "${universityToDelete?.name}"? This cannot be undone.`}
+                message={`Are you sure you want to delete "${universityToDelete?.name}"? This action cannot be undone.`}
                 confirmText="Delete"
                 confirmVariant="danger"
                 onConfirm={handleDeleteConfirmed}
