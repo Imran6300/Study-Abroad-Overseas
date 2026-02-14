@@ -32,17 +32,14 @@ const toSlug = (text) => text.toLowerCase().trim().replace(/\s+/g, "-");
 export default function NavBar() {
   const dispatch = useDispatch();
   const router = useRouter();
-  const {  user, authChecked } = useSelector((state) => state.auth);
+  const { user, authChecked } = useSelector((state) => state.auth);
   const isLoggedIn = Boolean(user);
 
   const handleLogout = async () => {
-    await fetch(
-      "https://overseas-backend-production-4f18.up.railway.app/auth/logout",
-      {
-        method: "POST",
-        credentials: "include",
-      },
-    );
+    await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/logout`, {
+      method: "POST",
+      credentials: "include",
+    });
 
     dispatch(logout());
     router.push("/login");
@@ -482,11 +479,7 @@ const MobileMenu = ({ open, onClose, isLoggedIn, handleLogout, user }) => {
                 link="/success-stories"
                 onClose={onClose}
               />
-              <MobileNavItem
-                label="Blog"
-                link="/blog"
-                onClose={onClose}
-              />
+              <MobileNavItem label="Blog" link="/blog" onClose={onClose} />
               <MobileNavItem
                 label="Contact"
                 link="/contact"

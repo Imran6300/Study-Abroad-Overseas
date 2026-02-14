@@ -11,7 +11,8 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { universityItems } from "@/data/universitiesData";
+import { useSelector, useDispatch } from "react-redux";
+import { fetchUniversities } from "@/store/universitySlice";
 
 const COUNTRIES = [
   "All",
@@ -137,6 +138,17 @@ const UniversityCard = memo(function UniversityCard({
 
 /* ================= PAGE ================= */
 export default function UniversitiesPage() {
+  const dispatch = useDispatch();
+  const { list: universities, loading } = useSelector(
+    (state) => state.universities,
+  );
+
+  useEffect(() => {
+    if (universities.length === 0) {
+      dispatch(fetchUniversities());
+    }
+  }, [dispatch, universities.length]);
+
   const shouldReduceMotion = useReducedMotion();
 
   const [mounted, setMounted] = useState(false);
@@ -156,18 +168,18 @@ export default function UniversitiesPage() {
   );
 
   const filteredUniversities = useMemo(() => {
-    return universityItems.filter((uni) => {
+    return universities.filter((uni) => {
       const matchesSearch =
         deferredSearch === "" ||
         uni.name.toLowerCase().includes(deferredSearch.toLowerCase()) ||
-        uni.location.toLowerCase().includes(deferredSearch.toLowerCase());
+        uni.country.toLowerCase().includes(deferredSearch.toLowerCase());
 
       const matchesCountry =
-        selectedCountry === "All" || uni.location.includes(selectedCountry);
+        selectedCountry === "All" || uni.country.includes(selectedCountry);
 
       return matchesSearch && matchesCountry;
     });
-  }, [deferredSearch, selectedCountry]);
+  }, [universities, deferredSearch, selectedCountry]);
 
   return (
     <div className="min-h-screen bg-gray-50/40">
@@ -232,8 +244,18 @@ export default function UniversitiesPage() {
           >
             {filteredUniversities.map((uni, index) => (
               <UniversityCard
-                key={uni.slug}
-                uni={uni}
+                key={uni._id}
+                uni={{
+                  slug: uni.slug,
+                  image: uni.logo?.url,
+                  logo: uni.logo?.url,
+                  name: uni.name,
+                  location: `${uni.city}, ${uni.country}`,
+                  rank: uni.qsRanking,
+                  desc: uni.description,
+                  students: uni.totalStudents,
+                  acceptance: `${uni.acceptanceRate}%`,
+                }}
                 index={index}
                 mounted={mounted}
                 shouldReduceMotion={shouldReduceMotion}

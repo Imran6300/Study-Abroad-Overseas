@@ -9,10 +9,14 @@ import {
   buildCourseIndex,
 } from "@/lib/searchUtils";
 
+import { useDispatch } from "react-redux";
+import { fetchUniversities } from "@/store/universitySlice";
+import { useEffect } from "react";
+
+import { useSelector } from "react-redux";
 import { COUNTRIES } from "@/data/countries";
 import { coursesData } from "@/data/coursesData";
 import { categoryData } from "@/data/coursescategory";
-import { universityItems } from "@/data/universitiesData";
 import { universitiesByCategory } from "@/data/universitybycatogery";
 import { COUNTRY_PAGE_DATA } from "@/data/countrydetail";
 
@@ -20,7 +24,17 @@ import { motion } from "framer-motion";
 
 export default function SearchClient() {
   const searchParams = useSearchParams();
+  const dispatch = useDispatch();
+
+  const { list: universities } = useSelector((state) => state.universities);
+
   const query = searchParams.get("q")?.trim() || "";
+
+  useEffect(() => {
+    if (universities.length === 0) {
+      dispatch(fetchUniversities());
+    }
+  }, [dispatch, universities.length]);
 
   const courseIndex = useMemo(
     () =>
@@ -34,10 +48,10 @@ export default function SearchClient() {
 
   let intent = "unknown";
 
-  if (query) {
+  if (query && universities.length > 0) {
     if (matchCountry(query, COUNTRIES)) intent = "country";
     else if (matchCourse(query, courseIndex)) intent = "course";
-    else if (matchUniversity(query, universityItems, universitiesByCategory))
+    else if (matchUniversity(query, universities, universitiesByCategory))
       intent = "university";
   }
 
@@ -223,15 +237,15 @@ export default function SearchClient() {
                   key={suggestion}
                   href={`?q=${encodeURIComponent(suggestion)}`}
                   className="
-                    group relative px-5 py-2.5 
-                    bg-gradient-to-r from-white/5 to-white/3 
-                    hover:from-emerald-950/40 hover:to-emerald-900/30
-                    border border-white/10 hover:border-emerald-700/40
-                    rounded-xl text-sm font-medium text-gray-300 
-                    transition-all duration-300 hover:text-emerald-300
-                    hover:shadow-[0_0_20px_rgba(16,185,129,0.12)]
-                    hover:-translate-y-0.5
-                  "
+                      group relative px-5 py-2.5 
+                      bg-gradient-to-r from-white/5 to-white/3 
+                      hover:from-emerald-950/40 hover:to-emerald-900/30
+                      border border-white/10 hover:border-emerald-700/40
+                      rounded-xl text-sm font-medium text-gray-300 
+                      transition-all duration-300 hover:text-emerald-300
+                      hover:shadow-[0_0_20px_rgba(16,185,129,0.12)]
+                      hover:-translate-y-0.5
+                    "
                   custom={i}
                   variants={suggestionVariants}
                 >

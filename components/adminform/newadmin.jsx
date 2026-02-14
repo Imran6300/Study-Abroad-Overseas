@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
-
 // 🔑 normalize helper
 const normalizeRole = (role = "") =>
   role.trim().toLowerCase().replace(/\s+/g, "_");
@@ -15,19 +14,18 @@ export default function AddAdmin({ onSuccess, onCancel }) {
   const currentRole = normalizeRole(user?.role);
   const isSuperAdmin = currentRole === "super_admin";
   useEffect(() => {
-  const fetchRoles = async () => {
-    const res = await fetch(
-      "https://overseas-backend-production-4f18.up.railway.app/host/admin-access-role",
-      { credentials: "include" }
-    );
+    const fetchRoles = async () => {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/host/admin-access-role`,
+        { credentials: "include" },
+      );
 
-    const data = await res.json();
-    if (res.ok) setRoles(data.roles);
-  };
+      const data = await res.json();
+      if (res.ok) setRoles(data.roles);
+    };
 
-  fetchRoles();
-}, []);
-
+    fetchRoles();
+  }, []);
 
   const [form, setForm] = useState({
     name: "",
@@ -62,7 +60,7 @@ export default function AddAdmin({ onSuccess, onCancel }) {
 
     try {
       const res = await fetch(
-        "https://overseas-backend-production-4f18.up.railway.app/host/admin-access-role",
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/host/admin-access-role`,
         {
           method: "POST",
           credentials: "include",
@@ -70,7 +68,7 @@ export default function AddAdmin({ onSuccess, onCancel }) {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(form),
-        }
+        },
       );
 
       let data = {};
@@ -164,17 +162,17 @@ export default function AddAdmin({ onSuccess, onCancel }) {
           Role
         </label>
         <select
-  name="role"
-  value={form.role}
-  onChange={handleChange}
-  className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-500 bg-white"
->
-  {roles.map((r) => (
-    <option key={r.value} value={r.value}>
-      {r.label}
-    </option>
-  ))}
-</select>
+          name="role"
+          value={form.role}
+          onChange={handleChange}
+          className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-500 bg-white"
+        >
+          {roles.map((r) => (
+            <option key={r.value} value={r.value}>
+              {r.label}
+            </option>
+          ))}
+        </select>
       </div>
 
       {/* Actions */}

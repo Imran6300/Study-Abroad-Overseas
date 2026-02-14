@@ -13,9 +13,8 @@ import { motion, AnimatePresence, useAnimation } from "framer-motion";
 import Link from "next/link";
 const MotionLink = motion(Link);
 
-//importing universities data
-
-import { universityItems } from "@/data/universitiesData";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchUniversities } from "@/store/universitySlice";
 
 // ─── Static data & variants (moved outside component) ────────────────────────────────
 
@@ -66,6 +65,15 @@ const backdropVariants = {
 // ──────────────────────────────────────────────────────────────────────────────────────
 
 export default function UniversityShortlisting() {
+  const dispatch = useDispatch();
+  const { list: universities } = useSelector((state) => state.universities);
+
+  useEffect(() => {
+    if (universities.length === 0) {
+      dispatch(fetchUniversities());
+    }
+  }, [dispatch, universities.length]);
+
   const country = "Canada";
 
   const [shortlisted, setShortlisted] = useState([]);
@@ -85,26 +93,35 @@ export default function UniversityShortlisting() {
 
   // ─── Memoized derived data ───────────────────────────────────────────────────────────
   const shortlistedUnis = useMemo(
-    () => universityItems.filter((uni) => shortlisted.includes(uni.id)),
-    [shortlisted],
+    () => universities.filter((uni) => shortlisted.includes(uni._id)),
+    [shortlisted, universities],
   );
 
+  const toggleShortlist = (id) => {
+    setShortlisted((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
+    );
+  };
+
   const filteredUnis = useMemo(() => {
-    return universityItems.filter((uni) => {
+    return universities.filter((uni) => {
       const countryMatch =
         appliedCountry === "All Countries" || uni.country === appliedCountry;
 
       const degreeMatch =
         appliedDegree === "All Degrees" ||
-        uni.degree.toLowerCase().includes(appliedDegree.toLowerCase());
+        uni.courses?.some((course) =>
+          course.toLowerCase().includes(appliedDegree.toLowerCase()),
+        );
 
       let budgetMatch = appliedBudget === "Any Budget";
 
       if (appliedBudget !== "Any Budget") {
-        const tuitionStr = uni.tuition
-          .replace(/[^0-9]/g, "")
-          .split("–")[0]
+        const tuitionStr = (uni.tuitionFee || "")
+          .replace(/,/g, "")
+          .split("-")[0]
           .trim();
+
         const tuitionNum = parseInt(tuitionStr) || 0;
 
         if (appliedBudget === "Under $15,000") budgetMatch = tuitionNum < 15000;
@@ -116,7 +133,7 @@ export default function UniversityShortlisting() {
 
       return countryMatch && degreeMatch && budgetMatch;
     });
-  }, [appliedCountry, appliedDegree, appliedBudget]);
+  }, [universities, appliedCountry, appliedDegree, appliedBudget]);
 
   // ─── Effects ────────────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -273,10 +290,10 @@ export default function UniversityShortlisting() {
               <AnimatePresence>
                 {filteredUnis.length > 0 ? (
                   filteredUnis.map((uni, i) => {
-                    const isShortlisted = shortlisted.includes(uni.id);
+                    const isShortlisted = shortlisted.includes(uni._id);
                     return (
                       <motion.div
-                        key={uni.id}
+                        key={uni._id}
                         custom={i}
                         variants={cardVariants}
                         initial="hidden"
@@ -291,7 +308,7 @@ export default function UniversityShortlisting() {
                       >
                         <div className="h-28 bg-gray-50 relative flex items-center justify-center p-5 border-b border-gray-200">
                           <img
-                            src={uni.logo}
+                            src={uni.logo?.url}
                             alt={uni.name}
                             className="max-h-20 object-contain"
                             loading="lazy" // ← performance boost
@@ -307,7 +324,7 @@ export default function UniversityShortlisting() {
                         <div className="p-5 flex flex-col flex-1">
                           <div className="mb-1">
                             <span className="inline-block bg-[#2f4f4f]/10 text-[#2f4f4f] text-xs font-bold px-2.5 py-1 rounded-full">
-                              {uni.ranking}
+                              {uni.qsRanking}
                             </span>
                           </div>
                           <h3 className="text-lg font-bold text-[#2f4f4f] mb-3 line-clamp-2">
@@ -319,20 +336,20 @@ export default function UniversityShortlisting() {
                               <span className="font-semibold text-[#2f4f4f]">
                                 Degree:
                               </span>{" "}
-                              {uni.degree}
+                              {uni.courses?.join(", ")}
                             </p>
                             <p>
                               <span className="font-semibold text-[#2f4f4f]">
                                 Tuition:
                               </span>{" "}
-                              {uni.tuition}
+                              {uni.tuitionFee}
                             </p>
                           </div>
 
                           <div className="flex gap-3 mt-auto">
                             <motion.button
                               whileTap={{ scale: 0.95 }}
-                              onClick={() => toggleShortlist(uni.id)}
+                              onClick={() => toggleShortlist(uni._id)}
                               className={`flex-1 py-2.5 rounded-lg font-medium transition flex items-center justify-center gap-2 text-sm ${
                                 isShortlisted
                                   ? "bg-[#32cd32] text-white hover:bg-[#2ab92a]"
@@ -561,11 +578,12 @@ export default function UniversityShortlisting() {
                         </thead>
                         <tbody>
                           {shortlistedUnis.map((uni) => (
-                            <tr key={uni.id} className="border-t">
+                            <tr key={uni._id} className="border-t">
                               <td className="p-4 font-medium">{uni.name}</td>
-                              <td className="p-4">{uni.ranking}</td>
-                              <td className="p-4">{uni.degree}</td>
-                              <td className="p-4">{uni.tuition}</td>
+                              <td className="p-4">{uni.qsRanking}</td>
+                              <td className="p-4">{uni.courses?.join(", ")}</td>
+
+                              <td className="p-4">{uni.tuitionFee}</td>
                               <td className="p-4">
                                 {uni.country} {uni.flag}
                               </td>

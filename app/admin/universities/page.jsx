@@ -63,7 +63,7 @@ export default function UniversitiesPage() {
       setError(null);
       try {
         const res = await fetch(
-          "https://overseas-backend-production-4f18.up.railway.app/host/show-university-data",
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/host/show-university-data`,
           { credentials: "include" },
         );
         if (!res.ok) {
@@ -122,7 +122,7 @@ export default function UniversitiesPage() {
 
     try {
       const res = await fetch(
-        `https://overseas-backend-production-4f18.up.railway.app/host/show-university-data/${id}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/host/show-university-data/${id}`,
         {
           method: "DELETE",
           credentials: "include",

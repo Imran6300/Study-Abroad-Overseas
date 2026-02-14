@@ -27,13 +27,13 @@ export default function LoginPage() {
 
     try {
       const res = await fetch(
-        "https://overseas-backend-production-4f18.up.railway.app/auth/login",
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/login`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
           body: JSON.stringify({ email, password }),
-        }
+        },
       );
 
       const data = await res.json();
@@ -61,7 +61,6 @@ export default function LoginPage() {
       } else {
         router.replace("/");
       }
-
     } catch (error) {
       dispatch(authFail("Server error"));
       setErrorMsg("Server error. Please try again.");
@@ -70,7 +69,6 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen w-full px-4 sm:px-6 flex items-center justify-center relative bg-[#F7F9FC] overflow-hidden">
-      
       {/* BACKGROUND BLOBS */}
       <div className="absolute w-56 h-56 bg-[#4A6BFF]/20 blur-3xl rounded-full top-0 left-0 -translate-x-1/3 -translate-y-1/3" />
       <div className="absolute w-56 h-56 bg-[#22C55E]/20 blur-3xl rounded-full bottom-0 right-0 translate-x-1/3 translate-y-1/3" />
@@ -87,9 +85,7 @@ export default function LoginPage() {
           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#4A6BFF] to-[#22C55E] flex items-center justify-center shadow-md">
             <FaGraduationCap className="text-white text-xl" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-800">
-            Khizar Overseas
-          </h1>
+          <h1 className="text-2xl font-bold text-gray-800">Khizar Overseas</h1>
         </div>
 
         <h2 className="text-xl font-semibold text-gray-900">Welcome Back</h2>
@@ -113,12 +109,9 @@ export default function LoginPage() {
 
         {/* FORM */}
         <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-          
           {/* EMAIL */}
           <div>
-            <label className="text-sm font-medium text-gray-700">
-              Email
-            </label>
+            <label className="text-sm font-medium text-gray-700">Email</label>
             <input
               type="email"
               value={email}

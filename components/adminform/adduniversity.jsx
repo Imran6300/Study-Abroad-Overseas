@@ -29,6 +29,7 @@ export default function AddUniversityForm({
     name: "",
     country: "",
     city: "",
+    flag: "",
     website: "",
     qsRanking: "",
     acceptanceRate: "",
@@ -42,6 +43,7 @@ export default function AddUniversityForm({
     featured: false,
     partnered: false,
     studentsPlaced: "",
+    programs: [],
     logoFile: null,
     imageFiles: [],
   });
@@ -52,11 +54,12 @@ export default function AddUniversityForm({
   // Sync initialData (edit mode)
   useEffect(() => {
     if (!initialData) {
-      // Reset form in add mode
+      // ✅ Add mode reset
       setForm({
         name: "",
         country: "",
         city: "",
+        flag: "",
         website: "",
         qsRanking: "",
         acceptanceRate: "",
@@ -70,20 +73,23 @@ export default function AddUniversityForm({
         featured: false,
         partnered: false,
         studentsPlaced: "",
+        programs: [], // 🔥 IMPORTANT
         logoFile: null,
         imageFiles: [],
       });
+
       setLogoPreview(null);
       setImagePreviews([]);
       setCurrentStep(1);
       return;
     }
 
-    // Edit mode
+    // ✅ Edit mode
     setForm({
       name: initialData.name || "",
       country: initialData.country || "",
       city: initialData.city || "",
+      flag: initialData.flag || "",
       website: initialData.website || "",
       qsRanking: initialData.qsRanking ?? "",
       acceptanceRate: initialData.acceptanceRate ?? "",
@@ -91,7 +97,9 @@ export default function AddUniversityForm({
       tuitionFee: initialData.tuitionFee ?? "",
       intakes: initialData.intakes || "",
       description: initialData.description || "",
-      courses: initialData.courses || "",
+      courses: Array.isArray(initialData.courses)
+        ? initialData.courses.join(", ")
+        : initialData.courses || "",
       admissionRequirements: initialData.admissionRequirements || "",
       similarUniversities: Array.isArray(initialData.similarUniversities)
         ? initialData.similarUniversities
@@ -99,6 +107,7 @@ export default function AddUniversityForm({
       featured: !!initialData.featured,
       partnered: !!initialData.partnered,
       studentsPlaced: initialData.studentsPlaced ?? "",
+      programs: Array.isArray(initialData.programs) ? initialData.programs : [], // 🔥 IMPORTANT
       logoFile: null,
       imageFiles: [],
     });
@@ -179,6 +188,8 @@ export default function AddUniversityForm({
           value.forEach((uni, i) => {
             formData.append(`similarUniversities[${i}]`, uni.trim());
           });
+        } else if (key === "programs") {
+          formData.append("programs", JSON.stringify(value)); // 🔥 IMPORTANT
         } else if (key !== "logoFile" && key !== "imageFiles") {
           formData.append(key, value ?? "");
         }
@@ -188,14 +199,17 @@ export default function AddUniversityForm({
       if (form.logoFile) formData.append("logo", form.logoFile);
       form.imageFiles.forEach((file) => formData.append("images", file));
 
-      const res = await fetch(
-        "https://overseas-backend-production-4f18.up.railway.app/host/university-editor-form",
-        {
-          method: "POST",
-          credentials: "include",
-          body: formData,
-        },
-      );
+      const url = isEditMode
+        ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/host/edit-university-data/${initialData._id}`
+        : `${process.env.NEXT_PUBLIC_BACKEND_URL}/host/university-editor-form`;
+
+      const method = isEditMode ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method,
+        credentials: "include",
+        body: formData,
+      });
 
       const data = await res.json();
 
@@ -218,6 +232,7 @@ export default function AddUniversityForm({
               name: "",
               country: "",
               city: "",
+              flag: "",
               website: "",
               qsRanking: "",
               acceptanceRate: "",
@@ -231,6 +246,7 @@ export default function AddUniversityForm({
               featured: false,
               partnered: false,
               studentsPlaced: "",
+              programs: [],
               logoFile: null,
               imageFiles: [],
             });
@@ -283,6 +299,7 @@ export default function AddUniversityForm({
         {currentStep === 3 && (
           <StepDescriptionCourses
             form={form}
+            setForm={setForm}
             onChange={handleChange}
             isViewMode={isViewMode}
           />

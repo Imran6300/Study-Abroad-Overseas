@@ -11,55 +11,120 @@ export default function AdminSidebar() {
   const user = useSelector((state) => state.auth.user);
   if (!user) return null;
 
-
   const dispatch = useDispatch();
   const router = useRouter();
   const pathname = usePathname();
   const [expanded, setExpanded] = useState(false);
 
   const Handlelogout = async () => {
-    await fetch(
-      "https://overseas-backend-production-4f18.up.railway.app/auth/logout",
-      {
-        method: "POST",
-        credentials: "include",
-      },
-    );
+    await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/logout`, {
+      method: "POST",
+      credentials: "include",
+    });
 
     dispatch(logout());
     router.replace("/login");
   };
 
-const menuItems = [
-  // Visible to everyone
-  { icon: "🏠", label: "Dashboard", href: "/dashboard/admin-dashboard" ,roles:["admin","super_admin"] }, 
+  const menuItems = [
+    // Visible to everyone
+    {
+      icon: "🏠",
+      label: "Dashboard",
+      href: "/dashboard/admin-dashboard",
+      roles: ["admin", "super_admin"],
+    },
 
-  // Student & Case Management (counselors need these)
-  { icon: "👨‍🎓", label: "Students", href: "/admin/students" ,roles: ["counselor", "admin", "super_admin"]},
-  { icon: "📑", label: "Applications", href: "/admin/applications",roles: ["counselor", "admin", "super_admin"]},     
-  { icon: "🛂", label: "Visa Tracking", href: "/admin/visa",roles: ["counselor", "admin", "super_admin"] },            
-  { icon: "⏰", label: "Deadlines", href: "/admin/deadlines",roles:["counselor", "admin", "super_admin"] },
+    // Student & Case Management (counselors need these)
+    {
+      icon: "👨‍🎓",
+      label: "Students",
+      href: "/admin/students",
+      roles: ["counselor", "admin", "super_admin"],
+    },
+    {
+      icon: "📑",
+      label: "Applications",
+      href: "/admin/applications",
+      roles: ["counselor", "admin", "super_admin"],
+    },
+    {
+      icon: "🛂",
+      label: "Visa Tracking",
+      href: "/admin/visa",
+      roles: ["counselor", "admin", "super_admin"],
+    },
+    {
+      icon: "⏰",
+      label: "Deadlines",
+      href: "/admin/deadlines",
+      roles: ["counselor", "admin", "super_admin"],
+    },
 
-  // Staff & Team Management (admin level)
-  { icon: "🧑‍🏫", label: "Counselors", href: "/admin/counselors" ,roles: ["admin", "super_admin"]},
+    // Staff & Team Management (admin level)
+    {
+      icon: "🧑‍🏫",
+      label: "Counselors",
+      href: "/admin/counselors",
+      roles: ["admin", "super_admin"],
+    },
 
-  // Content / Master Data (editor role)
-  { icon: "🏫", label: "Universities", href: "/admin/universities" ,roles: ["editor", "admin", "super_admin"]},
-  { icon: "📚", label: "Courses", href: "/admin/courses",roles: ["editor", "admin", "super_admin"] },
-  { icon: "✨", label: "Success Stories", href: "/admin/success-stories",roles: ["editor", "admin", "super_admin"] },
-  { icon: "🌍", label: "Countries", href: "/admin/countries" ,roles: ["editor", "admin", "super_admin"]},
-  { icon: "📰", label: "Blog", href: "/admin/blog" ,roles: ["editor", "admin", "super_admin"]},
+    // Content / Master Data (editor role)
+    {
+      icon: "🏫",
+      label: "Universities",
+      href: "/admin/universities",
+      roles: ["editor", "admin", "super_admin"],
+    },
+    {
+      icon: "📚",
+      label: "Courses",
+      href: "/admin/courses",
+      roles: ["editor", "admin", "super_admin"],
+    },
+    {
+      icon: "✨",
+      label: "Success Stories",
+      href: "/admin/success-stories",
+      roles: ["editor", "admin", "super_admin"],
+    },
+    {
+      icon: "🌍",
+      label: "Countries",
+      href: "/admin/countries",
+      roles: ["editor", "admin", "super_admin"],
+    },
+    {
+      icon: "📰",
+      label: "Blog",
+      href: "/admin/blog",
+      roles: ["editor", "admin", "super_admin"],
+    },
 
-  // Analytics & Admin-only
-  { icon: "💰", label: "Revenue", href: "/admin/revenue" ,roles: ["admin", "super_admin"]},               
-  { icon: "📊", label: "Reports", href: "/admin/reports",roles: ["admin", "super_admin"] },               
-  { icon: "📋", label: "Logs", href: "/admin/logs",roles: ["admin", "super_admin"] },
-];
+    // Analytics & Admin-only
+    {
+      icon: "💰",
+      label: "Revenue",
+      href: "/admin/revenue",
+      roles: ["admin", "super_admin"],
+    },
+    {
+      icon: "📊",
+      label: "Reports",
+      href: "/admin/reports",
+      roles: ["admin", "super_admin"],
+    },
+    {
+      icon: "📋",
+      label: "Logs",
+      href: "/admin/logs",
+      roles: ["admin", "super_admin"],
+    },
+  ];
 
-const filteredMenu = menuItems.filter(
-  (item) => !item.roles || item.roles.includes(user?.role)
-);
-
+  const filteredMenu = menuItems.filter(
+    (item) => !item.roles || item.roles.includes(user?.role),
+  );
 
   return (
     <>

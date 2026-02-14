@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
-import { authSuccess,authChecked} from "@/store/authSlice";
+import { authSuccess, authChecked } from "@/store/authSlice";
 
 export default function AuthInitializer({ children }) {
   const dispatch = useDispatch();
@@ -11,10 +11,10 @@ export default function AuthInitializer({ children }) {
     const checkAuth = async () => {
       try {
         const res = await fetch(
-          "https://overseas-backend-production-4f18.up.railway.app/auth/me",
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/me`,
           {
             credentials: "include",
-          }
+          },
         );
 
         if (res.ok) {

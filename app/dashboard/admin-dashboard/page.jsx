@@ -1,6 +1,6 @@
 "use client";
 
-import { useState ,useEffect} from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useSelector } from "react-redux";
 
@@ -29,12 +29,10 @@ export default function AdminPage() {
   const [loadingAdmins, setLoadingAdmins] = useState(true);
   const [pendingDeleteAdmin, setPendingDeleteAdmin] = useState(null);
 
-
   const [showAdminSection, setShowAdminSection] = useState(false);
   const { user } = useSelector((state) => state.auth);
 
   const CounselorName = user?.name;
-
 
   /* ===================== MODAL STATE ===================== */
 
@@ -44,44 +42,18 @@ export default function AdminPage() {
 
   /* ===================== HANDLERS ===================== */
 
-const handleAdminAdded = async () => {
-  setShowAdminSection(false);
-  setLoadingAdmins(true);
+  const handleAdminAdded = async () => {
+    setShowAdminSection(false);
+    setLoadingAdmins(true);
 
-  try {
-    const res = await fetch(
-      "https://overseas-backend-production-4f18.up.railway.app/host/admin-users",
-      { credentials: "include" }
-    );
-    const data = await res.json();
-    if (res.ok) {
-      setAdmins(
-        data.users.map((u) => ({
-          id: u._id,
-          name: u.name,
-          email: u.email,
-          role: u.role,
-        }))
-      );
-    }
-  } finally {
-    setLoadingAdmins(false);
-  }
-};
-
-
-useEffect(() => {
-  const fetchAdmins = async () => {
     try {
       const res = await fetch(
-        "https://overseas-backend-production-4f18.up.railway.app/host/admin-users",
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/host/admin-users`,
         {
           credentials: "include",
-        }
+        },
       );
-
       const data = await res.json();
-
       if (res.ok) {
         setAdmins(
           data.users.map((u) => ({
@@ -89,107 +61,125 @@ useEffect(() => {
             name: u.name,
             email: u.email,
             role: u.role,
-          }))
+          })),
         );
       }
-    } catch (err) {
-      console.error("Failed to fetch admins", err);
     } finally {
       setLoadingAdmins(false);
     }
   };
 
-  fetchAdmins();
-}, []);
+  useEffect(() => {
+    const fetchAdmins = async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/host/admin-users`,
+          {
+            credentials: "include",
+          },
+        );
 
+        const data = await res.json();
+
+        if (res.ok) {
+          setAdmins(
+            data.users.map((u) => ({
+              id: u._id,
+              name: u.name,
+              email: u.email,
+              role: u.role,
+            })),
+          );
+        }
+      } catch (err) {
+        console.error("Failed to fetch admins", err);
+      } finally {
+        setLoadingAdmins(false);
+      }
+    };
+
+    fetchAdmins();
+  }, []);
 
   // 🔥 MAIN DELETE LOGIC (RBAC)
-const handleDeleteAdmin = (targetAdmin) => {
-  const currentRole = normalizeRole(user?.role);
-  const targetRole = normalizeRole(targetAdmin.role);
+  const handleDeleteAdmin = (targetAdmin) => {
+    const currentRole = normalizeRole(user?.role);
+    const targetRole = normalizeRole(targetAdmin.role);
 
-  console.log("CURRENT:", currentRole);
-  console.log("TARGET:", targetRole);
+    console.log("CURRENT:", currentRole);
+    console.log("TARGET:", targetRole);
 
-  // ❌ nobody can delete super admin
-  if (targetRole === "super_admin") {
-    setModalMessage(`You cannot remove ${targetAdmin.name}.`);
-    setShowModal(true);
-    return;
-  }
-
-  // ✅ super admin can delete anyone else
-  if (currentRole === "super_admin") {
-    setPendingDeleteId(targetAdmin.id);
-    setPendingDeleteAdmin(targetAdmin);
-    setModalMessage(
-  `Are you sure you want to delete ${targetAdmin.name}?`
-);
-
-    setShowModal(true);
-    return;
-  }
-
-  // ❌ admin permissions
-  if (currentRole === "admin") {
-    if (["editor", "counselor"].includes(targetRole)) {
-      setPendingDeleteId(targetAdmin.id);
-      setPendingDeleteAdmin(targetAdmin);
-      setModalMessage(`Are you sure you want to delete ${targetAdmin.name}?`);
+    // ❌ nobody can delete super admin
+    if (targetRole === "super_admin") {
+      setModalMessage(`You cannot remove ${targetAdmin.name}.`);
       setShowModal(true);
       return;
     }
 
-    setModalMessage(`You cannot remove ${targetAdmin.role}.`);
-    setShowModal(true);
-    return;
-  }
+    // ✅ super admin can delete anyone else
+    if (currentRole === "super_admin") {
+      setPendingDeleteId(targetAdmin.id);
+      setPendingDeleteAdmin(targetAdmin);
+      setModalMessage(`Are you sure you want to delete ${targetAdmin.name}?`);
 
-  // ❌ everyone else
-  setModalMessage("You are not allowed to delete roles.");
-  setShowModal(true);
-};
+      setShowModal(true);
+      return;
+    }
 
-
-const confirmDelete = async () => {
-  if (!pendingDeleteId) return;
-
-  try {
-    const res = await fetch(
-      `https://overseas-backend-production-4f18.up.railway.app/host/admin-users/${pendingDeleteId}`,
-      {
-        method: "DELETE",
-        credentials: "include",
+    // ❌ admin permissions
+    if (currentRole === "admin") {
+      if (["editor", "counselor"].includes(targetRole)) {
+        setPendingDeleteId(targetAdmin.id);
+        setPendingDeleteAdmin(targetAdmin);
+        setModalMessage(`Are you sure you want to delete ${targetAdmin.name}?`);
+        setShowModal(true);
+        return;
       }
-    );
 
-    const data = await res.json();
+      setModalMessage(`You cannot remove ${targetAdmin.role}.`);
+      setShowModal(true);
+      return;
+    }
 
-    if (!res.ok) {
-  setModalMessage(data.message || "Delete failed");
-  setPendingDeleteId(null);
-  setPendingDeleteAdmin(null);
-  setShowModal(false);
-  return;
-}
+    // ❌ everyone else
+    setModalMessage("You are not allowed to delete roles.");
+    setShowModal(true);
+  };
 
+  const confirmDelete = async () => {
+    if (!pendingDeleteId) return;
 
-    // ✅ backend success → update UI
-    setAdmins((prev) =>
-      prev.filter((a) => a.id !== pendingDeleteId)
-    );
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/host/admin-users/${pendingDeleteId}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        },
+      );
 
-   setPendingDeleteId(null);
-setPendingDeleteAdmin(null);
-setShowModal(false);
+      const data = await res.json();
 
-  } catch (err) {
-    console.error("Delete error:", err);
-    setModalMessage("Network error. Please try again.");
-    setPendingDeleteId(null);
-  }
-};
+      if (!res.ok) {
+        setModalMessage(data.message || "Delete failed");
+        setPendingDeleteId(null);
+        setPendingDeleteAdmin(null);
+        setShowModal(false);
+        return;
+      }
 
+      // ✅ backend success → update UI
+      setAdmins((prev) => prev.filter((a) => a.id !== pendingDeleteId));
+
+      setPendingDeleteId(null);
+      setPendingDeleteAdmin(null);
+      setShowModal(false);
+    } catch (err) {
+      console.error("Delete error:", err);
+      setModalMessage("Network error. Please try again.");
+      setPendingDeleteId(null);
+    }
+  };
 
   /* ===================== RENDER ===================== */
 
