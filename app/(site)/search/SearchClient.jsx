@@ -4,7 +4,6 @@ import { useSearchParams } from "next/navigation";
 import { useMemo } from "react";
 import {
   matchCountry,
-  matchCourse,
   matchUniversity,
   buildCourseIndex,
 } from "@/lib/searchUtils";
@@ -37,23 +36,11 @@ export default function SearchClient() {
     }
   }, [dispatch, universities.length]);
 
-  const courseIndex = useMemo(
-    () =>
-      buildCourseIndex({
-        popularCourses: COUNTRY_PAGE_DATA.popularCourses,
-        categoryData,
-      }),
-    [],
-  );
-
   const result = useMemo(() => {
     if (!query || universities.length === 0) return null;
 
     const country = matchCountry(query, COUNTRIES);
     if (country) return { type: "country", data: country };
-
-    const course = matchCourse(query, courseIndex);
-    if (course) return { type: "course", data: course };
 
     const university = matchUniversity(query, universities);
     if (university) return { type: "university", data: university };
