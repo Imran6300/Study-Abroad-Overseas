@@ -2,22 +2,18 @@
 import { IoSearch } from "react-icons/io5";
 import { useRouter } from "next/navigation";
 import { useMemo } from "react";
-import {
-  matchCountry,
-  matchCourse,
-  matchUniversity,
-  buildCourseIndex,
-} from "@/lib/searchUtils";
+import { matchCountry, matchCourse, buildCourseIndex } from "@/lib/searchUtils";
 import { COUNTRY_PAGE_DATA } from "@/data/countrydetail";
 import { COUNTRIES } from "@/data/countries";
 import { categoryData } from "@/data/coursescategory";
-import { universityItems } from "@/data/universitiesData";
-import { universitiesByCategory } from "@/data/universitybycatogery";
+import { useSelector } from "react-redux";
 
 // Normalize function (same as before)
 const normalize = (str = "") => str.toLowerCase().trim().replace(/\s+/g, " ");
 
 export default function HeroSearch() {
+  const universities = useSelector((state) => state.universities.list);
+
   const router = useRouter();
 
   const courseIndex = useMemo(
@@ -26,7 +22,7 @@ export default function HeroSearch() {
         popularCourses: COUNTRY_PAGE_DATA.popularCourses || [],
         categoryData,
       }),
-    []
+    [],
   );
 
   const handleSearch = (e) => {
@@ -71,7 +67,7 @@ export default function HeroSearch() {
       Object.entries(categoryData).forEach(([catKey, cat]) => {
         Object.values(cat.tabs || {}).forEach((level) => {
           const match = level.find(
-            (item) => normalize(item.name) === titleNorm && item.slug
+            (item) => normalize(item.name) === titleNorm && item.slug,
           );
           if (match) {
             foundCategory = catKey;
@@ -91,13 +87,18 @@ export default function HeroSearch() {
     }
 
     // 4. UNIVERSITY
-    const university = matchUniversity(
-      query,
-      universityItems,
-      universitiesByCategory
-    );
+    // 4. UNIVERSITY (Dynamic from Backend)
+    const university =
+      universities?.find((uni) => normalize(uni.name) === normalizedQuery) ||
+      universities?.find((uni) =>
+        normalize(uni.name).startsWith(normalizedQuery),
+      ) ||
+      universities?.find((uni) =>
+        normalize(uni.name).includes(normalizedQuery),
+      );
+
     if (university) {
-      router.push(`/universities?search=${encodeURIComponent(query)}`);
+      router.push(`/universities/${university.slug}`);
       return;
     }
 

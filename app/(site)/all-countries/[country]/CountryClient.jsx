@@ -6,6 +6,9 @@ import { memo } from "react";
 import Link from "next/link";
 import { COUNTRY_PAGE_DATA } from "@/data/countrydetail";
 
+import { useSelector } from "react-redux";
+import { useMemo } from "react";
+
 /* ================= ANIMATIONS ================= */
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -17,6 +20,8 @@ const fadeUp = {
 };
 
 export default function CountryDetail({ country }) {
+  const allUniversities = useSelector((state) => state.universities.list);
+
   // 🔥 country now comes from SERVER
   const slug = (country ?? "usa").toLowerCase();
   const countryName = slug
@@ -25,7 +30,16 @@ export default function CountryDetail({ country }) {
 
   const data = COUNTRY_PAGE_DATA;
   const hero = data.heroImages[slug] || data.heroImages.usa;
-  const universities = data.universitiesByCountry[slug];
+  const normalizedSlug = slug.replace(/-/g, " ");
+
+  const universities = useMemo(() => {
+    if (!allUniversities?.length) return [];
+
+    return allUniversities.filter((uni) =>
+      uni.country?.toLowerCase().replace(/\s+/g, "-").includes(slug),
+    );
+  }, [allUniversities, slug]);
+
   return (
     <LazyMotion features={domAnimation}>
       <main className="bg-[#020617] text-white min-h-screen relative">
@@ -124,7 +138,7 @@ export default function CountryDetail({ country }) {
         </section>
 
         {/* TOP UNIVERSITIES */}
-        {universities && (
+        {universities.length > 0 && (
           <section className="py-20 lg:py-28 border-t border-white/10">
             <div className="max-w-7xl mx-auto px-6">
               <m.h2
@@ -140,14 +154,27 @@ export default function CountryDetail({ country }) {
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {universities.map((uni, i) => (
                   <m.div
-                    key={uni}
+                    key={uni._id}
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.1 }}
                     viewport={{ once: true }}
-                    className="bg-[#0B0F19] border border-white/10 rounded-2xl p-8 text-center hover:border-[#38BDF8]/50 transition"
+                    className="bg-[#0B0F19] border border-white/10 rounded-2xl p-6 text-center hover:border-[#38BDF8]/50 transition"
                   >
-                    <p className="font-medium text-lg">{uni}</p>
+                    <h3 className="text-lg font-semibold text-white">
+                      {uni.name}
+                    </h3>
+
+                    <p className="text-sm text-gray-400 mt-2">
+                      Rank #{uni.qsRanking}
+                    </p>
+
+                    <Link
+                      href={`/universities/${uni.slug}`}
+                      className="mt-4 inline-block text-[#38BDF8] hover:underline"
+                    >
+                      View Details →
+                    </Link>
                   </m.div>
                 ))}
               </div>

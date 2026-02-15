@@ -1,15 +1,31 @@
 "use client";
-import { useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { Globe, Users, Award, ArrowRight, Star } from "lucide-react";
 import Link from "next/link";
 import { categoryData } from "@/data/coursescategory";
-import { universitiesByCategory } from "@/data/universitybycatogery";
+import { useSelector } from "react-redux";
+import { useMemo } from "react";
 
-export default function CourseCategory({category}) {
-    const data = categoryData[category];
+export default function CourseCategory({ category }) {
+  const data = categoryData[category];
   const [activeTab, setActiveTab] = useState("master");
+  const allUniversities = useSelector((state) => state.universities.list);
+
+  const universities = useMemo(() => {
+    if (!allUniversities?.length) return [];
+
+    return allUniversities
+      .filter((uni) =>
+        uni.programs?.some(
+          (p) =>
+            p.category?.toLowerCase() === category?.toLowerCase() &&
+            p.level?.toLowerCase() === activeTab?.toLowerCase(),
+        ),
+      )
+      .sort((a, b) => a.qsRanking - b.qsRanking)
+      .slice(0, 6);
+  }, [allUniversities, activeTab, category]);
 
   if (!data) {
     return (
@@ -22,7 +38,6 @@ export default function CourseCategory({category}) {
   }
 
   const programs = data.tabs[activeTab] || [];
-  const universities = universitiesByCategory?.[category]?.[activeTab] || [];
   const gradient =
     data.gradient || "from-blue-600 via-indigo-600 to-purple-600";
 
@@ -35,7 +50,7 @@ export default function CourseCategory({category}) {
     min-h-[55vh] xs:min-h-[60vh] sm:min-h-[70vh] md:min-h-[80vh] lg:min-h-screen 
     flex items-center justify-center 
     overflow-hidden
-    max-sm:mt-12               {/* ← only on mobile (< sm breakpoint) */}
+    max-sm:mt-12
   "
       >
         <div className="absolute inset-0">
@@ -46,7 +61,6 @@ export default function CourseCategory({category}) {
         w-full h-full 
         object-cover 
         brightness-[0.6] sm:brightness-[0.65] 
-        /* optional: remove scale on very small screens if it feels weird */
         scale-105 sm:scale-105
         transition-transform duration-[20s] 
       "
@@ -218,7 +232,9 @@ ${
                   )}
                 </div>
                 <div className="mt-6 sm:mt-7 flex items-center gap-2.5 sm:gap-3 text-indigo-400 font-semibold group-hover:gap-4 transition-all duration-300 text-sm sm:text-base">
-                  <Link href={`/courses/${category}/${prog.slug}`}>Explore {prog.name}</Link>
+                  <Link href={`/courses/${category}/${prog.slug}`}>
+                    Explore {prog.name}
+                  </Link>
                   <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
                 </div>
               </motion.div>
@@ -258,7 +274,7 @@ ${
                 >
                   <div className="h-14 sm:h-16 mb-4 sm:mb-5 bg-white/5 rounded-xl flex items-center justify-center border border-white/10">
                     <img
-                      src={uni.logo}
+                      src={uni.logo?.url}
                       alt={uni.name}
                       className="h-8 sm:h-10 opacity-90 max-w-[80%]"
                     />
@@ -272,7 +288,7 @@ ${
                     </p>
                     <p className="flex items-center gap-2">
                       <Award className="w-4 h-4 text-yellow-400" />{" "}
-                      {uni.ranking}
+                      {uni.qsRanking}
                     </p>
                     <div className="flex items-center gap-1 text-yellow-400">
                       {[...Array(4)].map((_, i) => (

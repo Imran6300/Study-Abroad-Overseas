@@ -2,7 +2,7 @@ export const universityItems = [
   {
     id: 1,
     rank: 1,
-    slug: "massachusetts-institute-of-technology",
+    slug: "massachusetts-institute-of-technology-mit",
     name: "Massachusetts Institute of Technology (MIT)",
     country: "USA",
     location: "Cambridge, Massachusetts, USA",

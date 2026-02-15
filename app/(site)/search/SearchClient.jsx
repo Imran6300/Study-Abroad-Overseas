@@ -8,6 +8,7 @@ import {
   matchUniversity,
   buildCourseIndex,
 } from "@/lib/searchUtils";
+import { useRouter } from "next/navigation";
 
 import { useDispatch } from "react-redux";
 import { fetchUniversities } from "@/store/universitySlice";
@@ -15,14 +16,14 @@ import { useEffect } from "react";
 
 import { useSelector } from "react-redux";
 import { COUNTRIES } from "@/data/countries";
-import { coursesData } from "@/data/coursesData";
 import { categoryData } from "@/data/coursescategory";
-import { universitiesByCategory } from "@/data/universitybycatogery";
 import { COUNTRY_PAGE_DATA } from "@/data/countrydetail";
 
 import { motion } from "framer-motion";
 
 export default function SearchClient() {
+  const router = useRouter();
+
   const searchParams = useSearchParams();
   const dispatch = useDispatch();
 
@@ -39,21 +40,55 @@ export default function SearchClient() {
   const courseIndex = useMemo(
     () =>
       buildCourseIndex({
-        coursesData,
         popularCourses: COUNTRY_PAGE_DATA.popularCourses,
         categoryData,
       }),
     [],
   );
 
-  let intent = "unknown";
+  const result = useMemo(() => {
+    if (!query || universities.length === 0) return null;
 
-  if (query && universities.length > 0) {
-    if (matchCountry(query, COUNTRIES)) intent = "country";
-    else if (matchCourse(query, courseIndex)) intent = "course";
-    else if (matchUniversity(query, universities, universitiesByCategory))
-      intent = "university";
-  }
+    const country = matchCountry(query, COUNTRIES);
+    if (country) return { type: "country", data: country };
+
+    const course = matchCourse(query, courseIndex);
+    if (course) return { type: "course", data: course };
+
+    const university = matchUniversity(query, universities);
+    if (university) return { type: "university", data: university };
+
+    return { type: "unknown" };
+  }, [query, universities, courseIndex]);
+
+  const intent = result?.type || "unknown";
+
+  useEffect(() => {
+    if (!query) return;
+    if (!result) return;
+    if (result.type === "unknown") return;
+
+    // Small delay for smoother UX
+    const timer = setTimeout(() => {
+      if (result.type === "country") {
+        const slug =
+          result.data.slug ||
+          result.data.name?.toLowerCase().replace(/\s+/g, "-");
+
+        router.replace(`/all-countries/${slug}`);
+      }
+
+      if (result.type === "university") {
+        router.replace(`/universities/${result.data.slug}`);
+      }
+
+      if (result.type === "course") {
+        router.replace(`/courses?search=${encodeURIComponent(result.data)}`);
+      }
+    }, 300); // smooth redirect
+
+    return () => clearTimeout(timer);
+  }, [result, router, query]);
 
   const titles = {
     country: "Country not found",

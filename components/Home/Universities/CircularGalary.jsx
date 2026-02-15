@@ -195,7 +195,17 @@ export default function CircularGallery({
             pointerEvents: isDragging.current ? "none" : "auto",
           }}
         >
-          <Card {...item} />
+          <Card
+            slug={item.slug}
+            rank={item.qsRanking}
+            name={item.name}
+            image={item.images?.[0]?.url || item.logo?.url}
+            logo={item.logo?.url}
+            location={`${item.city}, ${item.country}`}
+            desc={item.description}
+            students={item.totalStudents?.toLocaleString() || "—"}
+            acceptance={item.acceptanceRate ? `${item.acceptanceRate}%` : "—"}
+          />
         </div>
       ))}
     </div>
