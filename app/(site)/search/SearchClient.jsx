@@ -5,8 +5,9 @@ import { useMemo } from "react";
 import {
   matchCountry,
   matchUniversity,
-  buildCourseIndex,
+  matchCourseInUniversity,
 } from "@/lib/searchUtils";
+
 import { useRouter } from "next/navigation";
 
 import { useDispatch } from "react-redux";
@@ -15,8 +16,6 @@ import { useEffect } from "react";
 
 import { useSelector } from "react-redux";
 import { COUNTRIES } from "@/data/countries";
-import { categoryData } from "@/data/coursescategory";
-import { COUNTRY_PAGE_DATA } from "@/data/countrydetail";
 
 import { motion } from "framer-motion";
 
@@ -39,14 +38,24 @@ export default function SearchClient() {
   const result = useMemo(() => {
     if (!query || universities.length === 0) return null;
 
-    const country = matchCountry(query, COUNTRIES);
-    if (country) return { type: "country", data: country };
-
+    // 1️⃣ University Name (Highest Priority)
     const university = matchUniversity(query, universities);
     if (university) return { type: "university", data: university };
 
+    // 2️⃣ Course Inside University
+    const courseMatch = matchCourseInUniversity(query, universities);
+    if (courseMatch)
+      return {
+        type: "course",
+        data: courseMatch,
+      };
+
+    // 3️⃣ Country
+    const country = matchCountry(query, COUNTRIES);
+    if (country) return { type: "country", data: country };
+
     return { type: "unknown" };
-  }, [query, universities, courseIndex]);
+  }, [query, universities]);
 
   const intent = result?.type || "unknown";
 
@@ -70,7 +79,11 @@ export default function SearchClient() {
       }
 
       if (result.type === "course") {
-        router.replace(`/courses?search=${encodeURIComponent(result.data)}`);
+        router.replace(
+          `/universities/${result.data.university.slug}?course=${encodeURIComponent(
+            result.data.course,
+          )}`,
+        );
       }
     }, 300); // smooth redirect
 
