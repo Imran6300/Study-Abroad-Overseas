@@ -8,23 +8,32 @@ import AdminSidebar from "@/components/admindashboard/AdminSidebar";
 import DashboardHeader from "@/components/admindashboard/DashboardHeader";
 import ConfirmationModal from "@/components/adminform/confirmmsg";
 
-import AddSuccessStoryForm from "@/components/adminform/addtestominal"; 
+import AddSuccessStoryForm from "@/components/adminform/addtestominal";
+import { useSelector } from "react-redux";
 
 // Animations (same as students page)
-import { containerVariants, itemVariants, formVariants } from "@/components/Animations/formanimations/animate";
+import {
+  containerVariants,
+  itemVariants,
+  formVariants,
+} from "@/components/Animations/formanimations/animate";
 
 export default function SuccessStoriesPage() {
+  const { user } = useSelector((state) => state.auth);
+  const CounselorName = user?.name;
   const [stories, setStories] = useState([
     {
       id: 1,
       studentName: "Priya Sharma",
-      photo: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400",
+      photo:
+        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400",
       university: "University of Toronto",
       course: "MSc Computer Science",
       country: "Canada",
       scholarship: "CAD 25,000",
       visaStatus: "Approved",
-      excerpt: "Overseas made my dream come true – full scholarship and visa in record time!",
+      excerpt:
+        "Overseas made my dream come true – full scholarship and visa in record time!",
       published: true,
       dateAdded: "2026-01-15",
     },
@@ -100,8 +109,8 @@ export default function SuccessStoriesPage() {
                 excerpt: formData.excerpt || s.excerpt,
                 published: formData.published ?? s.published,
               }
-            : s
-        )
+            : s,
+        ),
       );
     }
 
@@ -113,7 +122,7 @@ export default function SuccessStoriesPage() {
   const filteredStories = stories.filter(
     (s) =>
       s.studentName.toLowerCase().includes(search.toLowerCase()) ||
-      s.university.toLowerCase().includes(search.toLowerCase())
+      s.university.toLowerCase().includes(search.toLowerCase()),
   );
 
   return (
@@ -126,12 +135,12 @@ export default function SuccessStoriesPage() {
             mode === "add"
               ? "Add New Success Story"
               : mode === "edit"
-              ? "Edit Success Story"
-              : mode === "view"
-              ? "View Success Story"
-              : "Success Stories Management"
+                ? "Edit Success Story"
+                : mode === "view"
+                  ? "View Success Story"
+                  : "Success Stories Management"
           }
-          counselorName="Imran"
+          counselorName={CounselorName}
           btnName={isFormOpen ? "Close" : "+ Add New Story"}
           onButtonClick={isFormOpen ? () => setMode(null) : openAdd}
         />
@@ -165,8 +174,8 @@ export default function SuccessStoriesPage() {
                       {mode === "add"
                         ? "Add New Success Story"
                         : mode === "edit"
-                        ? "Edit Success Story"
-                        : "Success Story Details"}
+                          ? "Edit Success Story"
+                          : "Success Story Details"}
                     </h2>
                     <button
                       onClick={() => setMode(null)}
@@ -230,13 +239,27 @@ export default function SuccessStoriesPage() {
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 w-20">Photo</th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Student</th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">University</th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Country</th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Visa</th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Published</th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Actions</th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 w-20">
+                        Photo
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                        Student
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                        University
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                        Country
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                        Visa
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                        Published
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                        Actions
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
@@ -252,17 +275,28 @@ export default function SuccessStoriesPage() {
                               src={story.photo}
                               alt={story.studentName}
                               className="w-full h-full object-cover"
-                              onError={(e) => (e.target.src = "https://via.placeholder.com/48?text=?")}
+                              onError={(e) =>
+                                (e.target.src =
+                                  "https://via.placeholder.com/48?text=?")
+                              }
                             />
                           </div>
                         </td>
-                        <td className="px-6 py-4 font-medium text-gray-900">{story.studentName}</td>
-                        <td className="px-6 py-4 text-gray-600">{story.university}</td>
-                        <td className="px-6 py-4 text-gray-600">{story.country}</td>
+                        <td className="px-6 py-4 font-medium text-gray-900">
+                          {story.studentName}
+                        </td>
+                        <td className="px-6 py-4 text-gray-600">
+                          {story.university}
+                        </td>
+                        <td className="px-6 py-4 text-gray-600">
+                          {story.country}
+                        </td>
                         <td className="px-6 py-4">
                           <span
                             className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium ${
-                              story.visaStatus === "Approved" ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"
+                              story.visaStatus === "Approved"
+                                ? "bg-green-100 text-green-800"
+                                : "bg-yellow-100 text-yellow-800"
                             }`}
                           >
                             {story.visaStatus}
@@ -271,7 +305,9 @@ export default function SuccessStoriesPage() {
                         <td className="px-6 py-4 text-center">
                           <span
                             className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium ${
-                              story.published ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
+                              story.published
+                                ? "bg-green-100 text-green-800"
+                                : "bg-gray-100 text-gray-800"
                             }`}
                           >
                             {story.published ? "Yes" : "Draft"}
@@ -305,7 +341,10 @@ export default function SuccessStoriesPage() {
             </motion.div>
 
             {filteredStories.length === 0 && (
-              <motion.p variants={itemVariants} className="text-center mt-12 text-gray-500 text-lg">
+              <motion.p
+                variants={itemVariants}
+                className="text-center mt-12 text-gray-500 text-lg"
+              >
                 No success stories found.
               </motion.p>
             )}

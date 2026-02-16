@@ -9,13 +9,19 @@ import AdminSidebar from "@/components/admindashboard/AdminSidebar";
 import DashboardHeader from "@/components/admindashboard/DashboardHeader";
 import AddStudentForm from "@/components/adminform/addstudents";
 import ConfirmationModal from "@/components/adminform/confirmmsg";
+import { useSelector } from "react-redux";
 
 //animations
 
-import {containerVariants,itemVariants,formVariants} from "@/components/Animations/formanimations/animate"
-
+import {
+  containerVariants,
+  itemVariants,
+  formVariants,
+} from "@/components/Animations/formanimations/animate";
 
 export default function StudentsAdminPage() {
+  const { user } = useSelector((state) => state.auth);
+  const CounselorName = user?.name;
   const [students, setStudents] = useState([
     {
       id: 1,
@@ -45,7 +51,7 @@ export default function StudentsAdminPage() {
   const [justAdded, setJustAdded] = useState(false);
 
   // Modal control states
-  const [mode, setMode] = useState(null);           // ← fixed line
+  const [mode, setMode] = useState(null); // ← fixed line
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
   const [studentToDelete, setStudentToDelete] = useState(null);
@@ -108,8 +114,8 @@ export default function StudentsAdminPage() {
                 status: formData.currentStatus || s.status,
                 counselor: formData.assignedCounselor || s.counselor,
               }
-            : s
-        )
+            : s,
+        ),
       );
     }
 
@@ -121,7 +127,7 @@ export default function StudentsAdminPage() {
   const filteredStudents = students.filter(
     (s) =>
       s.name.toLowerCase().includes(search.toLowerCase()) ||
-      s.email.toLowerCase().includes(search.toLowerCase())
+      s.email.toLowerCase().includes(search.toLowerCase()),
   );
 
   return (
@@ -134,12 +140,12 @@ export default function StudentsAdminPage() {
             mode === "add"
               ? "Add New Student"
               : mode === "edit"
-              ? "Edit Student"
-              : mode === "view"
-              ? "View Student"
-              : "Student Management"
+                ? "Edit Student"
+                : mode === "view"
+                  ? "View Student"
+                  : "Student Management"
           }
-          counselorName="Imran"
+          counselorName={CounselorName}
           btnName={isFormOpen ? "Close" : "+ Add New Student"}
           onButtonClick={isFormOpen ? () => setMode(null) : openAdd}
         />
@@ -173,8 +179,8 @@ export default function StudentsAdminPage() {
                       {mode === "add"
                         ? "Add New Student"
                         : mode === "edit"
-                        ? "Edit Student"
-                        : "Student Details"}
+                          ? "Edit Student"
+                          : "Student Details"}
                     </h2>
                     <button
                       onClick={() => setMode(null)}
@@ -238,12 +244,24 @@ export default function StudentsAdminPage() {
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Name</th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Email</th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Phone</th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Target Country</th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Status</th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Actions</th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                        Name
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                        Email
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                        Phone
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                        Target Country
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                        Status
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                        Actions
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
@@ -253,18 +271,26 @@ export default function StudentsAdminPage() {
                         variants={itemVariants}
                         className="hover:bg-gray-50 transition-colors"
                       >
-                        <td className="px-6 py-4 font-medium text-gray-900">{student.name}</td>
-                        <td className="px-6 py-4 text-gray-600">{student.email}</td>
-                        <td className="px-6 py-4 text-gray-600">{student.phone}</td>
-                        <td className="px-6 py-4 text-gray-600">{student.target}</td>
+                        <td className="px-6 py-4 font-medium text-gray-900">
+                          {student.name}
+                        </td>
+                        <td className="px-6 py-4 text-gray-600">
+                          {student.email}
+                        </td>
+                        <td className="px-6 py-4 text-gray-600">
+                          {student.phone}
+                        </td>
+                        <td className="px-6 py-4 text-gray-600">
+                          {student.target}
+                        </td>
                         <td className="px-6 py-4">
                           <span
                             className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium ${
                               student.status === "Enrolled"
                                 ? "bg-green-100 text-green-800"
                                 : student.status === "Applied"
-                                ? "bg-blue-100 text-blue-800"
-                                : "bg-gray-100 text-gray-800"
+                                  ? "bg-blue-100 text-blue-800"
+                                  : "bg-gray-100 text-gray-800"
                             }`}
                           >
                             {student.status}
@@ -298,7 +324,10 @@ export default function StudentsAdminPage() {
             </motion.div>
 
             {filteredStudents.length === 0 && (
-              <motion.p variants={itemVariants} className="text-center mt-12 text-gray-500 text-lg">
+              <motion.p
+                variants={itemVariants}
+                className="text-center mt-12 text-gray-500 text-lg"
+              >
                 No students found.
               </motion.p>
             )}
