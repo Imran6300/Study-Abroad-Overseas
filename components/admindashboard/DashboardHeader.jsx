@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bell, Check, Info, AlertTriangle, X } from "lucide-react";
-import {useSelector} from "react-redux";
+import { useSelector } from "react-redux";
 
 export default function DashboardHeader({
   title = "Dashboard",
@@ -10,12 +10,13 @@ export default function DashboardHeader({
   btnName = null,
   onButtonClick,
 }) {
-  const initials = counselorName
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase() || "AD";
+  const initials =
+    counselorName
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase() || "AD";
 
   const [showNotifications, setShowNotifications] = useState(false);
   const notificationRef = useRef(null);
@@ -23,7 +24,10 @@ export default function DashboardHeader({
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (notificationRef.current && !notificationRef.current.contains(event.target)) {
+      if (
+        notificationRef.current &&
+        !notificationRef.current.contains(event.target)
+      ) {
         setShowNotifications(false);
       }
     };
@@ -137,7 +141,9 @@ export default function DashboardHeader({
                   >
                     {/* Header */}
                     <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100 bg-gradient-to-r from-sky-50 to-indigo-50">
-                      <h3 className="font-semibold text-gray-900">Notifications</h3>
+                      <h3 className="font-semibold text-gray-900">
+                        Notifications
+                      </h3>
                       <button
                         onClick={() => setShowNotifications(false)}
                         className="text-gray-500 hover:text-gray-800"
@@ -163,14 +169,32 @@ export default function DashboardHeader({
                           >
                             <div className="flex items-start gap-3">
                               <div className="mt-0.5">
-                                {notif.type === "success" && <Check size={18} className="text-emerald-600" />}
-                                {notif.type === "info" && <Info size={18} className="text-sky-600" />}
-                                {notif.type === "warning" && <AlertTriangle size={18} className="text-amber-600" />}
+                                {notif.type === "success" && (
+                                  <Check
+                                    size={18}
+                                    className="text-emerald-600"
+                                  />
+                                )}
+                                {notif.type === "info" && (
+                                  <Info size={18} className="text-sky-600" />
+                                )}
+                                {notif.type === "warning" && (
+                                  <AlertTriangle
+                                    size={18}
+                                    className="text-amber-600"
+                                  />
+                                )}
                               </div>
                               <div className="flex-1">
-                                <p className="font-medium text-gray-900 text-sm">{notif.title}</p>
-                                <p className="text-sm text-gray-600 mt-0.5">{notif.message}</p>
-                                <p className="text-xs text-gray-500 mt-1.5">{notif.time}</p>
+                                <p className="font-medium text-gray-900 text-sm">
+                                  {notif.title}
+                                </p>
+                                <p className="text-sm text-gray-600 mt-0.5">
+                                  {notif.message}
+                                </p>
+                                <p className="text-xs text-gray-500 mt-1.5">
+                                  {notif.time}
+                                </p>
                               </div>
                             </div>
                           </div>
@@ -204,18 +228,22 @@ export default function DashboardHeader({
               </motion.div>
 
               <div className="hidden sm:flex flex-col">
-                <span className="text-sm font-semibold text-gray-900">{counselorName}</span>
-                <span className="text-xs text-gray-500 font-medium">Welcome back</span>
+                <span className="text-sm font-semibold text-gray-900">
+                  {counselorName}
+                </span>
+                <span className="text-xs text-gray-500 font-medium">
+                  Welcome back
+                </span>
               </div>
             </div>
 
             {/* Primary Action Button (unchanged) */}
-            
-              <motion.button
-                whileHover={{ scale: 1.04, y: -2 }}
-                whileTap={{ scale: 0.96 }}
-                onClick={onButtonClick}
-                className="
+
+            <motion.button
+              whileHover={{ scale: 1.04, y: -2 }}
+              whileTap={{ scale: 0.96 }}
+              onClick={onButtonClick}
+              className="
                   group relative overflow-hidden
                   flex items-center gap-2
                   bg-gradient-to-r from-sky-600 via-sky-700 to-indigo-700
@@ -227,10 +255,10 @@ export default function DashboardHeader({
                   shadow-lg hover:shadow-xl
                   transition-all duration-300
                 "
-              >
-                <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></span>
-                <span className="relative z-10">{btnName}</span>
-              </motion.button>
+            >
+              <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></span>
+              <span className="relative z-10">{btnName}</span>
+            </motion.button>
           </div>
         </div>
       </div>

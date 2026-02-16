@@ -8,7 +8,6 @@ import AuthGate from "@/components/AuthGate";
 import Script from "next/script";
 import UniversityInitializer from "@/components/UniversityInitializer";
 
-
 export const viewport: Viewport = {
   themeColor: "#ffffff",
   width: "device-width",
@@ -55,7 +54,7 @@ export const metadata: Metadata = {
       "Expert overseas education guidance for Indian students. Apply to top universities in USA, UK, Canada, Australia. Free profile evaluation & visa help.",
     images: [
       {
-        url: "/og-image-1200x630.jpg", // Put real 1200×630 image in /public
+        url: "/og-image-1200x630.jpg",
         width: 1200,
         height: 630,
         alt: "Study Abroad Consultants India – Get Admission in Top Universities",
@@ -74,11 +73,6 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
-
-  // Optional: verification for Google Search Console etc.
-  // verification: {
-  //   google: "your-google-verification-code",
-  // },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
