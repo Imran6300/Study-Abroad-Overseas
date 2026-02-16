@@ -10,11 +10,17 @@ import AdminSidebar from "@/components/admindashboard/AdminSidebar";
 import DashboardHeader from "@/components/admindashboard/DashboardHeader";
 import ConfirmationModal from "@/components/adminform/confirmmsg";
 
+import { useSelector } from "react-redux";
+
 // New form component (we'll create below)
 import VisaCaseForm from "@/components/adminform/addvisa";
 
 // Animations
-import { containerVariants, itemVariants, formVariants } from "@/components/Animations/formanimations/animate";
+import {
+  containerVariants,
+  itemVariants,
+  formVariants,
+} from "@/components/Animations/formanimations/animate";
 
 function VisaRow({ visa, onView, onEdit, onDelete }) {
   const statusStyles = {
@@ -22,32 +28,63 @@ function VisaRow({ visa, onView, onEdit, onDelete }) {
     Approved: "bg-green-100 text-green-800",
     "Refused / Rejected": "bg-red-100 text-red-800",
     "Additional Documents Requested": "bg-orange-100 text-orange-800",
-    "Withdrawn": "bg-gray-100 text-gray-800",
+    Withdrawn: "bg-gray-100 text-gray-800",
   };
 
   const badgeClass = statusStyles[visa.status] || "bg-blue-100 text-blue-800";
 
   return (
     <tr className="hover:bg-gray-50 transition-colors duration-150">
-      <td className="px-4 py-3 sm:px-6 sm:py-4 text-xs sm:text-sm font-medium text-gray-900">{visa.id}</td>
-      <td className="px-4 py-3 sm:px-6 sm:py-4 text-xs sm:text-sm text-gray-900">{visa.studentName}</td>
-      <td className="px-4 py-3 sm:px-6 sm:py-4 text-xs sm:text-sm text-gray-600">{visa.passportNo}</td>
-      <td className="px-4 py-3 sm:px-6 sm:py-4 text-xs sm:text-sm text-gray-600 hidden sm:table-cell">{visa.country}</td>
-      <td className="px-4 py-3 sm:px-6 sm:py-4 text-xs sm:text-sm text-gray-600 hidden md:table-cell">{visa.visaType}</td>
+      <td className="px-4 py-3 sm:px-6 sm:py-4 text-xs sm:text-sm font-medium text-gray-900">
+        {visa.id}
+      </td>
+      <td className="px-4 py-3 sm:px-6 sm:py-4 text-xs sm:text-sm text-gray-900">
+        {visa.studentName}
+      </td>
+      <td className="px-4 py-3 sm:px-6 sm:py-4 text-xs sm:text-sm text-gray-600">
+        {visa.passportNo}
+      </td>
+      <td className="px-4 py-3 sm:px-6 sm:py-4 text-xs sm:text-sm text-gray-600 hidden sm:table-cell">
+        {visa.country}
+      </td>
+      <td className="px-4 py-3 sm:px-6 sm:py-4 text-xs sm:text-sm text-gray-600 hidden md:table-cell">
+        {visa.visaType}
+      </td>
       <td className="px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap">
-        <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium ${badgeClass}`}>
+        <span
+          className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium ${badgeClass}`}
+        >
           {visa.status}
         </span>
       </td>
       <td className="px-4 py-3 sm:px-6 sm:py-4 text-xs sm:text-sm text-gray-600 hidden sm:table-cell">
-        {visa.expectedDecision ? new Date(visa.expectedDecision).toLocaleDateString("en-IN") : "—"}
+        {visa.expectedDecision
+          ? new Date(visa.expectedDecision).toLocaleDateString("en-IN")
+          : "—"}
       </td>
-      <td className="px-4 py-3 sm:px-6 sm:py-4 text-xs sm:text-sm text-gray-600 hidden md:table-cell">{visa.counselor}</td>
+      <td className="px-4 py-3 sm:px-6 sm:py-4 text-xs sm:text-sm text-gray-600 hidden md:table-cell">
+        {visa.counselor}
+      </td>
       <td className="px-4 py-3 sm:px-6 sm:py-4 text-xs sm:text-sm font-medium">
         <div className="flex items-center gap-3 sm:gap-4">
-          <button onClick={() => onView(visa)} className="text-sky-600 hover:text-sky-800">View</button>
-          <button onClick={() => onEdit(visa)} className="text-amber-600 hover:text-amber-800">Update</button>
-          <button onClick={() => onDelete(visa)} className="text-red-600 hover:text-red-800">Delete</button>
+          <button
+            onClick={() => onView(visa)}
+            className="text-sky-600 hover:text-sky-800"
+          >
+            View
+          </button>
+          <button
+            onClick={() => onEdit(visa)}
+            className="text-amber-600 hover:text-amber-800"
+          >
+            Update
+          </button>
+          <button
+            onClick={() => onDelete(visa)}
+            className="text-red-600 hover:text-red-800"
+          >
+            Delete
+          </button>
         </div>
       </td>
     </tr>
@@ -55,6 +92,8 @@ function VisaRow({ visa, onView, onEdit, onDelete }) {
 }
 
 export default function VisaTrackingPage() {
+  const { user } = useSelector((state) => state.auth);
+  const CounselorName = user?.name;
   const [visaCases, setVisaCases] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -152,12 +191,13 @@ export default function VisaTrackingPage() {
                 passportNo: formData.passportNo || v.passportNo,
                 country: formData.country || v.country,
                 visaType: formData.visaType || v.visaType,
-                status: formData.status || v.status,           // ← updates visa status!
-                expectedDecision: formData.expectedDecision || v.expectedDecision,
+                status: formData.status || v.status, // ← updates visa status!
+                expectedDecision:
+                  formData.expectedDecision || v.expectedDecision,
                 counselor: formData.counselor || v.counselor,
               }
-            : v
-        )
+            : v,
+        ),
       );
     }
 
@@ -172,14 +212,16 @@ export default function VisaTrackingPage() {
       (v) =>
         v.studentName.toLowerCase().includes(term) ||
         v.passportNo.toLowerCase().includes(term) ||
-        v.country.toLowerCase().includes(term)
+        v.country.toLowerCase().includes(term),
     );
   }, [visaCases, debouncedSearch]);
 
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <p className="text-lg text-gray-600 animate-pulse">Loading visa cases…</p>
+        <p className="text-lg text-gray-600 animate-pulse">
+          Loading visa cases…
+        </p>
       </div>
     );
   }
@@ -194,12 +236,12 @@ export default function VisaTrackingPage() {
             mode === "add"
               ? "Add New Visa Case"
               : mode === "edit"
-              ? "Update Visa Case"
-              : mode === "view"
-              ? "Visa Case Details"
-              : "Visa Tracking"
+                ? "Update Visa Case"
+                : mode === "view"
+                  ? "Visa Case Details"
+                  : "Visa Tracking"
           }
-          counselorName="Imran"
+          counselorName={CounselorName}
           btnName={isFormOpen ? "Close" : "+ New Visa Case"}
           onButtonClick={isFormOpen ? () => setMode(null) : openAdd}
         />
@@ -233,8 +275,8 @@ export default function VisaTrackingPage() {
                       {mode === "add"
                         ? "Add New Visa Case"
                         : mode === "edit"
-                        ? "Update Visa Case"
-                        : "Visa Case Details"}
+                          ? "Update Visa Case"
+                          : "Visa Case Details"}
                     </h2>
                     <button
                       onClick={() => setMode(null)}
@@ -288,20 +330,41 @@ export default function VisaTrackingPage() {
               />
             </motion.div>
 
-            <motion.div variants={itemVariants} className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">
+            <motion.div
+              variants={itemVariants}
+              className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200"
+            >
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700 whitespace-nowrap">ID</th>
-                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700 min-w-[140px]">Student</th>
-                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700">Passport No</th>
-                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700 hidden sm:table-cell">Country</th>
-                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700 hidden md:table-cell">Visa Type</th>
-                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700">Status</th>
-                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700 hidden sm:table-cell">Expected Decision</th>
-                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700 hidden md:table-cell">Counselor</th>
-                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold whitespace-nowrap">Actions</th>
+                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700 whitespace-nowrap">
+                        ID
+                      </th>
+                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700 min-w-[140px]">
+                        Student
+                      </th>
+                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700">
+                        Passport No
+                      </th>
+                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700 hidden sm:table-cell">
+                        Country
+                      </th>
+                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700 hidden md:table-cell">
+                        Visa Type
+                      </th>
+                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700">
+                        Status
+                      </th>
+                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700 hidden sm:table-cell">
+                        Expected Decision
+                      </th>
+                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700 hidden md:table-cell">
+                        Counselor
+                      </th>
+                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold whitespace-nowrap">
+                        Actions
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
@@ -320,8 +383,13 @@ export default function VisaTrackingPage() {
             </motion.div>
 
             {filteredCases.length === 0 && (
-              <motion.p variants={itemVariants} className="text-center py-12 text-gray-500">
-                {debouncedSearch ? `No visa cases found matching “${debouncedSearch}”` : "No visa cases yet."}
+              <motion.p
+                variants={itemVariants}
+                className="text-center py-12 text-gray-500"
+              >
+                {debouncedSearch
+                  ? `No visa cases found matching “${debouncedSearch}”`
+                  : "No visa cases yet."}
               </motion.p>
             )}
           </motion.div>

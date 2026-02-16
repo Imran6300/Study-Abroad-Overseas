@@ -17,6 +17,7 @@ import AdminSidebar from "@/components/admindashboard/AdminSidebar";
 import DashboardHeader from "@/components/admindashboard/DashboardHeader";
 import AddUniversityForm from "@/components/adminform/adduniversity"; // fixed case
 import ConfirmationModal from "@/components/adminform/confirmmsg";
+const { useSelector } = require("react-redux");
 
 import {
   containerVariants,
@@ -34,6 +35,9 @@ function debounce(fn, delay) {
 }
 
 export default function UniversitiesPage() {
+  const { user } = useSelector((state) => state.auth);
+  const CounselorName = user?.name;
+
   const [universities, setUniversities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
@@ -193,7 +197,7 @@ export default function UniversitiesPage() {
                 ? "Edit University"
                 : "University Management"
           }
-          counselorName="Imran"
+          counselorName={CounselorName}
           btnName={isFormOpen ? "Close Form" : "+ Add University"}
           onButtonClick={isFormOpen ? () => setMode(null) : handleAdd}
         />
