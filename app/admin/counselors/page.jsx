@@ -10,9 +10,14 @@ import AdminSidebar from "@/components/admindashboard/AdminSidebar";
 import DashboardHeader from "@/components/admindashboard/DashboardHeader";
 import AddCounselorForm from "@/components/adminform/addcounselor";
 import ConfirmationModal from "@/components/adminform/confirmmsg";
+import { useSelector } from "react-redux";
 
 // Animations (same as students page)
-import { containerVariants, itemVariants, formVariants } from "@/components/Animations/formanimations/animate";
+import {
+  containerVariants,
+  itemVariants,
+  formVariants,
+} from "@/components/Animations/formanimations/animate";
 
 function CounselorRow({ counselor, openView, openEdit, openDeleteConfirm }) {
   return (
@@ -66,6 +71,8 @@ function CounselorRow({ counselor, openView, openEdit, openDeleteConfirm }) {
 }
 
 export default function CounselorsAdminPage() {
+  const { user } = useSelector((state) => state.auth);
+  const CounselorName = user?.name;
   const [counselors, setCounselors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -178,8 +185,8 @@ export default function CounselorsAdminPage() {
                 specialization: formData.specialization || c.specialization,
                 status: formData.status || c.status,
               }
-            : c
-        )
+            : c,
+        ),
       );
     }
 
@@ -196,14 +203,16 @@ export default function CounselorsAdminPage() {
       (c) =>
         c.name.toLowerCase().includes(term) ||
         c.email.toLowerCase().includes(term) ||
-        c.specialization.toLowerCase().includes(term)
+        c.specialization.toLowerCase().includes(term),
     );
   }, [counselors, debouncedSearch]);
 
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <p className="text-lg text-gray-600 animate-pulse">Loading counselors…</p>
+        <p className="text-lg text-gray-600 animate-pulse">
+          Loading counselors…
+        </p>
       </div>
     );
   }
@@ -218,12 +227,12 @@ export default function CounselorsAdminPage() {
             mode === "add"
               ? "Add New Counselor"
               : mode === "edit"
-              ? "Edit Counselor"
-              : mode === "view"
-              ? "View Counselor"
-              : "Counselors Management"
+                ? "Edit Counselor"
+                : mode === "view"
+                  ? "View Counselor"
+                  : "Counselors Management"
           }
-          counselorName="Imran"
+          counselorName={CounselorName}
           btnName={isFormOpen ? "Close" : "+ Add New Counselor"}
           onButtonClick={isFormOpen ? () => setMode(null) : openAdd}
         />
@@ -257,8 +266,8 @@ export default function CounselorsAdminPage() {
                       {mode === "add"
                         ? "Add New Counselor"
                         : mode === "edit"
-                        ? "Edit Counselor"
-                        : "Counselor Details"}
+                          ? "Edit Counselor"
+                          : "Counselor Details"}
                     </h2>
                     <button
                       onClick={() => setMode(null)}
@@ -322,9 +331,15 @@ export default function CounselorsAdminPage() {
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Name</th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Email</th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Phone</th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                        Name
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                        Email
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                        Phone
+                      </th>
                       <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
                         Specialization
                       </th>
@@ -334,8 +349,12 @@ export default function CounselorsAdminPage() {
                       <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 text-center">
                         Success Rate
                       </th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Status</th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Actions</th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                        Status
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                        Actions
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200 bg-white">
