@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -6,11 +5,23 @@ import { motion } from "framer-motion";
 import { useDebounce } from "use-debounce"; // npm install use-debounce
 import AdminSidebar from "@/components/admindashboard/AdminSidebar";
 import DashboardHeader from "@/components/admindashboard/DashboardHeader";
-import { Plus, Eye, Edit2, Trash2, Clock, CheckCircle, FileText, Star } from "lucide-react";
+import { useSelector } from "react-redux";
+import {
+  Plus,
+  Eye,
+  Edit2,
+  Trash2,
+  Clock,
+  CheckCircle,
+  FileText,
+  Star,
+} from "lucide-react";
 
 // Animation variants – container only
-import {containerVariants,itemVariants} from "@/components/Animations/formanimations/animate"
-
+import {
+  containerVariants,
+  itemVariants,
+} from "@/components/Animations/formanimations/animate";
 
 function BlogCard({ post }) {
   const getStatusBadge = (status) => {
@@ -52,7 +63,7 @@ function BlogCard({ post }) {
         <img
           src={post.coverImage}
           alt={post.title}
-          loading="lazy"                  // ← important
+          loading="lazy" // ← important
           width={800}
           height={600}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
@@ -78,7 +89,9 @@ function BlogCard({ post }) {
           {post.title}
         </h3>
 
-        <p className="text-sm text-gray-600 line-clamp-2 mb-5">{post.excerpt}</p>
+        <p className="text-sm text-gray-600 line-clamp-2 mb-5">
+          {post.excerpt}
+        </p>
 
         <div className="flex items-center justify-between text-xs text-gray-500">
           <span>{post.readTime}</span>
@@ -104,6 +117,8 @@ function BlogCard({ post }) {
 }
 
 export default function BlogAdminPage() {
+  const { user } = useSelector((state) => state.auth);
+  const CounselorName = user?.name;
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -118,8 +133,10 @@ export default function BlogAdminPage() {
         id: 1,
         title: "Top 10 Universities in Canada for 2026 Intake",
         slug: "top-10-universities-canada-2026",
-        excerpt: "Discover the best Canadian universities with high visa success rates and scholarship opportunities...",
-        coverImage: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800",
+        excerpt:
+          "Discover the best Canadian universities with high visa success rates and scholarship opportunities...",
+        coverImage:
+          "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800",
         status: "Published",
         featured: true,
         author: "Imran",
@@ -131,8 +148,10 @@ export default function BlogAdminPage() {
         id: 2,
         title: "How to Prepare for IELTS in 30 Days – Step-by-Step Guide",
         slug: "ielts-preparation-30-days-guide",
-        excerpt: "Realistic timeline, best resources, and common mistakes to avoid...",
-        coverImage: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800",
+        excerpt:
+          "Realistic timeline, best resources, and common mistakes to avoid...",
+        coverImage:
+          "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800",
         status: "Draft",
         featured: false,
         author: "Imran",
@@ -144,8 +163,10 @@ export default function BlogAdminPage() {
         id: 3,
         title: "Germany Free Education – Complete Application Process 2026",
         slug: "germany-free-education-2026",
-        excerpt: "Public universities with zero tuition + blocked account & APS guide...",
-        coverImage: "https://images.unsplash.com/photo-1552566626-52f8b828add9?w=800",
+        excerpt:
+          "Public universities with zero tuition + blocked account & APS guide...",
+        coverImage:
+          "https://images.unsplash.com/photo-1552566626-52f8b828add9?w=800",
         status: "Scheduled",
         featured: false,
         author: "Imran",
@@ -157,8 +178,10 @@ export default function BlogAdminPage() {
         id: 4,
         title: "Why Study in the UK? 2026 Guide for Indian Students",
         slug: "study-in-uk-2026-guide-indian-students",
-        excerpt: "Post-study work visa, top universities, scholarships & application tips...",
-        coverImage: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800",
+        excerpt:
+          "Post-study work visa, top universities, scholarships & application tips...",
+        coverImage:
+          "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800",
         status: "Published",
         featured: true,
         author: "Imran",
@@ -171,7 +194,6 @@ export default function BlogAdminPage() {
     setPosts(mockPosts);
     setLoading(false);
   }, []);
-
 
   const filteredPosts = useMemo(() => {
     const term = debouncedSearch?.toLowerCase() || "";
@@ -189,12 +211,15 @@ export default function BlogAdminPage() {
     });
   }, [posts, debouncedSearch, filterStatus]);
 
-  const counts = useMemo(() => ({
-    total: posts.length,
-    published: posts.filter((p) => p.status === "Published").length,
-    draft: posts.filter((p) => p.status === "Draft").length,
-    scheduled: posts.filter((p) => p.status === "Scheduled").length,
-  }), [posts]);
+  const counts = useMemo(
+    () => ({
+      total: posts.length,
+      published: posts.filter((p) => p.status === "Published").length,
+      draft: posts.filter((p) => p.status === "Draft").length,
+      scheduled: posts.filter((p) => p.status === "Scheduled").length,
+    }),
+    [posts],
+  );
 
   if (loading) {
     return (
@@ -214,7 +239,7 @@ export default function BlogAdminPage() {
       <div className="flex-1 flex flex-col overflow-hidden">
         <DashboardHeader
           title="Blog & Content Hub"
-          counselorName="Imran"
+          counselorName={CounselorName}
           btnName="+ New Article"
           onButtonClick={() => alert("→ Open new post editor / modal")}
         />
@@ -239,24 +264,37 @@ export default function BlogAdminPage() {
             </motion.button>
 
             {/* Stats + Filters */}
-            <motion.div variants={itemVariants} className="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+            <motion.div
+              variants={itemVariants}
+              className="flex flex-col sm:flex-row sm:items-center justify-between gap-5"
+            >
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 flex-1">
                 <div className="bg-white/70 backdrop-blur-sm p-4 sm:p-5 rounded-2xl border border-gray-200/60 shadow-sm hover:shadow transition-shadow">
-                  <p className="text-xs sm:text-sm text-gray-600">Total Posts</p>
-                  <p className="text-2xl sm:text-3xl font-bold text-gray-900 mt-1">{counts.total}</p>
+                  <p className="text-xs sm:text-sm text-gray-600">
+                    Total Posts
+                  </p>
+                  <p className="text-2xl sm:text-3xl font-bold text-gray-900 mt-1">
+                    {counts.total}
+                  </p>
                 </div>
                 <div className="bg-white/70 backdrop-blur-sm p-4 sm:p-5 rounded-2xl border border-gray-200/60 shadow-sm hover:shadow transition-shadow">
                   <p className="text-xs sm:text-sm text-gray-600">Published</p>
-                  <p className="text-2xl sm:text-3xl font-bold text-emerald-600 mt-1">{counts.published}</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-emerald-600 mt-1">
+                    {counts.published}
+                  </p>
                 </div>
                 {/* Draft & Scheduled cards similarly */}
                 <div className="bg-white/70 backdrop-blur-sm p-4 sm:p-5 rounded-2xl border border-gray-200/60 shadow-sm hover:shadow transition-shadow">
                   <p className="text-xs sm:text-sm text-gray-600">Drafts</p>
-                  <p className="text-2xl sm:text-3xl font-bold text-amber-600 mt-1">{counts.draft}</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-amber-600 mt-1">
+                    {counts.draft}
+                  </p>
                 </div>
                 <div className="bg-white/70 backdrop-blur-sm p-4 sm:p-5 rounded-2xl border border-gray-200/60 shadow-sm hover:shadow transition-shadow">
                   <p className="text-xs sm:text-sm text-gray-600">Scheduled</p>
-                  <p className="text-2xl sm:text-3xl font-bold text-violet-600 mt-1">{counts.scheduled}</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-violet-600 mt-1">
+                    {counts.scheduled}
+                  </p>
                 </div>
               </div>
 
@@ -264,12 +302,23 @@ export default function BlogAdminPage() {
                 {["All", "Published", "Draft", "Scheduled"].map((status) => (
                   <button
                     key={status}
-                    onClick={() => setFilterStatus(status.toLowerCase() === "all" ? "all" : status.toLowerCase())}
+                    onClick={() =>
+                      setFilterStatus(
+                        status.toLowerCase() === "all"
+                          ? "all"
+                          : status.toLowerCase(),
+                      )
+                    }
                     className={`
                       px-4 py-2 rounded-full text-sm font-medium transition-all
-                      ${filterStatus === (status.toLowerCase() === "all" ? "all" : status.toLowerCase())
-                        ? "bg-sky-600 text-white shadow-md"
-                        : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"}
+                      ${
+                        filterStatus ===
+                        (status.toLowerCase() === "all"
+                          ? "all"
+                          : status.toLowerCase())
+                          ? "bg-sky-600 text-white shadow-md"
+                          : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+                      }
                     `}
                   >
                     {status}
@@ -288,21 +337,36 @@ export default function BlogAdminPage() {
                 className="w-full pl-11 pr-4 py-3.5 rounded-2xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent text-base bg-white shadow-inner transition-all"
               />
               <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
                 </svg>
               </div>
             </motion.div>
 
             {/* Posts Grid */}
-            <motion.div variants={containerVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+            <motion.div
+              variants={containerVariants}
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8"
+            >
               {filteredPosts.length === 0 ? (
                 <motion.div
                   variants={itemVariants}
                   className="col-span-full py-20 text-center text-gray-500 text-lg"
                 >
                   <p>No articles found.</p>
-                  <p className="text-sm mt-2">Try adjusting your search or filter.</p>
+                  <p className="text-sm mt-2">
+                    Try adjusting your search or filter.
+                  </p>
                 </motion.div>
               ) : (
                 filteredPosts.map((post) => (
