@@ -12,8 +12,14 @@ import ConfirmationModal from "@/components/adminform/confirmmsg";
 
 import AddApplicationForm from "@/components/adminform/addapplication";
 
+import { useSelector } from "react-redux";
+
 // Animations (same as students page)
-import { containerVariants, itemVariants, formVariants } from "@/components/Animations/formanimations/animate";
+import {
+  containerVariants,
+  itemVariants,
+  formVariants,
+} from "@/components/Animations/formanimations/animate";
 
 function ApplicationRow({ app, onView, onEdit, onDelete }) {
   const stageStyles = {
@@ -40,7 +46,9 @@ function ApplicationRow({ app, onView, onEdit, onDelete }) {
         {app.course}
       </td>
       <td className="px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap">
-        <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium ${badgeClass}`}>
+        <span
+          className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium ${badgeClass}`}
+        >
           {app.stage}
         </span>
       </td>
@@ -56,13 +64,22 @@ function ApplicationRow({ app, onView, onEdit, onDelete }) {
       </td>
       <td className="px-4 py-3 sm:px-6 sm:py-4 text-xs sm:text-sm font-medium">
         <div className="flex items-center gap-3 sm:gap-4">
-          <button onClick={() => onView(app)} className="text-sky-600 hover:text-sky-800">
+          <button
+            onClick={() => onView(app)}
+            className="text-sky-600 hover:text-sky-800"
+          >
             View
           </button>
-          <button onClick={() => onEdit(app)} className="text-amber-600 hover:text-amber-800">
+          <button
+            onClick={() => onEdit(app)}
+            className="text-amber-600 hover:text-amber-800"
+          >
             Edit
           </button>
-          <button onClick={() => onDelete(app)} className="text-red-600 hover:text-red-800">
+          <button
+            onClick={() => onDelete(app)}
+            className="text-red-600 hover:text-red-800"
+          >
             Delete
           </button>
         </div>
@@ -72,6 +89,8 @@ function ApplicationRow({ app, onView, onEdit, onDelete }) {
 }
 
 export default function ApplicationsAdminPage() {
+  const { user } = useSelector((state) => state.auth);
+  const CounselorName = user?.name;
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -146,58 +165,61 @@ export default function ApplicationsAdminPage() {
     setAppToDelete(null);
   };
 
-const handleFormSuccess = (formData) => {
-  if (mode === "add") {
-    const newApp = {
-      id: `APP-${String(Date.now()).slice(-4)}`,
-      studentName: formData.studentName || formData.fullName || "Unknown",
-      email: formData.email || "",
-      university: formData.university || "",
-      course: formData.course || "",
-      stage: formData.stage || "Documents Pending",
-      deadline: formData.deadline || "",
-      counselor: formData.counselor || "Unassigned",
-      // you can add more if needed
-    };
-    setApplications((prev) => [...prev, newApp]);
-    setJustAdded(true);
-    setTimeout(() => setJustAdded(false), 3000);
-  } else if (mode === "edit" && selectedApplication) {
-    setApplications((prev) =>
-      prev.map((a) =>
-        a.id === selectedApplication.id
-          ? {
-              ...a,
-              studentName: formData.studentName || a.studentName,
-              email: formData.email || a.email,
-              university: formData.university || a.university,
-              course: formData.course || a.course,
-              stage: formData.stage || a.stage,           // ← this updates stage!
-              deadline: formData.deadline || a.deadline,
-              counselor: formData.counselor || a.counselor,
-            }
-          : a
-      )
-    );
-  }
+  const handleFormSuccess = (formData) => {
+    if (mode === "add") {
+      const newApp = {
+        id: `APP-${String(Date.now()).slice(-4)}`,
+        studentName: formData.studentName || formData.fullName || "Unknown",
+        email: formData.email || "",
+        university: formData.university || "",
+        course: formData.course || "",
+        stage: formData.stage || "Documents Pending",
+        deadline: formData.deadline || "",
+        counselor: formData.counselor || "Unassigned",
+        // you can add more if needed
+      };
+      setApplications((prev) => [...prev, newApp]);
+      setJustAdded(true);
+      setTimeout(() => setJustAdded(false), 3000);
+    } else if (mode === "edit" && selectedApplication) {
+      setApplications((prev) =>
+        prev.map((a) =>
+          a.id === selectedApplication.id
+            ? {
+                ...a,
+                studentName: formData.studentName || a.studentName,
+                email: formData.email || a.email,
+                university: formData.university || a.university,
+                course: formData.course || a.course,
+                stage: formData.stage || a.stage, // ← this updates stage!
+                deadline: formData.deadline || a.deadline,
+                counselor: formData.counselor || a.counselor,
+              }
+            : a,
+        ),
+      );
+    }
 
-  setMode(null);
-  setSelectedApplication(null);
-};
+    setMode(null);
+    setSelectedApplication(null);
+  };
 
   const filteredApplications = useMemo(() => {
     if (!debouncedSearch?.trim()) return applications;
     const term = debouncedSearch.toLowerCase();
     return applications.filter((app) =>
-      [app.id, app.studentName, app.email, app.university, app.course]
-        .some((field) => field?.toLowerCase().includes(term))
+      [app.id, app.studentName, app.email, app.university, app.course].some(
+        (field) => field?.toLowerCase().includes(term),
+      ),
     );
   }, [applications, debouncedSearch]);
 
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <p className="text-lg text-gray-600 animate-pulse">Loading applications…</p>
+        <p className="text-lg text-gray-600 animate-pulse">
+          Loading applications…
+        </p>
       </div>
     );
   }
@@ -212,12 +234,12 @@ const handleFormSuccess = (formData) => {
             mode === "add"
               ? "Add New Application"
               : mode === "edit"
-              ? "Edit Application"
-              : mode === "view"
-              ? "View Application"
-              : "Applications Management"
+                ? "Edit Application"
+                : mode === "view"
+                  ? "View Application"
+                  : "Applications Management"
           }
-          counselorName="Imran"
+          counselorName={CounselorName}
           btnName={isFormOpen ? "Close" : "+ New Application"}
           onButtonClick={isFormOpen ? () => setMode(null) : openAdd}
         />
@@ -251,8 +273,8 @@ const handleFormSuccess = (formData) => {
                       {mode === "add"
                         ? "Add New Application"
                         : mode === "edit"
-                        ? "Edit Application"
-                        : "Application Details"}
+                          ? "Edit Application"
+                          : "Application Details"}
                     </h2>
                     <button
                       onClick={() => setMode(null)}
@@ -306,19 +328,38 @@ const handleFormSuccess = (formData) => {
               />
             </motion.div>
 
-            <motion.div variants={itemVariants} className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">
+            <motion.div
+              variants={itemVariants}
+              className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200"
+            >
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700 whitespace-nowrap">ID</th>
-                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700 min-w-[140px]">Student</th>
-                      <th className="px-4 py-3 sm:px-6 text-left ... hidden md:table-cell">University</th>
-                      <th className="px-4 py-3 sm:px-6 text-left ... hidden lg:table-cell">Course</th>
-                      <th className="px-4 py-3 sm:px-6 text-left ... min-w-[130px]">Stage</th>
-                      <th className="px-4 py-3 sm:px-6 text-left ... hidden sm:table-cell">Deadline</th>
-                      <th className="px-4 py-3 sm:px-6 text-left ... hidden md:table-cell">Counselor</th>
-                      <th className="px-4 py-3 sm:px-6 text-left ... whitespace-nowrap">Actions</th>
+                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700 whitespace-nowrap">
+                        ID
+                      </th>
+                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700 min-w-[140px]">
+                        Student
+                      </th>
+                      <th className="px-4 py-3 sm:px-6 text-left ... hidden md:table-cell">
+                        University
+                      </th>
+                      <th className="px-4 py-3 sm:px-6 text-left ... hidden lg:table-cell">
+                        Course
+                      </th>
+                      <th className="px-4 py-3 sm:px-6 text-left ... min-w-[130px]">
+                        Stage
+                      </th>
+                      <th className="px-4 py-3 sm:px-6 text-left ... hidden sm:table-cell">
+                        Deadline
+                      </th>
+                      <th className="px-4 py-3 sm:px-6 text-left ... hidden md:table-cell">
+                        Counselor
+                      </th>
+                      <th className="px-4 py-3 sm:px-6 text-left ... whitespace-nowrap">
+                        Actions
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
@@ -337,8 +378,13 @@ const handleFormSuccess = (formData) => {
             </motion.div>
 
             {filteredApplications.length === 0 && (
-              <motion.p variants={itemVariants} className="text-center py-12 text-gray-500">
-                {debouncedSearch ? `No applications found matching “${debouncedSearch}”` : "No applications yet."}
+              <motion.p
+                variants={itemVariants}
+                className="text-center py-12 text-gray-500"
+              >
+                {debouncedSearch
+                  ? `No applications found matching “${debouncedSearch}”`
+                  : "No applications yet."}
               </motion.p>
             )}
           </motion.div>
