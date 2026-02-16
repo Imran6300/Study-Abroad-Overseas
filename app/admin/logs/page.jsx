@@ -5,12 +5,26 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import AdminSidebar from "@/components/admindashboard/AdminSidebar";
 import DashboardHeader from "@/components/admindashboard/DashboardHeader";
-import { Search, Filter, Calendar, CheckCircle2, AlertCircle, Info, XCircle } from "lucide-react";
+import { useSelector } from "react-redux";
+import {
+  Search,
+  Filter,
+  Calendar,
+  CheckCircle2,
+  AlertCircle,
+  Info,
+  XCircle,
+} from "lucide-react";
 
 // Animation variants (consistent with your other pages)
-import {containerVariants,itemVariants} from "@/components/Animations/formanimations/animate"
+import {
+  containerVariants,
+  itemVariants,
+} from "@/components/Animations/formanimations/animate";
 
 export default function LogsPage() {
+  const { user } = useSelector((state) => state.auth);
+  const CounselorName = user?.name;
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -22,15 +36,21 @@ export default function LogsPage() {
     // Dummy logs data — replace with real API later
     const mockLogs = Array.from({ length: 85 }, (_, i) => ({
       id: i + 1,
-      timestamp: new Date(Date.now() - Math.random() * 10000000000).toLocaleString("en-IN", {
+      timestamp: new Date(
+        Date.now() - Math.random() * 10000000000,
+      ).toLocaleString("en-IN", {
         day: "2-digit",
         month: "short",
         year: "numeric",
         hour: "2-digit",
         minute: "2-digit",
       }),
-      level: ["INFO", "SUCCESS", "WARNING", "ERROR"][Math.floor(Math.random() * 4)],
-      user: ["Imran", "Sara", "John", "Aisha", "System"][Math.floor(Math.random() * 5)],
+      level: ["INFO", "SUCCESS", "WARNING", "ERROR"][
+        Math.floor(Math.random() * 4)
+      ],
+      user: ["Imran", "Sara", "John", "Aisha", "System"][
+        Math.floor(Math.random() * 5)
+      ],
       action: [
         "User login",
         "Student profile updated",
@@ -70,7 +90,9 @@ export default function LogsPage() {
       log.user.toLowerCase().includes(search.toLowerCase()) ||
       log.action.toLowerCase().includes(search.toLowerCase());
 
-    const matchesType = logTypeFilter === "all" || log.level.toLowerCase() === logTypeFilter.toLowerCase();
+    const matchesType =
+      logTypeFilter === "all" ||
+      log.level.toLowerCase() === logTypeFilter.toLowerCase();
 
     return matchesSearch && matchesType;
   });
@@ -78,7 +100,10 @@ export default function LogsPage() {
   // Pagination
   const totalPages = Math.ceil(filteredLogs.length / logsPerPage);
   const startIndex = (currentPage - 1) * logsPerPage;
-  const paginatedLogs = filteredLogs.slice(startIndex, startIndex + logsPerPage);
+  const paginatedLogs = filteredLogs.slice(
+    startIndex,
+    startIndex + logsPerPage,
+  );
 
   const getLevelBadge = (level) => {
     const colors = {
@@ -129,12 +154,23 @@ export default function LogsPage() {
       <AdminSidebar />
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        <DashboardHeader title="System Logs & Audit" counselorName="Imran" />
+        <DashboardHeader
+          title="System Logs & Audit"
+          counselorName={CounselorName}
+        />
 
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
-          <motion.div variants={containerVariants} initial="hidden" animate="show" className="space-y-6 max-w-7xl mx-auto">
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="show"
+            className="space-y-6 max-w-7xl mx-auto"
+          >
             {/* Filters */}
-            <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+            <motion.div
+              variants={itemVariants}
+              className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between"
+            >
               <div className="relative w-full sm:w-80">
                 <input
                   type="text"
@@ -146,7 +182,10 @@ export default function LogsPage() {
                   }}
                   className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-sky-500 text-sm"
                 />
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                <Search
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                  size={18}
+                />
               </div>
 
               <div className="flex flex-wrap gap-2">
@@ -154,13 +193,20 @@ export default function LogsPage() {
                   <button
                     key={type}
                     onClick={() => {
-                      setLogTypeFilter(type.toLowerCase() === "all" ? "all" : type.toLowerCase());
+                      setLogTypeFilter(
+                        type.toLowerCase() === "all"
+                          ? "all"
+                          : type.toLowerCase(),
+                      );
                       setCurrentPage(1);
                     }}
                     className={`
                       px-4 py-2 rounded-full text-sm font-medium transition-all
                       ${
-                        logTypeFilter === (type.toLowerCase() === "all" ? "all" : type.toLowerCase())
+                        logTypeFilter ===
+                        (type.toLowerCase() === "all"
+                          ? "all"
+                          : type.toLowerCase())
                           ? "bg-sky-600 text-white shadow-md"
                           : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
                       }
@@ -173,25 +219,43 @@ export default function LogsPage() {
             </motion.div>
 
             {/* Logs Table */}
-            <motion.div variants={itemVariants} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            <motion.div
+              variants={itemVariants}
+              className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden"
+            >
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700">Timestamp</th>
-                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700">Level</th>
-                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700 hidden sm:table-cell">User</th>
-                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700">Action</th>
-                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700">Message</th>
+                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700">
+                        Timestamp
+                      </th>
+                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700">
+                        Level
+                      </th>
+                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700 hidden sm:table-cell">
+                        User
+                      </th>
+                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700">
+                        Action
+                      </th>
+                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700">
+                        Message
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
                     {paginatedLogs.map((log) => (
-                      <tr key={log.id} className="hover:bg-gray-50 transition-colors">
+                      <tr
+                        key={log.id}
+                        className="hover:bg-gray-50 transition-colors"
+                      >
                         <td className="px-4 py-3 sm:px-6 text-xs sm:text-sm text-gray-600 whitespace-nowrap">
                           {log.timestamp}
                         </td>
-                        <td className="px-4 py-3 sm:px-6">{getLevelBadge(log.level)}</td>
+                        <td className="px-4 py-3 sm:px-6">
+                          {getLevelBadge(log.level)}
+                        </td>
                         <td className="px-4 py-3 sm:px-6 text-xs sm:text-sm text-gray-700 hidden sm:table-cell">
                           {log.user}
                         </td>
@@ -211,7 +275,9 @@ export default function LogsPage() {
               {totalPages > 1 && (
                 <div className="px-4 py-3 sm:px-6 flex items-center justify-between border-t border-gray-200">
                   <div className="text-sm text-gray-500">
-                    Showing {startIndex + 1}–{Math.min(startIndex + logsPerPage, filteredLogs.length)} of {filteredLogs.length}
+                    Showing {startIndex + 1}–
+                    {Math.min(startIndex + logsPerPage, filteredLogs.length)} of{" "}
+                    {filteredLogs.length}
                   </div>
                   <div className="flex gap-2">
                     <button
@@ -222,7 +288,9 @@ export default function LogsPage() {
                       Previous
                     </button>
                     <button
-                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                      onClick={() =>
+                        setCurrentPage((p) => Math.min(totalPages, p + 1))
+                      }
                       disabled={currentPage === totalPages}
                       className="px-3 py-1.5 rounded-md border border-gray-300 text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
                     >
@@ -234,9 +302,14 @@ export default function LogsPage() {
             </motion.div>
 
             {filteredLogs.length === 0 && (
-              <motion.div variants={itemVariants} className="text-center py-16 text-gray-500">
+              <motion.div
+                variants={itemVariants}
+                className="text-center py-16 text-gray-500"
+              >
                 <p className="text-lg">No logs found matching your filters.</p>
-                <p className="text-sm mt-2">Try clearing search or changing log type filter.</p>
+                <p className="text-sm mt-2">
+                  Try clearing search or changing log type filter.
+                </p>
               </motion.div>
             )}
           </motion.div>

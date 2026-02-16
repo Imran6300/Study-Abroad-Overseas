@@ -12,9 +12,14 @@ import ConfirmationModal from "@/components/adminform/confirmmsg";
 
 // New form component
 import DeadlineForm from "@/components/adminform/adddeadline";
+import { useSelector } from "react-redux";
 
 // Animations
-import { containerVariants, itemVariants, formVariants } from "@/components/Animations/formanimations/animate";
+import {
+  containerVariants,
+  itemVariants,
+  formVariants,
+} from "@/components/Animations/formanimations/animate";
 
 function DeadlineRow({ deadline, onView, onEdit, onMarkDone, onDelete }) {
   const getUrgencyClass = (days, status) => {
@@ -25,32 +30,63 @@ function DeadlineRow({ deadline, onView, onEdit, onMarkDone, onDelete }) {
     return "bg-gray-100 text-gray-800";
   };
 
-  const daysText = deadline.daysLeft < 0
-    ? `${Math.abs(deadline.daysLeft)} days overdue`
-    : `${deadline.daysLeft} days left`;
+  const daysText =
+    deadline.daysLeft < 0
+      ? `${Math.abs(deadline.daysLeft)} days overdue`
+      : `${deadline.daysLeft} days left`;
 
   return (
     <tr className="hover:bg-gray-50 transition-colors duration-150">
-      <td className="px-4 py-3 sm:px-6 sm:py-4 text-xs sm:text-sm font-medium text-gray-900">{deadline.studentName}</td>
-      <td className="px-4 py-3 sm:px-6 sm:py-4 text-xs sm:text-sm text-gray-600">{deadline.type}</td>
+      <td className="px-4 py-3 sm:px-6 sm:py-4 text-xs sm:text-sm font-medium text-gray-900">
+        {deadline.studentName}
+      </td>
+      <td className="px-4 py-3 sm:px-6 sm:py-4 text-xs sm:text-sm text-gray-600">
+        {deadline.type}
+      </td>
       <td className="px-4 py-3 sm:px-6 sm:py-4 text-xs sm:text-sm text-gray-600">
         {new Date(deadline.deadlineDate).toLocaleDateString("en-IN")}
       </td>
       <td className="px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap">
-        <span className={`inline-block px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${getUrgencyClass(deadline.daysLeft, deadline.status)}`}>
+        <span
+          className={`inline-block px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${getUrgencyClass(deadline.daysLeft, deadline.status)}`}
+        >
           {deadline.status === "Done" ? "Done" : daysText}
         </span>
       </td>
-      <td className="px-4 py-3 sm:px-6 sm:py-4 text-xs sm:text-sm text-gray-600 hidden sm:table-cell">{deadline.university}</td>
-      <td className="px-4 py-3 sm:px-6 sm:py-4 text-xs sm:text-sm text-gray-600 hidden md:table-cell">{deadline.counselor}</td>
+      <td className="px-4 py-3 sm:px-6 sm:py-4 text-xs sm:text-sm text-gray-600 hidden sm:table-cell">
+        {deadline.university}
+      </td>
+      <td className="px-4 py-3 sm:px-6 sm:py-4 text-xs sm:text-sm text-gray-600 hidden md:table-cell">
+        {deadline.counselor}
+      </td>
       <td className="px-4 py-3 sm:px-6 sm:py-4 text-xs sm:text-sm font-medium">
         <div className="flex flex-wrap gap-2 sm:gap-4">
-          <button onClick={() => onView(deadline)} className="text-sky-600 hover:text-sky-800">View</button>
-          <button onClick={() => onEdit(deadline)} className="text-amber-600 hover:text-amber-800">Edit</button>
+          <button
+            onClick={() => onView(deadline)}
+            className="text-sky-600 hover:text-sky-800"
+          >
+            View
+          </button>
+          <button
+            onClick={() => onEdit(deadline)}
+            className="text-amber-600 hover:text-amber-800"
+          >
+            Edit
+          </button>
           {deadline.status !== "Done" && (
-            <button onClick={() => onMarkDone(deadline)} className="text-emerald-600 hover:text-emerald-800">Mark Done</button>
+            <button
+              onClick={() => onMarkDone(deadline)}
+              className="text-emerald-600 hover:text-emerald-800"
+            >
+              Mark Done
+            </button>
           )}
-          <button onClick={() => onDelete(deadline)} className="text-red-600 hover:text-red-800">Delete</button>
+          <button
+            onClick={() => onDelete(deadline)}
+            className="text-red-600 hover:text-red-800"
+          >
+            Delete
+          </button>
         </div>
       </td>
     </tr>
@@ -58,6 +94,8 @@ function DeadlineRow({ deadline, onView, onEdit, onMarkDone, onDelete }) {
 }
 
 export default function DeadlinesPage() {
+  const { user } = useSelector((state) => state.auth);
+  const CounselorName = user?.name;
   const [deadlines, setDeadlines] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -137,8 +175,8 @@ export default function DeadlinesPage() {
   const handleMarkDone = (deadline) => {
     setDeadlines((prev) =>
       prev.map((d) =>
-        d.id === deadline.id ? { ...d, status: "Done", daysLeft: 0 } : d
-      )
+        d.id === deadline.id ? { ...d, status: "Done", daysLeft: 0 } : d,
+      ),
     );
   };
 
@@ -154,7 +192,8 @@ export default function DeadlinesPage() {
         id: `DL-${String(Date.now()).slice(-4)}`,
         studentName: formData.studentName || "Unknown",
         type: formData.type || "Reminder",
-        deadlineDate: formData.deadlineDate || new Date().toISOString().split("T")[0],
+        deadlineDate:
+          formData.deadlineDate || new Date().toISOString().split("T")[0],
         daysLeft: formData.daysLeft || 0,
         university: formData.university || "",
         country: formData.country || "",
@@ -176,10 +215,10 @@ export default function DeadlinesPage() {
                 university: formData.university || d.university,
                 country: formData.country || d.country,
                 counselor: formData.counselor || d.counselor,
-                status: formData.status || d.status,           // ← updates status!
+                status: formData.status || d.status, // ← updates status!
               }
-            : d
-        )
+            : d,
+        ),
       );
     }
 
@@ -194,14 +233,16 @@ export default function DeadlinesPage() {
       (d) =>
         d.studentName.toLowerCase().includes(term) ||
         d.university.toLowerCase().includes(term) ||
-        d.type.toLowerCase().includes(term)
+        d.type.toLowerCase().includes(term),
     );
   }, [deadlines, debouncedSearch]);
 
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <p className="text-lg text-gray-600 animate-pulse">Loading deadlines...</p>
+        <p className="text-lg text-gray-600 animate-pulse">
+          Loading deadlines...
+        </p>
       </div>
     );
   }
@@ -216,12 +257,12 @@ export default function DeadlinesPage() {
             mode === "add"
               ? "Add New Reminder"
               : mode === "edit"
-              ? "Edit Deadline"
-              : mode === "view"
-              ? "Deadline Details"
-              : "Deadlines & Follow-ups"
+                ? "Edit Deadline"
+                : mode === "view"
+                  ? "Deadline Details"
+                  : "Deadlines & Follow-ups"
           }
-          counselorName="Imran"
+          counselorName={CounselorName}
           btnName={isFormOpen ? "Close" : "+ Add Reminder"}
           onButtonClick={isFormOpen ? () => setMode(null) : openAdd}
         />
@@ -254,8 +295,8 @@ export default function DeadlinesPage() {
                       {mode === "add"
                         ? "Add New Reminder"
                         : mode === "edit"
-                        ? "Edit Deadline"
-                        : "Deadline Details"}
+                          ? "Edit Deadline"
+                          : "Deadline Details"}
                     </h2>
                     <button
                       onClick={() => setMode(null)}
@@ -309,18 +350,35 @@ export default function DeadlinesPage() {
               />
             </motion.div>
 
-            <motion.div variants={itemVariants} className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">
+            <motion.div
+              variants={itemVariants}
+              className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200"
+            >
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700">Student</th>
-                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700 min-w-[140px]">Type</th>
-                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700">Deadline</th>
-                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700 whitespace-nowrap">Days Left</th>
-                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700 hidden sm:table-cell">University</th>
-                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700 hidden md:table-cell">Counselor</th>
-                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700">Actions</th>
+                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700">
+                        Student
+                      </th>
+                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700 min-w-[140px]">
+                        Type
+                      </th>
+                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700">
+                        Deadline
+                      </th>
+                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700 whitespace-nowrap">
+                        Days Left
+                      </th>
+                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700 hidden sm:table-cell">
+                        University
+                      </th>
+                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700 hidden md:table-cell">
+                        Counselor
+                      </th>
+                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700">
+                        Actions
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
@@ -340,8 +398,13 @@ export default function DeadlinesPage() {
             </motion.div>
 
             {filteredDeadlines.length === 0 && (
-              <motion.p variants={itemVariants} className="text-center py-12 text-gray-500">
-                {debouncedSearch ? `No deadlines found matching “${debouncedSearch}”` : "No deadlines yet."}
+              <motion.p
+                variants={itemVariants}
+                className="text-center py-12 text-gray-500"
+              >
+                {debouncedSearch
+                  ? `No deadlines found matching “${debouncedSearch}”`
+                  : "No deadlines yet."}
               </motion.p>
             )}
           </motion.div>
