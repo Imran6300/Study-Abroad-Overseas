@@ -7,12 +7,20 @@ import { X } from "lucide-react";
 import AdminSidebar from "@/components/admindashboard/AdminSidebar";
 import DashboardHeader from "@/components/admindashboard/DashboardHeader";
 
-import AddCountryForm from "@/components/adminform/addcountry"; 
+import AddCountryForm from "@/components/adminform/addcountry";
 import ConfirmationModal from "@/components/adminform/confirmmsg";
 
-import { containerVariants, itemVariants, formVariants } from "@/components/Animations/formanimations/animate";
+import { useSelector } from "react-redux";
+
+import {
+  containerVariants,
+  itemVariants,
+  formVariants,
+} from "@/components/Animations/formanimations/animate";
 
 export default function CountriesPage() {
+  const { user } = useSelector((state) => state.auth);
+  const CounselorName = user?.name;
   const [countries, setCountries] = useState([
     {
       id: 1,
@@ -80,7 +88,7 @@ export default function CountriesPage() {
         name: name || "Unknown",
         flag: finalFlagUrl || "https://flagcdn.com/w320/xx.png",
         image: finalPhotoUrl || null,
-        continent: "",           // ← add to form if needed
+        continent: "", // ← add to form if needed
         capital: "",
         languages: "",
         avgTuitionUSD: "N/A",
@@ -91,8 +99,7 @@ export default function CountriesPage() {
       setCountries((prev) => [...prev, newCountry]);
       setJustAdded(true);
       setTimeout(() => setJustAdded(false), 3000);
-    } 
-    else if (mode === "edit" && selectedCountry) {
+    } else if (mode === "edit" && selectedCountry) {
       setCountries((prev) =>
         prev.map((c) =>
           c.id === selectedCountry.id
@@ -104,8 +111,8 @@ export default function CountriesPage() {
                 // continent: submittedData.continent || c.continent,
                 // etc...
               }
-            : c
-        )
+            : c,
+        ),
       );
     }
 
@@ -116,7 +123,7 @@ export default function CountriesPage() {
   const filteredCountries = countries.filter(
     (c) =>
       c.name.toLowerCase().includes(search.toLowerCase()) ||
-      c.continent.toLowerCase().includes(search.toLowerCase())
+      c.continent.toLowerCase().includes(search.toLowerCase()),
   );
 
   return (
@@ -129,12 +136,12 @@ export default function CountriesPage() {
             mode === "add"
               ? "Add New Country"
               : mode === "edit"
-              ? "Edit Country"
-              : mode === "view"
-              ? "View Country"
-              : "Countries Management"
+                ? "Edit Country"
+                : mode === "view"
+                  ? "View Country"
+                  : "Countries Management"
           }
-          counselorName="Imran"
+          counselorName={CounselorName}
           btnName={isFormOpen ? "Close" : "+ Add Country"}
           onButtonClick={isFormOpen ? () => setMode(null) : openAdd}
         />
@@ -166,8 +173,8 @@ export default function CountriesPage() {
                       {mode === "add"
                         ? "Add New Country"
                         : mode === "edit"
-                        ? "Edit Country"
-                        : "Country Details"}
+                          ? "Edit Country"
+                          : "Country Details"}
                     </h2>
                     <button
                       onClick={() => setMode(null)}
@@ -227,13 +234,27 @@ export default function CountriesPage() {
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 w-20">Flag</th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 w-24">Image</th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Country</th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 hidden sm:table-cell">Continent</th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 hidden md:table-cell">Capital</th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 hidden lg:table-cell">Visa Success</th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Actions</th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 w-20">
+                        Flag
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 w-24">
+                        Image
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                        Country
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 hidden sm:table-cell">
+                        Continent
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 hidden md:table-cell">
+                        Capital
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 hidden lg:table-cell">
+                        Visa Success
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                        Actions
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
@@ -249,7 +270,10 @@ export default function CountriesPage() {
                               src={country.flag}
                               alt={`${country.name} flag`}
                               className="w-full h-full object-cover"
-                              onError={(e) => (e.target.src = "https://via.placeholder.com/48x32?text=Flag")}
+                              onError={(e) =>
+                                (e.target.src =
+                                  "https://via.placeholder.com/48x32?text=Flag")
+                              }
                             />
                           </div>
                         </td>
@@ -260,16 +284,27 @@ export default function CountriesPage() {
                                 src={country.image}
                                 alt={`${country.name} preview`}
                                 className="w-full h-full object-cover"
-                                onError={(e) => (e.target.src = "https://via.placeholder.com/64x40?text=No+Img")}
+                                onError={(e) =>
+                                  (e.target.src =
+                                    "https://via.placeholder.com/64x40?text=No+Img")
+                                }
                               />
                             </div>
                           ) : (
-                            <span className="text-gray-400 text-xs italic">—</span>
+                            <span className="text-gray-400 text-xs italic">
+                              —
+                            </span>
                           )}
                         </td>
-                        <td className="px-6 py-4 font-medium text-gray-900">{country.name}</td>
-                        <td className="px-6 py-4 text-gray-600 hidden sm:table-cell">{country.continent}</td>
-                        <td className="px-6 py-4 text-gray-600 hidden md:table-cell">{country.capital}</td>
+                        <td className="px-6 py-4 font-medium text-gray-900">
+                          {country.name}
+                        </td>
+                        <td className="px-6 py-4 text-gray-600 hidden sm:table-cell">
+                          {country.continent}
+                        </td>
+                        <td className="px-6 py-4 text-gray-600 hidden md:table-cell">
+                          {country.capital}
+                        </td>
                         <td className="px-6 py-4">
                           <span className="inline-block px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                             {country.visaSuccessRate}
@@ -303,7 +338,10 @@ export default function CountriesPage() {
             </motion.div>
 
             {filteredCountries.length === 0 && (
-              <motion.p variants={itemVariants} className="text-center mt-12 text-gray-500 text-lg">
+              <motion.p
+                variants={itemVariants}
+                className="text-center mt-12 text-gray-500 text-lg"
+              >
                 No countries found.
               </motion.p>
             )}

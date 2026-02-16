@@ -7,11 +7,18 @@ import { X } from "lucide-react";
 
 import AdminSidebar from "@/components/admindashboard/AdminSidebar";
 import DashboardHeader from "@/components/admindashboard/DashboardHeader";
-import AddCourseForm from "@/components/adminform/addcourse"; 
+import AddCourseForm from "@/components/adminform/addcourse";
 import ConfirmationModal from "@/components/adminform/confirmmsg";
-import { containerVariants, itemVariants, formVariants } from "@/components/Animations/formanimations/animate";
+import { useSelector } from "react-redux";
+import {
+  containerVariants,
+  itemVariants,
+  formVariants,
+} from "@/components/Animations/formanimations/animate";
 
 export default function CoursesPage() {
+  const { user } = useSelector((state) => state.auth);
+  const CounselorName = user?.name;
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -121,8 +128,8 @@ export default function CoursesPage() {
                 intake: formData.intake || c.intake,
                 featured: !!formData.featured,
               }
-            : c
-        )
+            : c,
+        ),
       );
     }
 
@@ -135,13 +142,17 @@ export default function CoursesPage() {
     (c) =>
       c.name.toLowerCase().includes(search.toLowerCase()) ||
       c.university.toLowerCase().includes(search.toLowerCase()) ||
-      c.field.toLowerCase().includes(search.toLowerCase())
+      c.field.toLowerCase().includes(search.toLowerCase()),
   );
 
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-lg text-gray-600">
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-lg text-gray-600"
+        >
           Loading courses...
         </motion.p>
       </div>
@@ -158,12 +169,12 @@ export default function CoursesPage() {
             mode === "add"
               ? "Add New Course"
               : mode === "edit"
-              ? "Edit Course"
-              : mode === "view"
-              ? "Course Details"
-              : "Courses Management"
+                ? "Edit Course"
+                : mode === "view"
+                  ? "Course Details"
+                  : "Courses Management"
           }
-          counselorName="Imran"
+          counselorName={CounselorName}
           btnName={isFormOpen ? "Close" : "+ Add Course"}
           onButtonClick={isFormOpen ? () => setMode(null) : openAdd}
         />
@@ -194,7 +205,11 @@ export default function CoursesPage() {
                 <div className="bg-white rounded-2xl shadow-2xl border border-gray-200/70 overflow-hidden">
                   <div className="bg-gradient-to-r from-sky-50 via-indigo-50 to-purple-50 px-6 py-5 border-b flex justify-between items-center">
                     <h2 className="text-2xl font-bold text-gray-900 tracking-tight">
-                      {mode === "add" ? "Add New Course" : mode === "edit" ? "Edit Course" : "Course Details"}
+                      {mode === "add"
+                        ? "Add New Course"
+                        : mode === "edit"
+                          ? "Edit Course"
+                          : "Course Details"}
                     </h2>
                     <button
                       onClick={() => setMode(null)}
@@ -256,33 +271,65 @@ export default function CoursesPage() {
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700 min-w-[180px]">Course Name</th>
-                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700 hidden sm:table-cell">University</th>
-                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700">Level</th>
-                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700 hidden md:table-cell">Field</th>
-                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700 hidden lg:table-cell">Duration</th>
-                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700">Tuition (approx.)</th>
-                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700">Featured</th>
-                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700">Actions</th>
+                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700 min-w-[180px]">
+                        Course Name
+                      </th>
+                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700 hidden sm:table-cell">
+                        University
+                      </th>
+                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700">
+                        Level
+                      </th>
+                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700 hidden md:table-cell">
+                        Field
+                      </th>
+                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700 hidden lg:table-cell">
+                        Duration
+                      </th>
+                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700">
+                        Tuition (approx.)
+                      </th>
+                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700">
+                        Featured
+                      </th>
+                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700">
+                        Actions
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
                     {filteredCourses.map((course) => (
-                      <motion.tr key={course.id} variants={itemVariants} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-4 py-3 sm:px-6 text-xs sm:text-sm font-medium">{course.name}</td>
-                        <td className="px-4 py-3 sm:px-6 text-xs sm:text-sm hidden sm:table-cell">{course.university}</td>
+                      <motion.tr
+                        key={course.id}
+                        variants={itemVariants}
+                        className="hover:bg-gray-50 transition-colors"
+                      >
+                        <td className="px-4 py-3 sm:px-6 text-xs sm:text-sm font-medium">
+                          {course.name}
+                        </td>
+                        <td className="px-4 py-3 sm:px-6 text-xs sm:text-sm hidden sm:table-cell">
+                          {course.university}
+                        </td>
                         <td className="px-4 py-3 sm:px-6 text-xs sm:text-sm">
                           <span className="inline-block px-2.5 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
                             {course.level}
                           </span>
                         </td>
-                        <td className="px-4 py-3 sm:px-6 text-xs sm:text-sm hidden md:table-cell">{course.field}</td>
-                        <td className="px-4 py-3 sm:px-6 text-xs sm:text-sm hidden lg:table-cell">{course.duration}</td>
-                        <td className="px-4 py-3 sm:px-6 text-xs sm:text-sm">{course.tuition}</td>
+                        <td className="px-4 py-3 sm:px-6 text-xs sm:text-sm hidden md:table-cell">
+                          {course.field}
+                        </td>
+                        <td className="px-4 py-3 sm:px-6 text-xs sm:text-sm hidden lg:table-cell">
+                          {course.duration}
+                        </td>
+                        <td className="px-4 py-3 sm:px-6 text-xs sm:text-sm">
+                          {course.tuition}
+                        </td>
                         <td className="px-4 py-3 sm:px-6 text-center">
                           <span
                             className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium ${
-                              course.featured ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
+                              course.featured
+                                ? "bg-green-100 text-green-800"
+                                : "bg-gray-100 text-gray-800"
                             }`}
                           >
                             {course.featured ? "Yes" : "No"}
@@ -312,7 +359,10 @@ export default function CoursesPage() {
             </motion.div>
 
             {filteredCourses.length === 0 && (
-              <motion.p variants={itemVariants} className="text-center mt-10 text-gray-500 text-base sm:text-lg">
+              <motion.p
+                variants={itemVariants}
+                className="text-center mt-10 text-gray-500 text-base sm:text-lg"
+              >
                 No courses found matching your search.
               </motion.p>
             )}
