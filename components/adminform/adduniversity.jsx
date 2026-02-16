@@ -91,9 +91,11 @@ export default function AddUniversityForm({
       city: initialData.city || "",
       flag: initialData.flag || "",
       website: initialData.website || "",
-      qsRanking: initialData.qsRanking ?? "",
+      qsRanking: initialData.qsRanking ? String(initialData.qsRanking) : "",
       acceptanceRate: initialData.acceptanceRate ?? "",
-      totalStudents: initialData.totalStudents ?? "",
+      totalStudents: initialData.totalStudents
+        ? String(initialData.totalStudents)
+        : "",
       tuitionFee: initialData.tuitionFee ?? "",
       intakes: initialData.intakes || "",
       description: initialData.description || "",

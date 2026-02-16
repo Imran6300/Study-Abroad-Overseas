@@ -10,7 +10,7 @@ export default function StepStats({ form, onChange, isViewMode }) {
             QS Ranking
           </label>
           <input
-            type="number"
+            type="text"
             name="qsRanking"
             value={form.qsRanking}
             onChange={onChange}
@@ -40,7 +40,7 @@ export default function StepStats({ form, onChange, isViewMode }) {
             Total Students
           </label>
           <input
-            type="number"
+            type="text"
             name="totalStudents"
             value={form.totalStudents}
             onChange={onChange}
