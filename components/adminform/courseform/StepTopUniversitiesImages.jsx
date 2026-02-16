@@ -8,7 +8,9 @@ export default function StepTopUniversitiesImages({
 }) {
   return (
     <section className="space-y-8">
-      <h2 className="text-2xl font-bold text-gray-900">Top Universities Offering This Course</h2>
+      <h2 className="text-2xl font-bold text-gray-900">
+        Top Universities Offering This Course
+      </h2>
 
       <div className="space-y-6">
         <div className="flex justify-between items-center">
@@ -31,7 +33,9 @@ export default function StepTopUniversitiesImages({
             <input
               type="text"
               value={uni}
-              onChange={(e) => updateArrayField("topUniversities", index, e.target.value)}
+              onChange={(e) =>
+                updateArrayField("topUniversities", index, e.target.value)
+              }
               disabled={isViewMode}
               placeholder="e.g. Massachusetts Institute of Technology (MIT)"
               className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 disabled:bg-gray-100"
@@ -47,13 +51,6 @@ export default function StepTopUniversitiesImages({
             )}
           </div>
         ))}
-      </div>
-
-      {/* Optional: Extra images if needed later */}
-      <div className="pt-4 border-t border-gray-200">
-        <p className="text-sm text-gray-500 italic">
-          (You can add course-specific gallery images here in future updates)
-        </p>
       </div>
     </section>
   );

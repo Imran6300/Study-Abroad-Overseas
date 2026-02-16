@@ -9,7 +9,9 @@ export default function StepCareerOutcomes({
 }) {
   return (
     <section className="space-y-8">
-      <h2 className="text-2xl font-bold text-gray-900">Career Prospects & Outcomes</h2>
+      <h2 className="text-2xl font-bold text-gray-900">
+        Career Prospects & Outcomes
+      </h2>
 
       <div className="space-y-6">
         <div>
@@ -49,7 +51,9 @@ export default function StepCareerOutcomes({
               <input
                 type="text"
                 value={role}
-                onChange={(e) => updateArrayField("popularJobRoles", index, e.target.value)}
+                onChange={(e) =>
+                  updateArrayField("popularJobRoles", index, e.target.value)
+                }
                 disabled={isViewMode}
                 placeholder="e.g. Cybersecurity Analyst"
                 className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 disabled:bg-gray-100"
@@ -80,6 +84,20 @@ export default function StepCareerOutcomes({
             disabled={isViewMode}
             placeholder="USD 80,000 – 150,000 per year"
             className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 disabled:bg-gray-100"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Highest Salaries In (Countries)
+          </label>
+          <input
+            type="text"
+            name="salariesInCountries"
+            value={form.salariesInCountries}
+            onChange={onChange}
+            disabled={isViewMode}
+            placeholder="USA, UK, Canada, Germany"
+            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg"
           />
         </div>
       </div>

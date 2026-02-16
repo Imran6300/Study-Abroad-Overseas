@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react";
 
-import StepIndicator from "./universityform/StepIndicator";          // create these sub-components
+import StepIndicator from "./universityform/StepIndicator"; // create these sub-components
 import StepHeroBasic from "./courseform/StepHeroBasic";
 import StepOverviewHighlights from "./courseform/StepOverviewHighlights";
 import StepRequirements from "./courseform/StepRequirements";
@@ -15,6 +15,7 @@ export default function AddCourseForm({
   initialData = null,
   onSuccess,
   onCancel,
+  isSubmitting = false,
 }) {
   const isViewMode = mode === "view";
   const isEditMode = mode === "edit";
@@ -23,9 +24,9 @@ export default function AddCourseForm({
   const [currentStep, setCurrentStep] = useState(1);
 
   const [form, setForm] = useState({
-    // Hero / Basic
     bgImageFile: null,
-    topLabel: "Master's Program",      // default example
+
+    topLabel: "Master's Program",
     title: "",
     subtitle: "",
     duration: "",
@@ -33,21 +34,22 @@ export default function AddCourseForm({
     scholarships: "",
     avgSalary: "",
 
-    // Overview & Highlights
+    level: "",
+    field: "",
+    primaryUniversity: "",
+
     overviewTitle: "Program Overview",
     overviewDescription: "",
-    keyHighlights: [""],               // array of strings
+    keyHighlights: [""],
 
-    // Entry Requirements
-    entryRequirements: [{ title: "", description: "" }],  // array of objects
+    entryRequirements: [{ title: "", description: "" }],
 
-    // Career & Outcomes
     careerProspects: "",
     popularJobRoles: [""],
     salaryExpectations: "",
+    salariesInCountries: "",
 
-    // Top Universities & Other
-    topUniversities: [""],             // array of names
+    topUniversities: [""],
     featured: false,
   });
 
@@ -58,6 +60,8 @@ export default function AddCourseForm({
     if (initialData) {
       setForm({
         bgImageFile: null,
+
+        // Hero / Basic
         topLabel: initialData.topLabel || "Master's Program",
         title: initialData.title || "",
         subtitle: initialData.subtitle || "",
@@ -66,28 +70,48 @@ export default function AddCourseForm({
         scholarships: initialData.scholarships || "",
         avgSalary: initialData.avgSalary || "",
 
+        level: initialData.level || "",
+        field: initialData.field || "",
+        primaryUniversity: initialData.primaryUniversity || "",
+
+        // Overview
         overviewTitle: initialData.overviewTitle || "Program Overview",
         overviewDescription: initialData.overviewDescription || "",
-        keyHighlights: Array.isArray(initialData.keyHighlights) ? initialData.keyHighlights : [""],
+        keyHighlights: Array.isArray(initialData.keyHighlights)
+          ? initialData.keyHighlights
+          : [""],
 
+        // Entry Requirements
         entryRequirements: Array.isArray(initialData.entryRequirements)
           ? initialData.entryRequirements
           : [{ title: "", description: "" }],
 
+        // Career
         careerProspects: initialData.careerProspects || "",
-        popularJobRoles: Array.isArray(initialData.popularJobRoles) ? initialData.popularJobRoles : [""],
-        salaryExpectations: initialData.salaryExpectations || "",
+        popularJobRoles: Array.isArray(initialData.popularJobRoles)
+          ? initialData.popularJobRoles
+          : [""],
 
-        topUniversities: Array.isArray(initialData.topUniversities) ? initialData.topUniversities : [""],
+        salaryExpectations: initialData.salaryExpectations || "",
+        salariesInCountries: initialData.salariesInCountries || "",
+
+        // Universities
+        topUniversities: Array.isArray(initialData.topUniversities)
+          ? initialData.topUniversities
+          : [""],
+
         featured: !!initialData.featured,
       });
 
-      setBgPreview(initialData.bgImage || null); // URL from DB
+      // Background preview (handle object or string safely)
+      setBgPreview(initialData.bgImage?.url || initialData.bgImage || null);
+
       setCurrentStep(1);
     } else {
-      // reset for add
+      // RESET FOR ADD MODE
       setForm({
         bgImageFile: null,
+
         topLabel: "Master's Program",
         title: "",
         subtitle: "",
@@ -95,6 +119,10 @@ export default function AddCourseForm({
         fees: "",
         scholarships: "",
         avgSalary: "",
+
+        level: "",
+        field: "",
+        primaryUniversity: "",
 
         overviewTitle: "Program Overview",
         overviewDescription: "",
@@ -104,11 +132,14 @@ export default function AddCourseForm({
 
         careerProspects: "",
         popularJobRoles: [""],
+
         salaryExpectations: "",
+        salariesInCountries: "",
 
         topUniversities: [""],
         featured: false,
       });
+
       setBgPreview(null);
       setCurrentStep(1);
     }
@@ -166,7 +197,10 @@ export default function AddCourseForm({
   const addRequirement = () => {
     setForm((prev) => ({
       ...prev,
-      entryRequirements: [...prev.entryRequirements, { title: "", description: "" }],
+      entryRequirements: [
+        ...prev.entryRequirements,
+        { title: "", description: "" },
+      ],
     }));
   };
 
@@ -263,9 +297,21 @@ export default function AddCourseForm({
         {!isViewMode && currentStep === totalSteps && (
           <button
             type="submit"
-            className="px-8 py-3 bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 text-white rounded-xl font-semibold shadow-md hover:shadow-lg transition-all"
+            disabled={isSubmitting}
+            className={`px-8 py-3 rounded-xl font-semibold shadow-md transition-all
+      ${
+        isSubmitting
+          ? "bg-gray-400 cursor-not-allowed text-white"
+          : "bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 text-white hover:shadow-lg"
+      }`}
           >
-            {isEditMode ? "Update Course" : "Add Course"}
+            {isSubmitting
+              ? mode === "edit"
+                ? "Updating..."
+                : "Adding..."
+              : isEditMode
+                ? "Update Course"
+                : "Add Course"}
           </button>
         )}
       </div>

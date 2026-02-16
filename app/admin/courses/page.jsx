@@ -9,16 +9,21 @@ import AdminSidebar from "@/components/admindashboard/AdminSidebar";
 import DashboardHeader from "@/components/admindashboard/DashboardHeader";
 import AddCourseForm from "@/components/adminform/addcourse";
 import ConfirmationModal from "@/components/adminform/confirmmsg";
-import { useSelector } from "react-redux";
 import {
   containerVariants,
   itemVariants,
   formVariants,
 } from "@/components/Animations/formanimations/animate";
+import { useSelector } from "react-redux";
 
 export default function CoursesPage() {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [modalMessage, setModalMessage] = useState("");
+  const [modalType, setModalType] = useState(null); // "success" | "error"
+
   const { user } = useSelector((state) => state.auth);
-  const CounselorName = user?.name;
+  const counselorName = user?.name;
+
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -96,46 +101,73 @@ export default function CoursesPage() {
     setCourseToDelete(null);
   };
 
-  const handleFormSuccess = (formData) => {
-    if (mode === "add") {
-      const newCourse = {
-        id: Date.now(),
-        name: formData.name || "Unnamed Course",
-        university: formData.university || "",
-        level: formData.level || "",
-        field: formData.field || "",
-        duration: formData.duration || "",
-        tuition: formData.tuition || "",
-        intake: formData.intake || "",
-        featured: !!formData.featured,
-      };
+  const handleFormSuccess = async (formData) => {
+    try {
+      setIsSubmitting(true); // 🔥 start loading
 
-      setCourses((prev) => [...prev, newCourse]);
-      setJustAdded(true);
-      setTimeout(() => setJustAdded(false), 3000);
-    } else if (mode === "edit" && selectedCourse) {
-      setCourses((prev) =>
-        prev.map((c) =>
-          c.id === selectedCourse.id
-            ? {
-                ...c,
-                name: formData.name || c.name,
-                university: formData.university || c.university,
-                level: formData.level || c.level,
-                field: formData.field || c.field,
-                duration: formData.duration || c.duration,
-                tuition: formData.tuition || c.tuition,
-                intake: formData.intake || c.intake,
-                featured: !!formData.featured,
-              }
-            : c,
-        ),
+      const form = new FormData();
+
+      // Basic Fields
+      form.append("topLabel", formData.topLabel);
+      form.append("title", formData.title);
+      form.append("subtitle", formData.subtitle);
+      form.append("duration", formData.duration);
+      form.append("fees", formData.fees);
+      form.append("scholarships", formData.scholarships);
+      form.append("avgSalary", formData.avgSalary);
+
+      form.append("level", formData.level);
+      form.append("field", formData.field);
+      form.append("primaryUniversity", formData.primaryUniversity);
+      form.append("salariesInCountries", formData.salariesInCountries);
+
+      form.append("featured", formData.featured);
+
+      form.append("overviewTitle", formData.overviewTitle);
+      form.append("overviewDescription", formData.overviewDescription);
+
+      form.append("keyHighlights", JSON.stringify(formData.keyHighlights));
+      form.append(
+        "entryRequirements",
+        JSON.stringify(formData.entryRequirements),
       );
-    }
+      form.append("popularJobRoles", JSON.stringify(formData.popularJobRoles));
+      form.append("topUniversities", JSON.stringify(formData.topUniversities));
 
-    // Close modal
-    setMode(null);
-    setSelectedCourse(null);
+      form.append("careerProspects", formData.careerProspects);
+      form.append("salaryExpectations", formData.salaryExpectations);
+
+      if (formData.bgImageFile) {
+        form.append("bgImage", formData.bgImageFile);
+      }
+
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/host/create-course`,
+        {
+          method: "POST",
+          body: form,
+          credentials: "include",
+        },
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setModalType("error");
+        setModalMessage(data.message || "Failed to create course.");
+        return;
+      }
+
+      // ✅ SUCCESS
+      setModalType("success");
+      setModalMessage("Course added successfully!");
+      setMode(null);
+    } catch (error) {
+      setModalType("error");
+      setModalMessage("Something went wrong. Please try again.");
+    } finally {
+      setIsSubmitting(false); // 🔥 stop loading
+    }
   };
 
   const filteredCourses = courses.filter(
@@ -174,7 +206,7 @@ export default function CoursesPage() {
                   ? "Course Details"
                   : "Courses Management"
           }
-          counselorName={CounselorName}
+          counselorName={counselorName}
           btnName={isFormOpen ? "Close" : "+ Add Course"}
           onButtonClick={isFormOpen ? () => setMode(null) : openAdd}
         />
@@ -225,6 +257,7 @@ export default function CoursesPage() {
                       initialData={selectedCourse}
                       onSuccess={handleFormSuccess}
                       onCancel={() => setMode(null)}
+                      isSubmitting={isSubmitting}
                     />
                   </div>
                 </div>
@@ -378,6 +411,18 @@ export default function CoursesPage() {
                 confirmVariant="danger"
                 onConfirm={handleDeleteConfirmed}
                 onCancel={() => setShowConfirmDelete(false)}
+              />
+            )}
+          </AnimatePresence>
+          <AnimatePresence>
+            {modalType && (
+              <ConfirmationModal
+                title={modalType === "success" ? "Success" : "Error"}
+                message={modalMessage}
+                confirmText="OK"
+                confirmVariant={modalType === "success" ? "success" : "danger"}
+                onConfirm={() => setModalType(null)}
+                onCancel={() => setModalType(null)}
               />
             )}
           </AnimatePresence>

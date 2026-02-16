@@ -1,8 +1,15 @@
 // components/adminform/courseform/StepHeroBasic.jsx
-export default function StepHeroBasic({ form, onChange, bgPreview, isViewMode }) {
+export default function StepHeroBasic({
+  form,
+  onChange,
+  bgPreview,
+  isViewMode,
+}) {
   return (
     <section className="space-y-8">
-      <h2 className="text-2xl font-bold text-gray-900">Hero / Banner Section</h2>
+      <h2 className="text-2xl font-bold text-gray-900">
+        Hero / Banner Section
+      </h2>
 
       {/* Background Image Upload */}
       <div className="space-y-4">
@@ -73,7 +80,57 @@ export default function StepHeroBasic({ form, onChange, bgPreview, isViewMode })
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Subtitle</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Level
+          </label>
+          <select
+            name="level"
+            value={form.level}
+            onChange={onChange}
+            disabled={isViewMode}
+            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg"
+          >
+            <option value="">Select Level</option>
+            <option value="Bachelor">Bachelor</option>
+            <option value="Master">Master</option>
+            <option value="PhD">PhD</option>
+            <option value="Diploma">Diploma</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Field
+          </label>
+          <input
+            type="text"
+            name="field"
+            value={form.field}
+            onChange={onChange}
+            disabled={isViewMode}
+            placeholder="Computer Science & IT"
+            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Primary University (for listing table)
+          </label>
+          <input
+            type="text"
+            name="primaryUniversity"
+            value={form.primaryUniversity}
+            onChange={onChange}
+            disabled={isViewMode}
+            placeholder="University of Toronto"
+            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Subtitle
+          </label>
           <input
             type="text"
             name="subtitle"
@@ -86,7 +143,9 @@ export default function StepHeroBasic({ form, onChange, bgPreview, isViewMode })
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Duration</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Duration
+          </label>
           <input
             type="text"
             name="duration"
@@ -99,7 +158,9 @@ export default function StepHeroBasic({ form, onChange, bgPreview, isViewMode })
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Fees (approx.)</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Fees (approx.)
+          </label>
           <input
             type="text"
             name="fees"
@@ -112,7 +173,9 @@ export default function StepHeroBasic({ form, onChange, bgPreview, isViewMode })
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Scholarships Info</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Scholarships Info
+          </label>
           <input
             type="text"
             name="scholarships"
@@ -125,7 +188,9 @@ export default function StepHeroBasic({ form, onChange, bgPreview, isViewMode })
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Average Salary (post-graduation)</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Average Salary (post-graduation)
+          </label>
           <input
             type="text"
             name="avgSalary"
@@ -148,7 +213,9 @@ export default function StepHeroBasic({ form, onChange, bgPreview, isViewMode })
             disabled={isViewMode}
             className="h-4 w-4 text-sky-600 rounded border-gray-300"
           />
-          <span className="text-sm text-gray-700 font-medium">Mark as Featured Course</span>
+          <span className="text-sm text-gray-700 font-medium">
+            Mark as Featured Course
+          </span>
         </label>
       </div>
     </section>

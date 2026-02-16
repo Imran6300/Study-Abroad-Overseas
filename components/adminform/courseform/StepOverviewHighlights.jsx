@@ -9,7 +9,9 @@ export default function StepOverviewHighlights({
 }) {
   return (
     <section className="space-y-8">
-      <h2 className="text-2xl font-bold text-gray-900">Overview & Key Highlights</h2>
+      <h2 className="text-2xl font-bold text-gray-900">
+        Overview & Key Highlights
+      </h2>
 
       {/* Overview */}
       <div className="space-y-4">
@@ -66,7 +68,9 @@ export default function StepOverviewHighlights({
             <input
               type="text"
               value={highlight}
-              onChange={(e) => updateArrayField("keyHighlights", index, e.target.value)}
+              onChange={(e) =>
+                updateArrayField("keyHighlights", index, e.target.value)
+              }
               disabled={isViewMode}
               placeholder="e.g. Hands-on labs with real-world tools"
               className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 disabled:bg-gray-100"
