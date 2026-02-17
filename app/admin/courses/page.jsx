@@ -163,7 +163,7 @@ export default function CoursesPage() {
       }
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/host/create-course`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/host/createcourse`,
         {
           method: "POST",
           body: form,
