@@ -56,6 +56,7 @@ export default function CoursesPage() {
       // 🔥 map backend fields to your table format
       const formatted = data.courses.map((course) => ({
         id: course._id,
+        slug: course.slug,
         name: course.title,
         university: course.primaryUniversity,
         level: course.level,
@@ -83,9 +84,31 @@ export default function CoursesPage() {
     setMode("add");
   };
 
-  const openEdit = (course) => {
-    setSelectedCourse(course);
-    setMode("edit");
+  const openEdit = async (course) => {
+    try {
+      setIsSubmitting(true);
+
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/host/courses/${course.slug}`,
+        {
+          credentials: "include",
+        },
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to fetch course details");
+      }
+
+      setSelectedCourse(data.course); // FULL backend object
+      setMode("edit");
+    } catch (error) {
+      setModalType("error");
+      setModalMessage("Failed to load course details.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const openDeleteConfirm = (course) => {
@@ -162,14 +185,19 @@ export default function CoursesPage() {
         form.append("bgImage", formData.bgImageFile);
       }
 
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/host/createcourse`,
-        {
-          method: "POST",
-          body: form,
-          credentials: "include",
-        },
-      );
+      const isEdit = mode === "edit";
+
+      const url = isEdit
+        ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/host/courses/${selectedCourse.slug}`
+        : `${process.env.NEXT_PUBLIC_BACKEND_URL}/host/courses`;
+
+      const method = isEdit ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method,
+        body: form,
+        credentials: "include",
+      });
 
       const data = await res.json();
 
