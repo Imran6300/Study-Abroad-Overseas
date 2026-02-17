@@ -41,7 +41,7 @@ export default function CoursesPage() {
   const fetchCourses = async () => {
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/get-public-courses`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/host/courses`,
         {
           credentials: "include",
         },
