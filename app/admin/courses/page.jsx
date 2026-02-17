@@ -38,45 +38,43 @@ export default function CoursesPage() {
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
   const [courseToDelete, setCourseToDelete] = useState(null);
 
+  const fetchCourses = async () => {
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/get-public-courses`,
+        {
+          credentials: "include",
+        },
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to fetch courses");
+      }
+
+      // 🔥 map backend fields to your table format
+      const formatted = data.courses.map((course) => ({
+        id: course._id,
+        name: course.title,
+        university: course.primaryUniversity,
+        level: course.level,
+        field: course.field,
+        duration: course.duration,
+        tuition: course.fees,
+        featured: course.featured,
+      }));
+
+      setCourses(formatted);
+    } catch (error) {
+      console.error("Fetch error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    // Mock data
-    const mockData = [
-      {
-        id: 1,
-        name: "Master of Computer Science",
-        university: "University of Toronto",
-        level: "Master’s",
-        field: "Computer Science & IT",
-        duration: "2 years",
-        tuition: "CAD 45,000 / year",
-        intake: "Fall 2026",
-        featured: true,
-      },
-      {
-        id: 2,
-        name: "Bachelor of Business Administration",
-        university: "University of Melbourne",
-        level: "Bachelor",
-        field: "Business & Management",
-        duration: "3 years",
-        tuition: "AUD 42,000 / year",
-        intake: "Semester 1 & 2",
-        featured: true,
-      },
-      {
-        id: 3,
-        name: "MSc in Data Science",
-        university: "Technical University of Munich",
-        level: "Master’s",
-        field: "Data Science & AI",
-        duration: "2 years",
-        tuition: "€ 0 (public university)",
-        intake: "Winter 2026",
-        featured: false,
-      },
-    ];
-    setCourses(mockData);
-    setLoading(false);
+    fetchCourses();
   }, []);
 
   // ─── Handlers ───
@@ -95,10 +93,33 @@ export default function CoursesPage() {
     setShowConfirmDelete(true);
   };
 
-  const handleDeleteConfirmed = () => {
-    setCourses((prev) => prev.filter((c) => c.id !== courseToDelete.id));
-    setShowConfirmDelete(false);
-    setCourseToDelete(null);
+  const handleDeleteConfirmed = async () => {
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/host/courses/${courseToDelete.id}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        },
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message);
+      }
+
+      await fetchCourses();
+
+      setModalType("success");
+      setModalMessage("Course deleted successfully!");
+    } catch (error) {
+      setModalType("error");
+      setModalMessage("Failed to delete course.");
+    } finally {
+      setShowConfirmDelete(false);
+      setCourseToDelete(null);
+    }
   };
 
   const handleFormSuccess = async (formData) => {
@@ -162,6 +183,7 @@ export default function CoursesPage() {
       setModalType("success");
       setModalMessage("Course added successfully!");
       setMode(null);
+      await fetchCourses();
     } catch (error) {
       setModalType("error");
       setModalMessage("Something went wrong. Please try again.");
@@ -170,12 +192,15 @@ export default function CoursesPage() {
     }
   };
 
-  const filteredCourses = courses.filter(
-    (c) =>
-      c.name.toLowerCase().includes(search.toLowerCase()) ||
-      c.university.toLowerCase().includes(search.toLowerCase()) ||
-      c.field.toLowerCase().includes(search.toLowerCase()),
-  );
+  const filteredCourses = courses.filter((c) => {
+    const searchLower = search.toLowerCase();
+
+    return (
+      (c.name || "").toLowerCase().includes(searchLower) ||
+      (c.university || "").toLowerCase().includes(searchLower) ||
+      (c.field || "").toLowerCase().includes(searchLower)
+    );
+  });
 
   if (loading) {
     return (

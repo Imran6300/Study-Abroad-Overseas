@@ -7,7 +7,7 @@ export const fetchUniversities = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/get-universities`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/universities`,
         {
           credentials: "include",
         },

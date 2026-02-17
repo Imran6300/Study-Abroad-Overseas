@@ -6,7 +6,7 @@ export default async function Page({ params }) {
 
   console.log(slug);
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_BACKEND_URL}/get-university/${slug}`,
+    `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/university/${slug}`,
     { cache: "no-store" },
   );
 
