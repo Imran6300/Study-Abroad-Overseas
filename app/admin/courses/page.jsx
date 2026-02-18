@@ -89,7 +89,7 @@ export default function CoursesPage() {
       setIsSubmitting(true);
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/host/courses/${course.slug}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/courses/${course.slug}`,
         {
           credentials: "include",
         },
@@ -119,7 +119,7 @@ export default function CoursesPage() {
   const handleDeleteConfirmed = async () => {
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/host/courses/${courseToDelete.id}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/host/courses/${courseToDelete.slug}`,
         {
           method: "DELETE",
           credentials: "include",
@@ -209,7 +209,11 @@ export default function CoursesPage() {
 
       // ✅ SUCCESS
       setModalType("success");
-      setModalMessage("Course added successfully!");
+      if (isEdit) {
+        setModalMessage("Course updated successfully!");
+      } else {
+        setModalMessage("Course added successfully!");
+      }
       setMode(null);
       await fetchCourses();
     } catch (error) {
