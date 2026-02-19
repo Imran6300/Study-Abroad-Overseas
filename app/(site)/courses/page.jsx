@@ -4,9 +4,12 @@ import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { debounce } from "lodash";
+import { useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 /* ================= DATA ================= */
-import { categoryData } from "@/data/coursescategory"; // ← your main merged data
+import { useDispatch, useSelector } from "react-redux";
+import { fetchCourses } from "@/store/courseSlice";
 
 const CATEGORY_META = {
   all: { label: "All Courses", color: "from-gray-500 to-gray-600" },
@@ -22,6 +25,12 @@ const CATEGORY_META = {
     label: "Healthcare & Medicine",
     color: "from-emerald-500 to-teal-500",
   },
+};
+
+const CATEGORY_FIELD_MAP = {
+  engineering: ["computer science", "engineering", "it"],
+  business: ["business", "management", "mba"],
+  healthcare: ["medicine", "healthcare", "nursing"],
 };
 
 /* ================= OPTIMIZED ANIMATION VARIANTS ================= */
@@ -46,8 +55,28 @@ const staggerContainer = {
 
 /* ================= PAGE COMPONENT ================= */
 export default function Courses() {
+  const router = useRouter();
+
+  const searchParams = useSearchParams();
+
   const [rawSearch, setRawSearch] = useState("");
-  const [activeCategory, setActiveCategory] = useState("all");
+
+  const queryCategory = searchParams.get("category") || "all";
+  const [activeCategory, setActiveCategory] = useState(queryCategory);
+
+  const dispatch = useDispatch();
+  const { courses, loading, error } = useSelector((state) => state.courses);
+
+  useEffect(() => {
+    if (!courses.length) {
+      dispatch(fetchCourses());
+    }
+  }, [dispatch, courses.length]);
+
+  useEffect(() => {
+    const categoryFromUrl = searchParams.get("category") || "all";
+    setActiveCategory(categoryFromUrl);
+  }, [searchParams.toString()]);
 
   // Debounce search input
   const [search, setSearch] = useState("");
@@ -59,56 +88,30 @@ export default function Courses() {
     return () => handler.cancel();
   }, [rawSearch]);
 
-  // Flatten ALL programs from categoryData into one array
-  const allCourses = useMemo(() => {
-    const courses = [];
-
-    Object.entries(categoryData).forEach(([categoryKey, category]) => {
-      Object.entries(category.tabs || {}).forEach(([levelKey, levelPrograms]) => {
-        (levelPrograms || []).forEach((prog) => {
-          if (prog.name) {
-            courses.push({
-              title: prog.name,
-              category: categoryKey,
-              level: levelKey,
-              slug: prog.slug,
-              desc: prog.shortDesc || "", // if you added shortDesc
-              unis: prog.unis || "",
-              duration: prog.duration || prog.funding || "",
-              fee: prog.fee || "",
-              popular: prog.popular || false,
-            });
-          }
-        });
-      });
-    });
-
-    return courses;
-  }, []);
-
   // Filter based on search & category
   const filteredCourses = useMemo(() => {
-    let result = allCourses;
+    let result = courses;
 
     // Category filter
     if (activeCategory !== "all") {
-      result = result.filter((course) => course.category === activeCategory);
+      result = result.filter((course) => {
+        const field = course.field?.toLowerCase() || "";
+        const keywords = CATEGORY_FIELD_MAP[activeCategory] || [];
+
+        return keywords.some((keyword) => field.includes(keyword));
+      });
     }
 
     // Search filter
     if (search.trim()) {
       const searchLower = search.toLowerCase();
-      result = result.filter((course) => {
-        return (
-          course.title.toLowerCase().includes(searchLower) ||
-          (course.desc || "").toLowerCase().includes(searchLower) ||
-          (course.unis || "").toLowerCase().includes(searchLower)
-        );
-      });
+      result = result.filter((course) =>
+        course.title.toLowerCase().includes(searchLower),
+      );
     }
 
     return result;
-  }, [search, activeCategory, allCourses]);
+  }, [search, activeCategory, courses]);
 
   return (
     <section className="min-h-screen bg-[#0b0f1a] text-white">
@@ -164,7 +167,13 @@ export default function Courses() {
             {Object.entries(CATEGORY_META).map(([key, { label, color }]) => (
               <button
                 key={key}
-                onClick={() => setActiveCategory(key)}
+                onClick={() => {
+                  setActiveCategory(key);
+                  router.push(
+                    key === "all" ? "/courses" : `/courses?category=${key}`,
+                    { scroll: false },
+                  );
+                }}
                 className={`px-6 py-3 rounded-full text-sm font-semibold transition-all duration-300
                   ${
                     activeCategory === key
@@ -181,68 +190,60 @@ export default function Courses() {
 
       {/* COURSES GRID */}
       <div className="max-w-7xl mx-auto px-6 py-24">
-        {filteredCourses.length === 0 ? (
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-center text-gray-400 text-lg py-20"
-          >
-            No courses found matching your search.
-          </motion.p>
+        {loading ? (
+          <p className="text-center text-gray-400 text-lg py-20">
+            Loading courses...
+          </p>
+        ) : filteredCourses.length === 0 ? (
+          <p className="text-center text-gray-400 text-lg py-20">
+            No courses found.
+          </p>
         ) : (
           <motion.div
             variants={staggerContainer}
             initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.1, margin: "-50px" }}
+            animate="visible"
             className="grid sm:grid-cols-2 lg:grid-cols-3 gap-10"
           >
-            {filteredCourses.map((course) => {
-              const meta = CATEGORY_META[course.category] || CATEGORY_META.all;
-
-              return (
-                <motion.div
-                  key={course.title}
-                  variants={cardVariants}
-                  whileHover="hover"
-                  className="h-full"
+            {filteredCourses.map((course) => (
+              <motion.div
+                key={course._id}
+                variants={cardVariants}
+                whileHover="hover"
+                className="h-full"
+              >
+                <Link
+                  href={`/courses/${course.slug}`}
+                  className="block h-full group"
                 >
-                  <Link
-                    href={`/courses/${course.category}/${course.slug}`}
-                    className="block h-full group"
-                  >
-                    <div className="relative h-full rounded-3xl p-8 bg-white/5 backdrop-blur-sm border border-white/10 overflow-hidden transition-all duration-500 hover:border-transparent hover:shadow-2xl group-hover:bg-white/8">
-                      <div
-                        className={`absolute top-0 left-0 h-1 w-full bg-gradient-to-r ${meta.color}`}
-                      />
+                  <div className="relative h-full rounded-3xl p-8 bg-white/5 backdrop-blur-sm border border-white/10 overflow-hidden transition-all duration-500 hover:border-transparent hover:shadow-2xl group-hover:bg-white/8">
+                    <div className="absolute top-0 left-0 h-1 w-full bg-gradient-to-r from-indigo-500 to-blue-500" />
 
-                      <span
-                        className={`inline-block px-4 py-2 rounded-full text-xs font-bold bg-gradient-to-r ${meta.color} text-white shadow-md`}
-                      >
-                        {meta.label} • {course.level.toUpperCase()}
+                    <span className="inline-block px-4 py-2 rounded-full text-xs font-bold bg-gradient-to-r from-indigo-500 to-blue-500 text-white shadow-md">
+                      {course.field} • {course.level}
+                    </span>
+
+                    <h3 className="mt-6 text-2xl font-bold group-hover:text-indigo-300 transition-colors">
+                      {course.title}
+                    </h3>
+
+                    <p className="mt-3 text-gray-400 leading-relaxed">
+                      {course.topUniversities?.join(", ")}
+                    </p>
+
+                    <div className="mt-10 flex items-center justify-between">
+                      <span className="text-sm text-gray-500">
+                        {course.duration} • ${course.fees}/year
                       </span>
 
-                      <h3 className="mt-6 text-2xl font-bold group-hover:text-indigo-300 transition-colors">
-                        {course.title}
-                      </h3>
-
-                      <p className="mt-3 text-gray-400 leading-relaxed">
-                        {course.desc || course.unis || "Explore top universities worldwide"}
-                      </p>
-
-                      <div className="mt-10 flex items-center justify-between">
-                        <span className="text-sm text-gray-500">
-                          {course.duration || "Varies"} • {course.fee || "Contact for fees"}
-                        </span>
-                        <span className="text-indigo-400 font-semibold flex items-center gap-2 group-hover:gap-4 transition-all">
-                          Explore <span>→</span>
-                        </span>
-                      </div>
+                      <span className="text-indigo-400 font-semibold flex items-center gap-2 group-hover:gap-4 transition-all">
+                        Explore <span>→</span>
+                      </span>
                     </div>
-                  </Link>
-                </motion.div>
-              );
-            })}
+                  </div>
+                </Link>
+              </motion.div>
+            ))}
           </motion.div>
         )}
       </div>

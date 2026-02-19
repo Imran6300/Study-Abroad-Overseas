@@ -12,21 +12,21 @@ export const categoryData = {
           unis: "MIT, Stanford, ETH Zurich",
           duration: "4 years",
           fee: "$45K–$65K/year",
-          slug: "computer-science"
+          slug: "computer-science",
         },
         {
           name: "Mechanical Engineering",
           unis: "Imperial College, UC Berkeley",
           duration: "4 years",
           fee: "$40K–$60K/year",
-          slug: "mechanical-engineering"
+          slug: "mechanical-engineering",
         },
         {
           name: "Electrical Engineering",
           unis: "Caltech, Cambridge",
           duration: "4 years",
           fee: "$50K–$70K/year",
-          slug: "electrical-engineering"
+          slug: "electrical-engineering",
         },
       ],
       master: [
@@ -36,22 +36,22 @@ export const categoryData = {
           duration: "1–2 years",
           fee: "$35K–$75K/year",
           popular: true,
-          slug: "msc-data-science-ai"
+          slug: "msc-data-science-ai",
         },
         {
           name: "Cybersecurity",
-          slug: "msc-cybersecurity",  // kept your existing one
+          slug: "cybersecurity", // kept your existing one
           unis: "Georgia Tech, NYU, Sydney",
           duration: "1–2 years",
           fee: "$30K–$55K/year",
-          popular: true
+          popular: true,
         },
         {
           name: "Software Engineering",
           unis: "Waterloo, TU Munich",
           duration: "1.5 years",
           fee: "$25K–$50K/year",
-          slug: "msc-software-engineering"
+          slug: "msc-software-engineering",
         },
       ],
       phd: [
@@ -59,13 +59,13 @@ export const categoryData = {
           name: "Artificial Intelligence",
           unis: "Stanford, MIT, DeepMind partners",
           funding: "Fully funded + stipend",
-          slug: "phd-artificial-intelligence"
+          slug: "phd-artificial-intelligence",
         },
         {
           name: "Robotics",
           unis: "CMU, EPFL Switzerland",
           funding: "Research assistantships",
-          slug: "phd-robotics"
+          slug: "phd-robotics",
         },
       ],
     },
@@ -84,14 +84,14 @@ export const categoryData = {
           unis: "Wharton, LSE, Singapore",
           duration: "3–4 years",
           fee: "$50K–$70K/year",
-          slug: "business-administration"
+          slug: "business-administration",
         },
         {
           name: "International Business",
           unis: "NYU Stern, Bocconi",
           duration: "4 years",
           fee: "$55K–$75K/year",
-          slug: "international-business"
+          slug: "international-business",
         },
       ],
       master: [
@@ -101,7 +101,7 @@ export const categoryData = {
           duration: "1–2 years",
           fee: "$80K–$150K total",
           popular: true,
-          slug: "mba"  // special short slug for MBA (very common)
+          slug: "mba", // special short slug for MBA (very common)
         },
         {
           name: "Finance & FinTech",
@@ -109,14 +109,14 @@ export const categoryData = {
           duration: "1 year",
           fee: "$70K–$100K/year",
           popular: true,
-          slug: "msc-finance-fintech"
+          slug: "msc-finance-fintech",
         },
         {
           name: "Entrepreneurship",
           unis: "Babson, Stanford GSB",
           duration: "1 year",
           fee: "$60K–$90K/year",
-          slug: "msc-entrepreneurship"
+          slug: "msc-entrepreneurship",
         },
       ],
     },
@@ -135,14 +135,14 @@ export const categoryData = {
           unis: "Johns Hopkins, Melbourne, King's College",
           duration: "4 years",
           fee: "$40K–$60K/year",
-          slug: "nursing-bsn"
+          slug: "nursing-bsn",
         },
         {
           name: "Public Health",
           unis: "Harvard, Imperial, Toronto",
           duration: "4 years",
           fee: "$45K–$65K/year",
-          slug: "public-health"
+          slug: "public-health",
         },
       ],
       master: [
@@ -152,7 +152,7 @@ export const categoryData = {
           duration: "1–2 years",
           fee: "$50K–$80K/year",
           popular: true,
-          slug: "mph-public-health"
+          slug: "mph-public-health",
         },
         {
           name: "Healthcare Management (MHA)",
@@ -160,14 +160,28 @@ export const categoryData = {
           duration: "2 years",
           fee: "$55K–$75K/year",
           popular: true,
-          slug: "mha-healthcare-management"
+          slug: "mha-healthcare-management",
         },
         {
           name: "Nursing (MSN)",
           unis: "Yale, Penn",
           duration: "2 years",
           fee: "$45K–$70K/year",
-          slug: "msn-nursing"
+          slug: "msn-nursing",
+        },
+      ],
+      phd: [
+        {
+          name: "Artificial Intelligence",
+          unis: "Stanford, MIT, DeepMind partners",
+          funding: "Fully funded + stipend",
+          slug: "phd-artificial-intelligence",
+        },
+        {
+          name: "Robotics",
+          unis: "CMU, EPFL Switzerland",
+          funding: "Research assistantships",
+          slug: "phd-robotics",
         },
       ],
     },

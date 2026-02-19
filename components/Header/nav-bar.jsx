@@ -318,7 +318,10 @@ const DesktopDropdown = ({ type, label, active, onToggle, items }) => {
       case "countries":
         return isAllItem ? "/all-countries" : `/all-countries/${slug}`;
       case "courses":
-        return isAllItem ? "/courses" : `/courses/${COURSE_CATEGORY_MAP[item]}`;
+        return isAllItem
+          ? "/courses"
+          : `/courses?category=${COURSE_CATEGORY_MAP[item]}`;
+
       case "programs":
         return `/programs/${slug}`;
       default:
@@ -457,7 +460,7 @@ const MobileMenu = ({ open, onClose, isLoggedIn, handleLogout, user }) => {
                 getHref={(item) =>
                   item.includes("All")
                     ? "/courses"
-                    : `/courses/${COURSE_CATEGORY_MAP[item] || "other"}`
+                    : `/courses?category=${COURSE_CATEGORY_MAP[item]}`
                 }
                 onClose={onClose}
               />

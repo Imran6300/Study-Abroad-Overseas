@@ -1,29 +1,29 @@
 "use client";
 import { IoSearch } from "react-icons/io5";
 import { useRouter } from "next/navigation";
-import { useMemo } from "react";
 import { matchCountry, matchCourse, buildCourseIndex } from "@/lib/searchUtils";
-import { COUNTRY_PAGE_DATA } from "@/data/countrydetail";
 import { COUNTRIES } from "@/data/countries";
-import { categoryData } from "@/data/coursescategory";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+
+import { useEffect } from "react";
+import { fetchCourses } from "@/store/courseSlice";
 
 // Normalize function (same as before)
 const normalize = (str = "") => str.toLowerCase().trim().replace(/\s+/g, " ");
 
 export default function HeroSearch() {
+  const dispatch = useDispatch();
+  const { courses } = useSelector((state) => state.courses);
+
+  useEffect(() => {
+    if (!courses || courses.length === 0) {
+      dispatch(fetchCourses());
+    }
+  }, [dispatch, courses]);
+
   const universities = useSelector((state) => state.universities.list);
 
   const router = useRouter();
-
-  const courseIndex = useMemo(
-    () =>
-      buildCourseIndex({
-        popularCourses: COUNTRY_PAGE_DATA.popularCourses || [],
-        categoryData,
-      }),
-    [],
-  );
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -33,66 +33,28 @@ export default function HeroSearch() {
 
     const normalizedQuery = normalize(query);
 
-    // 1. COUNTRY
+    // 1️⃣ COUNTRY (keep as is)
     const country = matchCountry(query, COUNTRIES);
     if (country) {
-      const countryNameNorm = normalize(country.name);
-      if (
-        normalizedQuery === countryNameNorm ||
-        normalizedQuery === countryNameNorm.replace(/\s+/g, "")
-      ) {
-        const slug = countryNameNorm.replace(/\s+/g, "-");
-        router.push(`/all-countries/${slug}`);
-      } else {
-        router.push(`/all-countries?search=${encodeURIComponent(query)}`);
-      }
+      const slug = normalize(country.name).replace(/\s+/g, "-");
+      router.push(`/all-countries/${slug}`);
       return;
     }
 
-    // 2. CATEGORY (direct match)
-    if (Object.keys(categoryData).includes(normalizedQuery)) {
-      router.push(`/courses/${normalizedQuery}`);
+    // 2️⃣ COURSE (FROM BACKEND)
+    const course =
+      courses?.find((c) => normalize(c.title) === normalizedQuery) ||
+      courses?.find((c) => normalize(c.title).startsWith(normalizedQuery)) ||
+      courses?.find((c) => normalize(c.title).includes(normalizedQuery));
+
+    if (course) {
+      router.push(`/courses/${course.slug}`);
       return;
     }
 
-    // 3. COURSE (updated: courseName is now a string)
-    const courseName = matchCourse(query, courseIndex);
-    if (courseName) {
-      const titleNorm = normalize(courseName);
-
-      // Find matching program to get category + slug
-      let foundCategory = null;
-      let foundSlug = null;
-
-      Object.entries(categoryData).forEach(([catKey, cat]) => {
-        Object.values(cat.tabs || {}).forEach((level) => {
-          const match = level.find(
-            (item) => normalize(item.name) === titleNorm && item.slug,
-          );
-          if (match) {
-            foundCategory = catKey;
-            foundSlug = match.slug;
-          }
-        });
-      });
-
-      // ✅ EXACT COURSE → DETAIL PAGE
-      if (foundCategory && foundSlug) {
-        router.push(`/courses/${foundCategory}/${foundSlug}`);
-      } else {
-        // Partial / no slug → list page
-        router.push(`/courses?search=${encodeURIComponent(query)}`);
-      }
-      return;
-    }
-
-    // 4. UNIVERSITY
-    // 4. UNIVERSITY (Dynamic from Backend)
+    // 3️⃣ UNIVERSITY
     const university =
       universities?.find((uni) => normalize(uni.name) === normalizedQuery) ||
-      universities?.find((uni) =>
-        normalize(uni.name).startsWith(normalizedQuery),
-      ) ||
       universities?.find((uni) =>
         normalize(uni.name).includes(normalizedQuery),
       );
@@ -102,7 +64,7 @@ export default function HeroSearch() {
       return;
     }
 
-    // 5. FALLBACK
+    // 4️⃣ FALLBACK
     router.push(`/search?q=${encodeURIComponent(query)}`);
   };
 

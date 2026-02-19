@@ -14,42 +14,71 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-export default function CourseDetailPage({ program, category }) {
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchCourseBySlug, clearSelectedCourse } from "@/store/courseSlice";
+
+export default function CourseDetailPage({ slug }) {
+  console.log("Slug from params:", slug);
+
   const [activeTab, setActiveTab] = useState("overview");
   const [openAccordion, setOpenAccordion] = useState(null);
 
+  const dispatch = useDispatch();
+
+  const { selectedCourse, loading, error } = useSelector(
+    (state) => state.courses,
+  );
+
+  useEffect(() => {
+    if (slug && (!selectedCourse || selectedCourse.course?.slug !== slug)) {
+      dispatch(fetchCourseBySlug(slug));
+    }
+
+    return () => {
+      dispatch(clearSelectedCourse());
+    };
+  }, [slug, dispatch]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-emerald-950">
+        Loading course details...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-red-500">
+        {error}
+      </div>
+    );
+  }
+
+  if (!selectedCourse?.course) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-white">
+        Course not found.
+      </div>
+    );
+  }
+
+  const program = selectedCourse.course;
+
   const course = {
-    name: program?.name || "Program Details",
-    tagline: program?.tagline || "World-class education abroad",
-    heroImage:
-      program?.heroImage ||
-      "https://images.unsplash.com/photo-1568952433726-3896e3881c65?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTZ8fGN5YmVyJTIwc2VjdXJpdHl8ZW58MHx8MHx8fDA%3D",
-    overview:
-      program?.overview ||
-      "This program offers advanced knowledge and global career opportunities.",
-    highlights: program?.highlights || [
-      "Industry-aligned curriculum",
-      "Hands-on practical training",
-      "International exposure",
-      "Career guidance & internships",
-    ],
-    duration: program?.duration || "1–2 years",
-    tuition: program?.tuition || "USD 25,000 – 60,000 per year",
-    scholarships: program?.scholarships || "Up to 100% available",
-    entryRequirements: program?.entryRequirements || [
-      "Bachelor’s degree in relevant field",
-      "English proficiency (IELTS 6.5+ / TOEFL 90+)",
-      "Strong academic background",
-    ],
-    topUniversities: program?.topUniversities || [
-      { name: "Top University 1", location: "USA", ranking: "World Top 10" },
-      { name: "Top University 2", location: "UK", ranking: "Top 5" },
-    ],
-    careerOutcomes: program?.careerOutcomes || [
-      "Relevant Job Role 1",
-      "Relevant Job Role 2",
-      "Average salary: USD 90,000+",
-    ],
+    name: program.title,
+    tagline: program.subtitle,
+    heroImage: program.bgImage?.url || "",
+
+    overview: program.overviewDescription,
+    highlights: program.keyHighlights || [],
+    duration: program.duration,
+    tuition: `$${program.fees}`,
+    scholarships: program.scholarships,
+    entryRequirements: program.entryRequirements || [],
+    topUniversities: program.topUniversities || [],
+    careerOutcomes: program.popularJobRoles || [],
   };
 
   const tabs = [
@@ -71,7 +100,7 @@ export default function CourseDetailPage({ program, category }) {
           <img
             src={course.heroImage}
             alt={course.name}
-            className="w-full h-full object-cover brightness-[0.45] scale-105"
+            className="w-full h-full object-cover mt-[80px] brightness-[0.45] scale-105"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#0a0e17] via-black/60 to-transparent" />
         </div>
@@ -83,7 +112,7 @@ export default function CourseDetailPage({ program, category }) {
             transition={{ duration: 0.8 }}
           >
             <span className="inline-block px-5 py-2 mb-6 text-sm font-semibold tracking-wider uppercase bg-gradient-to-r from-indigo-600/30 to-blue-600/30 backdrop-blur-lg rounded-full border border-indigo-500/30">
-              {category?.toUpperCase() || "PROGRAM"} • Master's Program
+              {program.level} • {program.topLabel}
             </span>
 
             <h1 className="text-4xl sm:text-5xl  md:text-6xl lg:text-7xl font-extrabold tracking-tight leading-tight bg-gradient-to-br from-white via-indigo-200 to-blue-300 bg-clip-text text-transparent">
@@ -105,14 +134,18 @@ export default function CourseDetailPage({ program, category }) {
             {
               icon: DollarSign,
               label: "Tuition",
-              value: course.tuition.split("–")[0]?.trim() + " +" || "Varies",
+              value: course.tuition || "Varies",
             },
             {
               icon: Award,
               label: "Scholarships",
               value: course.scholarships || "Up to 100%",
             },
-            { icon: Users, label: "Career Salary", value: "USD 90k+" },
+            {
+              icon: Users,
+              label: "Career Salary",
+              value: `$${program.avgSalary}`,
+            },
           ].map((stat, i) => (
             <motion.div
               key={i}
@@ -211,22 +244,21 @@ export default function CourseDetailPage({ program, category }) {
                 <div className="space-y-4">
                   {course.entryRequirements.map((req, index) => (
                     <div
-                      key={index}
+                      key={req._id || index}
                       className="bg-white/5 backdrop-blur-xl rounded-xl p-6 border border-white/10 cursor-pointer"
                       onClick={() => toggleAccordion(index)}
                     >
                       <div className="flex justify-between items-center">
-                        <p className="text-lg font-medium">
-                          {req.split(" (")[0] || req}
-                        </p>
+                        <p className="text-lg font-medium">{req.title}</p>
                         <ChevronDown
                           className={`w-6 h-6 transition-transform ${
                             openAccordion === index ? "rotate-180" : ""
                           }`}
                         />
                       </div>
-                      {req.includes("(") && openAccordion === index && (
-                        <p className="mt-4 text-gray-300">{req}</p>
+
+                      {openAccordion === index && (
+                        <p className="mt-4 text-gray-300">{req.description}</p>
                       )}
                     </div>
                   ))}
@@ -248,18 +280,9 @@ export default function CourseDetailPage({ program, category }) {
                       transition={{ delay: i * 0.1 }}
                       className="bg-white/5 backdrop-blur-xl rounded-2xl p-7 border border-white/10 hover:border-indigo-500/50 transition-all group"
                     >
-                      <h3 className="text-xl font-bold mb-3 group-hover:text-indigo-300 transition-colors">
-                        {uni.name}
+                      <h3 className="text-xl font-bold group-hover:text-indigo-300 transition-colors">
+                        {uni}
                       </h3>
-                      <div className="space-y-2 text-gray-300">
-                        <p className="flex items-center gap-2">
-                          <Globe size={18} /> {uni.location}
-                        </p>
-                        <p className="flex items-center gap-2">
-                          <Award size={18} className="text-yellow-400" />{" "}
-                          {uni.ranking}
-                        </p>
-                      </div>
                     </motion.div>
                   ))}
                 </div>
@@ -294,8 +317,9 @@ export default function CourseDetailPage({ program, category }) {
                         Salary Expectations
                       </h3>
                       <p className="text-4xl font-bold text-emerald-400 mb-2">
-                        USD 90,000+
+                        {program.avgSalary ? `$${program.avgSalary}` : "—"}
                       </p>
+
                       <p className="text-gray-300">
                         Average starting salary (US/Europe)
                       </p>
