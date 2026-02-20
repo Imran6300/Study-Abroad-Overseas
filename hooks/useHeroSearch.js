@@ -1,70 +1,54 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useMemo } from "react";
-import { useSelector } from "react-redux";
-import { matchCountry, matchCourse, buildCourseIndex } from "@/lib/searchUtils";
-import { COUNTRY_PAGE_DATA } from "@/data/countrydetail";
+import { useSelector, useDispatch } from "react-redux";
+import { useEffect } from "react";
+import { fetchCourses } from "@/store/courseSlice";
+import { matchCountry } from "@/lib/searchUtils";
 import { COUNTRIES } from "@/data/countries";
-import { categoryData } from "@/data/coursescategory";
-
-const popularCourses = COUNTRY_PAGE_DATA.popularCourses || [];
 
 const normalize = (str = "") => str.toLowerCase().trim().replace(/\s+/g, " ");
 
 export function useHeroSearch() {
   const router = useRouter();
+  const dispatch = useDispatch();
 
+  const { courses } = useSelector((state) => state.courses);
   const universities = useSelector((state) => state.universities.list);
 
-  const courseIndex = useMemo(
-    () =>
-      buildCourseIndex({
-        popularCourses,
-        categoryData,
-      }),
-    [],
-  );
+  useEffect(() => {
+    if (!courses || courses.length === 0) {
+      dispatch(fetchCourses());
+    }
+  }, [dispatch, courses.length]);
 
   const handleSearch = (query) => {
     if (!query?.trim()) return;
 
     const normalizedQuery = normalize(query);
 
-    // 1. COUNTRY
+    // 1️⃣ COUNTRY
     const country = matchCountry(query, COUNTRIES);
     if (country) {
-      const nameNorm = normalize(country.name);
-      if (
-        normalizedQuery === nameNorm ||
-        normalizedQuery === nameNorm.replace(/\s+/g, "")
-      ) {
-        router.push(`/all-countries/${nameNorm.replace(/\s+/g, "-")}`);
-      } else {
-        router.push(`/all-countries?search=${encodeURIComponent(query)}`);
-      }
+      const slug = normalize(country.name).replace(/\s+/g, "-");
+      router.push(`/all-countries/${slug}`);
       return;
     }
 
-    // 2. CATEGORY
-    if (Object.keys(categoryData).includes(normalizedQuery)) {
-      router.push(`/courses/${normalizedQuery}`);
+    // 2️⃣ COURSE (Dynamic from API)
+    const course =
+      courses?.find((c) => normalize(c.title) === normalizedQuery) ||
+      courses?.find((c) => normalize(c.title).startsWith(normalizedQuery)) ||
+      courses?.find((c) => normalize(c.title).includes(normalizedQuery));
+
+    if (course) {
+      router.push(`/courses/${course.slug}`);
       return;
     }
 
-    // 3. COURSE
-    const courseName = matchCourse(query, courseIndex);
-    if (courseName) {
-      router.push(`/courses?search=${encodeURIComponent(query)}`);
-      return;
-    }
-
-    // 4. UNIVERSITY (Dynamic from Redux)
+    // 3️⃣ UNIVERSITY
     const university =
       universities?.find((uni) => normalize(uni.name) === normalizedQuery) ||
-      universities?.find((uni) =>
-        normalize(uni.name).startsWith(normalizedQuery),
-      ) ||
       universities?.find((uni) =>
         normalize(uni.name).includes(normalizedQuery),
       );
@@ -74,7 +58,7 @@ export function useHeroSearch() {
       return;
     }
 
-    // 5. FALLBACK
+    // 4️⃣ FALLBACK
     router.push(`/search?q=${encodeURIComponent(query)}`);
   };
 
