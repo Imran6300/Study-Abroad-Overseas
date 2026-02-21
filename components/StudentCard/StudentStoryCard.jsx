@@ -19,8 +19,8 @@ export default function StudentStoryCard({ story, delay = 0 }) {
         transition={{ duration: 0.6 }}
         className="relative w-full h-full preserve-3d"
       >
-        {/* FRONT */}
-        <div className="absolute inset-0 backface-hidden rounded-2xl bg-white/5 border border-white/10 p-6 flex flex-col">
+        {/* ================= FRONT ================= */}
+        <div className="absolute inset-0 backface-hidden rounded-2xl bg-white/5 border border-white/10 p-6 flex flex-col overflow-hidden">
           {/* Student Photo */}
           <img
             src={story.photo?.url}
@@ -63,19 +63,22 @@ export default function StudentStoryCard({ story, delay = 0 }) {
           </button>
         </div>
 
-        {/* BACK */}
-        <div className="absolute inset-0 backface-hidden rotate-y-180 rounded-2xl bg-[#0B0F19] border border-indigo-500/40 p-6 flex flex-col">
-          <h3 className="text-xl font-semibold mb-4">
+        {/* ================= BACK ================= */}
+        <div className="absolute inset-0 backface-hidden rotate-y-180 rounded-2xl bg-[#0B0F19] border border-indigo-500/40 p-6 flex flex-col overflow-hidden">
+          <h3 className="text-xl font-semibold mb-4 shrink-0">
             {story.studentName}'s Experience
           </h3>
 
-          <p className="text-gray-300 text-sm leading-relaxed">
-            “{story.fullDescription}”
-          </p>
+          {/* Scrollable Description Area */}
+          <div className="flex-1 overflow-y-auto pr-2">
+            <p className="text-gray-300 text-sm leading-relaxed whitespace-pre-line break-words">
+              “{story.fullDescription}”
+            </p>
+          </div>
 
           <button
             onClick={() => setFlipped(false)}
-            className="mt-auto text-indigo-400 font-medium hover:underline"
+            className="mt-4 text-indigo-400 font-medium hover:underline shrink-0"
           >
             ← Back
           </button>
