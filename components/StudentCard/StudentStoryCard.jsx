@@ -21,15 +21,19 @@ export default function StudentStoryCard({ story, delay = 0 }) {
       >
         {/* FRONT */}
         <div className="absolute inset-0 backface-hidden rounded-2xl bg-white/5 border border-white/10 p-6 flex flex-col">
+          {/* Student Photo */}
           <img
-            src={story.image}
-            alt={story.name}
+            src={story.photo?.url}
+            alt={story.studentName}
             className="w-20 h-20 rounded-full object-cover border-2 border-indigo-500 mb-4"
           />
 
-          <h3 className="text-xl font-semibold">{story.name}</h3>
+          {/* Basic Info */}
+          <h3 className="text-xl font-semibold">{story.studentName}</h3>
+
           <p className="text-sm text-gray-400 mb-4">{story.course}</p>
 
+          {/* Details */}
           <div className="space-y-2 text-sm text-gray-300">
             <p>
               <strong>University:</strong> {story.university}
@@ -38,12 +42,18 @@ export default function StudentStoryCard({ story, delay = 0 }) {
               <strong>Country:</strong> {story.country}
             </p>
             <p>
-              <strong>Visa:</strong> {story.visa}
+              <strong>Visa:</strong> {story.visaStatus}
             </p>
             <p>
-              <strong>Scholarship:</strong> {story.scholarship}
+              <strong>Scholarship:</strong>{" "}
+              {story.scholarship || "Not Mentioned"}
             </p>
           </div>
+
+          {/* Short Description */}
+          <p className="text-gray-400 text-sm mt-4 line-clamp-2">
+            {story.excerpt}
+          </p>
 
           <button
             onClick={() => setFlipped(true)}
@@ -56,11 +66,11 @@ export default function StudentStoryCard({ story, delay = 0 }) {
         {/* BACK */}
         <div className="absolute inset-0 backface-hidden rotate-y-180 rounded-2xl bg-[#0B0F19] border border-indigo-500/40 p-6 flex flex-col">
           <h3 className="text-xl font-semibold mb-4">
-            {story.name}'s Experience
+            {story.studentName}'s Experience
           </h3>
 
           <p className="text-gray-300 text-sm leading-relaxed">
-            “{story.review}”
+            “{story.fullDescription}”
           </p>
 
           <button
