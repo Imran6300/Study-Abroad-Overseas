@@ -15,7 +15,7 @@ export default async function Stories() {
   const students = data.success ? data.data.slice(0, 4) : [];
 
   return (
-    <section className="min-h-screen w-full bg-[#f5f7ff] py-16 px-6 flex flex-col items-center">
+    <section className="min-h-screen w-full bg-[#f5f7ff] py-12 sm:py-16 px-4 sm:px-6 flex flex-col items-center">
       {/* Heading */}
       <FadeContent blur duration={500} easing="ease-out" initialOpacity={0}>
         <div className="text-center mb-14">
@@ -32,7 +32,7 @@ export default async function Stories() {
       </FadeContent>
 
       {/* GRID */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-14 max-w-[1200px] w-full">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-14 max-w-[1200px] w-full">
         {students.map((student) => (
           <FadeContent
             key={student._id}
