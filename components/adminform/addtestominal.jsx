@@ -9,6 +9,7 @@ export default function AddSuccessStoryForm({
   initialData = null,
   onSuccess,
   onCancel,
+  submitting = false,
 }) {
   const isViewMode = mode === "view";
 
@@ -16,13 +17,13 @@ export default function AddSuccessStoryForm({
     // Page title/subtitle
     pageTitle: "",
     pageSubtitle: "",
-    
+
     // Page stats (numbers)
     studentsPlaced: 0,
     visaSuccessRate: 0,
     partnerUniversities: 0,
     scholarshipsSecured: 0,
-    
+
     // Student info
     studentName: "",
     university: "",
@@ -30,7 +31,7 @@ export default function AddSuccessStoryForm({
     country: "",
     visaStatus: "Approved",
     scholarship: "",
-    
+    year: 0,
     // Content
     excerpt: "",
     fullDescription: "",
@@ -56,12 +57,15 @@ export default function AddSuccessStoryForm({
         course: initialData.course || "",
         country: initialData.country || "",
         scholarship: initialData.scholarship || "",
+        year: initialData.year || 0,
         visaStatus: initialData.visaStatus || "Approved",
         excerpt: initialData.excerpt || "",
         fullDescription: initialData.fullDescription || "",
         published: initialData.published ?? true,
       });
-      if (initialData.photo) setPhotoPreview(initialData.photo);
+      if (initialData.photo?.url) {
+        setPhotoPreview(initialData.photo.url);
+      }
     }
   }, [initialData]);
 
@@ -69,39 +73,61 @@ export default function AddSuccessStoryForm({
     const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: type === "checkbox" ? checked : value,
+      [name]:
+        type === "checkbox"
+          ? checked
+          : type === "number"
+            ? Number(value)
+            : value,
     }));
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
   const validateForm = () => {
     const newErrors = {};
-    
+
     // Title/Subtitle validation
     if (!formData.pageTitle.trim()) newErrors.pageTitle = "Page title required";
-    if (!formData.pageSubtitle.trim()) newErrors.pageSubtitle = "Page subtitle required";
-    
+    if (!formData.pageSubtitle.trim())
+      newErrors.pageSubtitle = "Page subtitle required";
+
     // Stats validation (optional but must be numbers)
     if (isNaN(formData.studentsPlaced) || formData.studentsPlaced < 0) {
       newErrors.studentsPlaced = "Must be valid number";
     }
-    if (isNaN(formData.visaSuccessRate) || formData.visaSuccessRate < 0 || formData.visaSuccessRate > 100) {
+    if (
+      isNaN(formData.visaSuccessRate) ||
+      formData.visaSuccessRate < 0 ||
+      formData.visaSuccessRate > 100
+    ) {
       newErrors.visaSuccessRate = "Must be 0-100";
     }
-    if (isNaN(formData.partnerUniversities) || formData.partnerUniversities < 0) {
+    if (
+      isNaN(formData.partnerUniversities) ||
+      formData.partnerUniversities < 0
+    ) {
       newErrors.partnerUniversities = "Must be valid number";
     }
-    if (isNaN(formData.scholarshipsSecured) || formData.scholarshipsSecured < 0) {
+    if (
+      isNaN(formData.scholarshipsSecured) ||
+      formData.scholarshipsSecured < 0
+    ) {
       newErrors.scholarshipsSecured = "Must be valid number";
     }
-    
+
     // Required fields
     if (!formData.studentName.trim()) newErrors.studentName = "Required";
     if (!formData.university.trim()) newErrors.university = "Required";
     if (!formData.course.trim()) newErrors.course = "Required";
     if (!formData.country.trim()) newErrors.country = "Required";
-    if (!formData.excerpt.trim()) newErrors.excerpt = "Short testimonial required";
-    if (!formData.fullDescription.trim()) newErrors.fullDescription = "Full story required";
+    if (!formData.excerpt.trim())
+      newErrors.excerpt = "Short testimonial required";
+    if (!formData.fullDescription.trim())
+      newErrors.fullDescription = "Full story required";
+
+    if (mode === "add" && !photoFile) {
+      newErrors.photo = "Student photo is required";
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -115,24 +141,44 @@ export default function AddSuccessStoryForm({
     onSuccess({
       ...formData,
       photoFile,
-      photoPreview,
-      existingPhotoUrl: !photoFile && photoPreview ? photoPreview : null,
     });
   };
 
   // Status options with DeadlineForm colors
   const visaStatusOptions = [
-    { value: "Approved", label: "✅ Approved", color: "bg-green-100 text-green-800 border-green-200 hover:border-green-300" },
-    { value: "Processing", label: "⏳ Processing", color: "bg-yellow-100 text-yellow-800 border-yellow-200 hover:border-yellow-300" },
-    { value: "Pending", label: "⏳ Pending", color: "bg-blue-100 text-blue-800 border-blue-200 hover:border-blue-300" },
-    { value: "Rejected", label: "❌ Rejected", color: "bg-red-100 text-red-800 border-red-200 hover:border-red-300" },
+    {
+      value: "Approved",
+      label: "✅ Approved",
+      color:
+        "bg-green-100 text-green-800 border-green-200 hover:border-green-300",
+    },
+    {
+      value: "Processing",
+      label: "⏳ Processing",
+      color:
+        "bg-yellow-100 text-yellow-800 border-yellow-200 hover:border-yellow-300",
+    },
+    {
+      value: "Pending",
+      label: "⏳ Pending",
+      color: "bg-blue-100 text-blue-800 border-blue-200 hover:border-blue-300",
+    },
+    {
+      value: "Rejected",
+      label: "❌ Rejected",
+      color: "bg-red-100 text-red-800 border-red-200 hover:border-red-300",
+    },
   ];
 
-  const currentVisaStatusStyle = visaStatusOptions.find(s => s.value === formData.visaStatus)?.color || "bg-gray-100 text-gray-800 border-gray-200 hover:border-gray-300";
+  const currentVisaStatusStyle =
+    visaStatusOptions.find((s) => s.value === formData.visaStatus)?.color ||
+    "bg-gray-100 text-gray-800 border-gray-200 hover:border-gray-300";
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8 max-w-4xl mx-auto p-8 bg-white rounded-xl shadow-sm border border-gray-200">
-      
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-8 max-w-4xl mx-auto p-8 bg-white rounded-xl shadow-sm border border-gray-200"
+    >
       {/* NEW: Page Title & Subtitle Section */}
       <div className="space-y-6">
         <div>
@@ -148,7 +194,9 @@ export default function AddSuccessStoryForm({
             className={`w-full px-4 py-3 text-xl rounded-lg border border-gray-300 font-bold shadow-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 ${errors.pageTitle ? "border-red-300 bg-red-50" : "hover:border-gray-400"} disabled:bg-gray-50`}
             placeholder="e.g. Success Stories 2026"
           />
-          {errors.pageTitle && <p className="text-red-600 font-medium mt-2">{errors.pageTitle}</p>}
+          {errors.pageTitle && (
+            <p className="text-red-600 font-medium mt-2">{errors.pageTitle}</p>
+          )}
         </div>
 
         <div>
@@ -164,7 +212,11 @@ export default function AddSuccessStoryForm({
             className={`w-full px-4 py-3 text-lg rounded-lg border border-gray-300 font-semibold shadow-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 ${errors.pageSubtitle ? "border-red-300 bg-red-50" : "hover:border-gray-400"} disabled:bg-gray-50`}
             placeholder="e.g. 500+ Students Placed | 98% Visa Success"
           />
-          {errors.pageSubtitle && <p className="text-red-600 font-medium mt-2">{errors.pageSubtitle}</p>}
+          {errors.pageSubtitle && (
+            <p className="text-red-600 font-medium mt-2">
+              {errors.pageSubtitle}
+            </p>
+          )}
         </div>
       </div>
 
@@ -183,7 +235,9 @@ export default function AddSuccessStoryForm({
             className={`w-24 mx-auto text-2xl font-black text-sky-600 bg-transparent border-0 focus:ring-2 focus:ring-sky-500 p-0 ${errors.studentsPlaced ? "text-red-600" : ""}`}
             min="0"
           />
-          {errors.studentsPlaced && <p className="text-red-600 text-xs mt-1">{errors.studentsPlaced}</p>}
+          {errors.studentsPlaced && (
+            <p className="text-red-600 text-xs mt-1">{errors.studentsPlaced}</p>
+          )}
         </div>
 
         <div className="text-center">
@@ -203,7 +257,11 @@ export default function AddSuccessStoryForm({
             />
             <span className="ml-1 text-lg font-semibold text-gray-500">%</span>
           </div>
-          {errors.visaSuccessRate && <p className="text-red-600 text-xs mt-1">{errors.visaSuccessRate}</p>}
+          {errors.visaSuccessRate && (
+            <p className="text-red-600 text-xs mt-1">
+              {errors.visaSuccessRate}
+            </p>
+          )}
         </div>
 
         <div className="text-center">
@@ -219,7 +277,11 @@ export default function AddSuccessStoryForm({
             className={`w-24 mx-auto text-2xl font-black text-sky-600 bg-transparent border-0 focus:ring-2 focus:ring-sky-500 p-0 ${errors.partnerUniversities ? "text-red-600" : ""}`}
             min="0"
           />
-          {errors.partnerUniversities && <p className="text-red-600 text-xs mt-1">{errors.partnerUniversities}</p>}
+          {errors.partnerUniversities && (
+            <p className="text-red-600 text-xs mt-1">
+              {errors.partnerUniversities}
+            </p>
+          )}
         </div>
 
         <div className="text-center">
@@ -235,7 +297,11 @@ export default function AddSuccessStoryForm({
             className={`w-24 mx-auto text-2xl font-black text-sky-600 bg-transparent border-0 focus:ring-2 focus:ring-sky-500 p-0 ${errors.scholarshipsSecured ? "text-red-600" : ""}`}
             min="0"
           />
-          {errors.scholarshipsSecured && <p className="text-red-600 text-xs mt-1">{errors.scholarshipsSecured}</p>}
+          {errors.scholarshipsSecured && (
+            <p className="text-red-600 text-xs mt-1">
+              {errors.scholarshipsSecured}
+            </p>
+          )}
         </div>
       </div>
 
@@ -261,14 +327,20 @@ export default function AddSuccessStoryForm({
           <h1 className="text-4xl font-bold text-gray-800 mb-2">
             {formData.studentName}
           </h1>
-          <p className="text-xl font-semibold text-gray-700">{formData.course} at {formData.university}</p>
-          
+          <p className="text-xl font-semibold text-gray-700">
+            {formData.course} at {formData.university}
+          </p>
+
           {/* Show title/subtitle in view mode */}
           {formData.pageTitle && (
-            <p className="text-2xl font-bold text-sky-600 mt-4">{formData.pageTitle}</p>
+            <p className="text-2xl font-bold text-sky-600 mt-4">
+              {formData.pageTitle}
+            </p>
           )}
           {formData.pageSubtitle && (
-            <p className="text-lg text-gray-600 mt-1">{formData.pageSubtitle}</p>
+            <p className="text-lg text-gray-600 mt-1">
+              {formData.pageSubtitle}
+            </p>
           )}
         </div>
       )}
@@ -289,7 +361,11 @@ export default function AddSuccessStoryForm({
             className={`w-full px-4 py-3 text-lg rounded-lg border border-gray-300 font-semibold shadow-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 ${errors.studentName ? "border-red-300 bg-red-50" : "hover:border-gray-400"} disabled:bg-gray-50`}
             placeholder="Full Name"
           />
-          {errors.studentName && <p className="text-red-600 font-medium mt-2">{errors.studentName}</p>}
+          {errors.studentName && (
+            <p className="text-red-600 font-medium mt-2">
+              {errors.studentName}
+            </p>
+          )}
         </div>
 
         <div>
@@ -305,7 +381,9 @@ export default function AddSuccessStoryForm({
             className={`w-full px-4 py-3 text-lg rounded-lg border border-gray-300 font-semibold shadow-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 ${errors.course ? "border-red-300 bg-red-50" : "hover:border-gray-400"} disabled:bg-gray-50`}
             placeholder="MSc Computer Science"
           />
-          {errors.course && <p className="text-red-600 font-medium mt-2">{errors.course}</p>}
+          {errors.course && (
+            <p className="text-red-600 font-medium mt-2">{errors.course}</p>
+          )}
         </div>
 
         <div>
@@ -321,7 +399,9 @@ export default function AddSuccessStoryForm({
             className={`w-full px-4 py-3 text-lg rounded-lg border border-gray-300 font-semibold shadow-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 ${errors.university ? "border-red-300 bg-red-50" : "hover:border-gray-400"} disabled:bg-gray-50`}
             placeholder="University of Toronto"
           />
-          {errors.university && <p className="text-red-600 font-medium mt-2">{errors.university}</p>}
+          {errors.university && (
+            <p className="text-red-600 font-medium mt-2">{errors.university}</p>
+          )}
         </div>
 
         <div>
@@ -337,7 +417,9 @@ export default function AddSuccessStoryForm({
             className={`w-full px-4 py-3 text-lg rounded-lg border border-gray-300 font-semibold shadow-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 ${errors.country ? "border-red-300 bg-red-50" : "hover:border-gray-400"} disabled:bg-gray-50`}
             placeholder="Canada"
           />
-          {errors.country && <p className="text-red-600 font-medium mt-2">{errors.country}</p>}
+          {errors.country && (
+            <p className="text-red-600 font-medium mt-2">{errors.country}</p>
+          )}
         </div>
 
         <div>
@@ -373,8 +455,43 @@ export default function AddSuccessStoryForm({
             placeholder="CAD 25,000 / Full Tuition"
           />
         </div>
+        <div>
+          <label className="block text-sm font-semibold text-gray-800 mb-3 bg-gray-50 px-4 py-2 rounded-lg border border-gray-200">
+            Course Duration
+          </label>
+          <input
+            type="number"
+            name="year"
+            value={formData.year}
+            onChange={handleChange}
+            disabled={isViewMode}
+            className="w-full px-4 py-3 text-lg rounded-lg border border-gray-300 font-semibold shadow-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 hover:border-gray-400 disabled:bg-gray-50"
+            placeholder="0"
+          />
+        </div>
       </div>
 
+      <div>
+        <label className="block text-lg font-semibold text-gray-800 mb-4 bg-gray-50 px-6 py-3 rounded-lg border border-gray-200">
+          Short Testimonial <span className="text-red-500">*</span>
+        </label>
+        <textarea
+          name="excerpt"
+          value={formData.excerpt}
+          onChange={handleChange}
+          disabled={isViewMode}
+          rows={3}
+          className={`w-full px-4 py-3 text-lg rounded-lg border border-gray-300 font-medium shadow-sm resize-vertical focus:ring-2 focus:ring-sky-500 focus:border-sky-500 ${
+            errors.excerpt
+              ? "border-red-300 bg-red-50"
+              : "hover:border-gray-400"
+          } disabled:bg-gray-50`}
+          placeholder="Write a short testimonial summary..."
+        />
+        {errors.excerpt && (
+          <p className="text-red-600 font-medium mt-2">{errors.excerpt}</p>
+        )}
+      </div>
 
       {/* Full Success Story */}
       <div>
@@ -390,7 +507,11 @@ export default function AddSuccessStoryForm({
           className={`w-full px-4 py-3 text-lg rounded-lg border border-gray-300 font-medium shadow-sm resize-vertical focus:ring-2 focus:ring-sky-500 focus:border-sky-500 ${errors.fullDescription ? "border-red-300 bg-red-50" : "hover:border-gray-400"} disabled:bg-gray-50`}
           placeholder="Tell the complete journey: How you found Khizar Overseas, challenges faced, documents prepared, interview experience, final results, and advice for future students..."
         />
-        {errors.fullDescription && <p className="text-red-600 font-medium text-lg mt-3 bg-red-50 p-3 rounded-lg border border-red-200">{errors.fullDescription}</p>}
+        {errors.fullDescription && (
+          <p className="text-red-600 font-medium text-lg mt-3 bg-red-50 p-3 rounded-lg border border-red-200">
+            {errors.fullDescription}
+          </p>
+        )}
       </div>
 
       {/* Publish Toggle */}
@@ -416,13 +537,24 @@ export default function AddSuccessStoryForm({
             onClick={onCancel}
             className="px-8 py-3 border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50 font-semibold transition-all shadow-sm hover:shadow-md"
           >
-             Cancel
+            Cancel
           </button>
           <button
             type="submit"
-            className="px-8 py-3 bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 text-white rounded-xl font-semibold shadow-md hover:shadow-lg transition-all"
+            disabled={submitting}
+            className={`px-8 py-3 rounded-xl font-semibold shadow-md transition-all ${
+              submitting
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 text-white"
+            }`}
           >
-            {mode === "add" ? " Add Success Story" : "✨ Update Story"}
+            {submitting
+              ? mode === "add"
+                ? "Adding..."
+                : "Updating..."
+              : mode === "add"
+                ? "Add Success Story"
+                : "Update Story"}
           </button>
         </div>
       )}

@@ -52,7 +52,7 @@ const programs = [
     title: "Cybersecurity",
     short: "Protect digital systems worldwide.",
     desc: "Cybersecurity trains students in ethical hacking, network defense, and digital forensics.",
-    slug: "engineering",
+    slug: "cybersecurity",
   },
 ];
 
