@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { FaUserGraduate } from "react-icons/fa6";
-
 
 const SuccessCard = ({ student }) => {
   const [flipped, setFlipped] = useState(false);
@@ -17,18 +17,23 @@ const SuccessCard = ({ student }) => {
         {/* ================= FRONT ================= */}
         <div className="backface-hidden bg-white rounded-2xl p-8 shadow-[0_10px_35px_rgba(0,0,0,0.08)] flex flex-col items-center h-full">
           {/* Image */}
-          <div className="w-28 h-28 rounded-xl overflow-hidden shadow-lg mb-6">
-            {/* <img
-              src={student.image}
-              alt={student.name}
-              className="w-full h-full object-cover"
-            /> */}
-            <FaUserGraduate className="w-full h-full object-cover text-[#4169E1]" />
+          <div className="w-28 h-28 rounded-xl overflow-hidden shadow-lg mb-6 bg-gray-100 flex items-center justify-center">
+            {student.photo?.url ? (
+              <Image
+                src={student.photo.url}
+                alt={student.studentName}
+                width={112}
+                height={112}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <FaUserGraduate className="text-[#4169E1] text-6xl" />
+            )}
           </div>
 
           {/* Name */}
           <h3 className="text-2xl font-semibold text-[#2F4F4F] text-center">
-            {student.name}
+            {student.studentName}
           </h3>
 
           {/* University */}
@@ -47,15 +52,21 @@ const SuccessCard = ({ student }) => {
               <strong>Country:</strong> {student.country}
             </p>
             <p>
-              <strong>Visa:</strong> {student.visa}
+              <strong>Visa:</strong> {student.visaStatus}
             </p>
             <p>
-              <strong>Scholarship:</strong> {student.scholarship}
+              <strong>Scholarship:</strong>{" "}
+              {student.scholarship || "Not Mentioned"}
             </p>
             <p>
               <strong>Year:</strong> {student.year}
             </p>
           </div>
+
+          {/* Short Excerpt */}
+          <p className="text-gray-500 text-sm mt-4 line-clamp-2 text-center">
+            {student.excerpt}
+          </p>
 
           {/* CTA */}
           <button
@@ -73,11 +84,11 @@ const SuccessCard = ({ student }) => {
         <div className="absolute inset-0 rotate-y-180 backface-hidden bg-white rounded-2xl p-8 shadow-[0_10px_35px_rgba(0,0,0,0.1)] flex flex-col justify-between h-full overflow-hidden">
           <div>
             <h3 className="text-xl font-semibold text-[#2F4F4F] mb-4">
-              {student.name}'s Experience
+              {student.studentName}'s Experience
             </h3>
 
-            <p className="text-gray-600 text-sm leading-6 line-clamp-6 sm:line-clamp-none">
-              “{student.review}”
+            <p className="text-gray-600 text-sm leading-6 overflow-y-auto max-h-[280px]">
+              “{student.fullDescription}”
             </p>
           </div>
 
