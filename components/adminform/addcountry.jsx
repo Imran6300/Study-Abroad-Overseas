@@ -13,6 +13,8 @@ export default function AddCountryForm({
   initialData = null,
   onSuccess,
   onCancel,
+  setMessageModal,
+  submitting,
 }) {
   const isViewMode = mode === "view";
 
@@ -45,19 +47,41 @@ export default function AddCountryForm({
         name: initialData.name || "",
         continent: initialData.continent || "",
         capital: initialData.capital || "",
-        visaSuccessRate: initialData.visaSuccessRate || "",
-        popularCourses: initialData.popularCourses || "",
-        careerOpportunities: initialData.careerOpportunities || "",
-        scholarships: initialData.scholarships || "",
-        eligibilityRequirements: initialData.eligibilityRequirements || "",
-        topUniversities: initialData.topUniversities || "",
+        visaSuccessRate:
+          initialData.visaSuccessRate !== undefined
+            ? String(initialData.visaSuccessRate)
+            : "",
+
+        popularCourses: Array.isArray(initialData.popularCourses)
+          ? initialData.popularCourses.join(", ")
+          : "",
+
+        careerOpportunities: Array.isArray(initialData.careerOpportunities)
+          ? initialData.careerOpportunities.join(", ")
+          : "",
+
+        scholarships: Array.isArray(initialData.scholarships)
+          ? initialData.scholarships.join(", ")
+          : "",
+
+        eligibilityRequirements: Array.isArray(
+          initialData.eligibilityRequirements,
+        )
+          ? initialData.eligibilityRequirements.join(", ")
+          : "",
+
+        topUniversities: Array.isArray(initialData.topUniversities)
+          ? initialData.topUniversities.join(", ")
+          : "",
+
         whyStudyCards:
           initialData.whyStudyCards?.length > 0
             ? initialData.whyStudyCards
             : [{ title: "", description: "" }],
       });
-      setFlagPreview(initialData.flag || null);
-      setPhotoPreview(initialData.image || null);
+
+      setFlagPreview(initialData.flagImage?.url || null);
+      setPhotoPreview(initialData.heroImage?.url || null);
     }
   }, [initialData]);
 
@@ -99,28 +123,43 @@ export default function AddCountryForm({
     }));
   };
 
+  const isEmpty = (value) =>
+    value === undefined || value === null || String(value).trim() === "";
+
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.name.trim()) newErrors.name = "Country name is required";
-    if (!formData.continent.trim()) newErrors.continent = "Continent is required";
-    if (!formData.capital.trim()) newErrors.capital = "Capital is required";
-    if (!formData.visaSuccessRate.trim())
-      newErrors.visaSuccessRate = "Visa success rate is required";
+    if (isEmpty(formData.name)) newErrors.name = "Country name is required";
 
-    if (!formData.popularCourses.trim())
+    if (isEmpty(formData.continent))
+      newErrors.continent = "Continent is required";
+
+    if (isEmpty(formData.capital)) newErrors.capital = "Capital is required";
+
+    if (
+      formData.visaSuccessRate === "" ||
+      isNaN(Number(formData.visaSuccessRate))
+    ) {
+      newErrors.visaSuccessRate = "Valid visa success rate is required";
+    }
+
+    if (isEmpty(formData.popularCourses))
       newErrors.popularCourses = "Popular courses required";
-    if (!formData.careerOpportunities.trim())
+
+    if (isEmpty(formData.careerOpportunities))
       newErrors.careerOpportunities = "Career opportunities required";
-    if (!formData.scholarships.trim())
+
+    if (isEmpty(formData.scholarships))
       newErrors.scholarships = "Scholarships required";
-    if (!formData.eligibilityRequirements.trim())
+
+    if (isEmpty(formData.eligibilityRequirements))
       newErrors.eligibilityRequirements = "Eligibility required";
-    if (!formData.topUniversities.trim())
+
+    if (isEmpty(formData.topUniversities))
       newErrors.topUniversities = "Top universities required";
 
     formData.whyStudyCards.forEach((card, index) => {
-      if (!card.description.trim()) {
+      if (!card.description || card.description.trim() === "") {
         newErrors[`whyStudyCards_${index}_description`] =
           `Description required for card ${index + 1}`;
       }
@@ -136,13 +175,13 @@ export default function AddCountryForm({
     if (!validateForm()) return;
 
     const cleanedCards = formData.whyStudyCards.filter(
-      (card) => card.description.trim() !== ""
+      (card) => card.description.trim() !== "",
     );
 
-    const finalFlagUrl = flagFile
+    const flagImage = flagFile
       ? flagPreview
       : flagPreview || initialData?.flag || null;
-    const finalPhotoUrl = photoFile
+    const heroImage = photoFile
       ? photoPreview
       : photoPreview || initialData?.image || null;
 
@@ -157,8 +196,16 @@ export default function AddCountryForm({
       eligibilityRequirements: formData.eligibilityRequirements,
       topUniversities: formData.topUniversities,
       whyStudyCards: cleanedCards,
-      finalFlagUrl,
-      finalPhotoUrl,
+      flagImage: flagFile,
+      heroImage: photoFile,
+    });
+  };
+
+  const onError = (msg) => {
+    setMessageModal({
+      open: true,
+      type: "error",
+      message: msg,
     });
   };
 
@@ -178,6 +225,7 @@ export default function AddCountryForm({
           setPhotoPreview={setPhotoPreview}
           setPhotoFile={setPhotoFile}
           fileInputRef={fileInputRef}
+          onError={onError}
         />
       )}
 
@@ -211,7 +259,7 @@ export default function AddCountryForm({
         isViewMode={isViewMode}
       />
 
-      <FormActions mode={mode} onCancel={onCancel} />
+      <FormActions mode={mode} onCancel={onCancel} submitting={submitting} />
     </form>
   );
 }
