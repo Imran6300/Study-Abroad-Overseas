@@ -1,5 +1,5 @@
 // components/admin/country/FormActions.jsx
-export default function FormActions({ mode, onCancel }) {
+export default function FormActions({ mode, onCancel, submitting }) {
   const isViewMode = mode === "view";
 
   return (
@@ -15,9 +15,21 @@ export default function FormActions({ mode, onCancel }) {
       {!isViewMode && (
         <button
           type="submit"
-          className="px-8 py-3 bg-sky-600 text-white rounded-xl hover:bg-sky-700 transition-colors font-medium shadow-sm"
+          disabled={submitting}
+          className={`px-8 py-3 rounded-xl font-medium shadow-sm transition-colors
+    ${
+      submitting
+        ? "bg-gray-400 text-white cursor-not-allowed"
+        : "bg-sky-600 text-white hover:bg-sky-700"
+    }`}
         >
-          {mode === "add" ? "Add Country" : "Update Country"}
+          {submitting
+            ? mode === "add"
+              ? "Adding Country..."
+              : "Updating Country..."
+            : mode === "add"
+              ? "Add Country"
+              : "Update Country"}
         </button>
       )}
     </div>
