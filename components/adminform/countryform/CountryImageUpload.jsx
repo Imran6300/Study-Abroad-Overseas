@@ -8,6 +8,7 @@ export default function CountryImageUpload({
   setPhotoPreview,
   setPhotoFile,
   fileInputRef,
+  onError,
 }) {
   const handlePhotoChange = (e) => {
     const file = e.target.files?.[0];
@@ -15,11 +16,11 @@ export default function CountryImageUpload({
 
     // Basic validation
     if (!file.type.startsWith("image/")) {
-      alert("Please select an image file (JPG, PNG, etc.)");
+      onError?.("Please select a valid image file (JPG, PNG, etc.)");
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      alert("Image size should be less than 5MB");
+      onError?.("Image size should be less than 5MB");
       return;
     }
 
