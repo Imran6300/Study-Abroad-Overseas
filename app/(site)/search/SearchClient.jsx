@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import {
   matchCountry,
   matchUniversity,
@@ -10,17 +10,14 @@ import {
 
 import { useRouter } from "next/navigation";
 
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { fetchUniversities } from "@/store/universitySlice";
-import { useEffect } from "react";
-
-import { useSelector } from "react-redux";
-import { COUNTRIES } from "@/data/countries";
 
 import { motion } from "framer-motion";
 
 export default function SearchClient() {
   const router = useRouter();
+  const [countries, setCountries] = useState([]);
 
   const searchParams = useSearchParams();
   const dispatch = useDispatch();
@@ -30,13 +27,32 @@ export default function SearchClient() {
   const query = searchParams.get("q")?.trim() || "";
 
   useEffect(() => {
+    async function fetchCountries() {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/countries`,
+        );
+
+        if (!res.ok) return;
+
+        const data = await res.json();
+        setCountries(data.data);
+      } catch (error) {
+        console.error("Error fetching countries:", error);
+      }
+    }
+
+    fetchCountries();
+  }, []);
+
+  useEffect(() => {
     if (universities.length === 0) {
       dispatch(fetchUniversities());
     }
   }, [dispatch, universities.length]);
 
   const result = useMemo(() => {
-    if (!query || universities.length === 0) return null;
+    if (!query) return null;
 
     // 1️⃣ University Name (Highest Priority)
     const university = matchUniversity(query, universities);
@@ -51,11 +67,11 @@ export default function SearchClient() {
       };
 
     // 3️⃣ Country
-    const country = matchCountry(query, COUNTRIES);
+    const country = matchCountry(query, countries);
     if (country) return { type: "country", data: country };
 
     return { type: "unknown" };
-  }, [query, universities]);
+  }, [query, universities, countries]);
 
   const intent = result?.type || "unknown";
 

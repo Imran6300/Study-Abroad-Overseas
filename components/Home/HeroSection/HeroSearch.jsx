@@ -2,16 +2,16 @@
 import { IoSearch } from "react-icons/io5";
 import { useRouter } from "next/navigation";
 import { matchCountry, matchCourse, buildCourseIndex } from "@/lib/searchUtils";
-import { COUNTRIES } from "@/data/countries";
 import { useSelector, useDispatch } from "react-redux";
 
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { fetchCourses } from "@/store/courseSlice";
 
 // Normalize function (same as before)
 const normalize = (str = "") => str.toLowerCase().trim().replace(/\s+/g, " ");
 
 export default function HeroSearch() {
+  const [countries, setCountries] = useState([]);
   const dispatch = useDispatch();
   const { courses } = useSelector((state) => state.courses);
 
@@ -20,6 +20,24 @@ export default function HeroSearch() {
       dispatch(fetchCourses());
     }
   }, [dispatch, courses]);
+  useEffect(() => {
+    async function fetchCountries() {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/countries`,
+        );
+
+        if (!res.ok) return;
+
+        const data = await res.json();
+        setCountries(data.data);
+      } catch (error) {
+        console.error("Error fetching countries:", error);
+      }
+    }
+
+    fetchCountries();
+  }, []);
 
   const universities = useSelector((state) => state.universities.list);
 
@@ -33,15 +51,14 @@ export default function HeroSearch() {
 
     const normalizedQuery = normalize(query);
 
-    // 1️⃣ COUNTRY (keep as is)
-    const country = matchCountry(query, COUNTRIES);
+    // 1️⃣ COUNTRY
+    const country = matchCountry(query, countries);
     if (country) {
-      const slug = normalize(country.name).replace(/\s+/g, "-");
-      router.push(`/all-countries/${slug}`);
+      router.push(`/all-countries/${country.slug}`);
       return;
     }
 
-    // 2️⃣ COURSE (FROM BACKEND)
+    // 2️⃣ COURSE
     const course =
       courses?.find((c) => normalize(c.title) === normalizedQuery) ||
       courses?.find((c) => normalize(c.title).startsWith(normalizedQuery)) ||

@@ -2,14 +2,14 @@
 
 import { useRouter } from "next/navigation";
 import { useSelector, useDispatch } from "react-redux";
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { fetchCourses } from "@/store/courseSlice";
 import { matchCountry } from "@/lib/searchUtils";
-import { COUNTRIES } from "@/data/countries";
 
 const normalize = (str = "") => str.toLowerCase().trim().replace(/\s+/g, " ");
 
 export function useHeroSearch() {
+  const [countries, setCountries] = useState([]);
   const router = useRouter();
   const dispatch = useDispatch();
 
@@ -21,6 +21,23 @@ export function useHeroSearch() {
       dispatch(fetchCourses());
     }
   }, [dispatch, courses.length]);
+  useEffect(() => {
+    async function fetchCountries() {
+      try {
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "";
+        const res = await fetch(`${baseUrl}/api/countries`);
+
+        if (!res.ok) return;
+
+        const data = await res.json();
+        setCountries(data.data);
+      } catch (error) {
+        console.error("Error fetching countries:", error);
+      }
+    }
+
+    fetchCountries();
+  }, []);
 
   const handleSearch = (query) => {
     if (!query?.trim()) return;
@@ -28,10 +45,9 @@ export function useHeroSearch() {
     const normalizedQuery = normalize(query);
 
     // 1️⃣ COUNTRY
-    const country = matchCountry(query, COUNTRIES);
+    const country = matchCountry(query, countries);
     if (country) {
-      const slug = normalize(country.name).replace(/\s+/g, "-");
-      router.push(`/all-countries/${slug}`);
+      router.push(`/all-countries/${country.slug}`);
       return;
     }
 

@@ -1,51 +1,39 @@
 import CountryClient from "./CountryClient";
-import { COUNTRIES } from "@/data/countries";
 import { notFound } from "next/navigation";
 
-/* =============================
-   STATIC PARAMS
-   ============================= */
-export async function generateStaticParams() {
-  return COUNTRIES.map((country) => ({
-    country: country.slug,
-  }));
-}
+async function getCountry(slug) {
+  const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
 
-/* =============================
-   METADATA
-   ============================= */
-export async function generateMetadata({ params }) {
-  const resolvedParams = await params;
-  const slug = resolvedParams?.country;
+  console.log("ENV:", baseUrl);
 
-  // First internal App Router call
-  if (!slug) return {};
-
-  const countryObj = COUNTRIES.find((c) => c.slug === slug);
-
-  if (!countryObj) {
-    notFound();
+  if (!baseUrl) {
+    console.error("API URL is not defined");
+    return null;
   }
 
-  return {
-    title: `Study in ${countryObj.name}`,
-    description: `Study in ${countryObj.name} with Khizar Overseas. Explore universities, courses, scholarships, living costs, and visa guidance.`,
-  };
+  try {
+    const res = await fetch(`${baseUrl}/api/countries/${slug}`, {
+      cache: "no-store",
+    });
+
+    if (!res.ok) return null;
+
+    const data = await res.json();
+    return data.data;
+  } catch (error) {
+    console.error("Fetch failed:", error);
+    return null;
+  }
 }
 
-/* =============================
-   PAGE
-   ============================= */
 export default async function CountryPage({ params }) {
-  const resolvedParams = await params;
-  const slug = resolvedParams.country;
+  const { country: slug } = await params;
 
-  // ✅ DEFINE countryObj AGAIN (scope fix)
-  const countryObj = COUNTRIES.find((c) => c.slug === slug);
+  const country = await getCountry(slug);
 
-  if (!countryObj) {
+  if (!country) {
     notFound();
   }
 
-  return <CountryClient country={slug} />;
+  return <CountryClient country={country} />;
 }
