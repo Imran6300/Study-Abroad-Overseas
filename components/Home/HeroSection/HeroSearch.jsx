@@ -24,7 +24,7 @@ export default function HeroSearch() {
     async function fetchCountries() {
       try {
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/countries`,
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/countries`,
         );
 
         if (!res.ok) return;

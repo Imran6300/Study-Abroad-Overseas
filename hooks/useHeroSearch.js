@@ -24,7 +24,7 @@ export function useHeroSearch() {
   useEffect(() => {
     async function fetchCountries() {
       try {
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "";
+        const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "";
         const res = await fetch(`${baseUrl}/api/countries`);
 
         if (!res.ok) return;
