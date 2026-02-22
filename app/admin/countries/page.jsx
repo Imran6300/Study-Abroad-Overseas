@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 
@@ -21,22 +21,40 @@ import {
 export default function CountriesPage() {
   const { user } = useSelector((state) => state.auth);
   const CounselorName = user?.name;
-  const [countries, setCountries] = useState([
-    {
-      id: 1,
-      name: "Canada",
-      flag: "https://flagcdn.com/w320/ca.png",
-      image: "https://images.unsplash.com/photo-1503614472-8c93d56e92ce?w=800", // example
-      continent: "North America",
-      capital: "Ottawa",
-      languages: "English, French",
-      avgTuitionUSD: "$20,000–$40,000 / year",
-      visaSuccessRate: "92%",
-      featured: true,
-      universitiesCount: 38,
-    },
-    // ... more mock entries
-  ]);
+  const [countries, setCountries] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const [submitting, setSubmitting] = useState(false);
+  const [messageModal, setMessageModal] = useState({
+    open: false,
+    type: "", // "success" | "error"
+    message: "",
+  });
+
+  useEffect(() => {
+    fetchCountries();
+  }, []);
+
+  const fetchCountries = async () => {
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/countries`,
+        {
+          credentials: "include",
+        },
+      );
+
+      const data = await res.json();
+
+      if (data.success) {
+        setCountries(data.data);
+      }
+    } catch (err) {
+      console.error("Error fetching countries:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const [search, setSearch] = useState("");
   const [justAdded, setJustAdded] = useState(false);
@@ -53,14 +71,40 @@ export default function CountriesPage() {
     setMode("add");
   };
 
-  const openView = (country) => {
-    setSelectedCountry(country);
-    setMode("view");
+  const openView = async (country) => {
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/countries/${country.slug}`,
+        { credentials: "include" },
+      );
+
+      const data = await res.json();
+
+      if (data.success) {
+        setSelectedCountry(data.data);
+        setMode("view");
+      }
+    } catch (err) {
+      console.error("Failed to fetch country details:", err);
+    }
   };
 
-  const openEdit = (country) => {
-    setSelectedCountry(country);
-    setMode("edit");
+  const openEdit = async (country) => {
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/countries/${country.slug}`,
+        { credentials: "include" },
+      );
+
+      const data = await res.json();
+
+      if (data.success) {
+        setSelectedCountry(data.data); // full country object
+        setMode("edit");
+      }
+    } catch (err) {
+      console.error("Failed to fetch country details:", err);
+    }
   };
 
   const openDeleteConfirm = (country) => {
@@ -68,62 +112,99 @@ export default function CountriesPage() {
     setShowConfirmDelete(true);
   };
 
-  const handleDeleteConfirmed = () => {
-    setCountries((prev) => prev.filter((c) => c.id !== countryToDelete.id));
+  const handleDeleteConfirmed = async () => {
+    try {
+      await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/host/country/${countryToDelete.slug}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        },
+      );
+
+      await fetchCountries();
+    } catch (err) {
+      console.error("Delete failed:", err);
+    }
+
     setShowConfirmDelete(false);
     setCountryToDelete(null);
   };
 
-  const handleFormSuccess = (submittedData) => {
-    const {
-      name,
-      finalFlagUrl,
-      finalPhotoUrl,
-      // you can add more later: popularCourses, careerOpportunities, etc.
-    } = submittedData;
+  const handleFormSuccess = async (submittedData) => {
+    setSubmitting(true);
 
-    if (mode === "add") {
-      const newCountry = {
-        id: Date.now(),
-        name: name || "Unknown",
-        flag: finalFlagUrl || "https://flagcdn.com/w320/xx.png",
-        image: finalPhotoUrl || null,
-        continent: "", // ← add to form if needed
-        capital: "",
-        languages: "",
-        avgTuitionUSD: "N/A",
-        visaSuccessRate: "N/A",
-        featured: false,
-        universitiesCount: 0,
-      };
-      setCountries((prev) => [...prev, newCountry]);
-      setJustAdded(true);
-      setTimeout(() => setJustAdded(false), 3000);
-    } else if (mode === "edit" && selectedCountry) {
-      setCountries((prev) =>
-        prev.map((c) =>
-          c.id === selectedCountry.id
-            ? {
-                ...c,
-                name: name || c.name,
-                flag: finalFlagUrl || c.flag,
-                image: finalPhotoUrl || c.image,
-                // continent: submittedData.continent || c.continent,
-                // etc...
-              }
-            : c,
-        ),
-      );
+    try {
+      const formData = new FormData();
+
+      Object.entries(submittedData).forEach(([key, value]) => {
+        if (Array.isArray(value)) {
+          formData.append(key, JSON.stringify(value));
+        } else {
+          formData.append(key, value);
+        }
+      });
+
+      let res;
+
+      if (mode === "add") {
+        res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/host/country`,
+          {
+            method: "POST",
+            body: formData,
+            credentials: "include",
+          },
+        );
+      }
+
+      if (mode === "edit" && selectedCountry) {
+        res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/host/country/${selectedCountry.slug}`,
+          {
+            method: "PUT",
+            body: formData,
+            credentials: "include",
+          },
+        );
+      }
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Something went wrong.");
+      }
+
+      // ✅ SUCCESS
+      await fetchCountries();
+
+      setMessageModal({
+        open: true,
+        type: "success",
+        message:
+          mode === "add"
+            ? "Country added successfully!"
+            : "Country updated successfully!",
+      });
+
+      setMode(null);
+      setSelectedCountry(null);
+    } catch (err) {
+      // ❌ ERROR
+      setMessageModal({
+        open: true,
+        type: "error",
+        message: err.message || "Form submission failed.",
+      });
+    } finally {
+      setSubmitting(false);
     }
-
-    setMode(null);
-    setSelectedCountry(null);
   };
 
   const filteredCountries = countries.filter(
     (c) =>
       c.name.toLowerCase().includes(search.toLowerCase()) ||
-      c.continent.toLowerCase().includes(search.toLowerCase()),
+      (c.continent || "").toLowerCase().includes(search.toLowerCase()),
   );
 
   return (
@@ -190,6 +271,8 @@ export default function CountriesPage() {
                       initialData={selectedCountry}
                       onSuccess={handleFormSuccess}
                       onCancel={() => setMode(null)}
+                      setMessageModal={setMessageModal}
+                      submitting={submitting}
                     />
                   </div>
                 </div>
@@ -198,15 +281,21 @@ export default function CountriesPage() {
           </AnimatePresence>
 
           <AnimatePresence>
-            {justAdded && (
-              <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="mb-8 p-4 bg-green-50 border border-green-200 text-green-800 rounded-xl text-center font-medium shadow-sm"
-              >
-                Country added successfully!
-              </motion.div>
+            {messageModal.open && (
+              <ConfirmationModal
+                title={messageModal.type === "success" ? "Success" : "Error"}
+                message={messageModal.message}
+                confirmText="OK"
+                confirmVariant={
+                  messageModal.type === "success" ? "primary" : "danger"
+                }
+                onConfirm={() =>
+                  setMessageModal({ open: false, type: "", message: "" })
+                }
+                onCancel={() =>
+                  setMessageModal({ open: false, type: "", message: "" })
+                }
+              />
             )}
           </AnimatePresence>
 
@@ -231,6 +320,11 @@ export default function CountriesPage() {
               className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200"
             >
               <div className="overflow-x-auto">
+                {loading && (
+                  <p className="text-center py-6 text-gray-500">
+                    Loading countries...
+                  </p>
+                )}
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
@@ -260,14 +354,13 @@ export default function CountriesPage() {
                   <tbody className="divide-y divide-gray-200">
                     {filteredCountries.map((country) => (
                       <motion.tr
-                        key={country.id}
-                        variants={itemVariants}
+                        key={country._id}
                         className="hover:bg-gray-50 transition-colors"
                       >
                         <td className="px-6 py-4">
                           <div className="w-12 h-8 rounded overflow-hidden border border-gray-200 shadow-sm">
                             <img
-                              src={country.flag}
+                              src={country.flagImage?.url}
                               alt={`${country.name} flag`}
                               className="w-full h-full object-cover"
                               onError={(e) =>
@@ -278,10 +371,10 @@ export default function CountriesPage() {
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          {country.image ? (
+                          {country.heroImage ? (
                             <div className="w-16 h-10 rounded overflow-hidden border border-gray-200 shadow-sm">
                               <img
-                                src={country.image}
+                                src={country.heroImage?.url}
                                 alt={`${country.name} preview`}
                                 className="w-full h-full object-cover"
                                 onError={(e) =>
