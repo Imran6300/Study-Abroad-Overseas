@@ -1,46 +1,24 @@
-import fs from "fs";
-import path from "path";
-import matter from "gray-matter";
 import BlogClient from "@/components/BlogClient";
 
-const postsDirectory = path.join(process.cwd(), "content/blog");
+export const metadata = {
+  title: "Study Abroad Blogs | Khizar Overseas",
+  description:
+    "Explore expert guides on studying abroad, visa tips, scholarships, and top universities for 2026.",
+};
 
-function getAllPosts() {
-  if (!fs.existsSync(postsDirectory)) return [];
+async function getBlogs() {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/blogs`, {
+    next: { revalidate: 3600 },
+  });
 
-  return fs
-    .readdirSync(postsDirectory)
-    .filter((f) => f.endsWith(".mdx"))
-    .map((file) => {
-      const slug = file.replace(".mdx", "");
-      const content = fs.readFileSync(path.join(postsDirectory, file), "utf8");
-      const { data } = matter(content);
+  if (!res.ok) return [];
 
-      return {
-        slug,
-        title: data.title || "Untitled",
-        excerpt: data.excerpt || "",
-        date: data.date
-          ? new Date(data.date).toLocaleDateString("en-IN", {
-              day: "numeric",
-              month: "long",
-              year: "numeric",
-            })
-          : "Date unavailable",
-
-        author: data.author || "Khizar Team",
-        readTime: data.readTime || "5 min read",
-        image: data.image || null,
-        category: data.category || "General",
-      };
-    });
+  const json = await res.json();
+  return json.data;
 }
 
-export default function BlogPage() {
-  const posts = getAllPosts();
+export default async function BlogPage() {
+  const posts = await getBlogs();
 
-  // 👇 ONLY THIS
   return <BlogClient posts={posts} />;
 }
-
-export const revalidate = 3600;

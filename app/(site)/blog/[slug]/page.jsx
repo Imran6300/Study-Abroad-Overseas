@@ -1,9 +1,4 @@
 // app/blog/[slug]/page.jsx
-import fs from "fs";
-import path from "path";
-import matter from "gray-matter";
-import { MDXRemote } from "next-mdx-remote/rsc";
-import { notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -14,26 +9,49 @@ import {
   FaArrowRight,
 } from "react-icons/fa";
 import Button from "@/components/mdx/Button";
-import Callout from "@/components/mdx/Callout";
 
-const postsDirectory = path.join(process.cwd(), "content/blog");
+async function getBlog(slug) {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/blogs/${slug}`,
+    { next: { revalidate: 3600 } },
+  );
 
-async function getPost(slug) {
-  const fullPath = path.join(postsDirectory, `${slug}.mdx`);
-  if (!fs.existsSync(fullPath)) return null;
+  if (!res.ok) return null;
 
-  const fileContents = fs.readFileSync(fullPath, "utf8");
-  const { data, content } = matter(fileContents);
-
-  return { frontmatter: data, content };
+  const json = await res.json();
+  return json.data;
 }
 
-export default async function Post({ params }) {
-  const { slug } = await params;
-  const post = await getPost(slug);
-  if (!post) notFound();
+export async function generateMetadata({ params }) {
+  const { slug } = await params; // ✅ FIXED
+  const blog = await getBlog(slug);
 
-  const { frontmatter, content } = post;
+  if (!blog) {
+    return { title: "Blog Not Found" };
+  }
+
+  return {
+    title: blog.metaTitle || blog.title,
+    description: blog.metaDescription || blog.excerpt,
+    openGraph: {
+      title: blog.metaTitle || blog.title,
+      description: blog.metaDescription || blog.excerpt,
+      images: blog.coverImage?.url ? [blog.coverImage.url] : [],
+      type: "article",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: blog.metaTitle || blog.title,
+      description: blog.metaDescription || blog.excerpt,
+      images: blog.coverImage?.url ? [blog.coverImage.url] : [],
+    },
+  };
+}
+export default async function Post({ params }) {
+  const { slug } = await params; // ✅ unwrap params
+  const blog = await getBlog(slug);
+
+  console.log("FULL BLOG OBJECT:", blog);
 
   return (
     <div className="min-h-screen bg-gradient-to-b  mt-5 from-slate-50 via-white to-slate-50/80">
@@ -52,12 +70,12 @@ export default async function Post({ params }) {
 
         <article className="relative bg-white rounded-2xl lg:rounded-3xl shadow-2xl overflow-hidden border border-slate-100/80">
           {/* Hero image – dramatic but clean */}
-          {frontmatter.image && (
+          {blog.coverImage?.url && (
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent/0 z-10" />
               <Image
-                src={frontmatter.image}
-                alt={frontmatter.title}
+                src={blog.coverImage?.url}
+                alt={blog.title}
                 width={1400}
                 height={720}
                 priority
@@ -67,7 +85,7 @@ export default async function Post({ params }) {
               {/* Desktop title overlay – elegant & cinematic */}
               <div className="absolute inset-x-0 bottom-0 z-20 px-8 pb-12 hidden md:block">
                 <h1 className="text-4xl lg:text-5xl xl:text-6xl font-extrabold text-white tracking-tight leading-[1.1] drop-shadow-2xl">
-                  {frontmatter.title}
+                  {blog.title}
                 </h1>
               </div>
             </div>
@@ -76,7 +94,7 @@ export default async function Post({ params }) {
           <div className="px-6 sm:px-10 md:px-14 lg:px-16 xl:px-20 pt-12 pb-16 md:pt-14 lg:pt-16">
             {/* Mobile title – big & bold */}
             <h1 className="md:hidden text-4xl sm:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight mb-8">
-              {frontmatter.title}
+              {blog.title}
             </h1>
 
             {/* Meta – spacious, elegant icons */}
@@ -84,7 +102,7 @@ export default async function Post({ params }) {
               <div className="flex items-center gap-3">
                 <FaCalendarAlt className="text-orange-600 text-xl flex-shrink-0" />
                 <time className="font-medium">
-                  {new Date(String(frontmatter.date)).toLocaleDateString(
+                  {new Date(String(blog.publishDate)).toLocaleDateString(
                     "en-IN",
                     {
                       day: "numeric",
@@ -96,11 +114,11 @@ export default async function Post({ params }) {
               </div>
               <div className="flex items-center gap-3">
                 <FaUser className="text-orange-600 text-xl flex-shrink-0" />
-                <span className="font-medium">{frontmatter.author}</span>
+                <span className="font-medium">{"Khizar Overseas Team"}</span>
               </div>
               <div className="flex items-center gap-3">
                 <FaClock className="text-orange-600 text-xl flex-shrink-0" />
-                <span className="font-medium">{frontmatter.readTime}</span>
+                <span className="font-medium">{blog.estimatedReadTime}</span>
               </div>
             </div>
 
@@ -123,12 +141,9 @@ export default async function Post({ params }) {
                 leading-relaxed tracking-wide font-sans
               `}
             >
-              <MDXRemote
-                source={content}
-                components={{
-                  Button,
-                  Callout,
-                  FaArrowRight,
+              <div
+                dangerouslySetInnerHTML={{
+                  __html: blog.content,
                 }}
               />
             </div>
@@ -159,13 +174,6 @@ export default async function Post({ params }) {
       </div>
     </div>
   );
-}
-
-export async function generateStaticParams() {
-  const fileNames = fs.readdirSync(postsDirectory);
-  return fileNames.map((file) => ({
-    slug: file.replace(/\.mdx$/, ""),
-  }));
 }
 
 export const revalidate = 3600;

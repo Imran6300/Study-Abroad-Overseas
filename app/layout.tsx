@@ -8,6 +8,8 @@ import AuthGate from "@/components/AuthGate";
 import Script from "next/script";
 import UniversityInitializer from "@/components/UniversityInitializer";
 
+import GoogleAnalytics from "@/components/GoogleAnalytics";
+
 export const viewport: Viewport = {
   themeColor: "#ffffff",
   width: "device-width",
@@ -18,6 +20,9 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://khizaroverseas.in"),
+  icons: {
+    icon: "/logo.png",
+  },
 
   title: {
     default: "Best Study Abroad Consultants in India | Overseas Education 2026",
@@ -170,7 +175,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           </AuthInitializer>
         </ReduxProvider>
 
-
         {/* Google tag (gtag.js) – Analytics + optional GA4 events */}
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-1W7JC83PF0"
@@ -186,6 +190,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             });
           `}
         </Script>
+        <GoogleAnalytics />
+
       </body>
     </html>
   );

@@ -131,9 +131,9 @@ export default function Blog({ posts }) {
                 className="bg-white rounded-3xl overflow-hidden shadow-xl border border-gray-100 group"
               >
                 <div className="relative h-64 md:h-96 overflow-hidden">
-                  {featuredPost.image ? (
+                  {featuredPost.coverImage?.url ? (
                     <Image
-                      src={featuredPost.image}
+                      src={featuredPost.coverImage.url}
                       alt={featuredPost.title}
                       fill
                       className="object-cover transition-transform duration-700 group-hover:scale-110"
@@ -150,17 +150,25 @@ export default function Blog({ posts }) {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
                   <div className="absolute bottom-0 left-0 p-8">
                     <span className="inline-block bg-orange-500 text-white text-xs font-bold px-3 py-1.5 rounded-full mb-4">
-                      {featuredPost.category}
+                      {featuredPost.focusCountry}
                     </span>
                     <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 leading-tight">
                       {featuredPost.title}
                     </h2>
                     <div className="flex items-center gap-6 text-white/90 text-sm">
                       <span className="flex items-center gap-2">
-                        <FaCalendarAlt /> {featuredPost.date}
+                        <FaCalendarAlt />{" "}
+                        {new Date(featuredPost.publishDate).toLocaleDateString(
+                          "en-IN",
+                          {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          },
+                        )}
                       </span>
                       <span className="flex items-center gap-2">
-                        <FaClock /> {featuredPost.readTime}
+                        <FaClock /> {featuredPost.estimatedReadTime}
                       </span>
                     </div>
                   </div>
@@ -204,9 +212,9 @@ export default function Blog({ posts }) {
                     className="bg-white rounded-2xl overflow-hidden shadow-lg border border-gray-100 group flex flex-col"
                   >
                     <div className="relative h-52 overflow-hidden">
-                      {post.image ? (
+                      {post.coverImage?.url ? (
                         <Image
-                          src={post.image}
+                          src={post.coverImage.url}
                           alt={post.title}
                           fill
                           className="object-cover transition-transform duration-500 group-hover:scale-105"
@@ -219,18 +227,25 @@ export default function Blog({ posts }) {
                         </div>
                       )}
                       <span className="absolute top-4 left-4 bg-[#0f2a5f] text-white text-xs font-bold px-3 py-1.5 rounded-full">
-                        {post.category}
+                        {post.focusCountry}
                       </span>
                     </div>
                     <div className="p-6 flex flex-col flex-grow">
                       <div className="flex items-center gap-4 text-sm text-gray-500 mb-3">
                         <span className="flex items-center gap-1.5">
                           <FaCalendarAlt className="text-orange-500" />{" "}
-                          {post.date}
+                          {new Date(post.publishDate).toLocaleDateString(
+                            "en-IN",
+                            {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                            },
+                          )}
                         </span>
                         <span className="flex items-center gap-1.5">
                           <FaClock className="text-orange-500" />{" "}
-                          {post.readTime}
+                          {post.estimatedReadTime}
                         </span>
                       </div>
                       <h3 className="text-xl font-bold text-[#0f2a5f] mb-3 line-clamp-2 group-hover:text-orange-600 transition-colors">
@@ -241,7 +256,8 @@ export default function Blog({ posts }) {
                       </p>
                       <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-100">
                         <span className="text-sm text-gray-500 flex items-center gap-1.5">
-                          <FaUser className="text-orange-500" /> {post.author}
+                          <FaUser className="text-orange-500" /> Khizar Overseas
+                          Team
                         </span>
                         <Link
                           href={`/blog/${post.slug}`}

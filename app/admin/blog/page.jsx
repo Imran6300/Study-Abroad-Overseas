@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import { getSocket } from "@/lib/socket";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDebounce } from "use-debounce";
 import AdminSidebar from "@/components/admindashboard/AdminSidebar";
@@ -140,7 +141,27 @@ export default function BlogAdminPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
+  //real time views
 
+  useEffect(() => {
+    const socket = getSocket();
+
+    socket.on("connect", () => {
+      console.log("🟢 Connected to socket:", socket.id);
+    });
+
+    socket.on("blog:viewUpdated", ({ blogId, views }) => {
+      setPosts((prevPosts) =>
+        prevPosts.map((post) =>
+          post.id === blogId ? { ...post, views } : post,
+        ),
+      );
+    });
+
+    return () => {
+      socket.off("blog:viewUpdated");
+    };
+  }, []);
   const [modalState, setModalState] = useState({
     open: false,
     title: "",
@@ -158,7 +179,10 @@ export default function BlogAdminPage() {
   const handleEdit = async (slug) => {
     try {
       const res = await fetch(
-        `https://overseas-backend-production-4f18.up.railway.app/api/blogs/${slug}`,
+        `https://overseas-backend-production-4f18.up.railway.app/host/blogs/${slug}`,
+        {
+          credentials: "include",
+        },
       );
 
       const result = await res.json();
@@ -177,7 +201,10 @@ export default function BlogAdminPage() {
   const handleView = async (slug) => {
     try {
       const res = await fetch(
-        `https://overseas-backend-production-4f18.up.railway.app/api/blogs/${slug}`,
+        `https://overseas-backend-production-4f18.up.railway.app/host/blogs/${slug}`,
+        {
+          credentials: "include",
+        },
       );
 
       const result = await res.json();
@@ -227,7 +254,10 @@ export default function BlogAdminPage() {
       setLoading(true);
 
       const res = await fetch(
-        "https://overseas-backend-production-4f18.up.railway.app/api/blogs",
+        "https://overseas-backend-production-4f18.up.railway.app/host/blogs",
+        {
+          credentials: "include",
+        },
       );
 
       const result = await res.json();
