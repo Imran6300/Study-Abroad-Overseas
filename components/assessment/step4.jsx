@@ -2,7 +2,14 @@
 
 import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 
-export default function Step4({ prevStep, submit, loading, data, updateForm }) {
+export default function Step4({
+  prevStep,
+  submit,
+  loading,
+  data,
+  updateForm,
+  submitStatus,
+}) {
   const { executeRecaptcha } = useGoogleReCaptcha();
 
   const isValid = data.examStatus && data.experience;
@@ -62,10 +69,21 @@ export default function Step4({ prevStep, submit, loading, data, updateForm }) {
 
         <button
           onClick={handleSubmit}
-          disabled={!isValid || loading}
-          className="btn-primary w-full disabled:opacity-60"
+          disabled={loading || submitStatus === "success"}
+          className={`w-full transition-all duration-300 
+    ${
+      submitStatus === "success"
+        ? "bg-green-600"
+        : submitStatus === "error"
+          ? "bg-red-600"
+          : "btn-primary"
+    } 
+    disabled:opacity-70`}
         >
-          {loading ? "Submitting..." : "Get My Free Assessment 🎓"}
+          {submitStatus === "loading" && "Submitting..."}
+          {submitStatus === "success" && "Submitted Successfully ✓"}
+          {submitStatus === "error" && "Submission Failed — Try Again"}
+          {submitStatus === "idle" && "Get My Free Assessment 🎓"}
         </button>
       </div>
 

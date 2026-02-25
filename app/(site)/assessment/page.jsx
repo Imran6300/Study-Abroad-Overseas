@@ -57,6 +57,8 @@ export default function FreeAssessmentPage() {
   const [step, setStep] = useState(1);
   const [direction, setDirection] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState("idle");
+  // idle | loading | success | error
 
   const [formData, setFormData] = useState({
     name: "",
@@ -90,6 +92,7 @@ export default function FreeAssessmentPage() {
     if (loading) return;
 
     setLoading(true);
+    setSubmitStatus("loading");
 
     try {
       const res = await fetch(
@@ -114,15 +117,15 @@ export default function FreeAssessmentPage() {
         },
       );
 
+      const data = await res.json();
+
       if (!res.ok) {
-        const errorData = await res.json();
-        console.log("Backend Error:", errorData);
-        throw new Error(errorData.message || "Failed");
+        throw new Error(data.message || "Submission failed");
       }
 
-      alert("Assessment submitted successfully!");
+      setSubmitStatus("success");
     } catch (err) {
-      alert(err.message);
+      setSubmitStatus("error");
     } finally {
       setLoading(false);
     }
@@ -209,6 +212,7 @@ export default function FreeAssessmentPage() {
                     loading={loading}
                     data={formData}
                     updateForm={updateForm}
+                    submitStatus={submitStatus}
                   />
                 )}
               </motion.div>
