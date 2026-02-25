@@ -162,4 +162,5 @@ body::-webkit-scrollbar {
 .grecaptcha-badge {
   bottom: 20px !important;
   margin-right: 1020px;
+  visibility: hidden;
 }

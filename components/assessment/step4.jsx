@@ -71,14 +71,14 @@ export default function Step4({
           onClick={handleSubmit}
           disabled={loading || submitStatus === "success"}
           className={`w-full transition-all duration-300 
-    ${
-      submitStatus === "success"
-        ? "bg-green-600"
-        : submitStatus === "error"
-          ? "bg-red-600"
-          : "btn-primary"
-    } 
-    disabled:opacity-70`}
+      ${
+        submitStatus === "success"
+          ? "bg-green-600"
+          : submitStatus === "error"
+            ? "bg-red-600"
+            : "btn-primary"
+      } 
+      disabled:opacity-70`}
         >
           {submitStatus === "loading" && "Submitting..."}
           {submitStatus === "success" && "Submitted Successfully ✓"}
@@ -87,8 +87,27 @@ export default function Step4({
         </button>
       </div>
 
-      <p className="text-xs text-gray-400 text-center pt-2">
-        Protected by reCAPTCHA
+      {/* ✅ PUT IT RIGHT HERE */}
+      <p className="text-xs text-gray-400 mt-4 text-center leading-relaxed">
+        This site is protected by reCAPTCHA and the Google{" "}
+        <a
+          href="https://policies.google.com/privacy"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline hover:text-gray-300"
+        >
+          Privacy Policy
+        </a>{" "}
+        and{" "}
+        <a
+          href="https://policies.google.com/terms"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline hover:text-gray-300"
+        >
+          Terms of Service
+        </a>{" "}
+        apply.
       </p>
     </div>
   );
