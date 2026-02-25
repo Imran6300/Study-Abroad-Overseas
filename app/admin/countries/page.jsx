@@ -10,6 +10,8 @@ import DashboardHeader from "@/components/admindashboard/DashboardHeader";
 import AddCountryForm from "@/components/adminform/addcountry";
 import ConfirmationModal from "@/components/adminform/confirmmsg";
 
+import Image from "next/image";
+
 import { useSelector } from "react-redux";
 
 import {
@@ -359,10 +361,13 @@ export default function CountriesPage() {
                       >
                         <td className="px-6 py-4">
                           <div className="w-12 h-8 rounded overflow-hidden border border-gray-200 shadow-sm">
-                            <img
+                            <Image
                               src={country.flagImage?.url}
                               alt={`${country.name} flag`}
+                              width={48}
+                              height={32}
                               className="w-full h-full object-cover"
+                              style={{ objectFit: "cover" }} // if needed
                               onError={(e) =>
                                 (e.target.src =
                                   "https://via.placeholder.com/48x32?text=Flag")
@@ -373,10 +378,13 @@ export default function CountriesPage() {
                         <td className="px-6 py-4">
                           {country.heroImage ? (
                             <div className="w-16 h-10 rounded overflow-hidden border border-gray-200 shadow-sm">
-                              <img
+                              <Image
                                 src={country.heroImage?.url}
                                 alt={`${country.name} preview`}
+                                width={48}
+                                height={32}
                                 className="w-full h-full object-cover"
+                                style={{ objectFit: "cover" }} // if needed
                                 onError={(e) =>
                                   (e.target.src =
                                     "https://via.placeholder.com/64x40?text=No+Img")
