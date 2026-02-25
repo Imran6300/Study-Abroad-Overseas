@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSelector } from "react-redux";
+import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 
 import Step1 from "@/components/assessment/step1";
 import Step2 from "@/components/assessment/step2";
@@ -54,8 +55,9 @@ const pageVariants = {
 const TOTAL_STEPS = 4;
 
 export default function FreeAssessmentPage() {
+  const { executeRecaptcha } = useGoogleReCaptcha();
   const { user, authChecked } = useSelector((state) => state.auth);
-  const isLoggedIn = Boolean(user)
+  const isLoggedIn = Boolean(user);
 
   const [step, setStep] = useState(1);
   const [direction, setDirection] = useState(1);
@@ -92,18 +94,27 @@ export default function FreeAssessmentPage() {
   const handleSubmit = async () => {
     if (loading) return;
 
+    if (!executeRecaptcha) {
+      alert("Recaptcha not ready");
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const res = await fetch("/api/assessment", {
+      const captchaToken = await executeRecaptcha("lead_submit");
+
+      const res = await fetch("/api/lead", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          captchaToken,
+        }),
       });
 
       if (!res.ok) throw new Error("Failed");
 
-      console.log("Assessment Submitted:", formData);
       alert("Assessment submitted successfully!");
     } catch (err) {
       alert("Submission failed");

@@ -7,6 +7,7 @@ import AuthInitializer from "@/components/AuthInitializer";
 import AuthGate from "@/components/AuthGate";
 import Script from "next/script";
 import UniversityInitializer from "@/components/UniversityInitializer";
+import RecaptchaProvider from "@/components/RecaptchaProvider";
 
 import GoogleAnalytics from "@/components/GoogleAnalytics";
 
@@ -170,7 +171,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <ReduxProvider>
           <AuthInitializer>
             <UniversityInitializer>
-              <AuthGate>{children}</AuthGate>
+              <RecaptchaProvider>
+                <AuthGate>{children}</AuthGate>
+              </RecaptchaProvider>
             </UniversityInitializer>
           </AuthInitializer>
         </ReduxProvider>
