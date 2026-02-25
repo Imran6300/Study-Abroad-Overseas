@@ -2,7 +2,6 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bell, Check, Info, AlertTriangle, X } from "lucide-react";
-import { useSelector } from "react-redux";
 
 export default function DashboardHeader({
   title = "Dashboard",
@@ -238,12 +237,12 @@ export default function DashboardHeader({
             </div>
 
             {/* Primary Action Button (unchanged) */}
-
-            <motion.button
-              whileHover={{ scale: 1.04, y: -2 }}
-              whileTap={{ scale: 0.96 }}
-              onClick={onButtonClick}
-              className="
+            {btnName && (
+              <motion.button
+                whileHover={{ scale: 1.04, y: -2 }}
+                whileTap={{ scale: 0.96 }}
+                onClick={onButtonClick}
+                className="
                   group relative overflow-hidden
                   flex items-center gap-2
                   bg-gradient-to-r from-sky-600 via-sky-700 to-indigo-700
@@ -255,10 +254,11 @@ export default function DashboardHeader({
                   shadow-lg hover:shadow-xl
                   transition-all duration-300
                 "
-            >
-              <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></span>
-              <span className="relative z-10">{btnName}</span>
-            </motion.button>
+              >
+                <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></span>
+                <span className="relative z-10">{btnName}</span>
+              </motion.button>
+            )}
           </div>
         </div>
       </div>
