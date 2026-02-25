@@ -57,6 +57,7 @@ export default function SignupPage() {
             name: formData.name.trim(),
             email: formData.email.trim(),
             password: password,
+            confirmpassword: confirmPassword,
           }),
         },
       );
