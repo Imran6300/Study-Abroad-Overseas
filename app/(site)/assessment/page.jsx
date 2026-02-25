@@ -122,7 +122,7 @@ export default function FreeAssessmentPage() {
 
       alert("Assessment submitted successfully!");
     } catch (err) {
-      alert("Submission failed");
+      alert(err.message);
     } finally {
       setLoading(false);
     }

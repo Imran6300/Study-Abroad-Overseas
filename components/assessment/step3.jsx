@@ -1,4 +1,5 @@
 export default function Step3({ data, updateForm, nextStep, prevStep }) {
+  const isValid = data.country && data.intake && data.budget.trim() !== "";
   return (
     <div className="space-y-5">
       <select
@@ -38,7 +39,11 @@ export default function Step3({ data, updateForm, nextStep, prevStep }) {
         <button onClick={prevStep} className="btn-secondary w-full text-white">
           ← Back
         </button>
-        <button onClick={nextStep} className="btn-primary w-full">
+        <button
+          onClick={() => isValid && nextStep()}
+          disabled={!isValid}
+          className="btn-primary w-full"
+        >
           Continue →
         </button>
       </div>
