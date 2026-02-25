@@ -62,6 +62,7 @@ export default function SignupPage() {
       );
 
       const data = await res.json();
+      console.log("Signup Response:", data);
 
       if (res.ok && data.success) {
         router.push(`/verify-otp?email=${formData.email}`);
@@ -71,8 +72,6 @@ export default function SignupPage() {
         dispatch(authFail(msg));
       }
     } catch (err) {
-      const data = await res.json();
-      console.log("Signup Response:", data);
       setError("Server error. Please try again.");
       dispatch(authFail("Server error"));
     } finally {
