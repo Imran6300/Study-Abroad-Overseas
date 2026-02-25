@@ -10,7 +10,6 @@ import { authStart, authSuccess, authFail } from "../../../store/authSlice";
 
 export default function SignupPage() {
   const router = useRouter();
-
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -22,10 +21,7 @@ export default function SignupPage() {
   const [error, setError] = useState("");
 
   const handleChange = (e) => {
-    setFormData((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const dispatch = useDispatch();
@@ -54,17 +50,16 @@ export default function SignupPage() {
             name: formData.name,
             email: formData.email,
             password: formData.password,
-            confirmpassword: formData.confirmpassword,
           }),
         },
       );
       const data = await res.json();
 
-      if (res.ok && data.success && data.isLoggedIn) {
-        dispatch(authSuccess(data.user));
-        router.push("/");
+      if (res.ok && data.success) {
+        // Redirect to OTP verification page
+        router.push(`/verify-otp?email=${formData.email}`);
       } else {
-        const msg = data.errors?.[0] || "Signup failed";
+        const msg = data.errors?.[0] || data.message || "Signup failed";
         setError(msg);
         dispatch(authFail(msg));
       }
@@ -79,55 +74,46 @@ export default function SignupPage() {
   return (
     <div
       className="
-    min-h-screen w-full 
-    bg-[#F7F9FC]
-    flex items-center justify-center 
-    px-4 
-    pt-8 sm:pt-10 md:pt-16 lg:pt-20        /* ← increased top padding on desktop */
-    pb-8 sm:pb-10
-  "
+        min-h-screen w-full bg-[#F7F9FC]
+    flex items-center justify-center
+    px-4 pb-10
+    pt-20 sm:pt-24 md:pt-[100px] lg:pt-28
+      "
     >
-      <div
-        className="
-      w-full max-w-[340px] xs:max-w-[360px] sm:max-w-[380px] md:max-w-[420px]
-      mx-auto
-    "
-      >
+      <div className="w-full max-w-[min(92vw,360px)] mx-auto">
         <motion.div
-          initial={{ opacity: 0, y: 16 }}
+          initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
           className="
-        bg-white rounded-xl shadow-lg border border-gray-200/70
-        p-5 sm:p-6 md:p-7
-        max-h-[85vh] sm:max-h-[88vh] overflow-y-auto
-        scrollbar-thin scrollbar-thumb-gray-300
-      "
+            bg-white rounded-xl shadow-md border border-gray-200/70
+            p-5 sm:p-6
+          "
         >
-          {/* Logo */}
-          <div className="flex items-center gap-2.5 mb-4 sm:mb-5">
-            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#4A6BFF] to-[#22C55E] flex items-center justify-center shadow-sm">
-              <FaGraduationCap className="text-white text-base" />
+          {/* Logo + brand */}
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#4A6BFF] to-[#22C55E] flex items-center justify-center shadow-sm">
+              <FaGraduationCap className="text-white text-lg" />
             </div>
-            <h1 className="text-lg font-bold text-gray-800 tracking-tight">
+            <h1 className="text-base font-bold text-gray-800 tracking-tight">
               Khizar Overseas
             </h1>
           </div>
 
-          <h2 className="text-base font-semibold text-gray-900">
+          <h2 className="text-base font-semibold text-gray-900 mb-1">
             Create your account
           </h2>
-          <p className="text-sm text-gray-600 mt-1 mb-5 sm:mb-6">
+          <p className="text-xs text-gray-600 mb-4">
             Start your journey toward global opportunities
           </p>
 
           {error && (
-            <p className="text-sm text-red-600 mb-4 bg-red-50 p-2.5 rounded-md">
+            <p className="text-xs text-red-600 mb-4 bg-red-50 p-2 rounded-md">
               {error}
             </p>
           )}
 
-          <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+          <form className="flex flex-col gap-3.5" onSubmit={handleSubmit}>
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">
                 Full name
@@ -139,8 +125,8 @@ export default function SignupPage() {
                 onChange={handleChange}
                 placeholder="John Doe"
                 className="
-                  w-full px-4 py-2.5 rounded-lg border border-gray-300 
-                  text-sm outline-none focus:border-[#22C55E] focus:ring-1 focus:ring-[#22C55E]/30
+                  w-full px-3 py-2 text-sm rounded-lg border border-gray-300
+                  outline-none focus:border-[#22C55E] focus:ring-1 focus:ring-[#22C55E]/30
                   transition-colors
                 "
                 required
@@ -158,15 +144,15 @@ export default function SignupPage() {
                 onChange={handleChange}
                 placeholder="john@example.com"
                 className="
-                  w-full px-4 py-2.5 rounded-lg border border-gray-300 
-                  text-sm outline-none focus:border-[#22C55E] focus:ring-1 focus:ring-[#22C55E]/30
+                  w-full px-3 py-2 text-sm rounded-lg border border-gray-300
+                  outline-none focus:border-[#22C55E] focus:ring-1 focus:ring-[#22C55E]/30
                   transition-colors
                 "
                 required
               />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">
                   Password
@@ -178,8 +164,8 @@ export default function SignupPage() {
                   onChange={handleChange}
                   placeholder="••••••••"
                   className="
-                    w-full px-4 py-2.5 rounded-lg border border-gray-300 
-                    text-sm outline-none focus:border-[#22C55E] focus:ring-1 focus:ring-[#22C55E]/30
+                    w-full px-3 py-2 text-sm rounded-lg border border-gray-300
+                    outline-none focus:border-[#22C55E] focus:ring-1 focus:ring-[#22C55E]/30
                     transition-colors
                   "
                   required
@@ -197,8 +183,8 @@ export default function SignupPage() {
                   onChange={handleChange}
                   placeholder="••••••••"
                   className="
-                    w-full px-4 py-2.5 rounded-lg border border-gray-300 
-                    text-sm outline-none focus:border-[#22C55E] focus:ring-1 focus:ring-[#22C55E]/30
+                    w-full px-3 py-2 text-sm rounded-lg border border-gray-300
+                    outline-none focus:border-[#22C55E] focus:ring-1 focus:ring-[#22C55E]/30
                     transition-colors
                   "
                   required
@@ -206,22 +192,43 @@ export default function SignupPage() {
               </div>
             </div>
 
+            <a
+              href={`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/google`}
+              className="
+                flex items-center justify-center gap-2
+                border border-gray-300 rounded-lg py-2 text-sm font-medium
+                hover:bg-gray-50 transition mt-1
+              "
+            >
+              <img
+                src="https://www.svgrepo.com/show/475656/google-color.svg"
+                alt="Google"
+                className="w-4 h-4"
+              />
+              Continue with Google
+            </a>
+
+            <div className="flex items-center gap-2 text-xs text-gray-400 my-1.5">
+              <div className="flex-1 h-px bg-gray-300"></div>
+              OR
+              <div className="flex-1 h-px bg-gray-300"></div>
+            </div>
+
             <button
               type="submit"
               disabled={loading}
               className="
-                mt-3 py-3 rounded-lg
+                py-2.5 rounded-lg
                 bg-gradient-to-r from-[#22C55E] to-[#4A6BFF]
-                text-white font-semibold text-sm
-                shadow-md hover:shadow-lg hover:brightness-105
-                transition-all duration-200
+                text-white font-medium text-sm
+                hover:brightness-105 transition-all
                 disabled:opacity-60 disabled:cursor-not-allowed
               "
             >
               {loading ? "Creating..." : "Create Account"}
             </button>
 
-            <p className="text-center text-xs text-gray-500 mt-3 leading-relaxed">
+            <p className="text-center text-xs text-gray-500 mt-3">
               By signing up you agree to our{" "}
               <Link
                 href="/privacy-policy"
@@ -232,7 +239,7 @@ export default function SignupPage() {
             </p>
           </form>
 
-          <p className="text-center text-sm text-gray-600 mt-5 sm:mt-6">
+          <p className="text-center text-sm text-gray-600 mt-5">
             Already have an account?{" "}
             <Link
               href="/login"
