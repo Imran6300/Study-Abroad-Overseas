@@ -29,15 +29,22 @@ export default function SignupPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    setLoading(true);
-    dispatch(authStart());
 
-    if (formData.password !== formData.confirmpassword) {
-      setError("Passwords do not match");
-      dispatch(authFail("Passwords do not match"));
-      setLoading(false);
+    const password = formData.password.trim();
+    const confirmPassword = formData.confirmpassword.trim();
+
+    if (!password || !confirmPassword) {
+      setError("Password fields cannot be empty");
       return;
     }
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+
+    setLoading(true);
+    dispatch(authStart());
 
     try {
       const res = await fetch(
@@ -47,16 +54,16 @@ export default function SignupPage() {
           headers: { "Content-Type": "application/json" },
           credentials: "include",
           body: JSON.stringify({
-            name: formData.name,
-            email: formData.email,
-            password: formData.password,
+            name: formData.name.trim(),
+            email: formData.email.trim(),
+            password: password,
           }),
         },
       );
+
       const data = await res.json();
 
       if (res.ok && data.success) {
-        // Redirect to OTP verification page
         router.push(`/verify-otp?email=${formData.email}`);
       } else {
         const msg = data.errors?.[0] || data.message || "Signup failed";
