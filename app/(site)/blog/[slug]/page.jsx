@@ -50,8 +50,9 @@ export async function generateMetadata({ params }) {
 export default async function Post({ params }) {
   const { slug } = await params; // ✅ unwrap params
   const blog = await getBlog(slug);
-
-  console.log("FULL BLOG OBJECT:", blog);
+  if (!blog) {
+    return <div>Blog not found or loading failed.</div>; // this will show in source
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b  mt-5 from-slate-50 via-white to-slate-50/80">
