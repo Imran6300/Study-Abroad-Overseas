@@ -207,6 +207,8 @@ export default function FreeAssessmentPage() {
                     prevStep={prevStep}
                     submit={handleSubmit}
                     loading={loading}
+                    data={formData}
+                    updateForm={updateForm}
                   />
                 )}
               </motion.div>
