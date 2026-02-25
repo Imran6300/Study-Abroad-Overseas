@@ -71,6 +71,8 @@ export default function SignupPage() {
         dispatch(authFail(msg));
       }
     } catch (err) {
+      const data = await res.json();
+      console.log("Signup Response:", data);
       setError("Server error. Please try again.");
       dispatch(authFail("Server error"));
     } finally {
