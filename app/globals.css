@@ -158,3 +158,8 @@ body::-webkit-scrollbar {
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+.grecaptcha-badge {
+  bottom: 20px !important;
+  margin-right: 1020px;
+}

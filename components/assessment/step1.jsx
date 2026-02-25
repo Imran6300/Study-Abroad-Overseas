@@ -1,27 +1,16 @@
-import { useEffect } from "react";
+"use client";
 
-export default function Step1({
-  data,
-  updateForm,
-  nextStep,
-  isLoggedIn,
-  user,
-  authChecked,
-}) {
-  // ✅ Prefill from session (safe, non-overwriting)
-  useEffect(() => {
-    if (!authChecked || !isLoggedIn || !user) return;
+export default function Step1({ data, updateForm, nextStep }) {
+  const isValid =
+    data.name.trim() !== "" &&
+    data.email.trim() !== "" &&
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email) &&
+    data.phone.trim() !== "";
 
-    const prefillData = {};
-
-    if (!data.name && user.name) prefillData.name = user.name;
-    if (!data.email && user.email) prefillData.email = user.email;
-    if (!data.phone && user.phone) prefillData.phone = user.phone;
-
-    if (Object.keys(prefillData).length > 0) {
-      updateForm(prefillData);
-    }
-  }, [authChecked, isLoggedIn, user]);
+  const handleNext = () => {
+    if (!isValid) return;
+    nextStep();
+  };
 
   return (
     <div className="space-y-5">
@@ -49,7 +38,11 @@ export default function Step1({
         className="input"
       />
 
-      <button onClick={nextStep} className="btn-primary w-full">
+      <button
+        onClick={handleNext}
+        disabled={!isValid}
+        className="btn-primary w-full disabled:opacity-60"
+      >
         Continue →
       </button>
     </div>

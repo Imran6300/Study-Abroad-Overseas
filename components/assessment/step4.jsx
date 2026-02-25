@@ -1,17 +1,13 @@
+"use client";
+
 import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 
-export default function Step4({
-  data,
-  updateForm,
-  prevStep,
-  submit,
-  loading,
-  isLoggedIn,
-  authChecked,
-}) {
+export default function Step4({ prevStep, submit, loading }) {
   const { executeRecaptcha } = useGoogleReCaptcha();
 
   const handleSubmit = async () => {
+    if (loading) return;
+
     if (!executeRecaptcha) {
       console.log("Recaptcha not ready");
       return;
@@ -19,13 +15,11 @@ export default function Step4({
 
     const token = await executeRecaptcha("lead_submit");
 
-    submit(token); // 👈 pass token to parent submit
+    submit(token); // pass token to parent
   };
 
   return (
     <div className="space-y-5">
-      {/* your select inputs unchanged */}
-
       <div className="flex justify-between gap-4 pt-2">
         <button
           onClick={prevStep}
@@ -35,26 +29,13 @@ export default function Step4({
           ← Back
         </button>
 
-        {!authChecked ? (
-          <button
-            disabled
-            className="btn-primary w-full opacity-60 cursor-not-allowed"
-          >
-            Checking authentication...
-          </button>
-        ) : (
-          <button
-            onClick={handleSubmit} // 👈 use handleSubmit
-            disabled={loading}
-            className="btn-primary w-full disabled:opacity-60"
-          >
-            {loading
-              ? "Submitting..."
-              : isLoggedIn
-                ? "Get My Free Assessment 🎓"
-                : "Login / Signup to Continue 🔐"}
-          </button>
-        )}
+        <button
+          onClick={handleSubmit}
+          disabled={loading}
+          className="btn-primary w-full disabled:opacity-60"
+        >
+          {loading ? "Submitting..." : "Get My Free Assessment 🎓"}
+        </button>
       </div>
 
       <p className="text-xs text-gray-400 text-center pt-2">

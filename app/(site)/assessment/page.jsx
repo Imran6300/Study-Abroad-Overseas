@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useSelector } from "react-redux";
 import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 
 import Step1 from "@/components/assessment/step1";
@@ -55,10 +54,6 @@ const pageVariants = {
 const TOTAL_STEPS = 4;
 
 export default function FreeAssessmentPage() {
-  const { executeRecaptcha } = useGoogleReCaptcha();
-  const { user, authChecked } = useSelector((state) => state.auth);
-  const isLoggedIn = Boolean(user);
-
   const [step, setStep] = useState(1);
   const [direction, setDirection] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -91,29 +86,39 @@ export default function FreeAssessmentPage() {
   const updateForm = (data) => setFormData((prev) => ({ ...prev, ...data }));
 
   // ✅ Single success alert + loading protection
-  const handleSubmit = async () => {
+  const handleSubmit = async (captchaToken) => {
     if (loading) return;
-
-    if (!executeRecaptcha) {
-      alert("Recaptcha not ready");
-      return;
-    }
 
     setLoading(true);
 
     try {
-      const captchaToken = await executeRecaptcha("lead_submit");
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/lead`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: formData.name,
+            email: formData.email,
+            phone: formData.phone,
+            qualification: formData.education,
+            field: formData.field,
+            passingYear: formData.year,
+            preferredCountry: formData.country,
+            preferredIntake: formData.intake,
+            budget: formData.budget,
+            examStatus: formData.examStatus,
+            workExperience: formData.experience,
+            captchaToken,
+          }),
+        },
+      );
 
-      const res = await fetch("/api/lead", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...formData,
-          captchaToken,
-        }),
-      });
-
-      if (!res.ok) throw new Error("Failed");
+      if (!res.ok) {
+        const errorData = await res.json();
+        console.log("Backend Error:", errorData);
+        throw new Error(errorData.message || "Failed");
+      }
 
       alert("Assessment submitted successfully!");
     } catch (err) {
@@ -176,9 +181,6 @@ export default function FreeAssessmentPage() {
                     data={formData}
                     updateForm={updateForm}
                     nextStep={nextStep}
-                    isLoggedIn={isLoggedIn}
-                    user={user}
-                    authChecked={authChecked}
                   />
                 )}
 
@@ -188,9 +190,6 @@ export default function FreeAssessmentPage() {
                     updateForm={updateForm}
                     nextStep={nextStep}
                     prevStep={prevStep}
-                    isLoggedIn={isLoggedIn}
-                    user={user}
-                    authChecked={authChecked}
                   />
                 )}
 
@@ -200,22 +199,14 @@ export default function FreeAssessmentPage() {
                     updateForm={updateForm}
                     nextStep={nextStep}
                     prevStep={prevStep}
-                    isLoggedIn={isLoggedIn}
-                    user={user}
-                    authChecked={authChecked}
                   />
                 )}
 
                 {step === 4 && (
                   <Step4
-                    data={formData}
-                    updateForm={updateForm}
                     prevStep={prevStep}
                     submit={handleSubmit}
                     loading={loading}
-                    isLoggedIn={isLoggedIn}
-                    user={user}
-                    authChecked={authChecked}
                   />
                 )}
               </motion.div>
