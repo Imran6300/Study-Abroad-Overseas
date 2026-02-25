@@ -4,6 +4,7 @@ import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 
 export default function Step4({ prevStep, submit, loading }) {
   const { executeRecaptcha } = useGoogleReCaptcha();
+  console.log("executeRecaptcha:", executeRecaptcha);
 
   const handleSubmit = async () => {
     if (loading) return;

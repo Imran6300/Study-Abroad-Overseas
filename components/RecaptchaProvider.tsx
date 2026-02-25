@@ -10,7 +10,7 @@ export default function RecaptchaProvider({
 }) {
     return (
         <GoogleReCaptchaProvider
-            reCaptchaKey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY as string}
+            reCaptchaKey={process.env.RECAPTCHA_SECRET_KEY as string}
             scriptProps={{
                 async: true,
                 defer: true,
