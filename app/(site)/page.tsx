@@ -8,11 +8,26 @@ import StudyAbroadProcess from "../../components/Home/AbroadProcess/abroadproces
 import ScholarshipsFunding from "../../components/Home/Scholarships/scholarships";
 import FinalCTASection from "../../components/Home/ReadyToStart/readytostart";
 
-export default function Page() {
+
+async function getUniversities() {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/universities`, {
+    next: { revalidate: 3600 }
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch universities");
+  }
+
+  const data = await res.json();
+  return data.universities;
+}
+
+export default async function Page() {
+  const universities = await getUniversities();
   return (
     <main >
       <Hero />
-      <Countries />
+      <Countries universities={universities} />
       <Services />
       <Stories />
       <WhyChooseUs />

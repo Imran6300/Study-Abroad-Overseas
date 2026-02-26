@@ -1,45 +1,17 @@
-"use client";
-
-import CircularGallery from "./CircularGalary";
 import Card from "./Card";
-import { useEffect, useRef, useMemo } from "react";
-import { useSelector } from "react-redux";
-import { useDispatch } from "react-redux";
-import { fetchUniversities } from "@/store/universitySlice";
+import UniversitiesSlider from "./UniversitiesSlider.jsx";
 
-const Countries = () => {
-  const dispatch = useDispatch();
-
-  const scrollRef = useRef(null);
-  const universities = useSelector((state) => state.universities.list);
-
-  useEffect(() => {
-    if (universities.length === 0) {
-      dispatch(fetchUniversities());
-    }
-  }, [dispatch, universities.length]);
-
+const Countries = ({ universities }) => {
   // ✅ Top 10 inside component
-  const Top10 = useMemo(() => {
-    return universities
-      .filter((uni) => uni.qsRanking && uni.qsRanking <= 10)
-
-      .sort((a, b) => a.qsRanking - b.qsRanking);
-  }, [universities]);
+  const Top10 = universities
+    .filter((uni) => uni.qsRanking && uni.qsRanking <= 10)
+    .sort((a, b) => a.qsRanking - b.qsRanking);
 
   // ✅ Infinite scroll items
-  const infiniteItems = useMemo(() => {
-    return [...Top10, ...Top10, ...Top10];
-  }, [Top10]);
-
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollLeft = scrollRef.current.scrollWidth / 3;
-    }
-  }, [Top10]);
+  const infiniteItems = [...Top10, ...Top10, ...Top10];
 
   return (
-    <div className="min-h-[90vh] w-full bg-[#f5f7ff] flex flex-col items-center pb-8 sm:pb-16">
+    <div className="min-h-[90vh] w-full bg-[#f5f7ff] flex flex-col items-center  sm:pb-16 ">
       <div className="w-full text-center mb-5 sm:mb-8 px-4">
         <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#2B4FFF] pt-3 sm:pt-6">
           Top Universities
@@ -53,10 +25,7 @@ const Countries = () => {
       </div>
 
       {/* MOBILE */}
-      <div
-        ref={scrollRef}
-        className="md:hidden w-full overflow-x-scroll no-scrollbar pb-8"
-      >
+      <div className="md:hidden w-full overflow-x-scroll no-scrollbar pb-8">
         <div className="flex gap-4 px-4 w-max">
           {infiniteItems.map((item, index) => (
             <div
@@ -82,14 +51,8 @@ const Countries = () => {
       </div>
 
       {/* DESKTOP */}
-      <div className="hidden md:block w-full px-4">
-        <CircularGallery
-          items={Top10}
-          cardWidth={400}
-          borderRadius={5}
-          autoSpeed={1}
-          scrollEase={0.8}
-        />
+      <div className="hidden md:block w-full px-4 h-full ">
+        <UniversitiesSlider items={Top10} />
       </div>
     </div>
   );

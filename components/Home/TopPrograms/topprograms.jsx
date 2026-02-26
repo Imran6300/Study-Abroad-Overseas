@@ -1,7 +1,4 @@
-"use client";
-
 import Link from "next/link";
-import { motion } from "framer-motion";
 import {
   Laptop,
   BrainCircuit,
@@ -59,7 +56,6 @@ const programs = [
 const TopPrograms = () => {
   return (
     <section className="w-full py-20 px-6 bg-[#F7F9FC]">
-      {/* Heading */}
       <div className="text-center mb-16 max-w-3xl mx-auto">
         <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-[#2F4F4F]">
           Top Programs Students Choose
@@ -70,19 +66,12 @@ const TopPrograms = () => {
         <div className="w-24 h-[3px] rounded-full bg-gradient-to-r from-[#4169E1] to-[#32CD32] mx-auto mt-4" />
       </div>
 
-      {/* Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 max-w-[1200px] mx-auto">
         {programs.map((program, i) => {
           const Icon = program.icon;
 
           return (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 25 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: i * 0.08 }}
-              viewport={{ once: true }}
-            >
+            <div key={i}>
               <Link href={`/courses/${program.slug}`} className="block h-full">
                 <div
                   className="
@@ -116,7 +105,7 @@ const TopPrograms = () => {
                   </p>
                 </div>
               </Link>
-            </motion.div>
+            </div>
           );
         })}
       </div>

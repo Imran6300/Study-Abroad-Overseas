@@ -20,8 +20,8 @@ export default function UniversityCard({
     <div
       className="
         group relative bg-white rounded-2xl overflow-hidden
-        shadow-lg hover:shadow-xl transition-shadow duration-300
-        flex flex-col h-full
+    shadow-md hover:shadow-xl transition-shadow duration-300
+    flex flex-col h-full  mb-3
       "
     >
       {/* Rank badge */}
@@ -95,14 +95,14 @@ export default function UniversityCard({
             <div className="flex items-center gap-1.5">
               <MdOutlinePeopleOutline className="text-indigo-500 text-lg" />
               <span className="bg-gray-50 px-2.5 py-1 rounded text-xs font-medium">
-                {students}
+                {students} Students
               </span>
             </div>
 
             <div className="flex items-center gap-1.5">
               <CiStar className="text-amber-400 text-lg" />
               <span className="bg-gray-50 px-2.5 py-1 rounded text-xs font-medium">
-                {acceptance}
+                {acceptance} Acceptance Rate
               </span>
             </div>
           </div>
