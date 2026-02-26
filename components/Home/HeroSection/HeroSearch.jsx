@@ -15,29 +15,29 @@ export default function HeroSearch() {
   const dispatch = useDispatch();
   const { courses } = useSelector((state) => state.courses);
 
-  useEffect(() => {
-    if (!courses || courses.length === 0) {
-      dispatch(fetchCourses());
-    }
-  }, [dispatch, courses]);
-  useEffect(() => {
-    async function fetchCountries() {
-      try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/countries`,
-        );
+  // useEffect(() => {
+  //   if (!courses || courses.length === 0) {
+  //     dispatch(fetchCourses());
+  //   }
+  // }, []);
+  // useEffect(() => {
+  //   async function fetchCountries() {
+  //     try {
+  //       const res = await fetch(
+  //         `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/countries`,
+  //       );
 
-        if (!res.ok) return;
+  //       if (!res.ok) return;
 
-        const data = await res.json();
-        setCountries(data.data);
-      } catch (error) {
-        console.error("Error fetching countries:", error);
-      }
-    }
+  //       const data = await res.json();
+  //       setCountries(data.data);
+  //     } catch (error) {
+  //       console.error("Error fetching countries:", error);
+  //     }
+  //   }
 
-    fetchCountries();
-  }, []);
+  //   fetchCountries();
+  // }, []);
 
   const universities = useSelector((state) => state.universities.list);
 

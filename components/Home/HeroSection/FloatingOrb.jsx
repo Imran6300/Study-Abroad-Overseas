@@ -2,7 +2,7 @@ import { memo } from "react";
 
 function FloatingOrb({ type }) {
   const base =
-    "absolute rounded-full blur-[120px] opacity-[0.35] animate-float";
+    "absolute rounded-full blur-[80px] opacity-[0.28] will-change-transform";
 
   const styles = {
     blue: "w-[650px] h-[650px] bg-[#4169e1] top-[-10%] left-[-10%]",

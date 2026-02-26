@@ -1,7 +1,6 @@
-"use client";
-
 import FloatingCard from "./FloatingCard";
 import { memo } from "react";
+import Image from "next/image";
 
 function HeroVisual() {
   return (
@@ -12,7 +11,6 @@ function HeroVisual() {
           w-[clamp(300px,35vw,480px)]
           h-[clamp(350px,40vw,520px)]
           bg-[rgba(255,255,255,0.22)]
-          backdrop-blur-[20px]
           rounded-[28px]
           shadow-[0_25px_60px_rgba(0,0,0,0.12)]
           overflow-hidden relative
@@ -20,18 +18,19 @@ function HeroVisual() {
         "
       >
         {/* Preload the image for instant load */}
-        <link rel="preload" href="/HeroImage.png" as="image" />
 
-        <img
-          src="/HeroImage.png" // Now served from /public → super fast
+        <Image
+          src="/newHeroImage.webp" // Now served from /public → super fast
           alt="Student"
+          fill
+          priority
+          quality={85}
+          sizes="(max-width: 768px) 100vw, 480px"
           className="
-            absolute top-0 left-0 w-full h-full object-cover
+             object-cover
             rounded-[28px]
             animate-imgFloat
           "
-          loading="eager" // Forces immediate load (highest priority)
-          fetchPriority="high" // Modern browsers: treat as critical resource
         />
       </div>
 
