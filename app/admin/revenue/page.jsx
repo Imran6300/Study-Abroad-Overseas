@@ -12,7 +12,6 @@ import {
   ArrowUpRight,
   ArrowDownRight,
 } from "lucide-react";
-import Chart from "chart.js/auto";
 import { useSelector } from "react-redux";
 
 //animation components
@@ -118,16 +117,20 @@ export default function RevenuePage() {
   }, []);
 
   useEffect(() => {
-    if (!loading && chartRef.current) {
+    if (loading || !chartRef.current) return;
+
+    let chart;
+
+    import("chart.js/auto").then((module) => {
+      const Chart = module.default;
+
       const ctx = chartRef.current.getContext("2d");
 
-      // Destroy previous chart instance if exists
       if (chartInstance.current) {
         chartInstance.current.destroy();
       }
 
-      // Create new chart
-      chartInstance.current = new Chart(ctx, {
+      chart = new Chart(ctx, {
         type: "line",
         data: {
           labels: revenueData.monthlyRevenue.map((item) => item.month),
@@ -136,53 +139,28 @@ export default function RevenuePage() {
               label: "Monthly Revenue (₹)",
               data: revenueData.monthlyRevenue.map((item) => item.revenue),
               borderColor: "#0284c7",
-              backgroundColor: "rgba(2, 132, 199, 0.15)",
+              backgroundColor: "rgba(2,132,199,0.15)",
               tension: 0.4,
               fill: true,
-              pointBackgroundColor: "#0284c7",
-              pointBorderColor: "#fff",
-              pointBorderWidth: 2,
-              pointRadius: 5,
-              pointHoverRadius: 8,
             },
           ],
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false },
-            tooltip: {
-              backgroundColor: "rgba(15, 23, 42, 0.95)",
-              titleFont: { size: 14 },
-              bodyFont: { size: 13 },
-              padding: 12,
-              cornerRadius: 8,
-              callbacks: {
-                label: (context) =>
-                  `₹ ${context.parsed.y.toLocaleString("en-IN")}`,
-              },
-            },
-          },
-          scales: {
-            y: {
-              beginAtZero: true,
-              ticks: {
-                callback: (value) => "₹" + value.toLocaleString("en-IN"),
-                font: { size: 12 },
-                color: "#64748b",
-              },
-              grid: { color: "#e2e8f0" },
-            },
-            x: {
-              ticks: { font: { size: 12 }, color: "#64748b" },
-              grid: { display: false },
-            },
-          },
         },
       });
-    }
-  }, [loading, revenueData, timeRange]);
+
+      chartInstance.current = chart;
+    });
+
+    return () => {
+      if (chartInstance.current) {
+        chartInstance.current.destroy();
+        chartInstance.current = null;
+      }
+    };
+  }, [loading, revenueData]);
 
   if (loading) {
     return (

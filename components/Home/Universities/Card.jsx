@@ -3,8 +3,9 @@ import Link from "next/link";
 import { IoLocationOutline } from "react-icons/io5";
 import { MdOutlinePeopleOutline } from "react-icons/md";
 import { CiStar } from "react-icons/ci";
+import Image from "next/image";
 
-export default function Card({
+export default function UniversityCard({
   rank,
   name,
   logo,
@@ -13,77 +14,109 @@ export default function Card({
   desc,
   students,
   acceptance,
-  slug, // ✅ REQUIRED
+  slug,
 }) {
   return (
-    <div className="relative bg-white rounded-2xl shadow-xl overflow-hidden w-full h-full flex flex-col">
-      {/* Rank Badge */}
-      <span className="absolute top-2 sm:top-3 left-2 sm:left-3 z-20 bg-black text-white text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-1.5 rounded-full shadow">
-        #{rank}
-      </span>
+    <div
+      className="
+        group relative bg-white rounded-2xl overflow-hidden
+        shadow-lg hover:shadow-xl transition-shadow duration-300
+        flex flex-col h-full
+      "
+    >
+      {/* Rank badge */}
+      <div className="absolute top-2.5 left-2.5 z-20">
+        <span
+          className="
+            bg-black/90 text-white text-xs sm:text-sm font-medium
+            px-2.5 py-1 rounded-full shadow-sm backdrop-blur-sm
+          "
+        >
+          #{rank}
+        </span>
+      </div>
 
-      {/* Image */}
-      <img
-        src={image}
-        alt={name}
-        className="w-full h-32 sm:h-40 md:h-48 object-cover pointer-events-none"
-      />
+      {/* Hero image – prevents layout shift with aspect ratio */}
+      <div className="relative aspect-[4/3] sm:aspect-[5/3] md:aspect-[16/9] bg-gray-100">
+        <Image
+          src={image}
+          alt={name}
+          width={640}
+          height={360}
+          loading="lazy"
+          decoding="async"
+          fetchPriority="low"
+          className="
+            absolute inset-0 size-full object-cover
+            transition-transform duration-500 group-hover:scale-105
+          "
+        />
+      </div>
 
-      {/* Content */}
-      <div className="flex flex-col justify-between flex-1 p-3 sm:p-5">
-        <div>
-          {/* Logo + Name */}
-          <div className="flex items-center mb-3 sm:mb-4 pointer-events-none">
+      {/* Main content */}
+      <div className="flex flex-col flex-1 p-4 sm:p-5">
+        {/* Logo + Name */}
+        <div className="flex items-start gap-3 mb-4">
+          <div className="shrink-0">
             <img
               src={logo}
-              className="w-10 sm:w-14 h-10 sm:h-14 rounded-full object-cover bg-white border-2 border-indigo-500 shadow-sm mr-2 sm:mr-3"
+              alt={`${name} logo`}
+              width={56}
+              height={56}
+              loading="lazy"
+              decoding="async"
+              className="
+                size-12 sm:size-14 rounded-full object-cover
+                bg-white border-2 border-indigo-400/50 shadow-sm
+              "
             />
-            <h5 className="text-indigo-900 font-semibold text-base sm:text-lg md:text-xl line-clamp-2">
-              {name}
-            </h5>
           </div>
-
-          {/* Location */}
-          <div className="flex items-center mb-2 sm:mb-3">
-            <IoLocationOutline className="mr-1 sm:mr-2 text-indigo-500 text-base sm:text-lg" />
-            <span className="bg-gray-100 text-gray-900 px-2 sm:px-3 py-1 rounded text-xs sm:text-sm truncate">
-              {location}
-            </span>
-          </div>
-
-          {/* Description */}
-          <p className="text-gray-600 text-xs sm:text-sm leading-relaxed line-clamp-3 sm:line-clamp-4">
-            {desc}
-          </p>
+          <h3 className="font-semibold text-indigo-950 text-lg sm:text-xl leading-tight line-clamp-2">
+            {name}
+          </h3>
         </div>
 
-        {/* Stats + CTA */}
-        <div className="mt-3 sm:mt-5 pt-2">
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mb-3 sm:mb-4">
-            <span className="flex items-center text-xs sm:text-sm">
-              <MdOutlinePeopleOutline className="text-indigo-500 mr-1 text-base sm:text-lg" />
-              <span className="bg-gray-100 text-gray-900 px-2 sm:px-3 py-1 rounded">
-                {students} students
-              </span>
-            </span>
+        {/* Location */}
+        <div className="flex items-center gap-2 mb-3 text-sm text-gray-700">
+          <IoLocationOutline className="text-indigo-500 shrink-0 text-lg" />
+          <span className="bg-gray-100/80 px-2.5 py-1 rounded text-xs sm:text-sm truncate max-w-[180px] sm:max-w-none">
+            {location}
+          </span>
+        </div>
 
-            <span className="flex items-center text-xs sm:text-sm">
-              <CiStar className="text-yellow-400 mr-1 text-base sm:text-lg" />
-              <span className="bg-gray-100 text-gray-900 px-2 sm:px-3 py-1 rounded">
-                {acceptance} acceptance
+        {/* Description */}
+        <p className="text-gray-600 text-sm leading-relaxed line-clamp-3 mb-5">
+          {desc}
+        </p>
+
+        {/* Stats + CTA – pushed to bottom with mt-auto */}
+        <div className="mt-auto space-y-4">
+          <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
+            <div className="flex items-center gap-1.5">
+              <MdOutlinePeopleOutline className="text-indigo-500 text-lg" />
+              <span className="bg-gray-50 px-2.5 py-1 rounded text-xs font-medium">
+                {students}
               </span>
-            </span>
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <CiStar className="text-amber-400 text-lg" />
+              <span className="bg-gray-50 px-2.5 py-1 rounded text-xs font-medium">
+                {acceptance}
+              </span>
+            </div>
           </div>
 
-          {/* ✅ WORKING LINK */}
           <Link
             href={`/universities/${slug}`}
-            onPointerDown={(e) => e.stopPropagation()}
-            onClick={(e) => e.stopPropagation()}
-            className="block w-full text-center font-semibold text-white py-2 sm:py-2.5 rounded-full shadow-md transition-all duration-200 hover:brightness-110 text-sm sm:text-base"
-            style={{
-              background: "linear-gradient(90deg, #6366f1, #818cf8)",
-            }}
+            className="
+              block w-full text-center font-semibold text-white
+              py-2.5 rounded-xl text-sm sm:text-base
+              bg-gradient-to-r from-indigo-500 to-indigo-600
+              hover:from-indigo-600 hover:to-indigo-700
+              transition-all duration-200 shadow-md hover:shadow-lg
+              active:scale-98
+            "
           >
             Learn More
           </Link>

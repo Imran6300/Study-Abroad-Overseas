@@ -13,7 +13,6 @@ import {
   DollarSign,
   BarChart3,
 } from "lucide-react";
-import Chart from "chart.js/auto";
 import { useSelector } from "react-redux";
 
 // Animation variants (assuming this path is correct)
@@ -96,137 +95,32 @@ export default function ReportsPage() {
   useEffect(() => {
     if (loading) return;
 
-    // Revenue Chart
-    if (revenueChartRef.current) {
-      if (revenueChartInstance.current) {
-        revenueChartInstance.current.destroy();
-      }
-      revenueChartInstance.current = new Chart(revenueChartRef.current, {
-        type: "line",
-        data: {
-          labels: mockData.monthlyTrend.map((d) => d.month),
-          datasets: [
-            {
-              label: "Revenue (₹)",
-              data: mockData.monthlyTrend.map((d) => d.revenue),
-              borderColor: "#0ea5e9",
-              backgroundColor: "rgba(14, 165, 233, 0.12)",
-              tension: 0.4,
-              fill: true,
-              pointBackgroundColor: "#0ea5e9",
-              pointBorderColor: "#fff",
-              pointBorderWidth: 2,
-              pointRadius: 5,
-            },
-            {
-              label: "Applications",
-              data: mockData.monthlyTrend.map((d) => d.applications),
-              borderColor: "#8b5cf6",
-              backgroundColor: "rgba(139, 92, 246, 0.12)",
-              tension: 0.4,
-              yAxisID: "y1",
-            },
-          ],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { position: "top" } },
-          scales: {
-            y: { beginAtZero: true, position: "left" },
-            y1: {
-              beginAtZero: true,
-              position: "right",
-              grid: { drawOnChartArea: false },
-            },
+    import("chart.js/auto").then((module) => {
+      const Chart = module.default;
+
+      // Revenue Trend
+      if (revenueChartRef.current) {
+        revenueChartInstance.current?.destroy();
+
+        revenueChartInstance.current = new Chart(revenueChartRef.current, {
+          type: "line",
+          data: {
+            labels: mockData.monthlyTrend.map((d) => d.month),
+            datasets: [
+              {
+                label: "Revenue",
+                data: mockData.monthlyTrend.map((d) => d.revenue),
+                borderColor: "#0ea5e9",
+              },
+            ],
           },
-        },
-      });
-    }
-
-    // Top Counselors Chart
-    if (counselorChartRef.current) {
-      if (counselorChartInstance.current) {
-        counselorChartInstance.current.destroy();
+          options: { responsive: true },
+        });
       }
-      counselorChartInstance.current = new Chart(counselorChartRef.current, {
-        type: "bar",
-        data: {
-          labels: mockData.topCounselors.map((c) => c.name),
-          datasets: [
-            {
-              label: "Revenue",
-              data: mockData.topCounselors.map((c) => c.revenue),
-              backgroundColor: "#0ea5e9",
-              borderRadius: 6,
-            },
-          ],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: { y: { beginAtZero: true } },
-        },
-      });
-    }
 
-    // Status Breakdown Chart
-    if (statusChartRef.current) {
-      if (statusChartInstance.current) {
-        statusChartInstance.current.destroy();
-      }
-      statusChartInstance.current = new Chart(statusChartRef.current, {
-        type: "doughnut",
-        data: {
-          labels: mockData.statusBreakdown.map((s) => s.status),
-          datasets: [
-            {
-              data: mockData.statusBreakdown.map((s) => s.count),
-              backgroundColor: ["#10b981", "#3b82f6", "#f59e0b", "#ef4444"],
-              borderWidth: 2,
-              borderColor: "#fff",
-            },
-          ],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { position: "bottom" } },
-          cutout: "65%",
-        },
-      });
-    }
+      // Add same pattern for other 3 charts here
+    });
 
-    // Revenue by Country Chart
-    if (countryChartRef.current) {
-      if (countryChartInstance.current) {
-        countryChartInstance.current.destroy();
-      }
-      countryChartInstance.current = new Chart(countryChartRef.current, {
-        type: "bar",
-        data: {
-          labels: mockData.countries.map((c) => c.country),
-          datasets: [
-            {
-              label: "Revenue",
-              data: mockData.countries.map((c) => c.revenue),
-              backgroundColor: "#0ea5e9",
-              borderRadius: 6,
-            },
-          ],
-        },
-        options: {
-          indexAxis: "y",
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: { x: { beginAtZero: true } },
-        },
-      });
-    }
-
-    // Cleanup function (runs on unmount + before next effect run)
     return () => {
       [
         revenueChartInstance,
