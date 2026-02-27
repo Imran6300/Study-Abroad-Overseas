@@ -179,7 +179,7 @@ export default function BlogAdminPage() {
   const handleEdit = async (slug) => {
     try {
       const res = await fetch(
-        `https://overseas-backend-production-4f18.up.railway.app/host/blogs/${slug}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/host/blogs/${slug}`,
         {
           credentials: "include",
         },
@@ -201,7 +201,7 @@ export default function BlogAdminPage() {
   const handleView = async (slug) => {
     try {
       const res = await fetch(
-        `https://overseas-backend-production-4f18.up.railway.app/host/blogs/${slug}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/host/blogs/${slug}`,
         {
           credentials: "include",
         },
@@ -254,7 +254,7 @@ export default function BlogAdminPage() {
       setLoading(true);
 
       const res = await fetch(
-        "https://overseas-backend-production-4f18.up.railway.app/host/blogs",
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/host/blogs`,
         {
           credentials: "include",
         },
