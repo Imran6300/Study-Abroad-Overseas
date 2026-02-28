@@ -1,4 +1,3 @@
-// app/admin/students/page.jsx
 "use client";
 
 import { useState } from "react";
@@ -10,6 +9,7 @@ import DashboardHeader from "@/components/admindashboard/DashboardHeader";
 import AddStudentForm from "@/components/adminform/addstudents";
 import ConfirmationModal from "@/components/adminform/confirmmsg";
 import { useSelector } from "react-redux";
+import { useRouter } from "next/navigation";
 
 //animations
 
@@ -19,7 +19,9 @@ import {
   formVariants,
 } from "@/components/Animations/formanimations/animate";
 
+const STATUS_OPTIONS = ["Lead", "Applied", "Enrolled", "Closed"];
 export default function StudentsAdminPage() {
+  const router = useRouter();
   const { user } = useSelector((state) => state.auth);
   const CounselorName = user?.name;
   const [students, setStudents] = useState([
@@ -58,6 +60,12 @@ export default function StudentsAdminPage() {
 
   const isFormOpen = mode !== null;
 
+  const handleStatusChange = (studentId, newStatus) => {
+    setStudents((prev) =>
+      prev.map((s) => (s.id === studentId ? { ...s, status: newStatus } : s)),
+    );
+  };
+
   // ─── Handlers ───
   const openAdd = () => {
     setSelectedStudent(null);
@@ -67,11 +75,6 @@ export default function StudentsAdminPage() {
   const openView = (student) => {
     setSelectedStudent(student);
     setMode("view");
-  };
-
-  const openEdit = (student) => {
-    setSelectedStudent(student);
-    setMode("edit");
   };
 
   const openDeleteConfirm = (student) => {
@@ -101,22 +104,6 @@ export default function StudentsAdminPage() {
       setStudents((prev) => [...prev, newStudent]);
       setJustAdded(true);
       setTimeout(() => setJustAdded(false), 3000);
-    } else if (mode === "edit" && selectedStudent) {
-      setStudents((prev) =>
-        prev.map((s) =>
-          s.id === selectedStudent.id
-            ? {
-                ...s,
-                name: formData.fullName || s.name,
-                email: formData.email || s.email,
-                phone: formData.mobile || s.phone,
-                target: formData.preferredCountries?.[0] || s.target,
-                status: formData.currentStatus || s.status,
-                counselor: formData.assignedCounselor || s.counselor,
-              }
-            : s,
-        ),
-      );
     }
 
     // Close modal/form
@@ -158,7 +145,7 @@ export default function StudentsAdminPage() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 bg-black/30 backdrop-blur-sm z-10 pointer-events-none"
+                className="fixed inset-0 bg-black/30 backdrop-blur-sm z-10 "
               />
             )}
           </AnimatePresence>
@@ -284,30 +271,37 @@ export default function StudentsAdminPage() {
                           {student.target}
                         </td>
                         <td className="px-6 py-4">
-                          <span
-                            className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium ${
+                          <select
+                            value={student.status}
+                            onChange={(e) =>
+                              handleStatusChange(student.id, e.target.value)
+                            }
+                            className={`px-3 py-1 rounded-full text-xs font-medium border outline-none
+                            ${
                               student.status === "Enrolled"
-                                ? "bg-green-100 text-green-800"
+                                ? "bg-green-100 text-green-800 border-green-200"
                                 : student.status === "Applied"
-                                  ? "bg-blue-100 text-blue-800"
-                                  : "bg-gray-100 text-gray-800"
+                                  ? "bg-blue-100 text-blue-800 border-blue-200"
+                                  : student.status === "Closed"
+                                    ? "bg-red-100 text-red-800 border-red-200"
+                                    : "bg-gray-100 text-gray-800 border-gray-200"
                             }`}
                           >
-                            {student.status}
-                          </span>
+                            {STATUS_OPTIONS.map((status) => (
+                              <option key={status} value={status}>
+                                {status}
+                              </option>
+                            ))}
+                          </select>
                         </td>
                         <td className="px-6 py-4 text-sm font-medium whitespace-nowrap">
                           <button
-                            onClick={() => openView(student)}
+                            onClick={() =>
+                              router.push(`/admin/students/${student.id}`)
+                            }
                             className="text-sky-600 hover:text-sky-800 mr-4"
                           >
                             View
-                          </button>
-                          <button
-                            onClick={() => openEdit(student)}
-                            className="text-amber-600 hover:text-amber-800 mr-4"
-                          >
-                            Edit
                           </button>
                           <button
                             onClick={() => openDeleteConfirm(student)}

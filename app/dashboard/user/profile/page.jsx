@@ -15,12 +15,47 @@ import {
 } from "lucide-react";
 
 export default function ProfilePage() {
-  const { user,  loading } = useSelector((state) => state.auth);
-  const isLoggedIn = Boolean(user)
+  const { user, loading } = useSelector((state) => state.auth);
+  const isLoggedIn = Boolean(user);
   const router = useRouter();
+
+  const [imagePreview, setImagePreview] = useState(user?.profileImage || null);
+  const [imageFile, setImageFile] = useState(null);
+  const [imageError, setImageError] = useState(""); // ← NEW: for showing error message
 
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState(null);
+
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB in bytes
+
+  const handleImageChange = (e) => {
+    const file = e.target.files?.[0];
+    setImageError(""); // clear previous error
+
+    if (!file) return;
+
+    // Size validation
+    if (file.size > MAX_FILE_SIZE) {
+      setImageError("Image is too large. Maximum allowed size is 5 MB.");
+      e.target.value = ""; // reset file input
+      return;
+    }
+
+    // Optional: you can also check mime type more strictly
+    if (!file.type.startsWith("image/")) {
+      setImageError("Please select a valid image file.");
+      e.target.value = "";
+      return;
+    }
+
+    setImageFile(file);
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result);
+    };
+    reader.readAsDataURL(file);
+  };
 
   /* ───────── AUTH GUARD ───────── */
   useEffect(() => {
@@ -41,6 +76,11 @@ export default function ProfilePage() {
         gpa: user.gpa || "",
         preferredCountry: user.preferredCountry || "",
         intendedIntake: user.intendedIntake || "",
+        dob: user.dob || "",
+        gender: user.gender || "",
+        nationality: user.nationality || "",
+        passportnumber: user.passportnumber || "",
+        passportexpiry: user.passportexpiry || "",
       });
     }
   }, [user]);
@@ -60,9 +100,6 @@ export default function ProfilePage() {
 
   const handleSave = async () => {
     setIsEditing(false);
-
-    console.log("Saving profile:", formData);
-    // TODO: API call → PATCH /api/profile
   };
 
   return (
@@ -73,9 +110,31 @@ export default function ProfilePage() {
         animate={{ opacity: 1, y: 0 }}
         className="mb-10 flex items-center gap-4"
       >
-        <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center text-3xl">
-          👤
+        <div className="relative group">
+          <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-white/20 bg-white/10 flex items-center justify-center">
+            {imagePreview ? (
+              <img
+                src={imagePreview}
+                alt="Profile"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <span className="text-3xl">👤</span>
+            )}
+          </div>
+
+          {/* ALWAYS visible pencil */}
+          <label className="absolute bottom-0 right-0 bg-[#32CD32] p-2 rounded-full cursor-pointer shadow-lg hover:scale-105 transition">
+            <Pencil size={14} className="text-black" />
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="hidden"
+            />
+          </label>
         </div>
+
         <div>
           <h1 className="text-4xl font-bold">My Profile</h1>
           <p className="text-gray-400">
@@ -83,6 +142,20 @@ export default function ProfilePage() {
           </p>
         </div>
       </motion.div>
+
+      {/* ERROR MESSAGE under profile picture */}
+      {imageError && (
+        <p className="text-red-400 text-sm mb-6 text-center max-w-xs mx-auto">
+          {imageError}
+        </p>
+      )}
+
+      {/* Optional: show current file size when valid */}
+      {imageFile && !imageError && (
+        <p className="text-xs text-gray-400 mb-6 text-center">
+          Selected: {(imageFile.size / 1024 / 1024).toFixed(1)} MB
+        </p>
+      )}
 
       {/* PROFILE CARD */}
       <motion.div
@@ -157,6 +230,59 @@ export default function ProfilePage() {
           />
         </Section>
 
+        <Section title="Identity Info" icon={Globe}>
+          <Field
+            label="Date Of Birth"
+            name="dob"
+            value={formData.dob}
+            editing={isEditing}
+            onChange={handleChange}
+            type="date"
+            className="cursor-pointer"
+          />
+          <Field
+            label="Gender"
+            name="gender"
+            value={formData.gender}
+            editing={isEditing}
+            onChange={handleChange}
+            options={["Male", "Female", "Other"]}
+            className="cursor-pointer"
+          />
+          <Field
+            label="Nationality"
+            name="nationality"
+            value={formData.nationality}
+            editing={isEditing}
+            onChange={handleChange}
+            options={[
+              "India",
+              "Pakistan",
+              "Bangladesh",
+              "Nepal",
+              "Sri Lanka",
+              "Other",
+            ]}
+            className="cursor-pointer"
+          />
+          <Field
+            label="Passport Number"
+            name="passportnumber"
+            value={formData.passportnumber}
+            editing={isEditing}
+            onChange={handleChange}
+          />
+          <Field
+            label="Passport Expiry"
+            name="passportexpiry"
+            value={formData.passportexpiry}
+            editing={isEditing}
+            onChange={handleChange}
+            type="date"
+            className="cursor-pointer"
+          />
+        </Section>
+
         {/* ACTIONS */}
         <div className="p-6 flex justify-end gap-4 border-t border-white/10 bg-black/20">
           {!isEditing ? (
@@ -193,17 +319,44 @@ function Section({ title, icon: Icon, children }) {
   );
 }
 
-function Field({ label, name, value, editing, onChange }) {
+function Field({
+  label,
+  name,
+  value,
+  editing,
+  onChange,
+  type = "text",
+  options,
+  className = "",
+}) {
   return (
     <div>
       <label className="text-sm text-gray-400 mb-1 block">{label}</label>
+
       {editing ? (
-        <input
-          name={name}
-          value={value}
-          onChange={onChange}
-          className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white focus:outline-none"
-        />
+        options ? (
+          <select
+            name={name}
+            value={value}
+            onChange={onChange}
+            className={`w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white focus:outline-none ${className}`}
+          >
+            <option value="">Select {label}</option>
+            {options.map((opt) => (
+              <option key={opt} value={opt} className="text-black">
+                {opt}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <input
+            type={type}
+            name={name}
+            value={value}
+            onChange={onChange}
+            className={`w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white focus:outline-none ${className}`}
+          />
+        )
       ) : (
         <div className="bg-white/6 rounded-xl px-4 py-3 border border-white/5">
           {value || "Not provided"}

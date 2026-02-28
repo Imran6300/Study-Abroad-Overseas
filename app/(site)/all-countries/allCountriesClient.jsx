@@ -5,6 +5,7 @@ import { LazyMotion, m } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
 import { Search, ArrowRight, X } from "lucide-react";
+import CountryCard from "@/components/ui/CountryCard";
 
 const loadFeatures = () =>
   import("framer-motion").then((res) => res.domAnimation);
@@ -166,7 +167,12 @@ export default function CountriesClient({ countries = [] }) {
                 {filteredCountries.map((country, index) => (
                   <CountryCard
                     key={country._id}
-                    country={country}
+                    title={country.name}
+                    slug={country.slug}
+                    image={country.heroImage?.url}
+                    flag={country.flagImage?.url}
+                    capital={country.capital}
+                    visaSuccessRate={country.visaSuccessRate}
                     priority={index < 4}
                   />
                 ))}
@@ -178,54 +184,3 @@ export default function CountriesClient({ countries = [] }) {
     </LazyMotion>
   );
 }
-
-/* ================= COUNTRY CARD ================= */
-const CountryCard = memo(function CountryCard({ country, priority }) {
-  return (
-    <Link href={`/all-countries/${country.slug}`} className="group block">
-      <m.div
-        variants={fadeUp}
-        whileHover={{ y: -12, scale: 1.03 }}
-        transition={{ type: "spring", stiffness: 200, damping: 20 }}
-        className="bg-gradient-to-b from-[#0B0F19] to-[#0a0f1f] border border-white/10 rounded-3xl overflow-hidden shadow-lg hover:shadow-cyan-500/20 transition-shadow h-full flex flex-col"
-      >
-        <div className="relative h-52 overflow-hidden">
-          <Image
-            src={country.heroImage?.url}
-            alt={`Study in ${country.name} – Top universities, scholarships & visa guidance`}
-            fill
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            className="object-cover transition-transform duration-700 group-hover:scale-110"
-            loading={priority ? undefined : "lazy"}
-            priority={!!priority}
-            quality={75}
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-          <div className="absolute top-4 left-4">
-            <img
-              src={country.flagImage?.url}
-              alt={`${country.name} flag`}
-              className="w-10 h-6 object-cover rounded shadow-md"
-            />
-          </div>
-        </div>
-
-        <div className="p-6 flex flex-col flex-1">
-          <h3 className="text-2xl font-bold">{country.name}</h3>
-          <p className="mt-2 text-gray-400 text-base">
-            Capital: {country.capital}
-          </p>
-
-          <p className="mt-1 text-sm text-cyan-400 font-medium">
-            Visa Success Rate: {country.visaSuccessRate}%
-          </p>
-          <div className="mt-auto pt-6">
-            <span className="inline-flex items-center gap-2 text-[#38BDF8] font-semibold group-hover:text-cyan-300 transition">
-              Explore Programs <ArrowRight size={18} />
-            </span>
-          </div>
-        </div>
-      </m.div>
-    </Link>
-  );
-});

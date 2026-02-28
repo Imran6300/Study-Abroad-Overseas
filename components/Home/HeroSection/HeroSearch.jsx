@@ -1,88 +1,51 @@
 "use client";
 import { IoSearch } from "react-icons/io5";
 import { useRouter } from "next/navigation";
-import { matchCountry, matchCourse, buildCourseIndex } from "@/lib/searchUtils";
-import { useSelector, useDispatch } from "react-redux";
-
-import { useState, useEffect } from "react";
-import { fetchCourses } from "@/store/courseSlice";
-
-// Normalize function (same as before)
-const normalize = (str = "") => str.toLowerCase().trim().replace(/\s+/g, " ");
 
 export default function HeroSearch() {
-  const [countries, setCountries] = useState([]);
-  const dispatch = useDispatch();
-  const { courses } = useSelector((state) => state.courses);
-
-  // useEffect(() => {
-  //   if (!courses || courses.length === 0) {
-  //     dispatch(fetchCourses());
-  //   }
-  // }, []);
-  // useEffect(() => {
-  //   async function fetchCountries() {
-  //     try {
-  //       const res = await fetch(
-  //         `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/countries`,
-  //       );
-
-  //       if (!res.ok) return;
-
-  //       const data = await res.json();
-  //       setCountries(data.data);
-  //     } catch (error) {
-  //       console.error("Error fetching countries:", error);
-  //     }
-  //   }
-
-  //   fetchCountries();
-  // }, []);
-
-  const universities = useSelector((state) => state.universities.list);
-
   const router = useRouter();
 
-  const handleSearch = (e) => {
+  const handleSearch = async (e) => {
     e.preventDefault();
 
     const query = e.target.search.value.trim();
     if (!query) return;
 
-    const normalizedQuery = normalize(query);
-
-    // 1️⃣ COUNTRY
-    const country = matchCountry(query, countries);
-    if (country) {
-      router.push(`/all-countries/${country.slug}`);
-      return;
-    }
-
-    // 2️⃣ COURSE
-    const course =
-      courses?.find((c) => normalize(c.title) === normalizedQuery) ||
-      courses?.find((c) => normalize(c.title).startsWith(normalizedQuery)) ||
-      courses?.find((c) => normalize(c.title).includes(normalizedQuery));
-
-    if (course) {
-      router.push(`/courses/${course.slug}`);
-      return;
-    }
-
-    // 3️⃣ UNIVERSITY
-    const university =
-      universities?.find((uni) => normalize(uni.name) === normalizedQuery) ||
-      universities?.find((uni) =>
-        normalize(uni.name).includes(normalizedQuery),
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/search?q=${encodeURIComponent(query)}`,
       );
 
-    if (university) {
-      router.push(`/universities/${university.slug}`);
-      return;
-    }
+      if (!res.ok) {
+        router.push(`/search?q=${encodeURIComponent(query)}`);
+        return;
+      }
 
-    // 4️⃣ FALLBACK
-    router.push(`/search?q=${encodeURIComponent(query)}`);
+      const data = await res.json();
+      if (data.type === "country") {
+        router.push(`/all-countries/${data.data.slug}`);
+        return;
+      }
+
+      if (data.type === "university") {
+        router.push(`/universities/${data.data.slug}`);
+        return;
+      }
+
+      if (data.type === "course") {
+        router.push(
+          `/universities/${data.data.university.slug}?course=${encodeURIComponent(
+            data.data.course,
+          )}`,
+        );
+        return;
+      }
+
+      router.push(`/search?q=${encodeURIComponent(query)}`);
+    } catch (error) {
+      console.error("Search error:", error);
+      router.push(`/search?q=${encodeURIComponent(query)}`);
+    }
   };
 
   return (

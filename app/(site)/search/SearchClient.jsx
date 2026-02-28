@@ -1,124 +1,65 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useMemo, useState, useEffect } from "react";
-import {
-  matchCountry,
-  matchUniversity,
-  matchCourseInUniversity,
-} from "@/lib/searchUtils";
+import { useState, useEffect } from "react";
 
 import { useRouter } from "next/navigation";
 
-import { useDispatch, useSelector } from "react-redux";
-import { fetchUniversities } from "@/store/universitySlice";
-
 import { motion } from "framer-motion";
+
+//all cards
+import UniversityCard from "@/components/ui/UniversityCard";
+import CourseCard from "@/components/ui/CourseCard";
+import CountryCard from "@/components/ui/CountryCard";
 
 export default function SearchClient() {
   const router = useRouter();
-  const [countries, setCountries] = useState([]);
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const searchParams = useSearchParams();
-  const dispatch = useDispatch();
-
-  const { list: universities } = useSelector((state) => state.universities);
 
   const query = searchParams.get("q")?.trim() || "";
 
   useEffect(() => {
-    async function fetchCountries() {
+    if (!query) {
+      setLoading(false);
+      setResult(null);
+      return;
+    }
+
+    async function searchData() {
       try {
+        setLoading(true);
+
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/countries`,
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/search?q=${encodeURIComponent(query)}`,
         );
 
-        if (!res.ok) return;
+        if (!res.ok) {
+          setResult({ type: "unknown" });
+          return;
+        }
 
         const data = await res.json();
-        setCountries(data.data);
-      } catch (error) {
-        console.error("Error fetching countries:", error);
+        setResult(data);
+      } catch (err) {
+        console.error("Search failed:", err);
+        setResult({ type: "unknown" });
+      } finally {
+        setLoading(false);
       }
     }
 
-    fetchCountries();
-  }, []);
+    searchData();
+  }, [query]);
 
-  useEffect(() => {
-    if (universities.length === 0) {
-      dispatch(fetchUniversities());
-    }
-  }, [dispatch, universities.length]);
+  const universities = result?.results?.universities || [];
+  const courses = result?.results?.courses || [];
+  const countries = result?.results?.countries || [];
 
-  const result = useMemo(() => {
-    if (!query) return null;
-
-    // 1️⃣ University Name (Highest Priority)
-    const university = matchUniversity(query, universities);
-    if (university) return { type: "university", data: university };
-
-    // 2️⃣ Course Inside University
-    const courseMatch = matchCourseInUniversity(query, universities);
-    if (courseMatch)
-      return {
-        type: "course",
-        data: courseMatch,
-      };
-
-    // 3️⃣ Country
-    const country = matchCountry(query, countries);
-    if (country) return { type: "country", data: country };
-
-    return { type: "unknown" };
-  }, [query, universities, countries]);
-
-  const intent = result?.type || "unknown";
-
-  useEffect(() => {
-    if (!query) return;
-    if (!result) return;
-    if (result.type === "unknown") return;
-
-    // Small delay for smoother UX
-    const timer = setTimeout(() => {
-      if (result.type === "country") {
-        const slug =
-          result.data.slug ||
-          result.data.name?.toLowerCase().replace(/\s+/g, "-");
-
-        router.replace(`/all-countries/${slug}`);
-      }
-
-      if (result.type === "university") {
-        router.replace(`/universities/${result.data.slug}`);
-      }
-
-      if (result.type === "course") {
-        router.replace(
-          `/universities/${result.data.university.slug}?course=${encodeURIComponent(
-            result.data.course,
-          )}`,
-        );
-      }
-    }, 300); // smooth redirect
-
-    return () => clearTimeout(timer);
-  }, [result, router, query]);
-
-  const titles = {
-    country: "Country not found",
-    course: "Course not found",
-    university: "University not found",
-    unknown: "No results found",
-  };
-
-  const messages = {
-    country: "We couldn't locate any country matching your search.",
-    course: "No courses match this name or keyword.",
-    university: "No university matches your search.",
-    unknown: "Sorry, nothing matched what you entered.",
-  };
+  const hasResults =
+    universities.length > 0 || courses.length > 0 || countries.length > 0;
 
   // Animation variants
   const containerVariants = {
@@ -147,21 +88,6 @@ export default function SearchClient() {
     },
   };
 
-  const iconVariants = {
-    hidden: { opacity: 0, scale: 0.5, rotate: -8 },
-    visible: {
-      opacity: 1,
-      scale: 1,
-      rotate: 0,
-      transition: {
-        type: "spring",
-        damping: 12,
-        stiffness: 180,
-        delay: 0.1,
-      },
-    },
-  };
-
   const pillVariants = {
     hidden: { opacity: 0, y: 12 },
     visible: {
@@ -171,23 +97,12 @@ export default function SearchClient() {
     },
   };
 
-  const suggestionVariants = {
-    hidden: { opacity: 0, scale: 0.92 },
-    visible: (i) => ({
-      opacity: 1,
-      scale: 1,
-      transition: {
-        delay: 0.6 + i * 0.08,
-        type: "spring",
-        damping: 15,
-        stiffness: 130,
-      },
-    }),
-  };
-
   return (
     <div className="relative min-h-screen bg-gradient-to-b from-[#0a0e17] via-[#0d1324] to-[#0a0e17] text-gray-100 overflow-hidden">
       {/* Animated background orbs */}
+      <p className="text-gray-400 mb-8">
+        {universities.length + courses.length + countries.length} results found
+      </p>
       <motion.div
         className="absolute inset-0 opacity-30 pointer-events-none"
         initial={{ opacity: 0 }}
@@ -242,69 +157,71 @@ export default function SearchClient() {
           initial="hidden"
           animate="visible"
         >
-          <motion.div className="mb-10" variants={iconVariants}>
-            <div className="inline-flex items-center justify-center w-28 h-28 rounded-2xl bg-gradient-to-br from-red-950/70 to-rose-950/40 border border-red-800/30 shadow-[0_0_40px_rgba(185,28,28,0.15)]">
-              <span className="text-6xl opacity-90">✦</span>
+          {loading && (
+            <h2 className="text-3xl font-bold text-white">Searching...</h2>
+          )}
+
+          {!loading && hasResults && (
+            <div className="space-y-12 text-left">
+              {/* Universities */}
+              {universities.length > 0 && (
+                <div>
+                  <h2 className="text-2xl font-bold mb-6">Universities</h2>
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-7">
+                    {universities.map((uni, i) => (
+                      <UniversityCard
+                        key={uni._id || uni.slug}
+                        uni={uni}
+                        index={i}
+                        mounted={true}
+                        shouldReduceMotion={false}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Courses */}
+              {courses.length > 0 && (
+                <div>
+                  <h2 className="text-2xl font-bold mb-6">Courses</h2>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-7">
+                    {courses.map((course) => (
+                      <CourseCard key={course._id} course={course} />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Countries */}
+              {countries.length > 0 && (
+                <div>
+                  <h2 className="text-2xl font-bold mb-6">Countries</h2>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-7">
+                    {countries.map((country, i) => (
+                      <CountryCard
+                        key={country._id}
+                        title={country.name}
+                        slug={country.slug}
+                        image={country.heroImage?.url}
+                        flag={country.flagImage?.url}
+                        capital={country.capital}
+                        visaSuccessRate={country.visaSuccessRate}
+                        priority={i < 2}
+                        variant="light"
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
-          </motion.div>
+          )}
 
-          <motion.h2
-            className="text-3xl sm:text-4xl font-bold text-gray-100 mb-6 tracking-wide"
-            variants={itemVariants}
-          >
-            {titles[intent]}
-          </motion.h2>
-
-          <motion.p
-            className="text-xl text-gray-300 max-w-2xl mx-auto leading-relaxed"
-            variants={itemVariants}
-          >
-            {messages[intent]}
-          </motion.p>
-
-          <motion.p className="mt-6 text-gray-500" variants={itemVariants}>
-            Double-check spelling or try a broader term.
-          </motion.p>
-
-          {/* Suggestions */}
-          <motion.div className="mt-8" variants={containerVariants}>
-            <motion.p
-              className="text-sm text-gray-500 mb-6"
-              variants={itemVariants}
-            >
-              Popular searches right now:
-            </motion.p>
-
-            <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
-              {[
-                "Computer Science",
-                "MBA",
-                "Canada Study",
-                "Australia Universities",
-                "Data Science",
-                "UK Masters",
-              ].map((suggestion, i) => (
-                <motion.a
-                  key={suggestion}
-                  href={`?q=${encodeURIComponent(suggestion)}`}
-                  className="
-                      group relative px-5 py-2.5 
-                      bg-gradient-to-r from-white/5 to-white/3 
-                      hover:from-emerald-950/40 hover:to-emerald-900/30
-                      border border-white/10 hover:border-emerald-700/40
-                      rounded-xl text-sm font-medium text-gray-300 
-                      transition-all duration-300 hover:text-emerald-300
-                      hover:shadow-[0_0_20px_rgba(16,185,129,0.12)]
-                      hover:-translate-y-0.5
-                    "
-                  custom={i}
-                  variants={suggestionVariants}
-                >
-                  {suggestion}
-                </motion.a>
-              ))}
-            </div>
-          </motion.div>
+          {!loading && !hasResults && (
+            <h2 className="text-3xl font-bold text-white">No results found</h2>
+          )}
         </motion.div>
       </div>
 

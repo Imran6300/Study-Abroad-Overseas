@@ -1,7 +1,5 @@
 import CountriesClient from "./allCountriesClient";
 
-import { headers } from "next/headers";
-
 async function getCountries() {
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/countries`,
@@ -9,8 +7,6 @@ async function getCountries() {
       cache: "no-store",
     },
   );
-
-  console.log("STATUS:", res.status);
 
   if (!res.ok) {
     const text = await res.text();
