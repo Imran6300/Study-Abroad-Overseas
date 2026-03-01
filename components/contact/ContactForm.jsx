@@ -61,7 +61,6 @@ const ContactForm = () => {
 
       if (!res.ok) throw new Error("Failed");
 
-      console.log("Contact Form Submitted:", form);
       alert("Request submitted successfully!");
     } catch (err) {
       alert("Submission failed");

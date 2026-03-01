@@ -7,9 +7,8 @@ import { Phone, Mail, User, Globe2, Send, MessageCircle } from "lucide-react";
 export default function FinalCTASection() {
   const router = useRouter();
   const pathname = usePathname();
-  const {  user, authChecked } = useSelector((state) => state.auth);
+  const { user, authChecked } = useSelector((state) => state.auth);
   const isLoggedIn = Boolean(user);
-
 
   const [form, setForm] = useState({
     name: "",
@@ -54,7 +53,6 @@ export default function FinalCTASection() {
       alert("Submission failed");
     }
 
-    console.log("Form Data:", form);
     alert("Submitted Successfully");
   };
 

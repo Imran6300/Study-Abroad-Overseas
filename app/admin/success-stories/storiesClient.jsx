@@ -187,9 +187,6 @@ export default function SuccessStoriesPage({ initialStories }) {
       (s.university || "").toLowerCase().includes(search.toLowerCase()),
   );
 
-  console.log("Initial Stories:", initialStories);
-  console.log("Stories State:", stories);
-
   return (
     <div className="flex min-h-screen bg-gray-50 relative">
       <AdminSidebar />

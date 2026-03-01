@@ -4,8 +4,6 @@ import { notFound } from "next/navigation";
 async function getCountry(slug) {
   const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
 
-  console.log("ENV:", baseUrl);
-
   if (!baseUrl) {
     console.error("API URL is not defined");
     return null;

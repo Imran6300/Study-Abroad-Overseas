@@ -78,10 +78,6 @@ export default function UniversitiesPage() {
 
       const data = await res.json();
       setUniversities(data.universities || []);
-
-      // Optional: keep these for debugging
-      console.log("Loaded universities count:", data.universities?.length || 0);
-      console.log("Backend total:", data.total);
     } catch (err) {
       setError(getErrorMessage(err));
       console.error("Fetch universities failed:", err);

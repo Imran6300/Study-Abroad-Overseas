@@ -34,9 +34,8 @@ export default function ProfileEvaluation() {
   };
 
   const handleSubmit = () => {
-    console.log("Submitting profile data:", data);
     alert(
-      "Thank you! Your free evaluation request has been submitted. We'll contact you within 24–48 hours."
+      "Thank you! Your free evaluation request has been submitted. We'll contact you within 24–48 hours.",
     );
   };
 

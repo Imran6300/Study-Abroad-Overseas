@@ -20,7 +20,6 @@ async function getUniversities() {
 
   const data = await res.json();
 
-  console.log("FULL RESPONSE:", data);
 
   return Array.isArray(data.universities)
     ? data.universities

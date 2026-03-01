@@ -154,7 +154,6 @@ export default function AddCounselorForm({
     // Attach photo file
     submitData.counselorPhoto = photoFile;
 
-    console.log("Submitting counselor data:", submitData);
     onSuccess(submitData);
   };
 

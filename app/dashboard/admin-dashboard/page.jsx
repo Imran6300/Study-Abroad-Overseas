@@ -106,9 +106,6 @@ export default function AdminPage() {
     const currentRole = normalizeRole(user?.role);
     const targetRole = normalizeRole(targetAdmin.role);
 
-    console.log("CURRENT:", currentRole);
-    console.log("TARGET:", targetRole);
-
     // ❌ nobody can delete super admin
     if (targetRole === "super_admin") {
       setModalMessage(`You cannot remove ${targetAdmin.name}.`);

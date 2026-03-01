@@ -4,7 +4,6 @@ import { notFound } from "next/navigation";
 export default async function Page({ params }) {
   const { slug } = await params;
 
-  console.log(slug);
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/university/${slug}`,
     { cache: "no-store" },
@@ -20,8 +19,6 @@ export default async function Page({ params }) {
   if (!data?.success || !data?.university) {
     notFound();
   }
-
-  console.log(data);
 
   return <UniversityDetailLayout uni={data.university} />;
 }

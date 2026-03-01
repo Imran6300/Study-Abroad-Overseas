@@ -19,8 +19,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchCourseBySlug, clearSelectedCourse } from "@/store/courseSlice";
 
 export default function CourseDetailPage({ slug }) {
-  console.log("Slug from params:", slug);
-
   const [activeTab, setActiveTab] = useState("overview");
   const [openAccordion, setOpenAccordion] = useState(null);
 

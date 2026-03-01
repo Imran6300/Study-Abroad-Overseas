@@ -145,7 +145,6 @@ export default function AddStudentForm({
 
     const submitData = { ...form, studentPhoto: photoFile };
 
-    console.log("Submitting student data:", submitData);
     onSuccess(submitData);
   };
 
@@ -161,11 +160,31 @@ export default function AddStudentForm({
       />
 
       {/* Sections – pass disabled prop where inputs exist */}
-      <PersonalDetailsSection form={form} handleChange={handleChange} disabled={isViewMode} />
-      <ContactInfoSection form={form} handleChange={handleChange} disabled={isViewMode} />
-      <AcademicSection form={form} handleChange={handleChange} disabled={isViewMode} />
-      <PreferenceSection form={form} handleChange={handleChange} disabled={isViewMode} />
-      <TestsAndAdminSection form={form} handleChange={handleChange} disabled={isViewMode} />
+      <PersonalDetailsSection
+        form={form}
+        handleChange={handleChange}
+        disabled={isViewMode}
+      />
+      <ContactInfoSection
+        form={form}
+        handleChange={handleChange}
+        disabled={isViewMode}
+      />
+      <AcademicSection
+        form={form}
+        handleChange={handleChange}
+        disabled={isViewMode}
+      />
+      <PreferenceSection
+        form={form}
+        handleChange={handleChange}
+        disabled={isViewMode}
+      />
+      <TestsAndAdminSection
+        form={form}
+        handleChange={handleChange}
+        disabled={isViewMode}
+      />
 
       {/* Action Buttons */}
       <div className="flex justify-end gap-4 pt-6 border-t border-gray-200">
