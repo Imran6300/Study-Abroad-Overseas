@@ -42,24 +42,6 @@ export default function AdminSidebar() {
       href: "/admin/students",
       roles: ["counselor", "admin", "super_admin"],
     },
-    {
-      icon: "📑",
-      label: "Applications",
-      href: "/admin/applications",
-      roles: ["counselor", "admin", "super_admin"],
-    },
-    {
-      icon: "🛂",
-      label: "Visa Tracking",
-      href: "/admin/visa",
-      roles: ["counselor", "admin", "super_admin"],
-    },
-    {
-      icon: "⏰",
-      label: "Deadlines",
-      href: "/admin/deadlines",
-      roles: ["counselor", "admin", "super_admin"],
-    },
 
     // Staff & Team Management (admin level)
     {

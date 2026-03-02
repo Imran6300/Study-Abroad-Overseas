@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 
@@ -24,31 +25,8 @@ export default function StudentsAdminPage() {
   const router = useRouter();
   const { user } = useSelector((state) => state.auth);
   const CounselorName = user?.name;
-  const [students, setStudents] = useState([
-    {
-      id: 1,
-      name: "Ahmed Khan",
-      email: "ahmed@example.com",
-      phone: "+91 98765 43210",
-      origin: "India",
-      target: "Canada",
-      status: "Applied",
-      counselor: "Sara",
-      created: "2025-11-15",
-    },
-    {
-      id: 2,
-      name: "Priya Sharma",
-      email: "priya.sharma@gmail.com",
-      phone: "+91 87654 32109",
-      origin: "India",
-      target: "UK",
-      status: "Enrolled",
-      counselor: "John",
-      created: "2025-10-20",
-    },
-  ]);
-
+  const [students, setStudents] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [justAdded, setJustAdded] = useState(false);
 
@@ -59,6 +37,44 @@ export default function StudentsAdminPage() {
   const [studentToDelete, setStudentToDelete] = useState(null);
 
   const isFormOpen = mode !== null;
+
+  useEffect(() => {
+    const fetchLeads = async () => {
+      try {
+        const res = await fetch(
+          "https://overseas-backend-production-828d.up.railway.app/api/lead",
+          {
+            credentials: "include",
+          },
+        );
+
+        const data = await res.json();
+
+        // Map backend data to frontend format
+        const formatted = data.leads.map((lead) => ({
+          id: lead._id,
+          name: lead.name,
+          email: lead.email,
+          phone: lead.phone,
+          target: lead.preferredCountry,
+          status: lead.counselorStage,
+          counselor: lead.assignedCounselor || "Unassigned",
+          created: new Date(lead.createdAt).toISOString().split("T")[0],
+        }));
+
+        setStudents(formatted);
+      } catch (err) {
+        console.error("Failed to fetch leads:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLeads();
+  }, []);
+
+  const capitalize = (str) =>
+    str ? str.charAt(0).toUpperCase() + str.slice(1) : "";
 
   const handleStatusChange = (studentId, newStatus) => {
     setStudents((prev) =>
@@ -117,6 +133,35 @@ export default function StudentsAdminPage() {
       s.email.toLowerCase().includes(search.toLowerCase()),
   );
 
+  const updateStatus = async (id, newStatus) => {
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/lead/${id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({ counselorStage: newStatus }),
+        },
+      );
+
+      if (!res.ok) {
+        const data = await res.json();
+        alert(data.message);
+        return;
+      }
+
+      // Update UI state after success
+      setStudents((prev) =>
+        prev.map((s) => (s.id === id ? { ...s, status: newStatus } : s)),
+      );
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   return (
     <div className="flex min-h-screen bg-gray-50 relative">
       <AdminSidebar />
@@ -133,7 +178,6 @@ export default function StudentsAdminPage() {
                   : "Student Management"
           }
           counselorName={CounselorName}
-          btnName={isFormOpen ? "Close" : "+ Add New Student"}
           onButtonClick={isFormOpen ? () => setMode(null) : openAdd}
         />
 
@@ -223,106 +267,142 @@ export default function StudentsAdminPage() {
             </motion.div>
 
             {/* Table */}
-            <motion.div
-              variants={itemVariants}
-              className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200"
-            >
+            <motion.div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
-                        Name
-                      </th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
-                        Email
-                      </th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
-                        Phone
-                      </th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
-                        Target Country
-                      </th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
-                        Status
-                      </th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {filteredStudents.map((student) => (
-                      <motion.tr
-                        key={student.id}
-                        variants={itemVariants}
-                        className="hover:bg-gray-50 transition-colors"
-                      >
-                        <td className="px-6 py-4 font-medium text-gray-900">
-                          {student.name}
-                        </td>
-                        <td className="px-6 py-4 text-gray-600">
-                          {student.email}
-                        </td>
-                        <td className="px-6 py-4 text-gray-600">
-                          {student.phone}
-                        </td>
-                        <td className="px-6 py-4 text-gray-600">
-                          {student.target}
-                        </td>
-                        <td className="px-6 py-4">
-                          <select
-                            value={student.status}
-                            onChange={(e) =>
-                              handleStatusChange(student.id, e.target.value)
-                            }
-                            className={`px-3 py-1 rounded-full text-xs font-medium border outline-none
-                            ${
-                              student.status === "Enrolled"
-                                ? "bg-green-100 text-green-800 border-green-200"
-                                : student.status === "Applied"
-                                  ? "bg-blue-100 text-blue-800 border-blue-200"
-                                  : student.status === "Closed"
-                                    ? "bg-red-100 text-red-800 border-red-200"
-                                    : "bg-gray-100 text-gray-800 border-gray-200"
-                            }`}
-                          >
-                            {STATUS_OPTIONS.map((status) => (
-                              <option key={status} value={status}>
-                                {status}
-                              </option>
-                            ))}
-                          </select>
-                        </td>
-                        <td className="px-6 py-4 text-sm font-medium whitespace-nowrap">
-                          <button
-                            onClick={() =>
-                              router.push(`/admin/students/${student.id}`)
-                            }
-                            className="text-sky-600 hover:text-sky-800 mr-4"
-                          >
-                            View
-                          </button>
-                          <button
-                            onClick={() => openDeleteConfirm(student)}
-                            className="text-red-600 hover:text-red-800"
-                          >
-                            Delete
-                          </button>
-                        </td>
-                      </motion.tr>
-                    ))}
-                  </tbody>
-                </table>
+                {loading ? (
+                  <div className="p-10 text-center text-gray-600">
+                    Loading students...
+                  </div>
+                ) : (
+                  <table className="min-w-full divide-y divide-gray-200">
+                    {/* ==================== TABLE HEADER ==================== */}
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                          Name
+                        </th>
+                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                          Email
+                        </th>
+                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                          Phone
+                        </th>
+                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                          Target Country
+                        </th>
+                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                          Status
+                        </th>
+                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                          Actions
+                        </th>
+                        <th className="px-6 py-4 text-center text-sm font-semibold text-gray-700">
+                          Contacted
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {filteredStudents.map((student) => (
+                        <motion.tr
+                          key={student.id}
+                          className="hover:bg-gray-50 transition-colors"
+                        >
+                          <td className="px-6 py-4 font-medium text-gray-900">
+                            {student.name}
+                          </td>
+                          <td className="px-6 py-4 text-gray-600">
+                            {student.email}
+                          </td>
+                          <td className="px-6 py-4 text-gray-600">
+                            {student.phone}
+                          </td>
+                          <td className="px-6 py-4 text-gray-600">
+                            {student.target}
+                          </td>
+                          <td className="px-6 py-4">
+                            <span
+                              className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                                student.status === "enrolled"
+                                  ? "bg-green-100 text-green-700"
+                                  : student.status === "applied"
+                                    ? "bg-blue-100 text-blue-700"
+                                    : student.status === "qualified"
+                                      ? "bg-purple-100 text-purple-700"
+                                      : student.status === "contacted"
+                                        ? "bg-yellow-100 text-yellow-700"
+                                        : student.status === "lost"
+                                          ? "bg-red-100 text-red-700"
+                                          : "bg-gray-100 text-gray-700"
+                              }`}
+                            >
+                              {student.status.charAt(0).toUpperCase() +
+                                student.status.slice(1)}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-sm font-medium whitespace-nowrap">
+                            <button
+                              onClick={() =>
+                                router.push(`/admin/students/${student.id}`)
+                              }
+                              className="text-sky-600 hover:text-sky-800 mr-4"
+                            >
+                              View
+                            </button>
+                            <button
+                              onClick={() => openDeleteConfirm(student)}
+                              className="text-red-600 hover:text-red-800"
+                            >
+                              Delete
+                            </button>
+                          </td>
+                          {/* ==================== TABLE BODY – only the Contacted cell ==================== */}
+                          <td className="px-6 py-4 text-center">
+                            <label className="inline-flex items-center cursor-pointer group">
+                              <input
+                                type="checkbox"
+                                className="sr-only peer"
+                                checked={student.status === "contacted"}
+                                onChange={() => {
+                                  const newStatus =
+                                    student.status === "contacted"
+                                      ? "lead"
+                                      : "contacted";
+
+                                  updateStatus(student.id, newStatus);
+                                }}
+                              />
+                              <div
+                                className={`
+      relative w-11 h-6 bg-gray-200 
+      peer-focus:outline-none 
+      peer-focus:ring-4 peer-focus:ring-sky-100 
+      rounded-full peer 
+      peer-checked:after:translate-x-full 
+      peer-checked:after:border-white 
+      after:content-[''] after:absolute after:top-[2px] after:left-[2px] 
+      after:bg-white after:border-gray-300 after:border after:rounded-full 
+      after:h-5 after:w-5 after:transition-all 
+      peer-checked:bg-emerald-500
+      group-hover:bg-gray-300
+      peer-checked:group-hover:bg-emerald-600
+    `}
+                              ></div>
+                            </label>
+                          </td>
+                        </motion.tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
               </div>
             </motion.div>
 
-            {filteredStudents.length === 0 && (
+            {!loading && filteredStudents.length === 0 && (
               <motion.p
                 variants={itemVariants}
                 className="text-center mt-12 text-gray-500 text-lg"
               >
-                No students found.
+                No student found.
               </motion.p>
             )}
           </motion.div>
