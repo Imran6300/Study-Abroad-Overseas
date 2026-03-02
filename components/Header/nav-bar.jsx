@@ -554,7 +554,7 @@ const MobileUserCard = ({ user, onLogout, onClose }) => {
       {/* Actions */}
       <div className="grid gap-2">
         <Link
-          href="/profile"
+          href="/profile/user/profile"
           onClick={onClose}
           className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10 transition text-white"
         >
@@ -563,7 +563,7 @@ const MobileUserCard = ({ user, onLogout, onClose }) => {
         </Link>
 
         <Link
-          href="/dashboard"
+          href="/dashboard/user"
           onClick={onClose}
           className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10 transition text-white"
         >
