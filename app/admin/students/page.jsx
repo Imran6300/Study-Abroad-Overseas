@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 
@@ -12,8 +11,6 @@ import ConfirmationModal from "@/components/adminform/confirmmsg";
 import { useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
 
-//animations
-
 import {
   containerVariants,
   itemVariants,
@@ -21,17 +18,18 @@ import {
 } from "@/components/Animations/formanimations/animate";
 
 const STATUS_OPTIONS = ["Lead", "Applied", "Enrolled", "Closed"];
+
 export default function StudentsAdminPage() {
   const router = useRouter();
   const { user } = useSelector((state) => state.auth);
   const CounselorName = user?.name;
+
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [justAdded, setJustAdded] = useState(false);
 
-  // Modal control states
-  const [mode, setMode] = useState(null); // ← fixed line
+  const [mode, setMode] = useState(null);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
   const [studentToDelete, setStudentToDelete] = useState(null);
@@ -43,14 +41,10 @@ export default function StudentsAdminPage() {
       try {
         const res = await fetch(
           "https://overseas-backend-production-828d.up.railway.app/api/lead",
-          {
-            credentials: "include",
-          },
+          { credentials: "include" },
         );
-
         const data = await res.json();
 
-        // Map backend data to frontend format
         const formatted = data.leads.map((lead) => ({
           id: lead._id,
           name: lead.name,
@@ -76,32 +70,42 @@ export default function StudentsAdminPage() {
   const capitalize = (str) =>
     str ? str.charAt(0).toUpperCase() + str.slice(1) : "";
 
-  const handleStatusChange = (studentId, newStatus) => {
-    setStudents((prev) =>
-      prev.map((s) => (s.id === studentId ? { ...s, status: newStatus } : s)),
+  const filteredStudents = students.filter((s) => {
+    const term = search.toLowerCase().trim();
+    if (!term) return true;
+
+    return (
+      (s.name || "").toLowerCase().includes(term) ||
+      (s.email || "").toLowerCase().includes(term) ||
+      (s.phone || "").toLowerCase().includes(term) ||
+      (s.status || "").toLowerCase().includes(term)
     );
-  };
+  });
 
-  // ─── Handlers ───
-  const openAdd = () => {
-    setSelectedStudent(null);
-    setMode("add");
-  };
+  const updateStatus = async (id, newStatus) => {
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/lead/${id}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ counselorStage: newStatus }),
+        },
+      );
 
-  const openView = (student) => {
-    setSelectedStudent(student);
-    setMode("view");
-  };
+      if (!res.ok) {
+        const data = await res.json();
+        alert(data.message || "Failed to update status");
+        return;
+      }
 
-  const openDeleteConfirm = (student) => {
-    setStudentToDelete(student);
-    setShowConfirmDelete(true);
-  };
-
-  const handleDeleteConfirmed = () => {
-    setStudents((prev) => prev.filter((s) => s.id !== studentToDelete.id));
-    setShowConfirmDelete(false);
-    setStudentToDelete(null);
+      setStudents((prev) =>
+        prev.map((s) => (s.id === id ? { ...s, status: newStatus } : s)),
+      );
+    } catch (error) {
+      console.error("Status update error:", error);
+    }
   };
 
   const handleFormSuccess = (formData) => {
@@ -121,49 +125,12 @@ export default function StudentsAdminPage() {
       setJustAdded(true);
       setTimeout(() => setJustAdded(false), 3000);
     }
-
-    // Close modal/form
     setMode(null);
     setSelectedStudent(null);
   };
 
-  const filteredStudents = students.filter(
-    (s) =>
-      s.name.toLowerCase().includes(search.toLowerCase()) ||
-      s.email.toLowerCase().includes(search.toLowerCase()),
-  );
-
-  const updateStatus = async (id, newStatus) => {
-    try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/lead/${id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify({ counselorStage: newStatus }),
-        },
-      );
-
-      if (!res.ok) {
-        const data = await res.json();
-        alert(data.message);
-        return;
-      }
-
-      // Update UI state after success
-      setStudents((prev) =>
-        prev.map((s) => (s.id === id ? { ...s, status: newStatus } : s)),
-      );
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
   return (
-    <div className="flex min-h-screen bg-gray-50 relative">
+    <div className="flex min-h-screen bg-gray-50">
       <AdminSidebar />
 
       <div className="flex-1 flex flex-col">
@@ -178,18 +145,20 @@ export default function StudentsAdminPage() {
                   : "Student Management"
           }
           counselorName={CounselorName}
-          onButtonClick={isFormOpen ? () => setMode(null) : openAdd}
+          onButtonClick={
+            isFormOpen ? () => setMode(null) : () => setMode("add")
+          }
         />
 
-        <main className="flex-1 p-6 lg:p-8 overflow-auto bg-gray-50 relative">
-          {/* Backdrop when form is open */}
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto bg-gray-50">
+          {/* Backdrop */}
           <AnimatePresence>
             {isFormOpen && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 bg-black/30 backdrop-blur-sm z-10 "
+                className="fixed inset-0 bg-black/30 backdrop-blur-sm z-10"
               />
             )}
           </AnimatePresence>
@@ -202,11 +171,11 @@ export default function StudentsAdminPage() {
                 initial="hidden"
                 animate="visible"
                 exit="exit"
-                className="relative z-20 max-w-5xl mx-auto mb-12"
+                className="relative z-20 max-w-5xl mx-auto mb-10 sm:mb-12"
               >
                 <div className="bg-white rounded-2xl shadow-2xl border border-gray-200/70 overflow-hidden">
-                  <div className="bg-gradient-to-r from-sky-50 via-indigo-50 to-purple-50 px-6 py-5 border-b flex justify-between items-center">
-                    <h2 className="text-2xl font-bold text-gray-900 tracking-tight">
+                  <div className="bg-gradient-to-r from-sky-50 via-indigo-50 to-purple-50 px-5 sm:px-6 py-4 sm:py-5 border-b flex justify-between items-center">
+                    <h2 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">
                       {mode === "add"
                         ? "Add New Student"
                         : mode === "edit"
@@ -221,7 +190,7 @@ export default function StudentsAdminPage() {
                     </button>
                   </div>
 
-                  <div className="p-6 lg:p-10">
+                  <div className="p-5 sm:p-6 lg:p-10">
                     <AddStudentForm
                       mode={mode}
                       initialData={selectedStudent}
@@ -241,87 +210,89 @@ export default function StudentsAdminPage() {
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                className="mb-8 p-4 bg-green-50 border border-green-200 text-green-800 rounded-xl text-center font-medium shadow-sm"
+                className="mb-6 mx-2 sm:mx-0 p-4 bg-green-50 border border-green-200 text-green-800 rounded-xl text-center font-medium shadow-sm"
               >
                 Student added successfully!
               </motion.div>
             )}
           </AnimatePresence>
 
-          {/* Student List */}
+          {/* Content */}
           <motion.div
             variants={containerVariants}
             initial="hidden"
             animate="show"
-            className={`space-y-8 transition-opacity duration-500 ${isFormOpen ? "opacity-70 pointer-events-none" : "opacity-100"}`}
+            className={`transition-opacity duration-500 ${isFormOpen ? "opacity-70 pointer-events-none" : "opacity-100"}`}
           >
             {/* Search */}
-            <motion.div variants={itemVariants} className="mb-6">
+            <motion.div variants={itemVariants} className="mb-6 px-1 sm:px-0">
               <input
                 type="text"
-                placeholder="Search by name or email..."
+                placeholder="Search by name, email, phone or status..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full max-w-md px-4 py-2.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-sky-500 transition-shadow"
+                className="w-full max-w-lg px-4 py-2.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
               />
             </motion.div>
 
-            {/* Table */}
-            <motion.div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">
+            {/* Table wrapper */}
+            <motion.div
+              className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200 mx-1 sm:mx-0"
+              variants={itemVariants}
+            >
               <div className="overflow-x-auto">
                 {loading ? (
-                  <div className="p-10 text-center text-gray-600">
+                  <div className="p-10 text-center text-gray-600 min-h-[300px] flex items-center justify-center">
                     Loading students...
                   </div>
                 ) : (
-                  <table className="min-w-full divide-y divide-gray-200">
-                    {/* ==================== TABLE HEADER ==================== */}
+                  <table className="min-w-full divide-y divide-gray-200 table-auto">
                     <thead className="bg-gray-50">
                       <tr>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                        <th className="px-4 py-3 sm:px-6 sm:py-4 text-left text-xs sm:text-sm font-semibold text-gray-700 whitespace-nowrap">
                           Name
                         </th>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                        <th className="px-4 py-3 sm:px-6 sm:py-4 text-left text-xs sm:text-sm font-semibold text-gray-700 whitespace-nowrap hidden sm:table-cell">
                           Email
                         </th>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                        <th className="px-4 py-3 sm:px-6 sm:py-4 text-left text-xs sm:text-sm font-semibold text-gray-700 whitespace-nowrap">
                           Phone
                         </th>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                        <th className="px-4 py-3 sm:px-6 sm:py-4 text-left text-xs sm:text-sm font-semibold text-gray-700 whitespace-nowrap hidden md:table-cell">
                           Target Country
                         </th>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                        <th className="px-4 py-3 sm:px-6 sm:py-4 text-left text-xs sm:text-sm font-semibold text-gray-700 whitespace-nowrap">
                           Status
                         </th>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                        <th className="px-4 py-3 sm:px-6 sm:py-4 text-left text-xs sm:text-sm font-semibold text-gray-700 whitespace-nowrap">
                           Actions
                         </th>
-                        <th className="px-6 py-4 text-center text-sm font-semibold text-gray-700">
+                        <th className="px-4 py-3 sm:px-6 sm:py-4 text-center text-xs sm:text-sm font-semibold text-gray-700 whitespace-nowrap">
                           Contacted
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-200">
+                    <tbody className="divide-y divide-gray-200 bg-white">
                       {filteredStudents.map((student) => (
                         <motion.tr
                           key={student.id}
                           className="hover:bg-gray-50 transition-colors"
                         >
-                          <td className="px-6 py-4 font-medium text-gray-900">
+                          <td className="px-4 py-3 sm:px-6 sm:py-4 text-sm font-medium text-gray-900">
                             {student.name}
                           </td>
-                          <td className="px-6 py-4 text-gray-600">
+                          <td className="px-4 py-3 sm:px-6 sm:py-4 text-sm text-gray-600 hidden sm:table-cell">
                             {student.email}
                           </td>
-                          <td className="px-6 py-4 text-gray-600">
+                          <td className="px-4 py-3 sm:px-6 sm:py-4 text-sm text-gray-600">
                             {student.phone}
                           </td>
-                          <td className="px-6 py-4 text-gray-600">
+                          <td className="px-4 py-3 sm:px-6 sm:py-4 text-sm text-gray-600 hidden md:table-cell">
                             {student.target}
                           </td>
-                          <td className="px-6 py-4">
+                          <td className="px-4 py-3 sm:px-6 sm:py-4">
                             <span
-                              className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                              className={`inline-block px-2.5 py-1 text-xs font-semibold rounded-full ${
                                 student.status === "enrolled"
                                   ? "bg-green-100 text-green-700"
                                   : student.status === "applied"
@@ -335,28 +306,31 @@ export default function StudentsAdminPage() {
                                           : "bg-gray-100 text-gray-700"
                               }`}
                             >
-                              {student.status.charAt(0).toUpperCase() +
-                                student.status.slice(1)}
+                              {capitalize(student.status)}
                             </span>
                           </td>
-                          <td className="px-6 py-4 text-sm font-medium whitespace-nowrap">
-                            <button
-                              onClick={() =>
-                                router.push(`/admin/students/${student.id}`)
-                              }
-                              className="text-sky-600 hover:text-sky-800 mr-4"
-                            >
-                              View
-                            </button>
-                            <button
-                              onClick={() => openDeleteConfirm(student)}
-                              className="text-red-600 hover:text-red-800"
-                            >
-                              Delete
-                            </button>
+                          <td className="px-4 py-3 sm:px-6 sm:py-4 text-sm font-medium whitespace-nowrap">
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                              <button
+                                onClick={() =>
+                                  router.push(`/admin/students/${student.id}`)
+                                }
+                                className="text-sky-600 hover:text-sky-800 text-sm"
+                              >
+                                View
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setStudentToDelete(student);
+                                  setShowConfirmDelete(true);
+                                }}
+                                className="text-red-600 hover:text-red-800 text-sm"
+                              >
+                                Delete
+                              </button>
+                            </div>
                           </td>
-                          {/* ==================== TABLE BODY – only the Contacted cell ==================== */}
-                          <td className="px-6 py-4 text-center">
+                          <td className="px-4 py-3 sm:px-6 sm:py-4 text-center">
                             <label className="inline-flex items-center cursor-pointer group">
                               <input
                                 type="checkbox"
@@ -367,26 +341,22 @@ export default function StudentsAdminPage() {
                                     student.status === "contacted"
                                       ? "lead"
                                       : "contacted";
-
                                   updateStatus(student.id, newStatus);
                                 }}
                               />
                               <div
                                 className={`
-      relative w-11 h-6 bg-gray-200 
-      peer-focus:outline-none 
-      peer-focus:ring-4 peer-focus:ring-sky-100 
-      rounded-full peer 
-      peer-checked:after:translate-x-full 
-      peer-checked:after:border-white 
-      after:content-[''] after:absolute after:top-[2px] after:left-[2px] 
-      after:bg-white after:border-gray-300 after:border after:rounded-full 
-      after:h-5 after:w-5 after:transition-all 
-      peer-checked:bg-emerald-500
-      group-hover:bg-gray-300
-      peer-checked:group-hover:bg-emerald-600
-    `}
-                              ></div>
+                                  relative w-10 h-5 sm:w-11 sm:h-6 bg-gray-200 
+                                  peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-sky-100 
+                                  rounded-full peer transition-colors
+                                  peer-checked:after:translate-x-full peer-checked:after:border-white 
+                                  after:content-[''] after:absolute after:top-[2px] after:left-[2px] 
+                                  after:bg-white after:border-gray-300 after:border after:rounded-full 
+                                  after:h-4 after:w-4 sm:after:h-5 sm:after:w-5 after:transition-all 
+                                  peer-checked:bg-emerald-500
+                                  group-hover:bg-gray-300 peer-checked:group-hover:bg-emerald-600
+                                `}
+                              />
                             </label>
                           </td>
                         </motion.tr>
@@ -400,22 +370,28 @@ export default function StudentsAdminPage() {
             {!loading && filteredStudents.length === 0 && (
               <motion.p
                 variants={itemVariants}
-                className="text-center mt-12 text-gray-500 text-lg"
+                className="text-center mt-10 sm:mt-12 text-gray-500 text-base sm:text-lg px-4"
               >
-                No student found.
+                No students found matching your search.
               </motion.p>
             )}
           </motion.div>
 
-          {/* Delete Confirmation Modal */}
+          {/* Delete Confirmation */}
           <AnimatePresence>
             {showConfirmDelete && (
               <ConfirmationModal
                 title="Delete Student"
-                message={`Are you sure you want to delete ${studentToDelete?.name}? This cannot be undone.`}
+                message={`Are you sure you want to delete ${studentToDelete?.name}? This action cannot be undone.`}
                 confirmText="Delete"
                 confirmVariant="danger"
-                onConfirm={handleDeleteConfirmed}
+                onConfirm={() => {
+                  setStudents((prev) =>
+                    prev.filter((s) => s.id !== studentToDelete.id),
+                  );
+                  setShowConfirmDelete(false);
+                  setStudentToDelete(null);
+                }}
                 onCancel={() => setShowConfirmDelete(false)}
               />
             )}
