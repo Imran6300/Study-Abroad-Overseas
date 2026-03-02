@@ -551,7 +551,6 @@ const MobileUserCard = ({ user, onLogout, onClose }) => {
         </div>
       </div>
 
-      {/* Actions */}
       <div className="grid gap-2">
         <Link
           href="/dashboard/user/profile"
