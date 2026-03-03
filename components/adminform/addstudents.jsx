@@ -133,7 +133,7 @@ export default function AddStudentForm({
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (isViewMode) return;
@@ -143,9 +143,42 @@ export default function AddStudentForm({
       return;
     }
 
-    const submitData = { ...form, studentPhoto: photoFile };
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/lead`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            name: form.fullName,
+            email: form.email,
+            phone: form.mobile,
+            preferredCountry: form.preferredCountries[0],
+            counselorStage: form.currentStatus.toLowerCase(),
+            assignedCounselor: form.assignedCounselor,
+          }),
+        },
+      );
 
-    onSuccess(submitData);
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || "Failed to create student");
+        return;
+      }
+
+      // ✅ send backend response to parent
+      onSuccess({
+        ...form,
+        leadId: data.leadId,
+      });
+    } catch (error) {
+      console.error("Create error:", error);
+      alert("Something went wrong");
+    }
   };
 
   return (

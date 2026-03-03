@@ -23,6 +23,7 @@ export default function StudentsAdminPage() {
   const router = useRouter();
   const { user } = useSelector((state) => state.auth);
   const CounselorName = user?.name;
+  const [deleting, setDeleting] = useState(false);
 
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -40,7 +41,7 @@ export default function StudentsAdminPage() {
     const fetchLeads = async () => {
       try {
         const res = await fetch(
-          "https://overseas-backend-production-828d.up.railway.app/api/lead",
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/lead`,
           { credentials: "include" },
         );
         const data = await res.json();
@@ -66,6 +67,36 @@ export default function StudentsAdminPage() {
 
     fetchLeads();
   }, []);
+
+  const deleteStudent = async (id) => {
+    try {
+      setDeleting(true);
+
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/lead/${id}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        },
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || "Failed to delete student");
+        return false;
+      }
+
+      setStudents((prev) => prev.filter((s) => s.id !== id));
+      return true;
+    } catch (error) {
+      console.error("Delete error:", error);
+      alert("Something went wrong");
+      return false;
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   const capitalize = (str) =>
     str ? str.charAt(0).toUpperCase() + str.slice(1) : "";
@@ -111,7 +142,7 @@ export default function StudentsAdminPage() {
   const handleFormSuccess = (formData) => {
     if (mode === "add") {
       const newStudent = {
-        id: Date.now(),
+        id: formData.leadId,
         name: formData.fullName || "Unknown",
         email: formData.email || "",
         phone: formData.mobile || "",
@@ -385,12 +416,15 @@ export default function StudentsAdminPage() {
                 message={`Are you sure you want to delete ${studentToDelete?.name}? This action cannot be undone.`}
                 confirmText="Delete"
                 confirmVariant="danger"
-                onConfirm={() => {
-                  setStudents((prev) =>
-                    prev.filter((s) => s.id !== studentToDelete.id),
-                  );
-                  setShowConfirmDelete(false);
-                  setStudentToDelete(null);
+                onConfirm={async () => {
+                  if (!studentToDelete) return;
+
+                  const success = await deleteStudent(studentToDelete.id);
+
+                  if (success) {
+                    setShowConfirmDelete(false);
+                    setStudentToDelete(null);
+                  }
                 }}
                 onCancel={() => setShowConfirmDelete(false)}
               />
