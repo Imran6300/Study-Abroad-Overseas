@@ -1,21 +1,89 @@
 "use client";
 
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion"; // For smooth animations
+import { motion } from "framer-motion";
+import { fetchMyLead } from "@/store/leadSlice";
+import Link from "next/link";
 
+const MotionLink = motion(Link);
+const getStatusColor = (status) => {
+  switch (status) {
+    case "Submitted":
+      return "bg-blue-500/20 text-blue-400 border-blue-500/30";
+    case "Documents Pending":
+      return "bg-yellow-500/20 text-yellow-400 border-yellow-500/30";
+    case "Offer Received":
+      return "bg-green-500/20 text-green-400 border-green-500/30";
+    case "Rejected":
+      return "bg-red-500/20 text-red-400 border-red-500/30";
+    case "Withdrawn":
+      return "bg-gray-500/20 text-gray-400 border-gray-500/30";
+    default:
+      return "bg-white/10 text-gray-300 border-white/10";
+  }
+};
 export default function DashboardPage() {
-  const { user,authChecked } = useSelector((state) => state.auth);
+  const { user, authChecked } = useSelector((state) => state.auth);
   const router = useRouter();
   const [progress, setProgress] = useState(0);
+  const [applications, setApplications] = useState([]);
+  const { lead, fetched } = useSelector((state) => state.lead);
+  const dispatch = useDispatch();
 
-  // Protect route
   useEffect(() => {
-    if(authChecked && !user){
-      router.replace("/login")
+    if (authChecked && !user) {
+      router.replace("/login");
     }
-  },[authChecked,user, router]);
+  }, [authChecked, user, router]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchApplications = async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/applications/me`,
+        );
+        const data = await res.json();
+        setApplications(data.applications || []);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchApplications();
+  }, [user]);
+
+  useEffect(() => {
+    if (!fetched) {
+      dispatch(fetchMyLead());
+    }
+  }, [fetched, dispatch]);
+
+  const handleWithdraw = async (id) => {
+    const confirmWithdraw = confirm(
+      "Are you sure you want to withdraw this application?",
+    );
+    if (!confirmWithdraw) return;
+
+    try {
+      const res = await fetch(`/api/applications/${id}/withdraw`, {
+        method: "PATCH",
+      });
+
+      if (res.ok) {
+        setApplications((prev) =>
+          prev.map((app) =>
+            app._id === id ? { ...app, status: "Withdrawn" } : app,
+          ),
+        );
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   // Animate progress bar on mount
   useEffect(() => {
@@ -23,17 +91,18 @@ export default function DashboardPage() {
   }, []);
 
   if (!authChecked) {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0A192F] text-white">
-      Loading dashboard...
-    </div>
-  );
-}
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#0A192F] text-white">
+        Loading dashboard...
+      </div>
+    );
+  }
 
-if (!user) {
-  return null; // prevents UI flash
-}
+  if (!user) {
+    return null; // prevents UI flash
+  }
 
+  // Fetch applications
 
   return (
     <div className="min-h-screen bg-[#0A192F] pt-28 px-4 md:px-8 pb-16">
@@ -91,13 +160,14 @@ if (!user) {
             </p>
           </div>
 
-          <motion.button
+          <MotionLink
+            href="/dashboard/user/profile"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className="bg-[#4169E1] hover:bg-[#3258c9] text-white px-8 py-4 rounded-2xl font-semibold text-lg shadow-lg transition-all"
+            className="bg-[#4169E1] hover:bg-[#3258c9] text-white px-8 py-4 rounded-2xl font-semibold text-lg shadow-lg transition-all inline-block text-center"
           >
             Complete Profile
-          </motion.button>
+          </MotionLink>
         </div>
       </motion.div>
 
@@ -109,8 +179,7 @@ if (!user) {
         className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12"
       >
         {[
-          { title: "Applications", value: "0", emoji: "🎓" },
-          { title: "Saved Universities", value: "0", emoji: "❤️" },
+          { title: "Applications", value: applications.length, emoji: "🎓" },
           { title: "Shortlisted", value: "0", emoji: "📌" },
           { title: "Tests Planned", value: "0", emoji: "📝" },
         ].map((stat, idx) => (
@@ -120,13 +189,90 @@ if (!user) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 + idx * 0.05 }}
             whileHover={{ y: -5, backgroundColor: "rgba(255,255,255,0.08)" }}
-            className="bg-white/5 backdrop-blur-sm rounded-3xl p-6 shadow-lg border border-white/10 transition-all"
+            className="bg-white/5 text-center backdrop-blur-sm rounded-3xl p-6 shadow-lg border border-white/10 transition-all"
           >
             <div className="text-4xl mb-3">{stat.emoji}</div>
             <p className="text-sm text-gray-400 mb-1">{stat.title}</p>
             <p className="text-3xl font-bold text-white">{stat.value}</p>
           </motion.div>
         ))}
+      </motion.div>
+
+      {/* ───────────────── MY APPLICATIONS ───────────────── */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.25 }}
+        className="bg-white/5 backdrop-blur-md rounded-3xl p-6 shadow-xl mb-12 border border-white/10"
+      >
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+          <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+            🎓 My Applications
+          </h2>
+
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => router.push("/dashboard/applications/new")}
+            className="bg-[#32CD32] text-white px-5 py-2 rounded-xl font-semibold shadow-lg hover:bg-[#2eb82e] transition-all text-sm"
+          >
+            + New Application
+          </motion.button>
+        </div>
+
+        {applications.length === 0 ? (
+          <div className="text-gray-400">
+            You haven’t started any applications yet.
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {applications.map((app) => (
+              <div
+                key={app._id}
+                className="p-5 bg-white/5 rounded-2xl border border-white/10 hover:bg-white/10 transition-all flex flex-col md:flex-row md:justify-between md:items-center gap-4"
+              >
+                {/* Left Info */}
+                <div>
+                  <h3 className="text-lg font-semibold text-white">
+                    {app.university}
+                  </h3>
+                  <p className="text-gray-400 text-sm">
+                    {app.course} • {app.intake}
+                  </p>
+
+                  <span
+                    className={`inline-block mt-3 px-3 py-1 text-xs rounded-full border ${getStatusColor(
+                      app.status,
+                    )}`}
+                  >
+                    {app.status}
+                  </span>
+                </div>
+
+                {/* Right Buttons */}
+                <div className="flex gap-3">
+                  <button
+                    onClick={() =>
+                      router.push(`/dashboard/applications/${app._id}`)
+                    }
+                    className="px-4 py-2 bg-[#4169E1] text-white rounded-xl text-sm hover:bg-[#3258c9]"
+                  >
+                    View
+                  </button>
+
+                  {app.status !== "Withdrawn" && (
+                    <button
+                      onClick={() => handleWithdraw(app._id)}
+                      className="px-4 py-2 bg-red-500/20 text-red-400 rounded-xl text-sm border border-red-500/30 hover:bg-red-500/30"
+                    >
+                      Withdraw
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </motion.div>
 
       {/* ───────────────── NEXT STEPS ───────────────── */}
@@ -178,7 +324,7 @@ if (!user) {
         </h2>
 
         <div className="text-gray-500 text-base py-4">
-          You haven’t saved any universities yet. Start exploring!
+          You haven’t shortlisted any universities yet. Start exploring!
         </div>
 
         <motion.button

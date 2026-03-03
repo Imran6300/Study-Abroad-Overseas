@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { fetchMyLead } from "@/store/leadSlice";
+
 import {
   User,
   Mail,
@@ -14,10 +16,28 @@ import {
   Save,
 } from "lucide-react";
 
+const qualificationOptions = [
+  "High School",
+  "Diploma",
+  "Bachelor",
+  "Master",
+  "PhD",
+];
+
+const intakeOptions = ["Spring", "Summer", "Fall", "Winter", "Other"];
+
 export default function ProfilePage() {
   const { user, loading } = useSelector((state) => state.auth);
+  const [profileExists, setProfileExists] = useState(false);
+
+  const [errors, setErrors] = useState({});
+  const [apiError, setApiError] = useState("");
+  const [apiSuccess, setApiSuccess] = useState("");
+  const [saving, setSaving] = useState(false);
+
   const isLoggedIn = Boolean(user);
   const router = useRouter();
+  const dispatch = useDispatch();
 
   const [imagePreview, setImagePreview] = useState(user?.profileImage || null);
   const [imageFile, setImageFile] = useState(null);
@@ -63,26 +83,65 @@ export default function ProfilePage() {
       router.replace("/login");
     }
   }, [loading, isLoggedIn, router]);
-
-  /* ───────── INIT FORM DATA ───────── */
   useEffect(() => {
-    if (user) {
-      setFormData({
-        name: user.name || "",
-        email: user.email || "",
-        qualification: user.qualification || "",
-        field: user.fieldOfStudy || "",
-        graduationYear: user.graduationYear || "",
-        gpa: user.gpa || "",
-        preferredCountry: user.preferredCountry || "",
-        intendedIntake: user.intendedIntake || "",
-        dob: user.dob || "",
-        gender: user.gender || "",
-        nationality: user.nationality || "",
-        passportnumber: user.passportnumber || "",
-        passportexpiry: user.passportexpiry || "",
-      });
-    }
+    if (!user) return;
+    const fetchProfile = async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/profile/me`,
+          { credentials: "include" },
+        );
+
+        if (res.status === 404) {
+          setProfileExists(false);
+
+          setFormData({
+            fullName: user?.name || "",
+            email: user?.email || "",
+            qualification: "",
+            fieldOfStudy: "",
+            graduationYear: "",
+            gpa: "",
+            preferredCountry: "",
+            intendedIntake: "",
+            dateOfBirth: "",
+            gender: "",
+            nationality: "",
+            passportNumber: "",
+            passportExpiry: "",
+          });
+
+          return;
+        }
+
+        const data = await res.json();
+        setProfileExists(true);
+
+        setFormData({
+          fullName: data.data.fullName || user?.name || "",
+          email: data.data.email || user?.email || "",
+          qualification: data.data.qualification || "",
+          fieldOfStudy: data.data.fieldOfStudy || "",
+          graduationYear: data.data.graduationYear || "",
+          gpa: data.data.gpa || "",
+          preferredCountry: data.data.preferredCountry || "",
+          intendedIntake: data.data.intendedIntake || "",
+          dateOfBirth: data.data.dateOfBirth?.split("T")[0] || "",
+          gender: data.data.gender || "",
+          nationality: data.data.nationality || "",
+          passportNumber: data.data.passportNumber || "",
+          passportExpiry: data.data.passportExpiry?.split("T")[0] || "",
+        });
+
+        if (data.data.profilePicture?.secure_url) {
+          setImagePreview(data.data.profilePicture.secure_url);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchProfile();
   }, [user]);
 
   if (loading || !formData) {
@@ -98,10 +157,84 @@ export default function ProfilePage() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSave = async () => {
-    setIsEditing(false);
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!formData.fullName?.trim()) {
+      newErrors.fullName = "Full name is required";
+    }
+
+    if (!formData.qualification) {
+      newErrors.qualification = "Please select qualification";
+    }
+
+    if (!formData.intendedIntake) {
+      newErrors.intendedIntake = "Please select intended intake";
+    }
+
+    if (formData.gpa && isNaN(formData.gpa)) {
+      newErrors.gpa = "GPA must be a number";
+    }
+
+    if (
+      formData.graduationYear &&
+      (formData.graduationYear < 1950 ||
+        formData.graduationYear > new Date().getFullYear() + 6)
+    ) {
+      newErrors.graduationYear = "Enter valid graduation year";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
+  const handleSave = async () => {
+    setApiError("");
+    setApiSuccess("");
+
+    if (!validateForm()) return;
+
+    try {
+      setSaving(true);
+
+      const form = new FormData();
+
+      Object.keys(formData).forEach((key) => {
+        form.append(key, formData[key] || "");
+      });
+
+      if (imageFile) {
+        form.append("profilePicture", imageFile);
+      }
+
+      const url = profileExists
+        ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/profile/me`
+        : `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/profile`;
+
+      const method = profileExists ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method,
+        credentials: "include",
+        body: form,
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setApiError(data.message || "Something went wrong");
+        return;
+      }
+
+      setApiSuccess("Profile updated successfully 🎉");
+      setProfileExists(true);
+      setIsEditing(false);
+    } catch (err) {
+      setApiError("Network error. Please try again.");
+    } finally {
+      setSaving(false);
+    }
+  };
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0B1C2D] to-[#0f2440] pt-28 px-6 pb-16 text-white">
       {/* HEADER */}
@@ -156,6 +289,17 @@ export default function ProfilePage() {
           Selected: {(imageFile.size / 1024 / 1024).toFixed(1)} MB
         </p>
       )}
+      {apiError && (
+        <div className="bg-red-500/20 border border-red-500 text-red-300 p-3 rounded-xl mb-6 text-center">
+          {apiError}
+        </div>
+      )}
+
+      {apiSuccess && (
+        <div className="bg-green-500/20 border border-green-500 text-green-300 p-3 rounded-xl mb-6 text-center">
+          {apiSuccess}
+        </div>
+      )}
 
       {/* PROFILE CARD */}
       <motion.div
@@ -167,16 +311,18 @@ export default function ProfilePage() {
         <Section title="Basic Information" icon={User}>
           <Field
             label="Full Name"
-            name="name"
-            value={formData.name}
+            name="fullName"
+            value={formData.fullName}
             editing={isEditing}
             onChange={handleChange}
+            error={errors.fullName}
           />
           <Field
             label="Email"
             name="email"
             value={formData.email}
             editing={false}
+            error={errors.email}
           />
         </Section>
 
@@ -188,13 +334,17 @@ export default function ProfilePage() {
             value={formData.qualification}
             editing={isEditing}
             onChange={handleChange}
+            options={qualificationOptions}
+            className="cursor-pointer"
+            error={errors.qualification}
           />
           <Field
             label="Field of Study"
-            name="field"
-            value={formData.field}
+            name="fieldOfStudy"
+            value={formData.fieldOfStudy}
             editing={isEditing}
             onChange={handleChange}
+            error={errors.fieldOfStudy}
           />
           <Field
             label="Graduation Year"
@@ -202,6 +352,7 @@ export default function ProfilePage() {
             value={formData.graduationYear}
             editing={isEditing}
             onChange={handleChange}
+            error={errors.graduationYear}
           />
           <Field
             label="GPA / Percentage"
@@ -209,6 +360,7 @@ export default function ProfilePage() {
             value={formData.gpa}
             editing={isEditing}
             onChange={handleChange}
+            error={errors.gpa}
           />
         </Section>
 
@@ -220,6 +372,7 @@ export default function ProfilePage() {
             value={formData.preferredCountry}
             editing={isEditing}
             onChange={handleChange}
+            error={errors.preferredCountry}
           />
           <Field
             label="Intended Intake"
@@ -227,18 +380,22 @@ export default function ProfilePage() {
             value={formData.intendedIntake}
             editing={isEditing}
             onChange={handleChange}
+            options={intakeOptions}
+            className="cursor-pointer"
+            error={errors.intendedIntake}
           />
         </Section>
 
         <Section title="Identity Info" icon={Globe}>
           <Field
             label="Date Of Birth"
-            name="dob"
-            value={formData.dob}
+            name="dateOfBirth"
+            value={formData.dateOfBirth}
             editing={isEditing}
             onChange={handleChange}
             type="date"
             className="cursor-pointer"
+            error={errors.dateOfBirth}
           />
           <Field
             label="Gender"
@@ -248,6 +405,7 @@ export default function ProfilePage() {
             onChange={handleChange}
             options={["Male", "Female", "Other"]}
             className="cursor-pointer"
+            error={errors.gender}
           />
           <Field
             label="Nationality"
@@ -264,22 +422,25 @@ export default function ProfilePage() {
               "Other",
             ]}
             className="cursor-pointer"
+            error={errors.nationality}
           />
           <Field
             label="Passport Number"
-            name="passportnumber"
-            value={formData.passportnumber}
+            name="passportNumber"
+            value={formData.passportNumber}
             editing={isEditing}
             onChange={handleChange}
+            error={errors.passportNumber}
           />
           <Field
             label="Passport Expiry"
-            name="passportexpiry"
-            value={formData.passportexpiry}
+            name="passportExpiry"
+            value={formData.passportExpiry}
             editing={isEditing}
             onChange={handleChange}
             type="date"
             className="cursor-pointer"
+            error={errors.passportExpiry}
           />
         </Section>
 
@@ -295,9 +456,18 @@ export default function ProfilePage() {
           ) : (
             <button
               onClick={handleSave}
-              className="bg-[#32CD32] text-black px-6 py-3 rounded-xl flex items-center gap-2 font-semibold"
+              disabled={saving}
+              className={`${
+                saving ? "bg-gray-400 cursor-not-allowed" : "bg-[#32CD32]"
+              } text-black px-6 py-3 rounded-xl flex items-center gap-2 font-semibold`}
             >
-              <Save size={18} /> Save Changes
+              {saving ? (
+                "Saving..."
+              ) : (
+                <>
+                  <Save size={18} /> Save Changes
+                </>
+              )}
             </button>
           )}
         </div>
@@ -328,6 +498,7 @@ function Field({
   type = "text",
   options,
   className = "",
+  error,
 }) {
   return (
     <div>
@@ -339,7 +510,9 @@ function Field({
             name={name}
             value={value}
             onChange={onChange}
-            className={`w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white focus:outline-none ${className}`}
+            className={`w-full bg-white/10 border ${
+              error ? "border-red-500" : "border-white/20"
+            } rounded-xl px-4 py-3 text-white focus:outline-none ${className}`}
           >
             <option value="">Select {label}</option>
             {options.map((opt) => (
@@ -354,7 +527,9 @@ function Field({
             name={name}
             value={value}
             onChange={onChange}
-            className={`w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white focus:outline-none ${className}`}
+            className={`w-full bg-white/10 border ${
+              error ? "border-red-500" : "border-white/20"
+            } rounded-xl px-4 py-3 text-white focus:outline-none ${className}`}
           />
         )
       ) : (
@@ -362,6 +537,7 @@ function Field({
           {value || "Not provided"}
         </div>
       )}
+      {error && <p className="text-red-400 text-xs mt-1">{error}</p>}
     </div>
   );
 }

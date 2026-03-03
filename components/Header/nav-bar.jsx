@@ -13,13 +13,11 @@ import {
 } from "react-icons/fa";
 import Link from "next/link";
 
-//redux
-
 import { useSelector, useDispatch } from "react-redux";
 import { logout } from "@/store/authSlice";
 import { useRouter } from "next/navigation";
+import { clearLead } from "@/store/leadSlice";
 
-// FIXED COURSE CATEGORY ROUTES (DO NOT CHANGE TEXT IN UI)
 const COURSE_CATEGORY_MAP = {
   "Engineering & Technology": "engineering",
   "Computer Science & IT": "engineering",
@@ -42,6 +40,7 @@ export default function NavBar() {
     });
 
     dispatch(logout());
+    dispatch(clearLead());
     router.push("/login");
   };
 
