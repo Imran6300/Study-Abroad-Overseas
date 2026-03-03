@@ -120,6 +120,7 @@ export default function ProfilePage() {
         setFormData({
           fullName: data.data.fullName || user?.name || "",
           email: data.data.email || user?.email || "",
+          phone: data.data.phone || "",
           qualification: data.data.qualification || "",
           fieldOfStudy: data.data.fieldOfStudy || "",
           graduationYear: data.data.graduationYear || "",
@@ -162,6 +163,10 @@ export default function ProfilePage() {
 
     if (!formData.fullName?.trim()) {
       newErrors.fullName = "Full name is required";
+    }
+
+    if (!formData.phone?.trim()) {
+      newErrors.phone = "Phone number is required";
     }
 
     if (!formData.qualification) {
@@ -323,6 +328,14 @@ export default function ProfilePage() {
             value={formData.email}
             editing={false}
             error={errors.email}
+          />
+          <Field
+            label="Phone Number"
+            name="phone"
+            value={formData.phone}
+            editing={isEditing}
+            onChange={handleChange}
+            error={errors.phone}
           />
         </Section>
 
