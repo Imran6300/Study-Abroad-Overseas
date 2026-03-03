@@ -31,6 +31,31 @@ export default function DashboardPage() {
   const [applications, setApplications] = useState([]);
   const { lead, fetched } = useSelector((state) => state.lead);
   const dispatch = useDispatch();
+  const [profileCompletion, setProfileCompletion] = useState(0);
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchProfile = async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/profile/me`,
+          {
+            credentials: "include", // if using cookies
+          },
+        );
+
+        const data = await res.json();
+
+        if (data.success) {
+          setProfileCompletion(data.data.profileCompletion || 0);
+        }
+      } catch (err) {
+        console.error("Profile fetch error:", err);
+      }
+    };
+
+    fetchProfile();
+  }, [user]);
 
   useEffect(() => {
     if (authChecked && !user) {
@@ -87,8 +112,8 @@ export default function DashboardPage() {
 
   // Animate progress bar on mount
   useEffect(() => {
-    setProgress(65);
-  }, []);
+    setProgress(profileCompletion);
+  }, [profileCompletion]);
 
   if (!authChecked) {
     return (
@@ -129,46 +154,79 @@ export default function DashboardPage() {
       </motion.div>
 
       {/* ───────────────── PROFILE COMPLETION ───────────────── */}
+      {/* ───────────────── PROFILE COMPLETION ───────────────── */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
         className="bg-white/5 backdrop-blur-md rounded-3xl p-6 shadow-xl mb-10 border border-white/10 hover:border-white/20 transition-all"
       >
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-          <div>
-            <h3 className="font-bold text-xl text-white mb-2">
-              Profile Completion
-            </h3>
-            <p className="text-gray-400 mb-4">
-              Unlock personalized recommendations by completing your profile.
-            </p>
+        {progress === 100 ? (
+          // ✅ COMPLETED UI
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+            <div>
+              <h3 className="font-bold text-xl text-[#32CD32] mb-2 flex items-center gap-2">
+                🎉 Profile Completed!
+              </h3>
+              <p className="text-gray-400 mb-4">
+                Your profile is fully completed. You're ready to apply to
+                universities.
+              </p>
 
-            <div className="relative w-full md:w-96 bg-slate-900 rounded-full h-4 overflow-hidden">
-              <motion.div
-                className="absolute left-0 top-0 h-full bg-[#32CD32] rounded-full"
-                initial={{ width: "0%" }}
-                animate={{ width: `${progress}%` }}
-                transition={{ duration: 1, ease: "easeOut" }}
-              />
-              <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[10px] font-bold text-white">
-                {progress}%
-              </span>
+              <div className="relative w-full md:w-96 bg-slate-900 rounded-full h-4 overflow-hidden">
+                <div className="absolute left-0 top-0 h-full bg-[#32CD32] rounded-full w-full" />
+                <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[10px] font-bold text-white">
+                  100%
+                </span>
+              </div>
             </div>
-            <p className="text-sm text-gray-500 mt-2 italic">
-              Keep going! You're almost there.
-            </p>
-          </div>
 
-          <MotionLink
-            href="/dashboard/user/profile"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className="bg-[#4169E1] hover:bg-[#3258c9] text-white px-8 py-4 rounded-2xl font-semibold text-lg shadow-lg transition-all inline-block text-center"
-          >
-            Complete Profile
-          </MotionLink>
-        </div>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => router.push("/dashboard/applications/new")}
+              className="bg-[#32CD32] text-white px-8 py-4 rounded-2xl font-semibold text-lg shadow-lg hover:bg-[#2eb82e] transition-all"
+            >
+              Start Applying 🚀
+            </motion.button>
+          </div>
+        ) : (
+          // ⏳ INCOMPLETE UI
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+            <div>
+              <h3 className="font-bold text-xl text-white mb-2">
+                Profile Completion
+              </h3>
+              <p className="text-gray-400 mb-4">
+                Unlock personalized recommendations by completing your profile.
+              </p>
+
+              <div className="relative w-full md:w-96 bg-slate-900 rounded-full h-4 overflow-hidden">
+                <motion.div
+                  className="absolute left-0 top-0 h-full bg-[#32CD32] rounded-full"
+                  initial={{ width: "0%" }}
+                  animate={{ width: `${progress}%` }}
+                  transition={{ duration: 1, ease: "easeOut" }}
+                />
+                <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[10px] font-bold text-white">
+                  {progress}%
+                </span>
+              </div>
+              <p className="text-sm text-gray-500 mt-2 italic">
+                Keep going! You're almost there.
+              </p>
+            </div>
+
+            <MotionLink
+              href="/dashboard/user/profile"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="bg-[#4169E1] hover:bg-[#3258c9] text-white px-8 py-4 rounded-2xl font-semibold text-lg shadow-lg transition-all inline-block text-center"
+            >
+              Complete Profile
+            </MotionLink>
+          </div>
+        )}
       </motion.div>
 
       {/* ───────────────── QUICK STATS ───────────────── */}
