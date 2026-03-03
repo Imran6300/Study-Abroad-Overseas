@@ -184,7 +184,7 @@ export default function DashboardPage() {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => router.push("/dashboard/applications/new")}
+              onClick={() => router.push("/programs/universities")}
               className="bg-[#32CD32] text-white px-8 py-4 rounded-2xl font-semibold text-lg shadow-lg hover:bg-[#2eb82e] transition-all"
             >
               Start Applying 🚀
