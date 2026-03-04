@@ -1,6 +1,7 @@
 // components/adminform/courseform/StepTopUniversitiesImages.jsx
 export default function StepTopUniversitiesImages({
   form,
+  universities,
   updateArrayField,
   addArrayItem,
   removeArrayItem,
@@ -30,16 +31,22 @@ export default function StepTopUniversitiesImages({
 
         {form.topUniversities.map((uni, index) => (
           <div key={index} className="flex gap-3 items-center">
-            <input
-              type="text"
+            <select
               value={uni}
               onChange={(e) =>
                 updateArrayField("topUniversities", index, e.target.value)
               }
               disabled={isViewMode}
-              placeholder="e.g. Massachusetts Institute of Technology (MIT)"
-              className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 disabled:bg-gray-100"
-            />
+              className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg"
+            >
+              <option value="">Select University</option>
+
+              {universities.map((u) => (
+                <option key={u._id} value={u._id}>
+                  {u.name}
+                </option>
+              ))}
+            </select>
             {!isViewMode && form.topUniversities.length > 1 && (
               <button
                 type="button"

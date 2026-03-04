@@ -3,6 +3,7 @@ export default function StepHeroBasic({
   form,
   onChange,
   bgPreview,
+  universities,
   isViewMode,
 }) {
   return (
@@ -116,15 +117,21 @@ export default function StepHeroBasic({
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Primary University (for listing table)
           </label>
-          <input
-            type="text"
+          <select
             name="primaryUniversity"
             value={form.primaryUniversity}
             onChange={onChange}
             disabled={isViewMode}
-            placeholder="University of Toronto"
             className="w-full px-4 py-2.5 border border-gray-300 rounded-lg"
-          />
+          >
+            <option value="">Select University</option>
+
+            {universities.map((uni) => (
+              <option key={uni._id} value={uni._id}>
+                {uni.name}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div>

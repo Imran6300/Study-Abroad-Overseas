@@ -91,7 +91,7 @@ const courseSlice = createSlice({
       })
       .addCase(fetchCourseBySlug.fulfilled, (state, action) => {
         state.loading = false;
-        state.selectedCourse = action.payload;
+        state.selectedCourse = action.payload.course;
       })
       .addCase(fetchCourseBySlug.rejected, (state, action) => {
         state.loading = false;

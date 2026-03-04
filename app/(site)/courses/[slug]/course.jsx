@@ -28,6 +28,9 @@ export default function CourseDetailPage({ slug }) {
     (state) => state.courses,
   );
 
+  console.log("selectedCourse:", selectedCourse);
+  console.log("topUniversities:", selectedCourse?.topUniversities);
+
   useEffect(() => {
     if (slug && (!selectedCourse || selectedCourse.course?.slug !== slug)) {
       dispatch(fetchCourseBySlug(slug));
@@ -54,7 +57,7 @@ export default function CourseDetailPage({ slug }) {
     );
   }
 
-  if (!selectedCourse?.course) {
+  if (!selectedCourse) {
     return (
       <div className="min-h-screen flex items-center justify-center text-white">
         Course not found.
@@ -62,7 +65,7 @@ export default function CourseDetailPage({ slug }) {
     );
   }
 
-  const program = selectedCourse.course;
+  const program = selectedCourse;
 
   const course = {
     name: program.title,
@@ -269,20 +272,34 @@ export default function CourseDetailPage({ slug }) {
                 <h2 className="text-3xl font-bold mb-8 text-indigo-300">
                   Top Universities Offering This Program
                 </h2>
+
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {course.topUniversities.map((uni, i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: i * 0.1 }}
-                      className="bg-white/5 backdrop-blur-xl rounded-2xl p-7 border border-white/10 hover:border-indigo-500/50 transition-all group"
-                    >
-                      <h3 className="text-xl font-bold group-hover:text-indigo-300 transition-colors">
-                        {uni}
-                      </h3>
-                    </motion.div>
-                  ))}
+                  {program.topUniversities?.length > 0 ? (
+                    program.topUniversities.map((uni, i) => (
+                      <Link key={uni._id} href={`/universities/${uni.slug}`}>
+                        <motion.div
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: i * 0.1 }}
+                          className="bg-white/5 backdrop-blur-xl rounded-2xl p-7 border border-white/10 hover:border-indigo-500/50 transition-all group cursor-pointer"
+                        >
+                          <h3 className="text-xl font-bold group-hover:text-indigo-300 transition-colors">
+                            {uni.name}
+                          </h3>
+
+                          <p className="text-gray-400 text-sm mt-2">
+                            {uni.country}
+                          </p>
+
+                          <p className="text-indigo-400 text-sm mt-1">
+                            QS Rank #{uni.qsRanking}
+                          </p>
+                        </motion.div>
+                      </Link>
+                    ))
+                  ) : (
+                    <p className="text-gray-400">No universities available.</p>
+                  )}
                 </div>
               </div>
             )}

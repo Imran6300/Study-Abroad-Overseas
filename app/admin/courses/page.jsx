@@ -58,7 +58,7 @@ export default function CoursesPage() {
         id: course._id,
         slug: course.slug,
         name: course.title,
-        university: course.primaryUniversity,
+        university: course.primaryUniversity?.name || "—",
         level: course.level,
         field: course.field,
         duration: course.duration,

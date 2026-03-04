@@ -22,6 +22,7 @@ export default function AddCourseForm({
 
   const totalSteps = 5;
   const [currentStep, setCurrentStep] = useState(1);
+  const [universities, setUniversities] = useState([]);
 
   const [form, setForm] = useState({
     bgImageFile: null,
@@ -57,6 +58,26 @@ export default function AddCourseForm({
   const [bgPreview, setBgPreview] = useState(null);
 
   useEffect(() => {
+    const fetchUniversities = async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/universities`,
+        );
+
+        const data = await res.json();
+
+        if (data.success) {
+          setUniversities(data.universities);
+        }
+      } catch (err) {
+        console.error("Failed to load universities");
+      }
+    };
+
+    fetchUniversities();
+  }, []);
+
+  useEffect(() => {
     if (initialData) {
       setForm({
         bgImageFile: null,
@@ -72,7 +93,10 @@ export default function AddCourseForm({
 
         level: initialData.level || "",
         field: initialData.field || "",
-        primaryUniversity: initialData.primaryUniversity || "",
+        primaryUniversity:
+          initialData.primaryUniversity?._id ||
+          initialData.primaryUniversity ||
+          "",
 
         // Overview
         overviewTitle: initialData.overviewTitle || "Program Overview",
@@ -97,7 +121,7 @@ export default function AddCourseForm({
 
         // Universities
         topUniversities: Array.isArray(initialData.topUniversities)
-          ? initialData.topUniversities
+          ? initialData.topUniversities.map((u) => u._id || u)
           : [""],
 
         featured: !!initialData.featured,
@@ -239,6 +263,7 @@ export default function AddCourseForm({
           form={form}
           onChange={handleChange}
           bgPreview={bgPreview}
+          universities={universities}
           isViewMode={isViewMode}
         />
       )}
@@ -278,6 +303,7 @@ export default function AddCourseForm({
       {currentStep === 5 && (
         <StepTopUniversitiesImages
           form={form}
+          universities={universities}
           updateArrayField={updateArrayField}
           addArrayItem={addArrayItem}
           removeArrayItem={removeArrayItem}
