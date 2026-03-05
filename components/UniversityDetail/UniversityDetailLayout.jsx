@@ -2,6 +2,7 @@
 import SimilarUniversityCard from "./SimilarUniversityCard";
 import { useSelector } from "react-redux";
 import { useMemo } from "react";
+import Link from "next/link";
 
 export default function UniversityDetailLayout({ uni }) {
   const universities = useSelector((state) => state.universities.list);
@@ -17,7 +18,7 @@ export default function UniversityDetailLayout({ uni }) {
   const description = uni.description ?? "";
   const image = uni.images?.[0]?.url || uni.logo?.url;
 
-  const courses = uni.courses ?? [];
+  const courses = Array.isArray(uni.courses) ? uni.courses : [];
   const admissionRequirements = uni.admissionRequirements ?? [];
 
   /* ================= SIMILAR UNIVERSITIES ================= */
@@ -65,12 +66,21 @@ export default function UniversityDetailLayout({ uni }) {
 
                 <div className="grid sm:grid-cols-2 gap-4">
                   {courses.map((course) => (
-                    <div
-                      key={course}
-                      className="bg-[#112240] border border-[#1E3A5F] rounded-lg px-4 py-3 hover:border-[#4169E1] transition"
+                    <Link
+                      key={course._id}
+                      href={`/courses/${course.slug}`}
+                      className="block bg-[#112240] border border-[#1E3A5F] rounded-lg px-4 py-4 hover:border-[#4169E1] transition hover:scale-[1.02]"
                     >
-                      {course}
-                    </div>
+                      <h3 className="font-semibold text-[#CCD6F6]">
+                        {course.title}
+                      </h3>
+
+                      <div className="text-sm text-[#8892B0] mt-1 flex gap-3">
+                        <span>{course.level}</span>
+                        <span>•</span>
+                        <span>{course.duration}</span>
+                      </div>
+                    </Link>
                   ))}
                 </div>
               </section>

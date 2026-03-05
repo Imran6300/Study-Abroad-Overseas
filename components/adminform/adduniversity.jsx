@@ -24,6 +24,7 @@ export default function AddUniversityForm({
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [modalConfig, setModalConfig] = useState(null);
+  const [coursesList, setCoursesList] = useState([]);
 
   const [form, setForm] = useState({
     name: "",
@@ -37,7 +38,7 @@ export default function AddUniversityForm({
     tuitionFee: "",
     intakes: "",
     description: "",
-    courses: "",
+    courses: [],
     admissionRequirements: "",
     similarUniversities: ["", "", ""],
     featured: false,
@@ -67,7 +68,7 @@ export default function AddUniversityForm({
         tuitionFee: "",
         intakes: "",
         description: "",
-        courses: "",
+        courses: [],
         admissionRequirements: "",
         similarUniversities: ["", "", ""],
         featured: false,
@@ -100,8 +101,8 @@ export default function AddUniversityForm({
       intakes: initialData.intakes || "",
       description: initialData.description || "",
       courses: Array.isArray(initialData.courses)
-        ? initialData.courses.join(", ")
-        : initialData.courses || "",
+        ? initialData.courses.map((c) => c._id)
+        : [],
       admissionRequirements: initialData.admissionRequirements || "",
       similarUniversities: Array.isArray(initialData.similarUniversities)
         ? initialData.similarUniversities
@@ -164,6 +165,12 @@ export default function AddUniversityForm({
     setImagePreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
+  useEffect(() => {
+    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/courses`)
+      .then((res) => res.json())
+      .then((data) => setCoursesList(data.courses || []));
+  }, []);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (isViewMode || isSubmitting) return;
@@ -186,12 +193,16 @@ export default function AddUniversityForm({
 
       // Text fields
       Object.entries(form).forEach(([key, value]) => {
-        if (key === "similarUniversities") {
+        if (key === "courses") {
+          value.forEach((courseId) => {
+            formData.append("courses", courseId);
+          });
+        } else if (key === "similarUniversities") {
           value.forEach((uni, i) => {
             formData.append(`similarUniversities[${i}]`, uni.trim());
           });
         } else if (key === "programs") {
-          formData.append("programs", JSON.stringify(value)); // 🔥 IMPORTANT
+          formData.append("programs", JSON.stringify(value));
         } else if (key !== "logoFile" && key !== "imageFiles") {
           formData.append(key, value ?? "");
         }
@@ -242,7 +253,7 @@ export default function AddUniversityForm({
               tuitionFee: "",
               intakes: "",
               description: "",
-              courses: "",
+              courses: [],
               admissionRequirements: "",
               similarUniversities: ["", "", ""],
               featured: false,
@@ -302,6 +313,7 @@ export default function AddUniversityForm({
           <StepDescriptionCourses
             form={form}
             setForm={setForm}
+            coursesList={coursesList}
             onChange={handleChange}
             isViewMode={isViewMode}
           />

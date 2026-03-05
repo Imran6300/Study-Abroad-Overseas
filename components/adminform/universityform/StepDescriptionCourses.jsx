@@ -2,12 +2,14 @@
 
 const CATEGORIES = ["engineering", "business", "healthcare"];
 const LEVELS = ["bachelor", "master", "phd"];
+import Select from "react-select";
 
 export default function StepDescriptionCourses({
   form,
   setForm,
   onChange,
   isViewMode,
+  coursesList,
 }) {
   // Add new program row
   const handleAddProgram = () => {
@@ -16,6 +18,8 @@ export default function StepDescriptionCourses({
       programs: [...(prev.programs || []), { category: "", level: "" }],
     }));
   };
+
+  console.log("coursesList", coursesList);
 
   // Remove program row
   const handleRemoveProgram = (index) => {
@@ -27,6 +31,11 @@ export default function StepDescriptionCourses({
       programs: updated,
     }));
   };
+
+  const courseOptions = coursesList.map((course) => ({
+    value: course._id,
+    label: course.title,
+  }));
 
   // Update category or level
   const handleProgramChange = (index, field, value) => {
@@ -63,17 +72,30 @@ export default function StepDescriptionCourses({
 
       {/* ================= COURSES ================= */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Popular / Offered Courses (comma separated)
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Popular / Offered Courses
         </label>
-        <textarea
-          name="courses"
-          value={form.courses}
-          onChange={onChange}
-          disabled={isViewMode}
-          rows={4}
-          className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 disabled:bg-gray-100 disabled:cursor-not-allowed resize-y"
-          placeholder="Computer Science, AI, Mechanical Engineering..."
+
+        <Select
+          isMulti
+          isDisabled={isViewMode}
+          options={coursesList.map((course) => ({
+            value: course._id,
+            label: course.title,
+          }))}
+          value={coursesList
+            .filter((course) => form.courses?.includes(course._id))
+            .map((course) => ({
+              value: course._id,
+              label: course.title,
+            }))}
+          onChange={(selected) =>
+            setForm((prev) => ({
+              ...prev,
+              courses: selected ? selected.map((s) => s.value) : [],
+            }))
+          }
+          placeholder="Search and select courses..."
         />
       </div>
 

@@ -19,6 +19,12 @@ export default async function Page({ params }) {
   if (!data?.success || !data?.university) {
     notFound();
   }
-
-  return <UniversityDetailLayout uni={data.university} />;
+  return (
+    <UniversityDetailLayout
+      uni={{
+        ...data.university,
+        courses: data.courses,
+      }}
+    />
+  );
 }
