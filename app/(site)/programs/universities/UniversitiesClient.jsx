@@ -185,57 +185,6 @@ export default function UniversitiesClient({ universities }) {
                 </button>
               ))}
             </motion.div>
-
-            <motion.div
-              variants={filterVariants}
-              className="flex flex-wrap gap-4 items-center justify-center sm:justify-start"
-            >
-              <select
-                value={maxRank ?? ""}
-                onChange={(e) =>
-                  setMaxRank(e.target.value ? Number(e.target.value) : null)
-                }
-                className="px-5 py-2.5 rounded-xl border bg-white text-sm focus:ring-2 focus:ring-blue-400/40 min-w-[140px]"
-              >
-                <option value="">All Rankings</option>
-                <option value="10">Top 10</option>
-                <option value="50">Top 50</option>
-                <option value="100">Top 100</option>
-                <option value="200">Top 200</option>
-              </select>
-
-              <select
-                value={maxAcceptance ?? ""}
-                onChange={(e) =>
-                  setMaxAcceptance(
-                    e.target.value ? Number(e.target.value) : null,
-                  )
-                }
-                className="px-5 py-2.5 rounded-xl border bg-white text-sm focus:ring-2 focus:ring-blue-400/40 min-w-[160px]"
-              >
-                <option value="">All Acceptance</option>
-                <option value="10">≤ 10%</option>
-                <option value="20">≤ 20%</option>
-                <option value="30">≤ 30%</option>
-                <option value="50">≤ 50%</option>
-              </select>
-
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="px-5 py-2.5 rounded-xl border bg-white text-sm focus:ring-2 focus:ring-blue-400/40"
-              >
-                <option value="rank">Sort by Rank</option>
-                <option value="students">Sort by Size</option>
-              </select>
-
-              <button
-                onClick={clearFilters}
-                className="px-5 py-2.5 rounded-xl bg-gray-100 text-gray-700 text-sm hover:bg-gray-200 transition min-w-[110px]"
-              >
-                Clear
-              </button>
-            </motion.div>
           </div>
         </motion.div>
 

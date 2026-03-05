@@ -59,6 +59,7 @@ export default function Step4({
       </select>
 
       <div className="flex justify-between gap-4 pt-2">
+        {/* Back */}
         <button
           onClick={prevStep}
           disabled={loading}
@@ -67,23 +68,13 @@ export default function Step4({
           ← Back
         </button>
 
+        {/* Submit */}
         <button
           onClick={handleSubmit}
-          disabled={loading || submitStatus === "success"}
-          className={`w-full transition-all duration-300 
-      ${
-        submitStatus === "success"
-          ? "bg-green-600"
-          : submitStatus === "error"
-            ? "bg-red-600"
-            : "btn-primary"
-      } 
-      disabled:opacity-70`}
+          disabled={loading}
+          className="w-full btn-primary transition-all duration-300 disabled:opacity-70"
         >
-          {submitStatus === "loading" && "Submitting..."}
-          {submitStatus === "success" && "Submitted Successfully ✓"}
-          {submitStatus === "error" && "Submission Failed — Try Again"}
-          {submitStatus === "idle" && "Get My Free Assessment 🎓"}
+          {loading ? "Submitting..." : "Get My Free Assessment 🎓"}
         </button>
       </div>
 

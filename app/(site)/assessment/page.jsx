@@ -58,7 +58,7 @@ export default function FreeAssessmentPage() {
   const [direction, setDirection] = useState(1);
   const [loading, setLoading] = useState(false);
   const [submitStatus, setSubmitStatus] = useState("idle");
-  // idle | loading | success | error
+  const [errorMessage, setErrorMessage] = useState("");
 
   const [formData, setFormData] = useState({
     name: "",
@@ -87,7 +87,6 @@ export default function FreeAssessmentPage() {
 
   const updateForm = (data) => setFormData((prev) => ({ ...prev, ...data }));
 
-  // ✅ Single success alert + loading protection
   const handleSubmit = async (captchaToken) => {
     if (loading) return;
 
@@ -123,12 +122,15 @@ export default function FreeAssessmentPage() {
       console.log("BACKEND RESPONSE:", data);
 
       if (!res.ok) {
-        throw new Error(JSON.stringify(data));
+        setErrorMessage(data.message || "Something went wrong");
+        setSubmitStatus("error");
+        return;
       }
 
       setSubmitStatus("success");
     } catch (err) {
       console.log("FULL ERROR:", err);
+      setErrorMessage("Network error. Please try again.");
       setSubmitStatus("error");
     } finally {
       setLoading(false);
@@ -137,92 +139,129 @@ export default function FreeAssessmentPage() {
 
   return (
     <div className="min-h-screen bg-[#0B0F1A] flex items-center justify-center px-4 py-20">
-      <div className="w-full max-w-2xl bg-[#111827] rounded-2xl shadow-xl p-8 overflow-hidden">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, ease: "easeOut" }}
-        >
-          <h1 className="text-3xl font-bold text-white text-center">
-            Free Study Abroad Assessment
-          </h1>
-          <p className="text-gray-400 text-center mt-2">
-            Takes less than 2 minutes
-          </p>
-        </motion.div>
+      <div className="flex gap-6 items-start">
+        <div className="w-full max-w-2xl bg-[#111827] rounded-2xl shadow-xl p-8 overflow-hidden">
+          {/* Header */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, ease: "easeOut" }}
+          >
+            <h1 className="text-3xl font-bold text-white text-center">
+              Free Study Abroad Assessment
+            </h1>
+            <p className="text-gray-400 text-center mt-2">
+              Takes less than 2 minutes
+            </p>
+          </motion.div>
 
-        {/* Progress Bar */}
-        <div className="mt-6">
-          <div className="w-full bg-gray-700 h-2 rounded-full overflow-hidden">
-            <motion.div
-              className="bg-indigo-500 h-2 rounded-full"
-              initial={{ width: 0 }}
-              animate={{ width: `${(step / TOTAL_STEPS) * 100}%` }}
-              transition={{ type: "spring", stiffness: 100, damping: 15 }}
-            />
-          </div>
-          <p className="text-sm text-gray-400 mt-2 text-right">
-            Step {step} of {TOTAL_STEPS}
-          </p>
-        </div>
-
-        {/* Animated steps */}
-        <div className="mt-8">
-          <AnimatePresence mode="wait" initial={false} custom={direction}>
-            <motion.div
-              key={step}
-              custom={direction}
-              variants={pageVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-            >
+          {/* Progress Bar */}
+          <div className="mt-6">
+            <div className="w-full bg-gray-700 h-2 rounded-full overflow-hidden">
               <motion.div
-                variants={staggerContainer}
-                initial="hidden"
-                animate="show"
+                className="bg-indigo-500 h-2 rounded-full"
+                initial={{ width: 0 }}
+                animate={{ width: `${(step / TOTAL_STEPS) * 100}%` }}
+                transition={{ type: "spring", stiffness: 100, damping: 15 }}
+              />
+            </div>
+            <p className="text-sm text-gray-400 mt-2 text-right">
+              Step {step} of {TOTAL_STEPS}
+            </p>
+          </div>
+
+          {/* Animated steps */}
+          <div className="mt-8">
+            <AnimatePresence mode="wait" initial={false} custom={direction}>
+              <motion.div
+                key={step}
+                custom={direction}
+                variants={pageVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
               >
-                {step === 1 && (
-                  <Step1
-                    data={formData}
-                    updateForm={updateForm}
-                    nextStep={nextStep}
-                  />
-                )}
+                <motion.div
+                  variants={staggerContainer}
+                  initial="hidden"
+                  animate="show"
+                >
+                  {step === 1 && (
+                    <Step1
+                      data={formData}
+                      updateForm={updateForm}
+                      nextStep={nextStep}
+                    />
+                  )}
 
-                {step === 2 && (
-                  <Step2
-                    data={formData}
-                    updateForm={updateForm}
-                    nextStep={nextStep}
-                    prevStep={prevStep}
-                  />
-                )}
+                  {step === 2 && (
+                    <Step2
+                      data={formData}
+                      updateForm={updateForm}
+                      nextStep={nextStep}
+                      prevStep={prevStep}
+                    />
+                  )}
 
-                {step === 3 && (
-                  <Step3
-                    data={formData}
-                    updateForm={updateForm}
-                    nextStep={nextStep}
-                    prevStep={prevStep}
-                  />
-                )}
+                  {step === 3 && (
+                    <Step3
+                      data={formData}
+                      updateForm={updateForm}
+                      nextStep={nextStep}
+                      prevStep={prevStep}
+                    />
+                  )}
 
-                {step === 4 && (
-                  <Step4
-                    prevStep={prevStep}
-                    submit={handleSubmit}
-                    loading={loading}
-                    data={formData}
-                    updateForm={updateForm}
-                    submitStatus={submitStatus}
-                  />
-                )}
+                  {step === 4 && (
+                    <Step4
+                      prevStep={prevStep}
+                      submit={handleSubmit}
+                      loading={loading}
+                      data={formData}
+                      updateForm={updateForm}
+                      submitStatus={submitStatus}
+                    />
+                  )}
+                </motion.div>
               </motion.div>
-            </motion.div>
-          </AnimatePresence>
+            </AnimatePresence>
+          </div>
         </div>
+        <AnimatePresence>
+          {(submitStatus === "success" || submitStatus === "error") && (
+            <motion.div
+              initial={{ opacity: 0, x: 40, scale: 0.95 }}
+              animate={{ opacity: 1, x: 0, scale: 1 }}
+              exit={{ opacity: 0, x: 40 }}
+              transition={{ duration: 0.3 }}
+              className={`fixed top-24 right-6 z-50 flex items-center gap-3 rounded-lg shadow-lg px-4 py-3
+        ${
+          submitStatus === "success"
+            ? "bg-[#111827] border border-green-500"
+            : "bg-[#111827] border border-red-500"
+        }`}
+            >
+              {/* Message */}
+              <span
+                className={`text-sm font-medium ${
+                  submitStatus === "success" ? "text-green-400" : "text-red-400"
+                }`}
+              >
+                {submitStatus === "success"
+                  ? "✅ Assessment Submitted Successfully"
+                  : `❌ ${errorMessage}`}
+              </span>
+
+              {/* Close Button */}
+              <button
+                onClick={() => setSubmitStatus("idle")}
+                className="text-gray-400 hover:text-white text-sm"
+              >
+                ✕
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
