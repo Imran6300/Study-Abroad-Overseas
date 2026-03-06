@@ -7,6 +7,7 @@ import Step1 from "@/components/assessment/step1";
 import Step2 from "@/components/assessment/step2";
 import Step3 from "@/components/assessment/step3";
 import Step4 from "@/components/assessment/step4";
+import MessageBox from "@/components/ui/MessageBox";
 
 // Animation variants
 const staggerContainer = {
@@ -215,60 +216,19 @@ export default function FreeAssessmentPage() {
 
           {/* Animated steps */}
           <div className="mt-8">
-            <AnimatePresence mode="wait" initial={false} custom={direction}>
-              <motion.div
-                key={step}
-                custom={direction}
-                variants={pageVariants}
-                initial="initial"
-                animate="animate"
-                exit="exit"
-              >
-                <motion.div
-                  variants={staggerContainer}
-                  initial="hidden"
-                  animate="show"
-                >
-                  {step === 1 && (
-                    <Step1
-                      data={formData}
-                      updateForm={updateForm}
-                      nextStep={nextStep}
-                    />
-                  )}
-
-                  {step === 2 && (
-                    <Step2
-                      data={formData}
-                      updateForm={updateForm}
-                      nextStep={nextStep}
-                      prevStep={prevStep}
-                    />
-                  )}
-
-                  {step === 3 && (
-                    <Step3
-                      data={formData}
-                      updateForm={updateForm}
-                      nextStep={nextStep}
-                      prevStep={prevStep}
-                    />
-                  )}
-
-                  {step === 4 && (
-                    <Step4
-                      prevStep={prevStep}
-                      submit={handleSubmit}
-                      loading={loading}
-                      data={formData}
-                      updateForm={updateForm}
-                      submitStatus={submitStatus}
-                      isEdit={hasLead}
-                    />
-                  )}
-                </motion.div>
-              </motion.div>
-            </AnimatePresence>
+            <MessageBox
+              status={
+                submitStatus === "success" || submitStatus === "error"
+                  ? submitStatus
+                  : null
+              }
+              message={
+                submitStatus === "success"
+                  ? "✅ Assessment Submitted Successfully"
+                  : `❌ ${errorMessage}`
+              }
+              onClose={() => setSubmitStatus("idle")}
+            />
           </div>
         </div>
         <AnimatePresence>

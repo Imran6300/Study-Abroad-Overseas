@@ -5,6 +5,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { fetchMyLead } from "@/store/leadSlice";
+import MessageBox from "@/components/ui/MessageBox";
 
 import {
   User,
@@ -294,17 +295,14 @@ export default function ProfilePage() {
           Selected: {(imageFile.size / 1024 / 1024).toFixed(1)} MB
         </p>
       )}
-      {apiError && (
-        <div className="bg-red-500/20 border border-red-500 text-red-300 p-3 rounded-xl mb-6 text-center">
-          {apiError}
-        </div>
-      )}
-
-      {apiSuccess && (
-        <div className="bg-green-500/20 border border-green-500 text-green-300 p-3 rounded-xl mb-6 text-center">
-          {apiSuccess}
-        </div>
-      )}
+      <MessageBox
+        status={apiSuccess ? "success" : apiError ? "error" : null}
+        message={apiSuccess || apiError}
+        onClose={() => {
+          setApiSuccess("");
+          setApiError("");
+        }}
+      />
 
       {/* PROFILE CARD */}
       <motion.div
