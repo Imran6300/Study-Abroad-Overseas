@@ -85,7 +85,7 @@ export default function FreeAssessmentPage() {
 
         const data = await res.json();
 
-        if (data.success && data.lead) {
+        if (res.ok && data.lead) {
           const lead = data.lead;
 
           setHasLead(true);
@@ -132,28 +132,31 @@ export default function FreeAssessmentPage() {
     setSubmitStatus("loading");
 
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/lead/me`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({
-            name: formData.name,
-            email: formData.email,
-            phone: formData.phone,
-            qualification: formData.education,
-            field: formData.field,
-            passingYear: formData.year,
-            preferredCountry: formData.country,
-            preferredIntake: formData.intake,
-            budget: formData.budget,
-            examStatus: formData.examStatus,
-            workExperience: formData.experience,
-            captchaToken,
-          }),
-        },
-      );
+      const url = hasLead
+        ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/lead/me`
+        : `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/lead`;
+
+      const method = hasLead ? "PATCH" : "POST";
+
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          qualification: formData.education,
+          field: formData.field,
+          passingYear: formData.year,
+          preferredCountry: formData.country,
+          preferredIntake: formData.intake,
+          budget: formData.budget,
+          examStatus: formData.examStatus,
+          workExperience: formData.experience,
+          captchaToken,
+        }),
+      });
 
       const data = await res.json();
 
@@ -167,6 +170,7 @@ export default function FreeAssessmentPage() {
       }
 
       setSubmitStatus("success");
+      setHasLead(true);
     } catch (err) {
       console.log("FULL ERROR:", err);
       setErrorMessage("Network error. Please try again.");
