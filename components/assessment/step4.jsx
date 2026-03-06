@@ -9,6 +9,7 @@ export default function Step4({
   data,
   updateForm,
   submitStatus,
+  isEdit,
 }) {
   const { executeRecaptcha } = useGoogleReCaptcha();
 
@@ -74,7 +75,11 @@ export default function Step4({
           disabled={loading}
           className="w-full btn-primary transition-all duration-300 disabled:opacity-70"
         >
-          {loading ? "Submitting..." : "Get My Free Assessment 🎓"}
+          {loading
+            ? "Updating..."
+            : isEdit
+              ? "Update My Assessment ✏️"
+              : "Get My Free Assessment 🎓"}
         </button>
       </div>
 

@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 
 import Step1 from "@/components/assessment/step1";
 import Step2 from "@/components/assessment/step2";
@@ -73,6 +72,42 @@ export default function FreeAssessmentPage() {
     examStatus: "",
     experience: "",
   });
+  useEffect(() => {
+    const fetchLead = async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/lead/me`,
+          {
+            credentials: "include",
+          },
+        );
+
+        const data = await res.json();
+
+        if (data.success && data.lead) {
+          const lead = data.lead;
+
+          setFormData({
+            name: lead.name || "",
+            email: lead.email || "",
+            phone: lead.phone || "",
+            education: lead.qualification || "",
+            field: lead.field || "",
+            year: lead.passingYear || "",
+            country: lead.preferredCountry || "",
+            intake: lead.preferredIntake || "",
+            budget: lead.budget || "",
+            examStatus: lead.examStatus || "",
+            experience: lead.workExperience || "",
+          });
+        }
+      } catch (err) {
+        console.error("Failed to load assessment", err);
+      }
+    };
+
+    fetchLead();
+  }, []);
 
   // ✅ Step bounds protection
   const nextStep = () => {
@@ -95,10 +130,11 @@ export default function FreeAssessmentPage() {
 
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/lead`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/lead/me`,
         {
-          method: "POST",
+          method: "PATCH",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify({
             name: formData.name,
             email: formData.email,
@@ -220,6 +256,7 @@ export default function FreeAssessmentPage() {
                       data={formData}
                       updateForm={updateForm}
                       submitStatus={submitStatus}
+                      isEdit={!!formData.email}
                     />
                   )}
                 </motion.div>
