@@ -58,6 +58,7 @@ export default function FreeAssessmentPage() {
   const [loading, setLoading] = useState(false);
   const [submitStatus, setSubmitStatus] = useState("idle");
   const [errorMessage, setErrorMessage] = useState("");
+  const [hasLead, setHasLead] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -86,6 +87,8 @@ export default function FreeAssessmentPage() {
 
         if (data.success && data.lead) {
           const lead = data.lead;
+
+          setHasLead(true);
 
           setFormData({
             name: lead.name || "",
@@ -256,7 +259,7 @@ export default function FreeAssessmentPage() {
                       data={formData}
                       updateForm={updateForm}
                       submitStatus={submitStatus}
-                      isEdit={!!formData.email}
+                      isEdit={hasLead}
                     />
                   )}
                 </motion.div>
