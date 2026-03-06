@@ -48,6 +48,8 @@ export default function StudentsAdminPage() {
 
         const formatted = data.leads.map((lead) => ({
           id: lead._id,
+          userId: lead.user, // ✅ ADD THIS
+
           name: lead.name,
           email: lead.email,
           phone: lead.phone,
@@ -344,7 +346,9 @@ export default function StudentsAdminPage() {
                             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
                               <button
                                 onClick={() =>
-                                  router.push(`/admin/students/${student.id}`)
+                                  router.push(
+                                    `/admin/students/${student.userId}`,
+                                  )
                                 }
                                 className="text-sky-600 hover:text-sky-800 text-sm"
                               >

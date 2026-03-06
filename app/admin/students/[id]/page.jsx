@@ -1,10 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
-  Calendar,
   FileText,
   Clock,
   FileSignature,
@@ -13,6 +12,7 @@ import {
   Trash2,
   CheckCircle2,
   Send,
+  UserRound,
 } from "lucide-react";
 
 import AdminSidebar from "@/components/admindashboard/AdminSidebar";
@@ -22,10 +22,9 @@ import AddApplicationForm from "@/components/adminform/addapplication";
 import VisaCaseForm from "@/components/adminform/addvisa";
 import DeadlineForm from "@/components/adminform/adddeadline";
 import NotesForm from "@/components/adminform/addnotes";
+import UserProfileSection from "@/components/adminform/addProfile";
 
-// ────────────────────────────────────────────────
 // Mock data – replace with real API later
-// ────────────────────────────────────────────────
 const mockApplications = [
   {
     id: "app1",
@@ -95,14 +94,16 @@ const mockNotes = [
 export default function StudentProfilePage() {
   const params = useParams();
   const id = params.id;
+  console.log("ID:", id);
   const router = useRouter();
   const { user } = useSelector((state) => state.auth);
   const counselorName = user?.name || "Counselor";
 
-  const [activeTab, setActiveTab] = useState("applications");
+  const [activeTab, setActiveTab] = useState("userprofile");
   const [editing, setEditing] = useState(null);
 
   const [applications, setApplications] = useState(mockApplications);
+  const [userProfile, setUserProfile] = useState(null);
   const [visas, setVisas] = useState(mockVisas);
   const [deadlines, setDeadlines] = useState(mockDeadlines);
   const [notes, setNotes] = useState(mockNotes);
@@ -146,6 +147,60 @@ export default function StudentProfilePage() {
       setEditing(null);
     }
   };
+  const updateUserProfile = async (profileData) => {
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/profile/${id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify(profileData),
+        },
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || "Failed to update profile");
+        return;
+      }
+
+      // update UI with new data
+      setUserProfile(data.data);
+
+      // close edit form
+      setEditing(null);
+    } catch (error) {
+      console.error("Update error:", error);
+    }
+  };
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/profile/${id}`,
+          {
+            credentials: "include",
+          },
+        );
+
+        const data = await res.json();
+
+        console.log("PROFILE API:", data);
+
+        if (data.success) {
+          setUserProfile(data.data); // VERY IMPORTANT
+        }
+      } catch (error) {
+        console.error("Fetch error:", error);
+      }
+    };
+
+    if (id) fetchUserProfile();
+  }, [id]);
 
   const startEdit = (type, item = null) => {
     setEditing({ type, item });
@@ -170,6 +225,8 @@ export default function StudentProfilePage() {
         setNotes((prev) =>
           prev.map((it) => (it.id === updatedItem.id ? updatedItem : it)),
         );
+      } else if (type === "userprofile") {
+        setUserProfile(updatedItem);
       }
     } else {
       // add new
@@ -181,6 +238,8 @@ export default function StudentProfilePage() {
         setDeadlines((prev) => [...prev, updatedItem]);
       } else if (type === "notes") {
         setNotes((prev) => [...prev, updatedItem]);
+      } else if (type === "userprofile") {
+        setUserProfile(updatedItem);
       }
     }
 
@@ -192,6 +251,8 @@ export default function StudentProfilePage() {
   };
 
   const tabs = [
+    { key: "userprofile", label: "User Profile", icon: UserRound },
+
     { key: "applications", label: "Applications", icon: FileSignature },
     { key: "documents", label: "Documents", icon: FileText },
     { key: "visa", label: "Visa", icon: Send },
@@ -202,11 +263,13 @@ export default function StudentProfilePage() {
 
   const student = {
     id,
-    name: "Ahmed Khan",
-    email: "ahmed@example.com",
-    phone: "+91 98765 43210",
-    country: "India",
-    target: "Canada",
+    name: userProfile?.fullName || "Student",
+    email: userProfile?.email || "",
+    phone: userProfile?.phone || "",
+
+    profilePicture: userProfile?.profilePicture?.secure_url || "",
+    country: userProfile?.nationality || "",
+    target: userProfile?.preferredCountry || "",
     status: "Active",
   };
 
@@ -243,8 +306,12 @@ export default function StudentProfilePage() {
           >
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
               <div className="flex items-center gap-5">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center text-white text-2xl sm:text-3xl font-bold shadow-md ring-2 ring-white/80">
-                  {student.name.charAt(0)}
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden shadow-md ring-2 ring-white/80">
+                  <img
+                    src={student.profilePicture || "/default-avatar.png"}
+                    alt="Profile"
+                    className="w-full h-full object-cover"
+                  />
                 </div>
                 <div>
                   <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
@@ -422,6 +489,44 @@ export default function StudentProfilePage() {
                           handleFormSuccess("applications", data)
                         }
                         onCancel={handleFormCancel}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* USER PROFILE */}
+              {activeTab === "userprofile" && (
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-xl font-semibold text-gray-900">
+                      Student Profile
+                    </h2>
+
+                    {!editing && (
+                      <button
+                        onClick={() => startEdit("userprofile")}
+                        className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition shadow-sm"
+                      >
+                        <Edit2 size={16} /> Edit Profile
+                      </button>
+                    )}
+                  </div>
+
+                  {editing?.type === "userprofile" ? (
+                    <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+                      <UserProfileSection
+                        userProfile={userProfile}
+                        mode="edit"
+                        onSave={updateUserProfile}
+                        onCancel={handleFormCancel}
+                      />
+                    </div>
+                  ) : (
+                    <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+                      <UserProfileSection
+                        userProfile={userProfile}
+                        mode="view"
                       />
                     </div>
                   )}
