@@ -229,43 +229,62 @@ export default function FreeAssessmentPage() {
               }
               onClose={() => setSubmitStatus("idle")}
             />
+            <AnimatePresence mode="wait" initial={false} custom={direction}>
+              <motion.div
+                key={step}
+                custom={direction}
+                variants={pageVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+              >
+                <motion.div
+                  variants={staggerContainer}
+                  initial="hidden"
+                  animate="show"
+                >
+                  {step === 1 && (
+                    <Step1
+                      data={formData}
+                      updateForm={updateForm}
+                      nextStep={nextStep}
+                    />
+                  )}
+
+                  {step === 2 && (
+                    <Step2
+                      data={formData}
+                      updateForm={updateForm}
+                      nextStep={nextStep}
+                      prevStep={prevStep}
+                    />
+                  )}
+
+                  {step === 3 && (
+                    <Step3
+                      data={formData}
+                      updateForm={updateForm}
+                      nextStep={nextStep}
+                      prevStep={prevStep}
+                    />
+                  )}
+
+                  {step === 4 && (
+                    <Step4
+                      prevStep={prevStep}
+                      submit={handleSubmit}
+                      loading={loading}
+                      data={formData}
+                      updateForm={updateForm}
+                      submitStatus={submitStatus}
+                      isEdit={hasLead}
+                    />
+                  )}
+                </motion.div>
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
-        <AnimatePresence>
-          {(submitStatus === "success" || submitStatus === "error") && (
-            <motion.div
-              initial={{ opacity: 0, x: 40, scale: 0.95 }}
-              animate={{ opacity: 1, x: 0, scale: 1 }}
-              exit={{ opacity: 0, x: 40 }}
-              transition={{ duration: 0.3 }}
-              className={`fixed top-24 right-6 z-50 flex items-center gap-3 rounded-lg shadow-lg px-4 py-3
-        ${
-          submitStatus === "success"
-            ? "bg-[#111827] border border-green-500"
-            : "bg-[#111827] border border-red-500"
-        }`}
-            >
-              {/* Message */}
-              <span
-                className={`text-sm font-medium ${
-                  submitStatus === "success" ? "text-green-400" : "text-red-400"
-                }`}
-              >
-                {submitStatus === "success"
-                  ? "✅ Assessment Submitted Successfully"
-                  : `❌ ${errorMessage}`}
-              </span>
-
-              {/* Close Button */}
-              <button
-                onClick={() => setSubmitStatus("idle")}
-                className="text-gray-400 hover:text-white text-sm"
-              >
-                ✕
-              </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
     </div>
   );
