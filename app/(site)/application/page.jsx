@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Step1Personal from "@/components/applicationForm/Step1Personal";
+import { useRouter } from "next/navigation";
 import Step2Education from "@/components/applicationForm/Step2Education";
 import Step3Tests from "@/components/applicationForm/Step3Tests";
 import Step4Program from "@/components/applicationForm/Step4Program";
@@ -12,6 +13,51 @@ import Step8Final from "@/components/applicationForm/Step8Final";
 
 export default function ApplicationForm() {
   const [step, setStep] = useState(1);
+  const router = useRouter();
+  const [checkingAccess, setCheckingAccess] = useState(true);
+  useEffect(() => {
+    const checkAccess = async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/application`,
+          {
+            method: "GET",
+            credentials: "include",
+          },
+        );
+
+        const text = await res.text();
+
+        let data;
+
+        try {
+          data = JSON.parse(text);
+        } catch {
+          router.push("/login");
+          return;
+        }
+
+        if (!res.ok) {
+          if (data.redirect === "/login") {
+            router.push("/login");
+            return;
+          }
+
+          if (data.redirect === "/assessment") {
+            router.push("/assessment");
+            return;
+          }
+        }
+
+        setCheckingAccess(false);
+      } catch (error) {
+        console.error(error);
+        router.push("/login");
+      }
+    };
+
+    checkAccess();
+  }, [router]);
   const [formData, setFormData] = useState({
     fullName: "",
     dob: "",
@@ -82,6 +128,14 @@ export default function ApplicationForm() {
     { num: 7, title: "Documents" },
     { num: 8, title: "Review" },
   ];
+
+  if (checkingAccess) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-gray-600">
+        Checking access...
+      </div>
+    );
+  }
 
   return (
     <div
