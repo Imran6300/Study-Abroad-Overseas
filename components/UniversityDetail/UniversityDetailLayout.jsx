@@ -1,11 +1,16 @@
 "use client";
 import SimilarUniversityCard from "./SimilarUniversityCard";
 import { useSelector } from "react-redux";
-import { useMemo } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import MessageBox from "@/components/ui/MessageBox";
 
 export default function UniversityDetailLayout({ uni }) {
   const universities = useSelector((state) => state.universities.list);
+  const [status, setStatus] = useState(null);
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
   /* ================= NORMALIZED VALUES ================= */
 
@@ -22,6 +27,63 @@ export default function UniversityDetailLayout({ uni }) {
   const admissionRequirements = uni.admissionRequirements ?? [];
 
   /* ================= SIMILAR UNIVERSITIES ================= */
+  const router = useRouter();
+
+  const handleApply = async () => {
+    try {
+      setLoading(true);
+
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/application`,
+        {
+          method: "GET",
+          credentials: "include",
+        },
+      );
+
+      const text = await res.text(); // safer than res.json()
+
+      let data;
+
+      try {
+        data = JSON.parse(text);
+      } catch {
+        throw new Error("Server returned an unexpected response.");
+      }
+
+      if (!res.ok) {
+        if (data.redirect === "/login") {
+          setStatus("error");
+          setMessage("Please login to continue.");
+          setTimeout(() => router.push("/login"), 1200);
+          return;
+        }
+
+        if (data.redirect === "/assessment") {
+          setStatus("error");
+          setMessage("Please complete the assessment first.");
+          setTimeout(() => router.push("/assessment"), 1200);
+          return;
+        }
+
+        throw new Error(data.message || "Something went wrong.");
+      }
+
+      setStatus("success");
+      setMessage("Redirecting to application...");
+
+      setTimeout(() => {
+        router.push("/application");
+      }, 1200);
+    } catch (error) {
+      console.error(error);
+
+      setStatus("error");
+      setMessage(error.message || "Unable to process your request.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const similarUniversities = useMemo(() => {
     return universities.filter((u) => u.slug !== uni.slug).slice(0, 3);
@@ -29,6 +91,11 @@ export default function UniversityDetailLayout({ uni }) {
 
   return (
     <section className="bg-[#0A192F] text-[#CCD6F6] min-h-screen pt-32">
+      <MessageBox
+        status={status}
+        message={message}
+        onClose={() => setStatus(null)}
+      />
       <div className="max-w-7xl mx-auto px-6 pb-16">
         {/* ================= HEADER ================= */}
         <header className="border-b border-[#1E3A5F] pb-6 mb-10">
@@ -122,12 +189,14 @@ export default function UniversityDetailLayout({ uni }) {
               <p className="text-sm text-[#8892B0] mt-2">
                 Get expert guidance on admissions, visas & scholarships.
               </p>
-
               <button
+                onClick={handleApply}
+                disabled={loading}
                 className="mt-5 w-full bg-[#32CD32] hover:bg-[#28b428]
-                text-[#0A192F] py-3 rounded-lg font-semibold transition"
+  disabled:opacity-60 disabled:cursor-not-allowed
+  text-[#0A192F] py-3 rounded-lg font-semibold transition"
               >
-                Apply Now
+                {loading ? "Checking..." : "Apply Now"}
               </button>
             </div>
           </aside>
