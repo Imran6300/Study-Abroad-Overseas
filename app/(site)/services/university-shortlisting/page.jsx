@@ -1,704 +1,194 @@
-"use client";
+import CanadaUniversitiesClient from "./CanadaUniversitiesClient";
 
-import { useState, useEffect, useMemo } from "react";
-import {
-  HiOutlineHeart,
-  HiHeart,
-  HiOutlineFilter,
-  HiX,
-  HiArrowRight,
-  HiChevronDown,
-} from "react-icons/hi";
-import { motion, AnimatePresence, useAnimation } from "framer-motion";
-import Link from "next/link";
-const MotionLink = motion(Link);
+export const metadata = {
+  metadataBase: new URL("https://www.khizaroverseas.in"),
 
-import { useDispatch, useSelector } from "react-redux";
-import { fetchUniversities } from "@/store/universitySlice";
+  title:
+    "University Shortlisting Tool for Study Abroad 2026 | Compare Top Universities – Khizar Overseas",
 
-// ─── Static data & variants (moved outside component) ────────────────────────────────
+  description:
+    "Use our university shortlisting tool to compare top universities worldwide. Filter by country, degree, tuition fees, rankings & courses for study abroad 2026. Get expert guidance from Khizar Overseas Hyderabad with 98.7% visa success.",
 
-const cardVariants = {
-  hidden: { opacity: 0, y: 30, scale: 0.96 },
-  visible: (i) => ({
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    transition: {
-      delay: i * 0.04, // reduced from 0.06 → feels snappier
-      duration: 0.45,
-      ease: [0.22, 1, 0.36, 1],
+  keywords: [
+    "university shortlisting tool study abroad",
+    "compare universities for study abroad",
+    "best universities for international students",
+    "study abroad university finder",
+    "shortlist universities for masters abroad",
+    "compare tuition fees universities abroad",
+    "study abroad consultants Hyderabad",
+    "find best universities for masters",
+  ],
+
+  alternates: {
+    canonical: "https://www.khizaroverseas.in/services/university-shortlisting",
+  },
+
+  openGraph: {
+    title:
+      "University Shortlisting Tool | Compare Top Universities for Study Abroad",
+    description:
+      "Compare universities by country, rankings, tuition fees and courses using our smart university shortlisting tool. Find the best universities for studying abroad.",
+    url: "https://www.khizaroverseas.in/services/university-shortlisting",
+    siteName: "Khizar Overseas",
+    type: "website",
+    locale: "en_IN",
+    images: [
+      {
+        url: "https://www.khizaroverseas.in/images/university-shortlisting-og.jpg",
+        width: 1200,
+        height: 630,
+        alt: "University Shortlisting Tool for Study Abroad",
+      },
+    ],
+  },
+
+  twitter: {
+    card: "summary_large_image",
+    title: "University Shortlisting Tool for Study Abroad",
+    description:
+      "Compare top universities worldwide using our smart shortlisting tool.",
+  },
+
+  robots: {
+    index: true,
+    follow: true,
+  },
+};
+
+// ─── Schema ───────────────────────────────────────────────────────────────────────────
+const localBusinessSchema = {
+  "@context": "https://schema.org",
+  "@type": "LocalBusiness",
+  name: "Khizar Overseas",
+  url: "https://www.khizaroverseas.in",
+  logo: "https://www.khizaroverseas.in/logo.png",
+  description:
+    "Leading study abroad consultants in Hyderabad specializing in top universities in Canada 2026. Free shortlisting, profile evaluation, visa guidance with 98.7% success rate.",
+  address: {
+    "@type": "PostalAddress",
+    streetAddress: "Shop No.35, 5-4-410, Nampally",
+    addressLocality: "Hyderabad",
+    addressRegion: "Telangana",
+    postalCode: "500001",
+    addressCountry: "IN",
+  },
+  geo: { "@type": "GeoCoordinates", latitude: 17.39009, longitude: 78.469326 },
+  telephone: "+917329822309",
+  email: "khizaroverseas@gmail.com",
+  priceRange: "$$",
+  openingHoursSpecification: [
+    {
+      dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+      opens: "10:00",
+      closes: "18:00",
     },
-  }),
-  hover: {
-    y: -8,
-    scale: 1.02,
-    boxShadow: "0 20px 40px -10px rgba(0,0,0,0.12)",
-    transition: { duration: 0.3, ease: "easeOut" },
-  },
+    { dayOfWeek: "Saturday", opens: "10:00", closes: "16:00" },
+  ],
+  areaServed: ["Hyderabad", "Telangana", "India"],
+  makesOffer: [
+    {
+      "@type": "Offer",
+      itemOffered: {
+        "@type": "Service",
+        name: "University Shortlisting for Canada 2026",
+        description:
+          "Free comparison of top QS-ranked universities, tuition, courses & intakes",
+      },
+    },
+    {
+      "@type": "Offer",
+      itemOffered: {
+        "@type": "Service",
+        name: "Free Profile Evaluation for Canada Study",
+        description: "Personalized assessment for admissions & scholarships",
+      },
+    },
+  ],
+  sameAs: [
+    "https://www.facebook.com/khizaroverseas",
+    "https://www.instagram.com/khizaroverseas",
+    "https://wa.me/917329822309",
+  ],
 };
 
-const heartVariants = {
-  initial: { scale: 1 },
-  animate: {
-    scale: [1, 1.4, 1],
-    transition: { duration: 0.4, ease: "easeOut" },
-  },
+const breadcrumbSchema = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    {
+      position: 1,
+      name: "Home",
+      item: "https://www.khizaroverseas.in",
+    },
+    {
+      position: 2,
+      name: "Services",
+      item: "https://www.khizaroverseas.in/services",
+    },
+    {
+      position: 3,
+      name: "University Shortlisting Tool",
+      item: "https://www.khizaroverseas.in/services/university-shortlisting",
+    },
+  ],
 };
 
-const modalVariants = {
-  hidden: { opacity: 0, scale: 0.85 },
-  visible: {
-    opacity: 1,
-    scale: 1,
-    transition: { duration: 0.4, ease: [0.4, 0, 0.2, 1] },
-  },
-  exit: { opacity: 0, scale: 0.9, transition: { duration: 0.25 } },
+const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: [
+    {
+      "@type": "Question",
+      name: "What is a university shortlisting tool?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "A university shortlisting tool helps students compare universities based on country, tuition fees, rankings, degree programs and eligibility to find the best universities for studying abroad.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "How can I shortlist universities for studying abroad?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "You can shortlist universities by comparing rankings, tuition fees, courses, admission requirements and post-study work opportunities. Our tool helps students easily compare universities across multiple countries.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "Which countries are best for studying abroad in 2026?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Popular study abroad destinations include Canada, USA, UK, Australia and Germany due to top-ranked universities, scholarships and post-study work opportunities.",
+      },
+    },
+  ],
 };
-
-const backdropVariants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { duration: 0.3 } },
-  exit: { opacity: 0, transition: { duration: 0.2 } },
-};
-
-// ──────────────────────────────────────────────────────────────────────────────────────
-
-export default function UniversityShortlisting() {
-  const dispatch = useDispatch();
-  const { list: universities } = useSelector((state) => state.universities);
-
-  useEffect(() => {
-    if (universities.length === 0) {
-      dispatch(fetchUniversities());
-    }
-  }, [dispatch, universities.length]);
-
-  const country = "Canada";
-
-  const [shortlisted, setShortlisted] = useState([]);
-  const [filtersOpen, setFiltersOpen] = useState(false);
-  const [showFloatingBar, setShowFloatingBar] = useState(false);
-  const [showCompareModal, setShowCompareModal] = useState(false);
-
-  const [tempCountry, setTempCountry] = useState("All Countries");
-  const [tempDegree, setTempDegree] = useState("All Degrees");
-  const [tempBudget, setTempBudget] = useState("Any Budget");
-
-  const [appliedCountry, setAppliedCountry] = useState("All Countries");
-  const [appliedDegree, setAppliedDegree] = useState("All Degrees");
-  const [appliedBudget, setAppliedBudget] = useState("Any Budget");
-
-  const controls = useAnimation();
-
-  // ─── Memoized derived data ───────────────────────────────────────────────────────────
-  const shortlistedUnis = useMemo(
-    () => universities.filter((uni) => shortlisted.includes(uni._id)),
-    [shortlisted, universities],
-  );
-
-  const toggleShortlist = (id) => {
-    setShortlisted((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
-    );
-  };
-
-  const filteredUnis = useMemo(() => {
-    return universities.filter((uni) => {
-      const countryMatch =
-        appliedCountry === "All Countries" || uni.country === appliedCountry;
-
-      const degreeMatch =
-        appliedDegree === "All Degrees" ||
-        uni.courses?.some((course) =>
-          course.toLowerCase().includes(appliedDegree.toLowerCase()),
-        );
-
-      let budgetMatch = appliedBudget === "Any Budget";
-
-      if (appliedBudget !== "Any Budget") {
-        const tuitionStr = (uni.tuitionFee || "")
-          .replace(/,/g, "")
-          .split("-")[0]
-          .trim();
-
-        const tuitionNum = parseInt(tuitionStr) || 0;
-
-        if (appliedBudget === "Under $15,000") budgetMatch = tuitionNum < 15000;
-        else if (appliedBudget === "$15,000 – $35,000")
-          budgetMatch = tuitionNum >= 15000 && tuitionNum <= 35000;
-        else if (appliedBudget === "Over $35,000")
-          budgetMatch = tuitionNum > 35000;
-      }
-
-      return countryMatch && degreeMatch && budgetMatch;
-    });
-  }, [universities, appliedCountry, appliedDegree, appliedBudget]);
-
-  // ─── Effects ────────────────────────────────────────────────────────────────────────
-  useEffect(() => {
-    setShowFloatingBar(shortlisted.length > 0);
-  }, [shortlisted]);
-
-  useEffect(() => {
-    // Only re-animate when the number of visible items changes
-    controls.start("visible");
-  }, [filteredUnis.length, controls]);
-
-  const handleApplyFilters = () => {
-    setAppliedCountry(tempCountry);
-    setAppliedDegree(tempDegree);
-    setAppliedBudget(tempBudget);
-    if (filtersOpen) setFiltersOpen(false);
-  };
-
+export default function Page() {
   return (
-    <div className="min-h-screen bg-gray-50 mt-5">
-      {/* Hero */}
-      <motion.header
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7, ease: "easeOut" }}
-        className="bg-[#2f4f4f] text-white"
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 md:py-20 text-center">
-          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">
-            Top Universities in {country} for International Students
-          </h1>
-          <p className="mt-5 text-xl md:text-2xl opacity-90 max-w-4xl mx-auto">
-            Compare 2026 QS rankings, tuition, intakes — find your perfect match
-          </p>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(localBusinessSchema),
+        }}
+      />
 
-          <div className="mt-8 flex flex-wrap justify-center gap-4">
-            <MotionLink
-              href="/services/profile-evaluation"
-              whileHover={{ scale: 1.04 }}
-              whileTap={{ scale: 0.97 }}
-              className="bg-white text-[#2f4f4f] px-8 py-4 rounded-xl font-bold text-lg shadow-lg hover:bg-gray-100 transition"
-            >
-              Free Profile Evaluation →
-            </MotionLink>
-            <MotionLink
-              href="/all-countries"
-              whileHover={{ scale: 1.04 }}
-              whileTap={{ scale: 0.97 }}
-              className="border-2 border-white/40 text-white px-8 py-4 rounded-xl font-semibold hover:bg-white/10 transition inline-block"
-            >
-              See All Countries
-            </MotionLink>
-          </div>
-        </div>
-      </motion.header>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(breadcrumbSchema),
+        }}
+      />
 
-      <main className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <div className="grid lg:grid-cols-4 gap-8">
-          {/* Desktop Filters */}
-          <motion.aside
-            initial={{ x: -60, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="hidden lg:block lg:col-span-1"
-          >
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sticky top-6">
-              <h2 className="text-xl font-bold text-[#2f4f4f] mb-6 flex items-center gap-2">
-                <HiOutlineFilter className="w-6 h-6 text-[#2f4f4f]" />
-                Filter Universities
-              </h2>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(faqSchema),
+        }}
+      />
 
-              <div className="space-y-5">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Country
-                  </label>
-                  <select
-                    value={tempCountry}
-                    onChange={(e) => setTempCountry(e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg py-2.5 px-3 focus:ring-2 focus:ring-[#2f4f4f]/30 focus:border-[#2f4f4f]"
-                  >
-                    <option>All Countries</option>
-                    <option>Canada</option>
-                    <option>USA</option>
-                    <option>UK</option>
-                    <option>Germany</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Degree Level
-                  </label>
-                  <select
-                    value={tempDegree}
-                    onChange={(e) => setTempDegree(e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg py-2.5 px-3 focus:ring-2 focus:ring-[#2f4f4f]/30 focus:border-[#2f4f4f]"
-                  >
-                    <option>All Degrees</option>
-                    <option>Bachelors</option>
-                    <option>Masters</option>
-                    <option>PhD</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Budget (per year)
-                  </label>
-                  <select
-                    value={tempBudget}
-                    onChange={(e) => setTempBudget(e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg py-2.5 px-3 focus:ring-2 focus:ring-[#2f4f4f]/30 focus:border-[#2f4f4f]"
-                  >
-                    <option>Any Budget</option>
-                    <option>Under $15,000</option>
-                    <option>$15,000 – $35,000</option>
-                    <option>Over $35,000</option>
-                  </select>
-                </div>
-
-                <button
-                  onClick={handleApplyFilters}
-                  className="w-full bg-[#2f4f4f] text-white py-3 rounded-xl font-semibold hover:bg-[#1e2f2f] transition mt-3"
-                >
-                  Apply Filters
-                </button>
-              </div>
-            </div>
-          </motion.aside>
-
-          {/* Main content */}
-          <div className="lg:col-span-3">
-            {/* Mobile filter trigger */}
-            <div className="lg:hidden mb-6">
-              <button
-                onClick={() => setFiltersOpen(true)}
-                className="w-full bg-white border border-gray-200 rounded-xl py-3.5 px-4 font-medium flex items-center justify-between shadow-sm"
-              >
-                <span className="flex items-center gap-2">
-                  <HiOutlineFilter className="w-5 h-5 text-[#2f4f4f]" />
-                  Filters & Sort
-                </span>
-                <HiChevronDown className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* University Cards + No results */}
-            <motion.div
-              className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6"
-              initial="hidden"
-              animate={controls}
-            >
-              <AnimatePresence>
-                {filteredUnis.length > 0 ? (
-                  filteredUnis.map((uni, i) => {
-                    const isShortlisted = shortlisted.includes(uni._id);
-                    return (
-                      <motion.div
-                        key={uni._id}
-                        custom={i}
-                        variants={cardVariants}
-                        initial="hidden"
-                        animate="visible"
-                        whileHover="hover"
-                        exit={{
-                          opacity: 0,
-                          scale: 0.95,
-                          transition: { duration: 0.3 },
-                        }}
-                        className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col h-full"
-                      >
-                        <div className="h-28 bg-gray-50 relative flex items-center justify-center p-5 border-b border-gray-200">
-                          <img
-                            src={uni.logo?.url}
-                            alt={uni.name}
-                            className="max-h-20 object-contain"
-                            loading="lazy" // ← performance boost
-                            onError={(e) =>
-                              (e.target.src = "/uni-placeholder.png")
-                            }
-                          />
-                          <div className="absolute top-3 right-3 text-3xl drop-shadow-sm">
-                            {uni.flag}
-                          </div>
-                        </div>
-
-                        <div className="p-5 flex flex-col flex-1">
-                          <div className="mb-1">
-                            <span className="inline-block bg-[#2f4f4f]/10 text-[#2f4f4f] text-xs font-bold px-2.5 py-1 rounded-full">
-                              {uni.qsRanking}
-                            </span>
-                          </div>
-                          <h3 className="text-lg font-bold text-[#2f4f4f] mb-3 line-clamp-2">
-                            {uni.name}
-                          </h3>
-
-                          <div className="text-sm text-gray-700 space-y-1.5 mb-5 flex-1">
-                            <p>
-                              <span className="font-semibold text-[#2f4f4f]">
-                                Degree:
-                              </span>{" "}
-                              {uni.courses?.join(", ")}
-                            </p>
-                            <p>
-                              <span className="font-semibold text-[#2f4f4f]">
-                                Tuition:
-                              </span>{" "}
-                              {uni.tuitionFee}
-                            </p>
-                          </div>
-
-                          <div className="flex gap-3 mt-auto">
-                            <motion.button
-                              whileTap={{ scale: 0.95 }}
-                              onClick={() => toggleShortlist(uni._id)}
-                              className={`flex-1 py-2.5 rounded-lg font-medium transition flex items-center justify-center gap-2 text-sm ${
-                                isShortlisted
-                                  ? "bg-[#32cd32] text-white hover:bg-[#2ab92a]"
-                                  : "bg-[#2f4f4f]/10 text-[#2f4f4f] hover:bg-[#2f4f4f]/20 border border-[#2f4f4f]/30"
-                              }`}
-                            >
-                              <motion.div
-                                animate={isShortlisted ? "animate" : "initial"}
-                                variants={heartVariants}
-                              >
-                                {isShortlisted ? (
-                                  <HiHeart className="w-4 h-4" />
-                                ) : (
-                                  <HiOutlineHeart className="w-4 h-4" />
-                                )}
-                              </motion.div>
-                              {isShortlisted ? "Shortlisted" : "Shortlist"}
-                            </motion.button>
-
-                            <MotionLink
-                              href={`/universities/${uni.slug}`} // or slug-based
-                              whileHover={{ scale: 1.02 }}
-                              className="flex-1 border border-gray-300 text-gray-700 py-2.5 rounded-lg text-sm hover:bg-gray-50 transition text-center"
-                            >
-                              Details
-                            </MotionLink>
-                          </div>
-                        </div>
-                      </motion.div>
-                    );
-                  })
-                ) : (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.5 }}
-                    className="col-span-full py-16 flex flex-col items-center justify-center text-center"
-                  >
-                    <div className="text-6xl mb-4 opacity-40">🔍</div>
-                    <h3 className="text-2xl font-semibold text-gray-700 mb-2">
-                      No universities found
-                    </h3>
-                    <p className="text-gray-500 max-w-md">
-                      Try adjusting your filters or select different options
-                    </p>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
-
-            {/* Why Study Section */}
-            <motion.section
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-100px" }}
-              transition={{ duration: 0.7 }}
-              className="mt-16 bg-white rounded-xl p-7 border border-gray-200"
-            >
-              <h2 className="text-2xl font-bold text-[#2f4f4f] mb-5">
-                Why Study in {country}?
-              </h2>
-              <p className="text-gray-700 leading-relaxed mb-4">
-                In 2026, Canada remains one of the top destinations for
-                international students thanks to its world-class universities
-                (four in global top 100 QS 2026), welcoming policies, and strong
-                post-study opportunities.
-              </p>
-              <ul className="list-disc pl-6 text-gray-700 space-y-2 mb-4">
-                <li>
-                  <strong>Top-ranked education</strong>: McGill (#27),
-                  University of Toronto (#29), UBC (top 40) lead globally with
-                  excellent research and employability.
-                </li>
-                <li>
-                  <strong>Post-Graduation Work Permit (PGWP)</strong>: Up to 3
-                  years work rights after graduation — pathway to permanent
-                  residency (PR) via Express Entry or PNPs.
-                </li>
-                <li>
-                  <strong>Multicultural & safe environment</strong>: Diverse
-                  campuses, high quality of life, and inclusive society.
-                </li>
-                <li>
-                  <strong>Affordable compared to US/UK</strong>: Lower tuition
-                  for many programs + scholarships available.
-                </li>
-                <li>
-                  <strong>Master’s/PhD exemptions</strong>: From 2026, no PAL
-                  required for graduate students at public DLIs — faster
-                  processing.
-                </li>
-              </ul>
-              <p className="text-gray-700">
-                Canada issued ~408,000 study permits in 2026 plans, focusing on
-                quality and sustainability.
-              </p>
-            </motion.section>
-
-            {/* FAQs */}
-            <motion.section
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-100px" }}
-              transition={{ duration: 0.7, delay: 0.15 }}
-              className="mt-12 bg-white rounded-xl p-7 border border-gray-200"
-            >
-              <h2 className="text-2xl font-bold text-[#2f4f4f] mb-6">
-                Frequently Asked Questions
-              </h2>
-              <div className="space-y-4">
-                {[
-                  {
-                    q: "What are the best universities in Canada in 2026?",
-                    a: "According to QS World University Rankings 2026, top ones include McGill University (#27 globally), University of Toronto (#29), and UBC (top 40). They excel in research, employability, and international outlook.",
-                  },
-                  {
-                    q: "How much does it cost to study in Canada?",
-                    a: "Tuition for international students ranges from CAD 20,000–60,000/year depending on program and province. Living costs add ~CAD 15,000–20,000/year. Many scholarships exist for high-achieving students.",
-                  },
-                  {
-                    q: "Can I work while studying?",
-                    a: "Yes — up to 24 hours/week off-campus during sessions (2026 rules), full-time during breaks. Eligibility shown on study permit.",
-                  },
-                  {
-                    q: "How to get PR after studying in Canada?",
-                    a: "Via Post-Graduation Work Permit → Canadian Experience Class (Express Entry) or Provincial Nominee Programs. Many graduates successfully transition to PR.",
-                  },
-                  {
-                    q: "Do I need a Provincial Attestation Letter (PAL)?",
-                    a: "Most undergraduates do in 2026, but master's/doctoral students at public institutions are exempt.",
-                  },
-                ].map((faq, i) => (
-                  <details
-                    key={i}
-                    className="border-b border-gray-200 pb-3 last:border-0"
-                  >
-                    <summary className="font-medium text-[#2f4f4f] cursor-pointer flex justify-between items-center">
-                      {faq.q}
-                    </summary>
-                    <p className="mt-2 text-gray-700">{faq.a}</p>
-                  </details>
-                ))}
-              </div>
-            </motion.section>
-          </div>
-        </div>
-      </main>
-
-      {/* Floating Shortlist Bar */}
-      <AnimatePresence>
-        {showFloatingBar && (
-          <motion.div
-            initial={{ y: 100 }}
-            animate={{ y: 0 }}
-            exit={{ y: 100 }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-2xl z-50 py-4 px-5 md:px-8"
-          >
-            <div className="max-w-7xl mx-auto flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="bg-[#32cd32]/10 text-[#32cd32] px-4 py-2 rounded-lg font-semibold">
-                  {shortlisted.length} Shortlisted
-                </div>
-                <span className="text-gray-600 hidden sm:inline">
-                  Ready to compare?
-                </span>
-              </div>
-
-              <button
-                onClick={() => setShowCompareModal(true)}
-                className="bg-[#2f4f4f] text-white px-6 md:px-10 py-3 rounded-xl font-semibold flex items-center gap-2 hover:bg-[#1e2f2f] transition shadow-md"
-              >
-                Compare & Evaluate Now
-                <HiArrowRight className="w-5 h-5" />
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Compare Modal */}
-      <AnimatePresence>
-        {showCompareModal && (
-          <>
-            <motion.div
-              variants={backdropVariants}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-              className="fixed inset-0 bg-black/60 z-50"
-              onClick={() => setShowCompareModal(false)}
-            />
-            <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-              <motion.div
-                variants={modalVariants}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
-                className="bg-white rounded-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto"
-              >
-                <div className="p-6 border-b flex justify-between items-center">
-                  <h2 className="text-2xl font-bold text-[#2f4f4f]">
-                    Compare Shortlisted Universities
-                  </h2>
-                  <button onClick={() => setShowCompareModal(false)}>
-                    <HiX className="w-8 h-8 text-gray-600" />
-                  </button>
-                </div>
-
-                <div className="p-6">
-                  {shortlistedUnis.length === 0 ? (
-                    <p className="text-center text-gray-600">
-                      No universities shortlisted yet.
-                    </p>
-                  ) : (
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-left border-collapse">
-                        <thead>
-                          <tr className="bg-gray-100">
-                            <th className="p-4 font-semibold">University</th>
-                            <th className="p-4 font-semibold">Ranking</th>
-                            <th className="p-4 font-semibold">Degree</th>
-                            <th className="p-4 font-semibold">Tuition</th>
-                            <th className="p-4 font-semibold">Country</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {shortlistedUnis.map((uni) => (
-                            <tr key={uni._id} className="border-t">
-                              <td className="p-4 font-medium">{uni.name}</td>
-                              <td className="p-4">{uni.qsRanking}</td>
-                              <td className="p-4">{uni.courses?.join(", ")}</td>
-
-                              <td className="p-4">{uni.tuitionFee}</td>
-                              <td className="p-4">
-                                {uni.country} {uni.flag}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                  <div className="mt-6 flex justify-end">
-                    <button
-                      onClick={() => setShowCompareModal(false)}
-                      className="bg-[#2f4f4f] text-white px-8 py-3 rounded-xl font-semibold hover:bg-[#1e2f2f]"
-                    >
-                      Close
-                    </button>
-                  </div>
-                </div>
-              </motion.div>
-            </div>
-          </>
-        )}
-      </AnimatePresence>
-
-      {/* Mobile Filters Bottom Sheet */}
-      {/* Mobile Filters Bottom Sheet */}
-      <AnimatePresence>
-        {filtersOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-black/60 z-50 lg:hidden"
-            onClick={() => setFiltersOpen(false)}
-          >
-            {/* Bottom Sheet */}
-            <motion.div
-              initial={{ y: "100%" }}
-              animate={{ y: 0 }}
-              exit={{ y: "100%" }}
-              transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl max-h-[85vh] overflow-y-auto"
-              onClick={(e) => e.stopPropagation()} // 🔥 THIS FIXES IT
-            >
-              <div className="p-6">
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-xl font-bold text-[#2f4f4f]">Filters</h2>
-                  <button onClick={() => setFiltersOpen(false)}>
-                    <HiX className="w-7 h-7 text-gray-600" />
-                  </button>
-                </div>
-
-                <div className="space-y-5">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      Country
-                    </label>
-                    <select
-                      value={tempCountry}
-                      onChange={(e) => setTempCountry(e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg py-3 px-4 text-base"
-                    >
-                      <option>All Countries</option>
-                      <option>Canada</option>
-                      <option>USA</option>
-                      <option>UK</option>
-                      <option>Germany</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      Degree Level
-                    </label>
-                    <select
-                      value={tempDegree}
-                      onChange={(e) => setTempDegree(e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg py-3 px-4 text-base"
-                    >
-                      <option>All Degrees</option>
-                      <option>Bachelors</option>
-                      <option>Masters</option>
-                      <option>PhD</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      Budget (per year)
-                    </label>
-                    <select
-                      value={tempBudget}
-                      onChange={(e) => setTempBudget(e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg py-3 px-4 text-base"
-                    >
-                      <option>Any Budget</option>
-                      <option>Under $15,000</option>
-                      <option>$15,000 – $35,000</option>
-                      <option>Over $35,000</option>
-                    </select>
-                  </div>
-
-                  <button
-                    onClick={handleApplyFilters}
-                    className="w-full bg-[#2f4f4f] text-white py-4 rounded-xl font-bold mt-6"
-                  >
-                    Apply Filters
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+      <CanadaUniversitiesClient />
+    </>
   );
 }
