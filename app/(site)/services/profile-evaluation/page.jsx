@@ -1,314 +1,232 @@
-"use client";
+// app/services/profile-evaluation/page.jsx
 
-import { useState } from "react";
-import Link from "next/link";
-import { motion } from "framer-motion";
+import ProfileEvaluationClient from "./ProfileEvaluationClient";
 
-const COUNTRIES = [
-  "USA",
-  "UK",
-  "Canada",
-  "Australia",
-  "Germany",
-  "China",
-  "Ireland",
-];
+export const metadata = {
+  metadataBase: new URL("https://www.khizaroverseas.in"),
 
-// Helper: convert country name → URL slug
-const toSlug = (country) => country.toLowerCase().replace(/\s+/g, "-");
+  title:
+    "Free Study Abroad Profile Evaluation Hyderabad 2026 | Khizar Overseas – Best Consultants",
 
-export default function ProfileEvaluation() {
-  const [step, setStep] = useState(1);
-  const [data, setData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    country: "",
-    education: "",
-    experience: "",
-    testStatus: "",
-  });
+  description:
+    "Get 100% free study abroad profile evaluation in Hyderabad with Khizar Overseas. Expert assessment of academics, work experience, visa chances, scholarships & best university recommendations for USA, UK, Canada, Australia, Germany. 98.7% visa success, 5000+ students placed. Book free evaluation now – Call/WhatsApp +91 73298 22309!",
 
-  const handleChange = (e) => {
-    setData({ ...data, [e.target.name]: e.target.value });
-  };
+  keywords: [
+    "free study abroad profile evaluation Hyderabad",
+    "study abroad profile evaluation Hyderabad 2026",
+    "best profile assessment study abroad Hyderabad",
+    "free overseas education profile evaluation",
+    "study abroad eligibility check Hyderabad",
+    "study abroad counselling Hyderabad free",
+    "Khizar Overseas profile evaluation",
+    "university shortlisting free Hyderabad",
+    "scholarship eligibility assessment Hyderabad",
+    "study in USA UK Canada Australia Germany profile check",
+    "top study abroad consultants Hyderabad free evaluation",
+  ].join(", "),
 
-  const handleSubmit = () => {
-    alert(
-      "Thank you! Your free evaluation request has been submitted. We'll contact you within 24–48 hours.",
-    );
-  };
+  alternates: {
+    canonical: "https://www.khizaroverseas.in/services/profile-evaluation",
+  },
 
+  openGraph: {
+    title:
+      "Free Profile Evaluation for Study Abroad Hyderabad | Khizar Overseas 2026",
+    description:
+      "Personalized free assessment: academics, GRE/IELTS, work exp, visa probability, scholarships & top university matches. Trusted by 5000+ Hyderabad students. Free session – WhatsApp +91 73298 22309!",
+    url: "https://www.khizaroverseas.in/services/profile-evaluation",
+    type: "website",
+    siteName: "Khizar Overseas",
+    locale: "en_IN",
+    images: [
+      {
+        url: "https://www.khizaroverseas.in/images/profile-evaluation-og-2026.jpg", // Fresh image: form/student + "FREE" badge + phone overlay
+        width: 1200,
+        height: 630,
+        alt: "Khizar Overseas Free Study Abroad Profile Evaluation Hyderabad 2026",
+      },
+    ],
+  },
+
+  twitter: {
+    card: "summary_large_image",
+    title:
+      "Free Study Abroad Profile Evaluation Hyderabad | Khizar Overseas 2026",
+    description:
+      "98.7% visa success • 5000+ students • Free university & scholarship suggestions • USA/UK/Canada/Australia/Germany",
+  },
+
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+};
+
+const localBusinessSchema = {
+  "@context": "https://schema.org",
+  "@type": "LocalBusiness",
+  "@id": "https://www.khizaroverseas.in/#organization",
+
+  name: "Khizar Overseas",
+  url: "https://www.khizaroverseas.in",
+  logo: "https://www.khizaroverseas.in/logo.png",
+  description:
+    "Best study abroad consultants in Hyderabad offering 100% free profile evaluation, university shortlisting, visa guidance & scholarships for USA, UK, Canada, Australia, Germany. 98.7% success rate.",
+  address: {
+    "@type": "PostalAddress",
+    streetAddress: "Shop No.35, 5-4-410, Nampally",
+    addressLocality: "Hyderabad",
+    addressRegion: "Telangana",
+    postalCode: "500001",
+    addressCountry: "IN",
+  },
+  geo: {
+    "@type": "GeoCoordinates",
+    latitude: 17.39009,
+    longitude: 78.469326,
+  },
+  telephone: "+917329822309",
+  email: "khizaroverseas@gmail.com",
+  priceRange: "$$ (Free Profile Evaluation)",
+  openingHoursSpecification: [
+    {
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+      opens: "10:00",
+      closes: "18:00",
+    },
+    {
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: "Saturday",
+      opens: "10:00",
+      closes: "16:00",
+    },
+  ],
+  areaServed: ["Hyderabad", "Telangana", "India"],
+  makesOffer: [
+    {
+      "@type": "Offer",
+      itemOffered: {
+        "@type": "Service",
+        name: "Free Study Abroad Profile Evaluation",
+        description:
+          "Expert assessment of academics, tests, experience, visa chances & scholarship eligibility",
+      },
+    },
+    {
+      "@type": "Offer",
+      itemOffered: {
+        "@type": "Service",
+        name: "University Shortlisting & Recommendations",
+        description: "Personalized list of best-fit universities & courses",
+      },
+    },
+  ],
+  sameAs: [
+    "https://www.facebook.com/khizaroverseas",
+    "https://www.instagram.com/khizaroverseas",
+    "https://wa.me/917329822309",
+  ],
+};
+
+const breadcrumbSchema = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    {
+      "@type": "ListItem",
+      position: 1,
+      name: "Home",
+      item: "https://www.khizaroverseas.in",
+    },
+    {
+      "@type": "ListItem",
+      position: 2,
+      name: "Services",
+      item: "https://www.khizaroverseas.in/services",
+    },
+    {
+      "@type": "ListItem",
+      position: 3,
+      name: "Free Profile Evaluation",
+      item: "https://www.khizaroverseas.in/services/profile-evaluation",
+    },
+  ],
+};
+
+const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: [
+    {
+      "@type": "Question",
+      name: "Is the profile evaluation really free at Khizar Overseas?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Yes, 100% free – no hidden charges. Our experts provide detailed feedback on your academics, test scores, work experience, visa probability, scholarships and university shortlisting.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "How long does the free profile evaluation take?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Usually 30–45 minutes in a one-on-one session (online or in-office in Hyderabad). You'll get instant personalized recommendations for 2026/2027 intakes.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "What documents do I need for profile evaluation?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Basic: Academic transcripts, test scores (IELTS/GRE/GMAT/PTE), passport copy, resume/CV, work experience letters (if any). We guide you on everything during the session.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "Which countries do you evaluate profiles for?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "We specialize in USA, UK, Canada, Australia, Germany, Ireland, New Zealand & more. Full support for admissions, scholarships & visas.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "How soon can I get university suggestions after evaluation?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Immediately in the session! We shortlist 8–12 best-fit universities based on your profile, budget & goals – plus scholarship possibilities.",
+      },
+    },
+  ],
+};
+
+export default function ProfileEvaluationPage() {
   return (
-    <section className="min-h-screen mt-10 bg-gradient-to-b from-[#f8faff] to-[#e6efff] py-16 md:py-24">
-      <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-12 lg:gap-16 items-start">
-        {/* LEFT – INFO */}
-        <motion.div
-          initial={{ opacity: 0, x: -50 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.7 }}
-        >
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
-            Get Your <span className="text-blue-600">Free</span> Profile
-            Evaluation
-            <span className="block text-2xl md:text-3xl mt-4 text-gray-700 font-normal">
-              in 24–48 Hours – Personalized Report
-            </span>
-          </h1>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(localBusinessSchema),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
 
-          <p className="mt-8 text-lg md:text-xl text-gray-700 leading-relaxed">
-            Our expert counsellors will review your academic & professional
-            background and give you clear recommendations on the best countries,
-            universities, courses, visa chances, and scholarships — 100% free,
-            no obligation.
-          </p>
-
-          <ul className="mt-10 space-y-5 text-gray-800 text-lg">
-            <li className="flex items-start">
-              <span className="text-green-500 mr-4 text-2xl">🌍</span>
-              <span>Country & course suitability</span>
-            </li>
-            <li className="flex items-start">
-              <span className="text-green-500 mr-4 text-2xl">🏫</span>
-              <span>University shortlisting guidance</span>
-            </li>
-            <li className="flex items-start">
-              <span className="text-green-500 mr-4 text-2xl">🛂</span>
-              <span>Visa feasibility check</span>
-            </li>
-            <li className="flex items-start">
-              <span className="text-green-500 mr-4 text-2xl">💰</span>
-              <span>Scholarship & budget insight</span>
-            </li>
-          </ul>
-
-          {/* Social Proof */}
-          <div className="mt-12 grid grid-cols-1 sm:grid-cols-3 gap-6">
-            <div className="text-center p-6 bg-white/70 rounded-xl shadow-sm border border-gray-100">
-              <div className="text-4xl font-bold text-blue-600">500+</div>
-              <p className="mt-2 text-gray-700 font-medium">
-                Students Evaluated
-              </p>
-            </div>
-            <div className="text-center p-6 bg-white/70 rounded-xl shadow-sm border border-gray-100">
-              <div className="text-4xl font-bold text-blue-600">98%</div>
-              <p className="mt-2 text-gray-700 font-medium">
-                Proceed to Next Steps
-              </p>
-            </div>
-            <div className="text-center p-6 bg-white/70 rounded-xl shadow-sm border border-gray-100">
-              <div className="text-4xl font-bold text-blue-600">Free</div>
-              <p className="mt-2 text-gray-700 font-medium">
-                No Hidden Charges
-              </p>
-            </div>
-          </div>
-
-          {/* Testimonials */}
-          <div className="mt-10 space-y-6">
-            <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100">
-              <p className="text-gray-700 italic">
-                "Got detailed feedback in 24 hours — helped me choose Canada
-                over USA!"
-              </p>
-              <p className="mt-3 font-medium text-gray-800">
-                — Ayesha K., Hyderabad (Going to Toronto)
-              </p>
-            </div>
-            <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100">
-              <p className="text-gray-700 italic">
-                "Clear visa chances & scholarship options — very helpful!"
-              </p>
-              <p className="mt-3 font-medium text-gray-800">
-                — Mohammed A., Secunderabad (Admitted to UK)
-              </p>
-            </div>
-          </div>
-
-          {/* Country Links */}
-          <div className="mt-12 p-6 rounded-2xl bg-white/80 shadow-md border border-gray-100">
-            <p className="font-semibold text-gray-800 mb-3 text-lg">
-              Popular Study Destinations We Cover
-            </p>
-            <div className="flex flex-wrap gap-3">
-              {COUNTRIES.map((c) => (
-                <Link
-                  key={c}
-                  href={`/all-countries/${toSlug(c)}`}
-                  className="px-5 py-2.5 rounded-full bg-blue-50 text-blue-700 
-                             text-sm font-medium hover:bg-blue-100 
-                             hover:scale-105 transition-all"
-                >
-                  {c}
-                </Link>
-              ))}
-            </div>
-          </div>
-        </motion.div>
-
-        {/* RIGHT – FORM */}
-        <motion.div
-          initial={{ opacity: 0, x: 50 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.7 }}
-          className="bg-white rounded-3xl shadow-2xl p-8 md:p-10 lg:p-12 border border-gray-100"
-        >
-          {/* Progress */}
-          <div className="flex items-center justify-between mb-10">
-            {[1, 2, 3].map((s) => (
-              <div
-                key={s}
-                className={`flex-1 h-1.5 mx-2 rounded-full transition-all ${
-                  step >= s ? "bg-blue-600" : "bg-gray-200"
-                }`}
-              />
-            ))}
-          </div>
-
-          {/* Step 1 */}
-          {step === 1 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
-              <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-8">
-                Basic Details
-              </h3>
-
-              <div className="space-y-6">
-                <input
-                  name="name"
-                  placeholder="Full Name *"
-                  value={data.name}
-                  onChange={handleChange}
-                  className="input"
-                  required
-                />
-                <input
-                  name="email"
-                  type="email"
-                  placeholder="Email Address *"
-                  value={data.email}
-                  onChange={handleChange}
-                  className="input"
-                  required
-                />
-                <input
-                  name="phone"
-                  placeholder="Phone / WhatsApp Number *"
-                  value={data.phone}
-                  onChange={handleChange}
-                  className="input"
-                  required
-                />
-              </div>
-
-              <button
-                onClick={() => setStep(2)}
-                className="mt-10 w-full btn-primary text-lg py-4"
-              >
-                Continue →
-              </button>
-            </motion.div>
-          )}
-
-          {/* Step 2 */}
-          {step === 2 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
-              <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-8">
-                Academic & Professional Background
-              </h3>
-
-              <div className="space-y-6">
-                <select
-                  name="country"
-                  value={data.country}
-                  onChange={handleChange}
-                  className="select-mobile"
-                >
-                  <option value="">Preferred Study Country (optional)</option>
-                  {COUNTRIES.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
-                </select>
-
-                <input
-                  name="education"
-                  placeholder="Highest Qualification"
-                  value={data.education}
-                  onChange={handleChange}
-                  className="input"
-                />
-
-                <select
-                  name="experience"
-                  value={data.experience}
-                  onChange={handleChange}
-                  className="select-mobile"
-                >
-                  <option value="">Work Experience</option>
-                  <option value="0-1">0–1 Years</option>
-                  <option value="1-3">1–3 Years</option>
-                  <option value="3+">3+ Years</option>
-                </select>
-              </div>
-
-              <div className="flex justify-between items-center mt-10">
-                <button
-                  onClick={() => setStep(1)}
-                  className="text-gray-600 hover:text-gray-800 font-medium"
-                >
-                  ← Back
-                </button>
-                <button
-                  onClick={() => setStep(3)}
-                  className="btn-primary px-10 py-4"
-                >
-                  Continue →
-                </button>
-              </div>
-            </motion.div>
-          )}
-
-          {/* Step 3 */}
-          {step === 3 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
-              <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-8">
-                Test Status & Submit
-              </h3>
-
-              <select
-                name="testStatus"
-                value={data.testStatus}
-                onChange={handleChange}
-                className="select-mobile"
-              >
-                <option value="">English Test Status</option>
-                <option value="completed">
-                  IELTS / TOEFL / PTE / Duolingo Completed
-                </option>
-                <option value="planning">Planning to Take Soon</option>
-                <option value="not-taken">Not Taken Yet</option>
-              </select>
-
-              <button
-                onClick={handleSubmit}
-                className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-5 rounded-xl"
-              >
-                Get My Free Evaluation Report →
-              </button>
-            </motion.div>
-          )}
-        </motion.div>
-      </div>
-    </section>
+      <ProfileEvaluationClient />
+    </>
   );
 }
