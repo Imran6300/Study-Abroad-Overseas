@@ -75,7 +75,7 @@ export const metadata = {
   },
 };
 
-export const revalidate = 3600; // 1 hour
+export const revalidate = 3600;
 const schema = {
   "@context": "https://schema.org",
   "@type": "EducationalOrganization",
