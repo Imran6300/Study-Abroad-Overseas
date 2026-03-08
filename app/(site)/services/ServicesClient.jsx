@@ -16,6 +16,7 @@ export default function Services() {
       icon: "📊",
       image: "/coreservices/profileevaluation.avif",
       alt: "Student profile evaluation and academic assessment",
+      link: "/services/profile-evaluation",
     },
     {
       title: "University Shortlisting",
@@ -24,6 +25,7 @@ export default function Services() {
       icon: "🏫",
       image: "/coreservices/campusshortlisting.avif",
       alt: "University campus shortlisting for study abroad",
+      link: "/services/university-shortlisting",
     },
     {
       title: "SOP / LOR Assistance",
@@ -32,6 +34,7 @@ export default function Services() {
       icon: "✍️",
       image: "/coreservices/writingassistance.avif",
       alt: "Writing assistance for SOP and LOR documents",
+      link: "/services/sop-lor",
     },
     {
       title: "Visa Guidance & Filing",
@@ -40,6 +43,7 @@ export default function Services() {
       icon: "🛂",
       image: "/coreservices/studentvisaapplication.avif",
       alt: "Student visa application guidance and filing",
+      link: "/services/visa",
     },
     {
       title: "Financial Planning",
@@ -48,6 +52,7 @@ export default function Services() {
       icon: "💰",
       image: "/coreservices/financialplanning.avif",
       alt: "Financial planning and budgeting support for international students",
+      link: "/services/finance",
     },
     {
       title: "Pre-Departure Support",
@@ -56,6 +61,7 @@ export default function Services() {
       icon: "✈️",
       image: "/coreservices/pre-departuresupport.avif",
       alt: "Pre-departure support for international students",
+      link: "/services/pre-departure",
     },
   ];
 
@@ -286,7 +292,7 @@ export default function Services() {
                     </p>
 
                     <Link
-                      href="/contact"
+                      href={service.link}
                       className="text-blue-600 font-medium hover:text-blue-800 transition text-sm mt-auto"
                     >
                       Learn more →
