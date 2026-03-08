@@ -197,7 +197,7 @@ export default function CourseDetailPage({ slug }) {
               <div className="space-y-12">
                 <div className="prose prose-invert max-w-none">
                   <h2 className="text-3xl font-bold mb-6 text-indigo-300">
-                    Program Overview
+                    {course.name} Course Overview
                   </h2>
                   <p className="text-lg leading-relaxed text-gray-200">
                     {course.overview}
