@@ -1,478 +1,232 @@
-"use client";
+// app/services/finance/page.jsx
 
-import { useState, useMemo, useEffect } from "react";
-import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
+import FinancialClient from "./FinancialClient";
 
-// Optional: nicer variants for accordion items
-const accordionVariants = {
-  hidden: { opacity: 0, height: 0 },
-  visible: {
-    opacity: 1,
-    height: "auto",
-    transition: {
-      type: "spring",
-      stiffness: 200,
-      damping: 22,
-    },
-  },
-  exit: {
-    opacity: 0,
-    height: 0,
-    transition: { duration: 0.3 },
-  },
-};
+export const metadata = {
+  metadataBase: new URL("https://www.khizaroverseas.in"),
+  title:
+    "Study Abroad Financial Planning & Cost Calculator Hyderabad 2026 | Khizar Overseas",
+  description:
+    "Calculate real study abroad costs in Hyderabad with Khizar Overseas – best overseas education consultants. Get accurate estimates for tuition, living expenses, scholarships, education loans for USA, UK, Canada, Australia, Germany. 98.7% visa success, 5000+ students helped. Free financial consultation & loan guidance now!",
 
-const iconVariants = {
-  closed: { rotate: 0 },
-  open: { rotate: 180 },
-};
+  keywords: [
+    "study abroad financial planning Hyderabad",
+    "study abroad cost calculator Hyderabad",
+    "cost of studying abroad Hyderabad 2026",
+    "education loan for study abroad Hyderabad",
+    "study abroad expenses USA UK Canada Australia Germany",
+    "scholarships and financial aid Hyderabad",
+    "best financial planning consultants study abroad Hyderabad",
+    "Khizar Overseas finance services",
+    "study in USA cost from Hyderabad",
+    "free study abroad cost consultation Hyderabad",
+    "overseas education loan guidance Hyderabad",
+  ].join(", "),
 
-// Reusable variants
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.12,
-      delayChildren: 0.1,
-    },
-  },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 30 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      type: "spring",
-      stiffness: 100,
-      damping: 15,
-      duration: 0.6,
-    },
-  },
-};
-
-const cardHover = {
-  rest: { scale: 1, boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)" },
-  hover: {
-    scale: 1.03,
-    boxShadow:
-      "0 20px 25px -5px rgba(0,0,0,0.2), 0 10px 10px -5px rgba(0,0,0,0.1)",
-    transition: { duration: 0.3 },
-  },
-};
-
-// ────────────────────────────────────────────────
-// Your original data object (unchanged)
-const FINANCIAL_PAGE_DATA = {
-  hero: {
-    title: "Financial Planning for Studying Abroad in 2026",
+  openGraph: {
+    title:
+      "Study Abroad Cost Calculator & Financial Planning Hyderabad | Khizar Overseas 2026",
     description:
-      "Get a realistic estimate of your total study abroad expenses — tuition fees, monthly living costs, hidden fees, scholarships, and education loan options — tailored for top destinations.",
-    primaryCTA: {
-      label: "Get Free Personalized Financial Assessment",
-      href: "/free-assessment",
-    },
-    secondaryCTA: {
-      label: "Use Cost Calculator Now",
-      href: "#calculator",
-    },
-  },
-
-  calculator: {
-    title: "Study Abroad Cost Calculator",
-    levels: [
-      { value: "undergraduate", label: "Undergraduate / Bachelor’s" },
-      { value: "postgraduate", label: "Postgraduate / Master’s" },
-    ],
-    duration: { min: 1, max: 6 },
-    livingCostHint:
-      "Typical range: $1,200 – $2,000 depending on city & lifestyle",
-  },
-
-  countries: {
-    USA: {
-      label: "USA",
-      tuition: { undergraduate: 35000, postgraduate: 30000 },
-      living: 1800,
-    },
-    UK: {
-      label: "United Kingdom",
-      tuition: { undergraduate: 28000, postgraduate: 26000 },
-      living: 1500,
-    },
-    Canada: {
-      label: "Canada",
-      tuition: { undergraduate: 22000, postgraduate: 20000 },
-      living: 1300,
-    },
-    Australia: {
-      label: "Australia",
-      tuition: { undergraduate: 28000, postgraduate: 30000 },
-      living: 1700,
-    },
-  },
-
-  breakdown: {
-    title: "Average Study Abroad Costs by Country (2026)",
-  },
-
-  lead: {
-    title: "Need Help Managing Study Abroad Finances?",
-    description:
-      "Our experts help with budgeting, scholarships, education loans, part-time work rules, and more — completely free consultation.",
-    cta: {
-      label: "Start Free Financial Consultation",
-      href: "/free-assessment",
-    },
-  },
-
-  faq: {
-    title: "Frequently Asked Questions",
-    items: [
+      "Get personalized cost breakdown + scholarships up to $50M+ & education loan help. Trusted by 5000+ Hyderabad students for USA, UK, Canada, Australia, Germany. Free consultation – Call/WhatsApp +91 73298 22309!",
+    url: "https://www.khizaroverseas.in/services/finance",
+    type: "website",
+    siteName: "Khizar Overseas",
+    locale: "en_IN",
+    images: [
       {
-        q: "What is the average cost of studying abroad in 2026?",
-        a: "Total cost (tuition + living) typically ranges from $25,000–$80,000+ per year depending on country, course, and city.",
-      },
-      {
-        q: "How can I reduce my study abroad expenses?",
-        a: "Apply early for scholarships, choose affordable cities, share accommodation, and compare low-interest education loans.",
-      },
-      {
-        q: "Do scholarships cover full tuition for international students?",
-        a: "Some scholarships do, but most cover 10–50% of tuition. We help identify realistic options during assessment.",
+        url: "https://www.khizaroverseas.in/images/finance-og-2026.jpg", // Make new image: calculator screenshot + stats + phone overlay
+        width: 1200,
+        height: 630,
+        alt: "Khizar Overseas Study Abroad Cost Calculator & Financial Planning Hyderabad 2026",
       },
     ],
   },
+
+  twitter: {
+    card: "summary_large_image",
+    title:
+      "Study Abroad Cost Calculator Hyderabad | Khizar Overseas – Free 2026 Planning",
+    description:
+      "98.7% visa success • 5000+ placed • Scholarships + Loans • USA/UK/Canada/Australia/Germany costs",
+  },
+
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  alternates: {
+    canonical: "https://www.khizaroverseas.in/services/finance",
+    languages: {
+      "en-IN": "https://www.khizaroverseas.in/services/finance",
+    },
+  },
 };
 
-export default function FinancialPlanningPage() {
-  const [form, setForm] = useState({
-    country: "",
-    level: "",
-    duration: 1,
-    livingCost: 1200,
-  });
+const localBusinessSchema = {
+  "@context": "https://schema.org",
+  "@type": "LocalBusiness",
+  "@id": "https://www.khizaroverseas.in/#organization",
+  name: "Khizar Overseas",
+  url: "https://www.khizaroverseas.in",
+  logo: "https://www.khizaroverseas.in/logo.png",
+  description:
+    "Best study abroad financial planning consultants in Hyderabad offering cost calculators, scholarship guidance, education loans, and free consultations for USA, UK, Canada, Australia, Germany.",
+  address: {
+    "@type": "PostalAddress",
+    streetAddress: "Shop No.35, 5-4-410, Nampally",
+    addressLocality: "Hyderabad",
+    addressRegion: "Telangana",
+    postalCode: "500001",
+    addressCountry: "IN",
+  },
+  geo: {
+    "@type": "GeoCoordinates",
+    latitude: 17.39009,
+    longitude: 78.469326,
+  },
+  telephone: "+917329822309",
+  email: "khizaroverseas@gmail.com",
+  priceRange: "$$",
+  openingHoursSpecification: [
+    {
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+      opens: "10:00",
+      closes: "18:00",
+    },
+    {
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: "Saturday",
+      opens: "10:00",
+      closes: "16:00",
+    },
+  ],
+  areaServed: ["Hyderabad", "Telangana", "India"],
+  makesOffer: [
+    {
+      "@type": "Offer",
+      itemOffered: {
+        "@type": "Service",
+        name: "Study Abroad Cost Calculator & Financial Planning",
+        description:
+          "Personalized cost estimates including tuition, living, scholarships & loans",
+      },
+    },
+    {
+      "@type": "Offer",
+      itemOffered: {
+        "@type": "Service",
+        name: "Education Loan Guidance",
+        description: "Help securing low-interest loans for overseas education",
+      },
+    },
+    {
+      "@type": "Offer",
+      itemOffered: {
+        "@type": "Service",
+        name: "Scholarship Assistance",
+        description: "Maximize funding opportunities up to $50M+",
+      },
+    },
+  ],
+  sameAs: [
+    "https://www.facebook.com/khizaroverseas",
+    "https://www.instagram.com/khizaroverseas",
+    "https://wa.me/917329822309",
+  ],
+};
 
-  const countryData = useMemo(() => {
-    const result = {};
-    Object.entries(FINANCIAL_PAGE_DATA.countries).forEach(([key, value]) => {
-      result[key] = {
-        undergrad: value.tuition.undergraduate,
-        postgrad: value.tuition.postgraduate,
-        living: value.living,
-      };
-    });
-    return result;
-  }, []);
+const breadcrumbSchema = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    {
+      "@type": "ListItem",
+      position: 1,
+      name: "Home",
+      item: "https://www.khizaroverseas.in",
+    },
+    {
+      "@type": "ListItem",
+      position: 2,
+      name: "Services",
+      item: "https://www.khizaroverseas.in/services",
+    },
+    {
+      "@type": "ListItem",
+      position: 3,
+      name: "Financial Planning & Cost Calculator",
+      item: "https://www.khizaroverseas.in/services/finance",
+    },
+  ],
+};
 
-  useEffect(() => {
-    if (form.country && countryData[form.country]) {
-      setForm((prev) => ({
-        ...prev,
-        livingCost: countryData[form.country].living,
-      }));
-    }
-  }, [form.country, countryData]);
+const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: [
+    {
+      "@type": "Question",
+      name: "What is the average cost of studying abroad in 2026?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Costs vary by country: USA (~₹35–60L/year), UK (~₹25–45L), Canada (~₹20–40L), Australia (~₹25–50L), Germany (₹10–20L with low/no tuition). Includes tuition + living expenses. Use our free calculator for personalized estimates.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "How can Khizar Overseas help with financial planning for study abroad?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "We provide free cost breakdowns, scholarship hunting (up to $50M+ secured), education loan guidance from top banks/NBFCs, and budgeting tips to reduce expenses. Book a free consultation in Hyderabad.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "Which country is cheapest to study abroad in 2026?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Germany often ranks cheapest (low/no tuition at public unis + ~₹8–15L living/year). Canada & Australia offer good ROI with part-time work options. We help compare based on your profile.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "Do you assist with education loans for study abroad?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Yes – we guide you through low-interest loans from Indian banks/NBFCs, including documentation, eligibility checks, and faster processing. Many students secure loans covering 100% costs.",
+      },
+    },
+    // Add 2–3 more if you have content for them
+  ],
+};
 
-  const estimate = useMemo(() => {
-    if (!form.country || !form.level || form.duration < 1) return 0;
-
-    const data = countryData[form.country];
-    if (!data) return 0;
-
-    const tuitionPerYear =
-      form.level === "undergraduate" ? data.undergrad : data.postgrad;
-
-    return Math.round(
-      tuitionPerYear * form.duration + form.livingCost * 12 * form.duration
-    );
-  }, [form, countryData]);
-
-  const formatCurrency = (num) =>
-    num.toLocaleString("en-US", { style: "currency", currency: "USD" });
-
+export default function FinancePage() {
   return (
-    <main className="min-h-screen bg-[#2F4F4F] text-[#DCDCDC] pt-28 px-6 md:px-12">
-      {/* HERO */}
-      <motion.section
-        initial="hidden"
-        animate="visible"
-        variants={containerVariants}
-        className="max-w-6xl mx-auto mb-20"
-      >
-        <motion.h1
-          variants={itemVariants}
-          className="text-4xl md:text-5xl font-bold text-white mb-5"
-        >
-          {FINANCIAL_PAGE_DATA.hero.title}
-        </motion.h1>
-        <motion.p
-          variants={itemVariants}
-          className="text-xl text-gray-300 max-w-3xl mb-8"
-        >
-          {FINANCIAL_PAGE_DATA.hero.description}
-        </motion.p>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(localBusinessSchema),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
 
-        <motion.div variants={itemVariants} className="flex flex-wrap gap-4">
-          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.96 }}>
-            <Link
-              href={FINANCIAL_PAGE_DATA.hero.primaryCTA.href}
-              className="bg-[#4169E1] px-8 py-4 rounded-xl font-bold text-white inline-block"
-            >
-              {FINANCIAL_PAGE_DATA.hero.primaryCTA.label}
-            </Link>
-          </motion.div>
-
-          <motion.a
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.96 }}
-            href={FINANCIAL_PAGE_DATA.hero.secondaryCTA.href}
-            className="border-2 border-[#4169E1] text-[#4169E1] px-8 py-4 rounded-xl font-semibold inline-block"
-          >
-            {FINANCIAL_PAGE_DATA.hero.secondaryCTA.label}
-          </motion.a>
-        </motion.div>
-      </motion.section>
-
-      {/* CALCULATOR */}
-      <motion.section
-        id="calculator"
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, margin: "-100px" }}
-        variants={containerVariants}
-        className="max-w-6xl mx-auto grid md:grid-cols-2 gap-8 mb-24"
-      >
-        <motion.div
-          variants={itemVariants}
-          className="bg-[#1E2A2A] p-8 rounded-2xl"
-        >
-          <h2 className="text-3xl font-bold text-white mb-8">
-            {FINANCIAL_PAGE_DATA.calculator.title}
-          </h2>
-
-          <div className="space-y-6">
-            <motion.select
-              whileFocus={{ scale: 1.02 }}
-              className="w-full bg-[#2F4F4F] p-4 rounded-lg border border-transparent focus:border-[#4169E1] transition"
-              value={form.country}
-              onChange={(e) => setForm({ ...form, country: e.target.value })}
-            >
-              <option value="">Select Country</option>
-              {Object.entries(FINANCIAL_PAGE_DATA.countries).map(([key, c]) => (
-                <option key={key} value={key}>
-                  {c.label}
-                </option>
-              ))}
-            </motion.select>
-
-            <motion.select
-              whileFocus={{ scale: 1.02 }}
-              className="w-full bg-[#2F4F4F] p-4 rounded-lg border border-transparent focus:border-[#4169E1] transition"
-              value={form.level}
-              onChange={(e) => setForm({ ...form, level: e.target.value })}
-            >
-              <option value="">Select Level</option>
-              {FINANCIAL_PAGE_DATA.calculator.levels.map((l) => (
-                <option key={l.value} value={l.value}>
-                  {l.label}
-                </option>
-              ))}
-            </motion.select>
-
-            <motion.input
-              whileFocus={{ scale: 1.02 }}
-              type="number"
-              min={FINANCIAL_PAGE_DATA.calculator.duration.min}
-              max={FINANCIAL_PAGE_DATA.calculator.duration.max}
-              value={form.duration}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  duration: Math.max(1, Number(e.target.value)),
-                })
-              }
-              className="w-full bg-[#2F4F4F] p-4 rounded-lg border border-transparent focus:border-[#4169E1] transition"
-            />
-
-            <motion.input
-              whileFocus={{ scale: 1.02 }}
-              type="number"
-              value={form.livingCost}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  livingCost: Number(e.target.value),
-                })
-              }
-              className="w-full bg-[#2F4F4F] p-4 rounded-lg border border-transparent focus:border-[#4169E1] transition"
-            />
-            <p className="text-xs text-gray-400">
-              {FINANCIAL_PAGE_DATA.calculator.livingCostHint}
-            </p>
-          </div>
-        </motion.div>
-
-        <motion.div
-          variants={itemVariants}
-          className="bg-[#1E2A2A] p-8 rounded-2xl flex flex-col"
-        >
-          <h3 className="text-2xl font-bold text-white mb-6">
-            Estimated Total Cost
-          </h3>
-
-          {estimate > 0 ? (
-            <motion.p
-              key={estimate}
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ type: "spring", stiffness: 120 }}
-              className="text-5xl font-extrabold text-[#32CD32]"
-            >
-              {formatCurrency(estimate)}
-            </motion.p>
-          ) : (
-            <p className="text-gray-400">Select country, level and duration</p>
-          )}
-
-          <p className="text-gray-400 mt-2">for {form.duration} year(s)</p>
-
-          <motion.div
-            whileHover={{ scale: 1.04 }}
-            whileTap={{ scale: 0.97 }}
-            className="mt-auto"
-          >
-            <Link
-              href="/free-assessment"
-              className="block bg-[#4169E1] text-white px-6 py-4 rounded-xl text-center font-bold"
-            >
-              Get Accurate Personalized Plan
-            </Link>
-          </motion.div>
-        </motion.div>
-      </motion.section>
-
-      {/* COUNTRY CARDS */}
-      <motion.section
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, margin: "-80px" }}
-        variants={containerVariants}
-        className="max-w-6xl mx-auto mb-24"
-      >
-        <h2 className="text-3xl font-bold text-center text-white mb-10">
-          {FINANCIAL_PAGE_DATA.breakdown.title}
-        </h2>
-
-        <div className="grid md:grid-cols-4 gap-6">
-          {Object.entries(FINANCIAL_PAGE_DATA.countries).map(([key, c]) => (
-            <motion.div
-              key={key}
-              variants={{ ...itemVariants, ...cardHover }}
-              initial="rest"
-              whileHover="hover"
-              className="bg-[#1E2A2A] p-6 rounded-xl text-center cursor-pointer"
-            >
-              <h3 className="text-xl font-bold text-[#4169E1] mb-3">
-                {c.label}
-              </h3>
-              <p>${c.tuition.undergraduate.toLocaleString()} / year</p>
-              <p>${c.living.toLocaleString()} / month</p>
-            </motion.div>
-          ))}
-        </div>
-      </motion.section>
-
-      {/* LEAD CTA BANNER */}
-      <motion.section
-        initial={{ opacity: 0, scale: 0.96 }}
-        whileInView={{ opacity: 1, scale: 1 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.7, type: "spring" }}
-        className="max-w-5xl mx-auto mb-24"
-      >
-        <div className="bg-gradient-to-br from-[#1E2A2A] to-[#2F4F4F] p-10 md:p-16 rounded-3xl text-center border border-gray-700/40">
-          <h2 className="text-3xl md:text-4xl font-bold mb-6 text-white">
-            Need Help Managing Study Abroad Finances?
-          </h2>
-          <p className="text-lg text-gray-300 mb-8 max-w-2xl mx-auto">
-            Our experts can help with budgeting, finding scholarships, comparing
-            education loans, part-time work rules, and more — completely free
-            consultation.
-          </p>
-
-          <motion.div whileHover={{ scale: 1.06 }} whileTap={{ scale: 0.95 }}>
-            <Link
-              href="/free-assessment"
-              className="inline-block bg-[#FF8C00] hover:bg-orange-700 text-black px-10 py-5 rounded-xl font-bold text-lg transition shadow-lg"
-            >
-              Start Free Financial Consultation
-            </Link>
-          </motion.div>
-        </div>
-      </motion.section>
-
-      {/* FAQ */}
-      <motion.section
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, margin: "-50px" }}
-        variants={containerVariants}
-        className="max-w-4xl mx-auto mb-30 py-8"
-      >
-        <h2 className="text-3xl md:text-4xl font-bold text-center text-white mb-12">
-          {FINANCIAL_PAGE_DATA.faq.title}
-        </h2>
-
-        <div className="space-y-4">
-          {FINANCIAL_PAGE_DATA.faq.items.map((faq, index) => {
-            const [isOpen, setIsOpen] = useState(false);
-
-            return (
-              <motion.div
-                key={index}
-                variants={itemVariants}
-                className="bg-[#1E2A2A] rounded-xl overflow-hidden border border-gray-700/30 shadow-sm"
-              >
-                <button
-                  onClick={() => setIsOpen(!isOpen)}
-                  className="w-full px-6 py-5 text-left flex items-center justify-between hover:bg-[#252f2f] transition-colors duration-200"
-                >
-                  <h3 className="text-lg md:text-xl font-semibold text-[#32CD32] pr-8">
-                    {faq.q}
-                  </h3>
-
-                  <motion.span
-                    animate={isOpen ? "open" : "closed"}
-                    variants={iconVariants}
-                    transition={{ duration: 0.4 }}
-                    className="text-[#32CD32] text-2xl font-bold flex-shrink-0"
-                  >
-                    {isOpen ? "−" : "+"}
-                  </motion.span>
-                </button>
-
-                <AnimatePresence initial={false}>
-                  {isOpen && (
-                    <motion.div
-                      variants={accordionVariants}
-                      initial="hidden"
-                      animate="visible"
-                      exit="exit"
-                      className="px-6 pb-5 text-gray-300 leading-relaxed"
-                    >
-                      {faq.a}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.div>
-            );
-          })}
-        </div>
-      </motion.section>
-    </main>
+      <FinancialClient />
+    </>
   );
 }
