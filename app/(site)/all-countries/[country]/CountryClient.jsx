@@ -39,25 +39,160 @@ export default function CountryDetail({ country }) {
     whyStudyCards,
   } = country;
 
+  // ── Rich, natural, long-form FAQs for better rich results + user value ──
+  const faqs = [
+    {
+      question: `Is ${name} a good choice for Indian students in 2026?`,
+      answer: `${name} is still one of the top study abroad destinations for Indian students in 2026. It offers globally ranked universities, generous post-study work visas (2–5 years in most cases), high student visa success rates (${visaSuccessRate}% for Indian applicants based on recent trends), part-time work rights (20–40 hours/week), strong job markets in IT, engineering, healthcare, business & data science, plus safe, multicultural cities with English as the primary language. Thousands of Indian students enroll every year and many secure PR pathways. Contact our Hyderabad experts for free profile evaluation and university shortlisting.`,
+    },
+    {
+      question: `What is the student visa success rate for ${name}?`,
+      answer: `The current student visa success rate for ${name} is around ${visaSuccessRate}% for Indian applicants (based on recent immigration data and consultancy reports). Approval chances improve significantly with strong academics (65–85%+), sufficient financial proof, clear Statement of Purpose, genuine intent to return home after studies, and complete documentation. Our team in Hyderabad specializes in visa guidance, mock interviews, and application strengthening to maximize your chances.`,
+    },
+    {
+      question: `Which courses are most popular for international students in ${name}?`,
+      answer: `The most popular and in-demand courses in ${name} for international students include ${popularCourses?.join(", ")}. These programs are highly employable, often come with scholarship options, co-op/internship opportunities, and clear post-study work visa pathways. Many lead to high-paying jobs in global companies. We help Indian students choose the right course based on their background, budget, and career goals.`,
+    },
+    {
+      question: `What scholarships are available for Indian students in ${name}?`,
+      answer: `Indian students can apply for a wide range of scholarships in ${name}, including ${scholarships?.slice(0, 5).join(", ")} and many university-specific, government-funded, and merit-based awards. Scholarships range from 10–100% tuition waivers to full-ride packages including living expenses. Most require strong academics (70–90%+), good IELTS/TOEFL/PTE scores, and sometimes essays or interviews. Our Hyderabad counselors identify the best scholarships for your profile and assist with applications — completely free.`,
+    },
+  ];
+
   const universities = useMemo(() => {
     if (!allUniversities?.length) return [];
-
     return allUniversities.filter(
       (uni) => uni.country?.toLowerCase().replace(/\s+/g, "-") === slug,
     );
   }, [allUniversities, slug]);
 
+  // ── All schemas combined into one clean block ─────────────────────────────
+  const schemas = [
+    // WebPage + Country entity
+    {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      name: `Study in ${name} 2026 – Top Universities, Visa, Scholarships for Indian Students`,
+      description: `Complete 2026 guide to studying in ${name}: top universities, ${visaSuccessRate}% visa success rate, popular courses, scholarships, eligibility, post-study work & career opportunities for Indian students.`,
+      url: `${process.env.NEXT_PUBLIC_FRONTEND_URL}/all-countries/${slug}`,
+      publisher: {
+        "@type": "Organization",
+        name: "Khizar Overseas",
+        url: process.env.NEXT_PUBLIC_FRONTEND_URL,
+      },
+      mainEntity: {
+        "@type": "Country",
+        name: name,
+      },
+    },
+
+    // Organization – your consultancy (important for EEAT & local SEO)
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      name: "Khizar Overseas",
+      url: process.env.NEXT_PUBLIC_FRONTEND_URL,
+      logo: `${process.env.NEXT_PUBLIC_FRONTEND_URL}/logo.png`, // ← change to your real logo
+      address: {
+        "@type": "PostalAddress",
+        streetAddress: "Your Office Address Here", // ← optional but helpful
+        addressLocality: "Hyderabad",
+        addressRegion: "Telangana",
+        postalCode: "500081", // ← your real pin code
+        addressCountry: "IN",
+      },
+      contactPoint: {
+        "@type": "ContactPoint",
+        telephone: "+91-XXXXXXXXXX", // ← add real number
+        contactType: "customer service",
+        areaServed: "IN",
+      },
+      sameAs: [
+        "https://www.instagram.com/khizaroverseas/",
+        "https://www.linkedin.com/company/khizaroverseas",
+        // add real facebook, youtube, twitter if you have
+      ],
+    },
+
+    // BreadcrumbList
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: "Home",
+          item: process.env.NEXT_PUBLIC_FRONTEND_URL,
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: "Study Abroad Destinations",
+          item: `${process.env.NEXT_PUBLIC_FRONTEND_URL}/all-countries`,
+        },
+        {
+          "@type": "ListItem",
+          position: 3,
+          name: `Study in ${name} 2026`,
+          item: `${process.env.NEXT_PUBLIC_FRONTEND_URL}/all-countries/${slug}`,
+        },
+      ],
+    },
+
+    // FAQPage
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: faqs.map((faq) => ({
+        "@type": "Question",
+        name: faq.question,
+        acceptedAnswer: { "@type": "Answer", text: faq.answer },
+      })),
+    },
+
+    // ItemList for Top Universities (potential rich result boost)
+    ...(universities.length > 0
+      ? [
+          {
+            "@context": "https://schema.org",
+            "@type": "ItemList",
+            name: `Top Universities in ${name} for International Students`,
+            itemListElement: universities.slice(0, 12).map((uni, index) => ({
+              "@type": "ListItem",
+              position: index + 1,
+              item: {
+                "@type": "CollegeOrUniversity",
+                name: uni.name,
+                url: `${process.env.NEXT_PUBLIC_FRONTEND_URL}/universities/${uni.slug}`,
+                address: {
+                  "@type": "PostalAddress",
+                  addressCountry: uni.country,
+                },
+              },
+            })),
+          },
+        ]
+      : []),
+  ];
+
   return (
     <LazyMotion features={domAnimation}>
+      {/* Single clean schema block – better for performance */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemas) }}
+      />
+
       <main className="bg-[#020617] text-white min-h-screen relative">
         {/* HERO */}
         <section className="relative h-[75vh] min-h-[520px] overflow-hidden">
           <Image
             src={heroImage?.url || "/fallback.jpg"}
-            alt={`Study in ${name}`}
+            alt={`Study in ${name} 2026 – Best Universities, Visa Success & Scholarships for Indian Students`}
             fill
             priority
-            sizes="100vw"
+            sizes="(max-width:768px) 100vw, (max-width:1200px) 80vw, 70vw"
             className="object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/55 to-[#020617]" />
@@ -70,7 +205,7 @@ export default function CountryDetail({ country }) {
                 animate="visible"
                 className="text-4xl md:text-5xl lg:text-6xl font-bold"
               >
-                Study in {name}
+                Study in {name} 2026
               </m.h1>
 
               <m.p
@@ -79,33 +214,46 @@ export default function CountryDetail({ country }) {
                 animate="visible"
                 className="mt-6 text-lg md:text-xl text-gray-200 max-w-4xl"
               >
-                Visa Success Rate: {visaSuccessRate}%
+                Visa Success Rate: {visaSuccessRate}% | Top Choice for Indian
+                Students
               </m.p>
             </div>
           </div>
         </section>
 
-        {/* MAIN CONTENT */}
+        {/* BREADCRUMB */}
+        <div className="max-w-7xl mx-auto px-6 mt-10 text-sm text-gray-400">
+          <Link href="/" className="hover:text-white">
+            Home
+          </Link>{" "}
+          /{" "}
+          <Link href="/all-countries" className="hover:text-white">
+            Study Destinations
+          </Link>{" "}
+          / <span className="text-white">Study in {name}</span>
+        </div>
+
+        {/* MAIN CONTENT – unchanged structure */}
         <section className="py-16 lg:py-20">
           <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-[1fr_360px] gap-12">
             <div className="space-y-16 lg:space-y-20">
               <ContentBlock
-                title="Popular Courses"
+                title={`Popular Courses to Study in ${name} in 2026`}
                 items={cleanArray(popularCourses)}
               />
 
               <ContentBlock
-                title="Career Opportunities"
+                title={`Career Opportunities After Studying in ${name}`}
                 items={cleanArray(careerOpportunities)}
               />
 
               <ContentBlock
-                title="Scholarships & Financial Aid"
+                title="Scholarships & Financial Aid for International Students"
                 items={cleanArray(scholarships)}
               />
 
               <ContentBlock
-                title="Eligibility Requirements"
+                title={`Eligibility Requirements to Study in ${name}`}
                 items={cleanArray(eligibilityRequirements)}
               />
 
@@ -118,9 +266,8 @@ export default function CountryDetail({ country }) {
                   viewport={{ once: true }}
                 >
                   <h2 className="text-3xl font-bold mb-8">
-                    Why Study in {name}?
+                    Why Study in {name} in 2026?
                   </h2>
-
                   <div className="grid md:grid-cols-2 gap-6">
                     {whyStudyCards.map((item, i) => (
                       <m.div
@@ -142,6 +289,40 @@ export default function CountryDetail({ country }) {
                   </div>
                 </m.div>
               )}
+
+              {/* FAQ SECTION */}
+              <section className="py-24 border-t border-white/10">
+                <div className="max-w-5xl mx-auto px-6">
+                  <div className="text-center mb-14">
+                    <h2 className="text-4xl font-bold text-white">
+                      Frequently Asked Questions About Studying in {name}
+                    </h2>
+                    <p className="mt-3 text-gray-400">
+                      Common questions Indian students ask before choosing{" "}
+                      {name} in 2026
+                    </p>
+                  </div>
+
+                  <div className="space-y-4">
+                    {faqs.map((faq, i) => (
+                      <details
+                        key={i}
+                        className="group bg-[#0B0F19] border border-white/10 rounded-xl p-6 cursor-pointer hover:border-cyan-400/40 transition"
+                      >
+                        <summary className="flex justify-between items-center text-lg font-semibold text-white">
+                          {faq.question}
+                          <span className="text-cyan-400 group-open:rotate-180 transition">
+                            ⌄
+                          </span>
+                        </summary>
+                        <p className="mt-4 text-gray-300 leading-relaxed">
+                          {faq.answer}
+                        </p>
+                      </details>
+                    ))}
+                  </div>
+                </div>
+              </section>
             </div>
 
             {/* SIDEBAR CTA */}
@@ -162,7 +343,7 @@ export default function CountryDetail({ country }) {
                 viewport={{ once: true }}
                 className="text-3xl lg:text-4xl font-bold mb-12 text-center lg:text-left"
               >
-                Top Universities in {name}
+                Top Universities in {name} 2026
               </m.h2>
 
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -178,11 +359,9 @@ export default function CountryDetail({ country }) {
                     <h3 className="text-lg font-semibold text-white">
                       {uni.name}
                     </h3>
-
                     <p className="text-sm text-gray-400 mt-2">
-                      Rank #{uni.qsRanking}
+                      QS Rank #{uni.qsRanking}
                     </p>
-
                     <Link
                       href={`/universities/${uni.slug}`}
                       className="mt-4 inline-block text-[#38BDF8] hover:underline"
@@ -200,7 +379,7 @@ export default function CountryDetail({ country }) {
   );
 }
 
-/* ================= MEMOIZED COMPONENTS ================= */
+/* ================= MEMOIZED COMPONENTS (unchanged) ================= */
 
 const ContentBlock = memo(function ContentBlock({ title, items }) {
   return (
@@ -230,16 +409,17 @@ const CTACard = memo(function CTACard() {
   return (
     <div className="bg-[#0B0F19] border border-white/10 rounded-2xl p-6">
       <h3 className="text-xl lg:text-2xl font-bold text-white">
-        Book Free Counseling
+        Book Free Counseling Session
       </h3>
       <p className="mt-3 text-sm lg:text-base text-gray-300 leading-relaxed">
-        Talk to our experts and start your overseas journey today.
+        Talk to our expert counselors in Hyderabad and kickstart your study
+        abroad journey today.
       </p>
       <Link
         href="/assessment"
         className="mt-5 block w-full text-center bg-[#38BDF8] text-[#020617] py-4 rounded-xl font-bold text-lg hover:bg-[#22D3EE] transform hover:scale-105 transition-all duration-200 shadow-lg"
       >
-        Get Started
+        Get Started →
       </Link>
     </div>
   );
