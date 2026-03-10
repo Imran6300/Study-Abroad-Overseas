@@ -19,15 +19,15 @@ export default function CourseCard({ course }) {
       <Link href={`/courses/${course.slug}`} className="block h-full group">
         <div
           className={`
-            relative h-72                   // ← small fixed height (try 64, 68, 72, 80)
-            rounded-3xl p-6                 // reduced padding = more compact feel
+            relative h-72
+            rounded-3xl p-6                 
             bg-white/5 backdrop-blur-sm
             border border-white/10
             overflow-hidden
             transition-all duration-500
             hover:border-transparent hover:shadow-2xl group-hover:bg-white/8
 
-            flex flex-col                   // column layout
+            flex flex-col
           `}
         >
           {/* Top accent bar */}
