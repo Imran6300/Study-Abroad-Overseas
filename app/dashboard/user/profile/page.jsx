@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { fetchMyLead } from "@/store/leadSlice";
 import MessageBox from "@/components/ui/MessageBox";
 
 import {
@@ -242,7 +241,7 @@ export default function ProfilePage() {
     }
   };
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0B1C2D] to-[#0f2440] pt-28 px-6 pb-16 text-white">
+    <div className="min-h-screen bg-gradient-to-b  space-y-10   px-6 pb-16 text-white">
       {/* HEADER */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}

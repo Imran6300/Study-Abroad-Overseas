@@ -165,3 +165,20 @@ body::-webkit-scrollbar {
   visibility: hidden;
 }
 
+
+.sidebar-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-scroll::-webkit-scrollbar-thumb {
+  background: rgba(50, 205, 50, 0.4);
+  border-radius: 10px;
+}
+
+.sidebar-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(50, 205, 50, 0.7);
+}
