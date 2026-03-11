@@ -50,18 +50,21 @@ export default function FinalCTASection() {
         { action: "submit" },
       );
 
-      const res = await fetch("/api/lead", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: form.name,
-          email: form.email,
-          phone: form.phone,
-          preferredCountry: form.country,
-          leadSource: "homepage",
-          captchaToken,
-        }),
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/lead`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: form.name,
+            email: form.email,
+            phone: form.phone,
+            preferredCountry: form.country,
+            leadSource: "homepage",
+            captchaToken,
+          }),
+        },
+      );
 
       if (!res.ok) throw new Error("Failed");
 
