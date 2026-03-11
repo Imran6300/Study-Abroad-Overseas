@@ -1,87 +1,114 @@
-import Link from "next/link";
-import { motion } from "framer-motion";
+"use client";
 
-const MotionLink = motion(Link);
+import { motion } from "framer-motion";
+import { Calendar, Globe, Eye, XCircle } from "lucide-react";
+
 export default function ApplicationsCard({
   applications,
   handleWithdraw,
   router,
-  getStatusColor,
 }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.25 }}
-      className="bg-white/6 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-5 sm:p-8 mb-10 sm:mb-12 border border-white/10 shadow-xl"
-    >
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0 mb-6">
-        <h2 className="text-2xl sm:text-3xl font-bold text-white flex items-center gap-3">
-          🎓 My Applications
-        </h2>
-        <motion.button
-          whileHover={{ scale: 1.04 }}
-          onClick={() => router.push("/dashboard/applications/new")}
-          className="bg-[#32CD32] text-black px-6 sm:px-8 py-3.5 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all w-full sm:w-auto text-base sm:text-lg"
-        >
-          + New Application
-        </motion.button>
-      </div>
+  if (!applications.length) {
+    return (
+      <div className="bg-white/6 backdrop-blur-xl border border-white/10 rounded-2xl p-12 text-center">
+        <h2 className="text-xl font-bold text-white">No Applications Yet</h2>
 
-      {applications.length === 0 ? (
-        <div className="text-center py-10">
-          <p className="text-gray-400 text-base mb-5">
-            No applications yet — start now!
-          </p>
-          <MotionLink
-            href="/programs/universities"
-            className="text-[#32CD32] font-bold hover:underline text-base sm:text-lg"
-          >
-            Explore Universities →
-          </MotionLink>
-        </div>
-      ) : (
-        <div className="space-y-4 sm:space-y-5">
-          {applications.map((app) => (
-            <div
-              key={app._id}
-              className="p-5 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 transition-all flex flex-col sm:flex-row justify-between items-start sm:items-center gap-5"
-            >
-              <div className="w-full">
-                <h3 className="text-lg sm:text-xl font-semibold text-white">
-                  {app.university}
-                </h3>
-                <p className="text-sm text-gray-400 mt-1">
-                  {app.course} • {app.intake}
-                </p>
-                <span
-                  className={`mt-3 inline-block px-4 py-1 text-xs rounded-full border ${getStatusColor(app.status)}`}
-                >
-                  {app.status}
-                </span>
-              </div>
-              <div className="flex gap-3 w-full sm:w-auto">
-                <button
-                  onClick={() =>
-                    router.push(`/dashboard/applications/${app._id}`)
-                  }
-                  className="flex-1 sm:flex-none px-5 py-3 bg-[#4169E1] text-white rounded-xl hover:bg-[#3258c9] transition-all text-sm sm:text-base"
-                >
-                  View
-                </button>
-                {app.status !== "Withdrawn" && (
-                  <button
-                    onClick={() => handleWithdraw(app._id)}
-                    className="flex-1 sm:flex-none px-5 py-3 bg-red-600/20 text-red-400 rounded-xl border border-red-500/40 hover:bg-red-600/30 transition-all text-sm sm:text-base"
-                  >
-                    Withdraw
-                  </button>
-                )}
+        <p className="text-gray-400 mt-2">
+          Start applying to universities and track your applications here.
+        </p>
+
+        <button
+          onClick={() => router.push("/universities")}
+          className="mt-6 bg-[#32CD32] text-black px-6 py-3 rounded-xl font-semibold hover:bg-[#28b428] transition"
+        >
+          Explore Universities
+        </button>
+      </div>
+    );
+  }
+
+  const statusStyles = (status) => {
+    switch (status) {
+      case "Accepted":
+        return "bg-[#32CD32]/20 text-[#32CD32]";
+      case "Rejected":
+        return "bg-red-500/20 text-red-400";
+      case "Under Review":
+        return "bg-yellow-500/20 text-yellow-400";
+      default:
+        return "bg-gray-500/20 text-gray-300";
+    }
+  };
+
+  return (
+    <div className="space-y-5">
+      {applications.map((app) => (
+        <motion.div
+          key={app.id}
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          whileHover={{ scale: 1.01 }}
+          transition={{ duration: 0.25 }}
+          className="bg-white/6 backdrop-blur-xl border border-white/10 rounded-2xl p-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 hover:border-[#32CD32]/40 hover:shadow-lg hover:shadow-[#32CD32]/10 transition"
+        >
+          {/* LEFT SIDE */}
+          <div className="flex items-start gap-4">
+            {/* University Logo Placeholder */}
+            <div className="w-12 h-12 rounded-xl bg-[#32CD32]/20 flex items-center justify-center text-[#32CD32] font-bold text-lg">
+              {app.university.charAt(0)}
+            </div>
+
+            <div>
+              <h3 className="text-white text-lg font-semibold">
+                {app.university}
+              </h3>
+
+              <p className="text-gray-400 text-sm">{app.course}</p>
+
+              <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
+                <div className="flex items-center gap-1">
+                  <Globe size={14} />
+                  {app.country}
+                </div>
+
+                <div className="flex items-center gap-1">
+                  <Calendar size={14} />
+                  {app.date}
+                </div>
               </div>
             </div>
-          ))}
-        </div>
-      )}
-    </motion.div>
+          </div>
+
+          {/* STATUS */}
+          <div
+            className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold ${statusStyles(
+              app.status,
+            )}`}
+          >
+            <span className="w-2 h-2 rounded-full bg-current"></span>
+            {app.status}
+          </div>
+
+          {/* ACTION BUTTONS */}
+          <div className="flex gap-3">
+            <button
+              onClick={() => router.push(`/application/${app.id}`)}
+              className="flex items-center gap-2 border border-white/20 text-white px-4 py-2 rounded-lg hover:bg-white/10 transition"
+            >
+              <Eye size={16} />
+              View
+            </button>
+
+            <button
+              onClick={() => handleWithdraw(app.id)}
+              className="flex items-center gap-2 border border-red-500/30 text-red-400 px-4 py-2 rounded-lg hover:bg-red-500/10 transition"
+            >
+              <XCircle size={16} />
+              Withdraw
+            </button>
+          </div>
+        </motion.div>
+      ))}
+    </div>
   );
 }

@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import Link from "next/link";
 import { motion } from "framer-motion";
 import { debounce } from "lodash";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import CourseCard from "@/components/ui/CourseCard";
+import StudentProCard from "@/components/upgrade/StudentProCard";
 
 /* ================= DATA ================= */
 import { useDispatch, useSelector } from "react-redux";
@@ -206,8 +206,19 @@ export default function Courses() {
             animate="visible"
             className="grid sm:grid-cols-2 lg:grid-cols-3 gap-10"
           >
-            {filteredCourses.map((course) => (
-              <CourseCard key={course._id} course={course} />
+            {filteredCourses.map((course, i) => (
+              <>
+                {i === 3 && (
+                  <div className="col-span-full">
+                    <StudentProCard
+                      variant="dark"
+                      title="Get AI Course Recommendations"
+                      description="Student Pro analyzes your academic background and recommends the best courses and universities for your career goals."
+                    />
+                  </div>
+                )}
+                <CourseCard key={course._id} course={course} />
+              </>
             ))}
           </motion.div>
         )}

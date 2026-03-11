@@ -43,6 +43,7 @@ export default function ProfileEvaluation() {
     <section className="min-h-screen mt-10 bg-gradient-to-b from-[#f8faff] to-[#e6efff] py-16 md:py-24">
       <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-12 lg:gap-16 items-start">
         {/* LEFT – INFO */}
+
         <motion.div
           initial={{ opacity: 0, x: -50 }}
           animate={{ opacity: 1, x: 0 }}

@@ -4,6 +4,7 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
+import StudentProCard from "@/components/upgrade/StudentProCard";
 
 const Palette = {
   royalBlue: "#3B82F6",
@@ -73,7 +74,7 @@ export default function SopLorPage() {
               Free SOP Review Now
             </Link>
             <Link
-            href="/contact"
+              href="/contact"
               className="px-10 py-6 rounded-2xl font-bold text-xl border-2 transition-all hover:scale-105 hover:bg-white/10"
               style={{
                 borderColor: Palette.royalBlue,
@@ -199,6 +200,17 @@ export default function SopLorPage() {
         </div>
       </section>
 
+      {/* Student Pro Upgrade */}
+      <section className="py-20 px-5 sm:px-8 lg:px-16">
+        <div className="max-w-4xl mx-auto">
+          <StudentProCard
+            variant="dark"
+            title="Strengthen Your SOP & LOR with AI Insights"
+            description="Student Pro analyzes your academic profile and helps you craft stronger SOPs, choose the right universities, and discover scholarships that increase your admission chances."
+          />
+        </div>
+      </section>
+
       {/* Countries Specialization */}
       <section className="py-16 sm:py-20 lg:py-32 px-4 sm:px-8 lg:px-16 bg-black/30 border-y border-white/5">
         <div className="max-w-6xl mx-auto">
@@ -312,7 +324,7 @@ export default function SopLorPage() {
             className="flex flex-col sm:flex-row justify-center gap-6 lg:gap-10"
           >
             <Link
-            href="/assessment"
+              href="/assessment"
               className="px-12 py-7 rounded-full font-bold text-2xl shadow-2xl transition-all hover:scale-105"
               style={{ backgroundColor: "white", color: "black" }}
             >

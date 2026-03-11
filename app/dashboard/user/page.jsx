@@ -11,6 +11,7 @@ import QuickStats from "@/components/userdashboard/QuickStats";
 import DeadlinesCard from "@/components/userdashboard/DeadlinesCard";
 import ApplicationsCard from "@/components/userdashboard/ApplicationsCard";
 import RecommendedUniversities from "@/components/userdashboard/RecommendedUniversities";
+import StudentProCard from "@/components/upgrade/StudentProCard";
 
 const getStatusColor = (status) => {
   switch (status) {
@@ -158,6 +159,8 @@ space-y-6 lg:space-y-8"
 
         {/* Profile Completion */}
         <ProfileCompletionCard progress={progress} router={router} />
+
+        <StudentProCard variant="dark" compact />
 
         {/* Quick Stats */}
         <QuickStats

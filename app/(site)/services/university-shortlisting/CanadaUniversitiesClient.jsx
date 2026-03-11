@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import StudentProCard from "@/components/upgrade/StudentProCard";
 import {
   HiOutlineHeart,
   HiHeart,
@@ -286,95 +287,102 @@ export default function CanadaUniversitiesClient() {
                     filteredUnis.map((uni, i) => {
                       const isShortlisted = shortlisted.includes(uni._id);
                       return (
-                        <motion.div
-                          key={uni._id}
-                          custom={i}
-                          variants={cardVariants}
-                          initial="hidden"
-                          animate="visible"
-                          whileHover="hover"
-                          exit={{
-                            opacity: 0,
-                            scale: 0.95,
-                            transition: { duration: 0.3 },
-                          }}
-                          className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col h-full"
-                        >
-                          <div className="h-28 bg-gray-50 relative flex items-center justify-center p-5 border-b border-gray-200">
-                            <img
-                              src={uni.logo?.url}
-                              alt={`${uni.name} logo – top university in Canada 2026 QS ranking`}
-                              className="max-h-20 object-contain"
-                              loading="lazy"
-                              onError={(e) =>
-                                (e.target.src = "/uni-placeholder.png")
-                              }
-                            />
-                            <div className="absolute top-3 right-3 text-3xl drop-shadow-sm">
-                              {uni.flag}
+                        <>
+                          {i === 3 && (
+                            <div className="sm:col-span-2 lg:col-span-3">
+                              <StudentProCard variant="light" compact />
                             </div>
-                          </div>
-
-                          <div className="p-5 flex flex-col flex-1">
-                            <div className="mb-1">
-                              <span className="inline-block bg-[#2f4f4f]/10 text-[#2f4f4f] text-xs font-bold px-2.5 py-1 rounded-full">
-                                {uni.qsRanking}
-                              </span>
-                            </div>
-                            <h3 className="text-lg font-bold text-[#2f4f4f] mb-3 line-clamp-2">
-                              {uni.name}
-                            </h3>
-
-                            <div className="text-sm text-gray-700 space-y-1.5 mb-5 flex-1">
-                              <p>
-                                <span className="font-semibold text-[#2f4f4f]">
-                                  Degree:
-                                </span>{" "}
-                                {uni.courses?.join(", ")}
-                              </p>
-                              <p>
-                                <span className="font-semibold text-[#2f4f4f]">
-                                  Tuition:
-                                </span>{" "}
-                                {uni.tuitionFee}
-                              </p>
+                          )}
+                          <motion.div
+                            key={uni._id}
+                            custom={i}
+                            variants={cardVariants}
+                            initial="hidden"
+                            animate="visible"
+                            whileHover="hover"
+                            exit={{
+                              opacity: 0,
+                              scale: 0.95,
+                              transition: { duration: 0.3 },
+                            }}
+                            className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col h-full"
+                          >
+                            <div className="h-28 bg-gray-50 relative flex items-center justify-center p-5 border-b border-gray-200">
+                              <img
+                                src={uni.logo?.url}
+                                alt={`${uni.name} logo – top university in Canada 2026 QS ranking`}
+                                className="max-h-20 object-contain"
+                                loading="lazy"
+                                onError={(e) =>
+                                  (e.target.src = "/uni-placeholder.png")
+                                }
+                              />
+                              <div className="absolute top-3 right-3 text-3xl drop-shadow-sm">
+                                {uni.flag}
+                              </div>
                             </div>
 
-                            <div className="flex gap-3 mt-auto">
-                              <motion.button
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() => toggleShortlist(uni._id)}
-                                className={`flex-1 py-2.5 rounded-lg font-medium transition flex items-center justify-center gap-2 text-sm ${
-                                  isShortlisted
-                                    ? "bg-[#32cd32] text-white hover:bg-[#2ab92a]"
-                                    : "bg-[#2f4f4f]/10 text-[#2f4f4f] hover:bg-[#2f4f4f]/20 border border-[#2f4f4f]/30"
-                                }`}
-                              >
-                                <motion.div
-                                  animate={
-                                    isShortlisted ? "animate" : "initial"
-                                  }
-                                  variants={heartVariants}
+                            <div className="p-5 flex flex-col flex-1">
+                              <div className="mb-1">
+                                <span className="inline-block bg-[#2f4f4f]/10 text-[#2f4f4f] text-xs font-bold px-2.5 py-1 rounded-full">
+                                  {uni.qsRanking}
+                                </span>
+                              </div>
+                              <h3 className="text-lg font-bold text-[#2f4f4f] mb-3 line-clamp-2">
+                                {uni.name}
+                              </h3>
+
+                              <div className="text-sm text-gray-700 space-y-1.5 mb-5 flex-1">
+                                <p>
+                                  <span className="font-semibold text-[#2f4f4f]">
+                                    Degree:
+                                  </span>{" "}
+                                  {uni.courses?.join(", ")}
+                                </p>
+                                <p>
+                                  <span className="font-semibold text-[#2f4f4f]">
+                                    Tuition:
+                                  </span>{" "}
+                                  {uni.tuitionFee}
+                                </p>
+                              </div>
+
+                              <div className="flex gap-3 mt-auto">
+                                <motion.button
+                                  whileTap={{ scale: 0.95 }}
+                                  onClick={() => toggleShortlist(uni._id)}
+                                  className={`flex-1 py-2.5 rounded-lg font-medium transition flex items-center justify-center gap-2 text-sm ${
+                                    isShortlisted
+                                      ? "bg-[#32cd32] text-white hover:bg-[#2ab92a]"
+                                      : "bg-[#2f4f4f]/10 text-[#2f4f4f] hover:bg-[#2f4f4f]/20 border border-[#2f4f4f]/30"
+                                  }`}
                                 >
-                                  {isShortlisted ? (
-                                    <HiHeart className="w-4 h-4" />
-                                  ) : (
-                                    <HiOutlineHeart className="w-4 h-4" />
-                                  )}
-                                </motion.div>
-                                {isShortlisted ? "Shortlisted" : "Shortlist"}
-                              </motion.button>
+                                  <motion.div
+                                    animate={
+                                      isShortlisted ? "animate" : "initial"
+                                    }
+                                    variants={heartVariants}
+                                  >
+                                    {isShortlisted ? (
+                                      <HiHeart className="w-4 h-4" />
+                                    ) : (
+                                      <HiOutlineHeart className="w-4 h-4" />
+                                    )}
+                                  </motion.div>
+                                  {isShortlisted ? "Shortlisted" : "Shortlist"}
+                                </motion.button>
 
-                              <MotionLink
-                                href={`/universities/${uni.slug}`}
-                                whileHover={{ scale: 1.02 }}
-                                className="flex-1 border border-gray-300 text-gray-700 py-2.5 rounded-lg text-sm hover:bg-gray-50 transition text-center"
-                              >
-                                Details
-                              </MotionLink>
+                                <MotionLink
+                                  href={`/universities/${uni.slug}`}
+                                  whileHover={{ scale: 1.02 }}
+                                  className="flex-1 border border-gray-300 text-gray-700 py-2.5 rounded-lg text-sm hover:bg-gray-50 transition text-center"
+                                >
+                                  Details
+                                </MotionLink>
+                              </div>
                             </div>
-                          </div>
-                        </motion.div>
+                          </motion.div>
+                        </>
                       );
                     })
                   ) : (

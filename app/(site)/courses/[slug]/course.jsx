@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import StudentProCard from "@/components/upgrade/StudentProCard";
 import {
   ChevronDown,
   Globe,
@@ -349,6 +350,14 @@ export default function CourseDetailPage({ slug }) {
             )}
           </motion.div>
         </AnimatePresence>
+
+        <div className="mt-24 max-w-4xl mx-auto">
+          <StudentProCard
+            variant="dark"
+            title={`Get AI University Recommendations for ${course.name}`}
+            description={`Student Pro analyzes your profile and suggests the best universities worldwide offering ${course.name}.`}
+          />
+        </div>
 
         {/* Final CTA */}
         <motion.div
