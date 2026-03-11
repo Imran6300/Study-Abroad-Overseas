@@ -3,12 +3,14 @@ import { useSelector } from "react-redux";
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Phone, Mail, User, Globe2, Send, MessageCircle } from "lucide-react";
+import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 
 export default function FinalCTASection() {
   const router = useRouter();
   const pathname = usePathname();
   const { user, authChecked } = useSelector((state) => state.auth);
   const isLoggedIn = Boolean(user);
+  const { executeRecaptcha } = useGoogleReCaptcha();
 
   const [form, setForm] = useState({
     name: "",
@@ -41,14 +43,12 @@ export default function FinalCTASection() {
     }
 
     try {
-      if (!window.grecaptcha) {
-        alert("Captcha not loaded yet. Please try again.");
+      if (!executeRecaptcha) {
+        alert("Captcha not ready");
         return;
       }
-      const captchaToken = await window.grecaptcha.execute(
-        process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY,
-        { action: "submit" },
-      );
+
+      const captchaToken = await executeRecaptcha("lead_submit");
 
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/lead`,
