@@ -11,6 +11,7 @@ export default function PrivacyPolicyPage() {
         min-h-screen w-full bg-[#F7F9FC]
         flex flex-col items-center
         px-4 py-10 md:py-16 lg:py-20
+        mt-12 sm:mt-0
       "
     >
       <div className="w-full max-w-3xl mx-auto">

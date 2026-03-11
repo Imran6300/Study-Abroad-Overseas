@@ -164,14 +164,6 @@ export default function Footer() {
               <Phone /> +91 90321 76741
             </a>
 
-            {/* <a
-              href="mailto:Consultant@gmail.com"
-              className="flex gap-3 hover:text-[#2ca850]"
-            >
-              <Mail /> info@khizaroverseas.com
-            </a> */}
-
-            
             <a
               href="mailto:khizaroverseas.educounsultant@gmail.com"
               className="flex gap-3 hover:text-[#2ca850]"
@@ -200,8 +192,36 @@ export default function Footer() {
         </div>
       </div>
 
-      <div className="mt-12 pt-10 border-t border-[#4169E1]/15 text-center text-sm text-gray-600">
-        © {new Date().getFullYear()} Khizar Overseas — All Rights Reserved
+      <div className="mt-12 pt-10 border-t border-[#4169E1]/15 text-center text-sm text-gray-600 space-y-3">
+        <p className="text-xs text-gray-500">
+          Secure payments powered by Razorpay
+        </p>
+        <p>
+          © {new Date().getFullYear()} Khizar Overseas — All Rights Reserved
+        </p>
+
+        <div className="flex flex-wrap justify-center gap-6 text-gray-600">
+          <Link
+            href="/privacy-policy"
+            className="hover:text-[#4169E1] transition"
+          >
+            Privacy Policy
+          </Link>
+
+          <Link
+            href="/terms-and-conditions"
+            className="hover:text-[#4169E1] transition"
+          >
+            Terms & Conditions
+          </Link>
+
+          <Link
+            href="/refund-policy"
+            className="hover:text-[#4169E1] transition"
+          >
+            Refund Policy
+          </Link>
+        </div>
       </div>
     </footer>
   );
