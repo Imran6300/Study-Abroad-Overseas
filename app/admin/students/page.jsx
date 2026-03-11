@@ -47,8 +47,8 @@ export default function StudentsAdminPage() {
         const data = await res.json();
 
         const formatted = data.leads.map((lead) => ({
-          id: lead._id,
-          userId: lead.user, // ✅ ADD THIS
+          id: lead.user || null,
+          leadId: lead._id,
 
           name: lead.name,
           email: lead.email,
@@ -70,12 +70,12 @@ export default function StudentsAdminPage() {
     fetchLeads();
   }, []);
 
-  const deleteStudent = async (id) => {
+  const deleteStudent = async (leadId) => {
     try {
       setDeleting(true);
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/lead/${id}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/lead/${leadId}`,
         {
           method: "DELETE",
           credentials: "include",
@@ -89,7 +89,7 @@ export default function StudentsAdminPage() {
         return false;
       }
 
-      setStudents((prev) => prev.filter((s) => s.id !== id));
+      setStudents((prev) => prev.filter((s) => s.leadId !== leadId));
       return true;
     } catch (error) {
       console.error("Delete error:", error);
@@ -134,7 +134,7 @@ export default function StudentsAdminPage() {
       }
 
       setStudents((prev) =>
-        prev.map((s) => (s.id === id ? { ...s, status: newStatus } : s)),
+        prev.map((s) => (s.leadId === id ? { ...s, status: newStatus } : s)),
       );
     } catch (error) {
       console.error("Status update error:", error);
@@ -308,7 +308,7 @@ export default function StudentsAdminPage() {
                     <tbody className="divide-y divide-gray-200 bg-white">
                       {filteredStudents.map((student) => (
                         <motion.tr
-                          key={student.id}
+                          key={student.leadId}
                           className="hover:bg-gray-50 transition-colors"
                         >
                           <td className="px-4 py-3 sm:px-6 sm:py-4 text-sm font-medium text-gray-900">
@@ -344,16 +344,16 @@ export default function StudentsAdminPage() {
                           </td>
                           <td className="px-4 py-3 sm:px-6 sm:py-4 text-sm font-medium whitespace-nowrap">
                             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-                              <button
-                                onClick={() =>
-                                  router.push(
-                                    `/admin/students/${student.userId}`,
-                                  )
-                                }
-                                className="text-sky-600 hover:text-sky-800 text-sm"
-                              >
-                                View
-                              </button>
+                              {student.id && (
+                                <button
+                                  onClick={() =>
+                                    router.push(`/admin/students/${student.id}`)
+                                  }
+                                  className="text-sky-600 hover:text-sky-800 text-sm"
+                                >
+                                  View
+                                </button>
+                              )}
                               <button
                                 onClick={() => {
                                   setStudentToDelete(student);
@@ -376,7 +376,7 @@ export default function StudentsAdminPage() {
                                     student.status === "contacted"
                                       ? "lead"
                                       : "contacted";
-                                  updateStatus(student.id, newStatus);
+                                  updateStatus(student.leadId, newStatus);
                                 }}
                               />
                               <div
@@ -423,7 +423,7 @@ export default function StudentsAdminPage() {
                 onConfirm={async () => {
                   if (!studentToDelete) return;
 
-                  const success = await deleteStudent(studentToDelete.id);
+                  const success = await deleteStudent(studentToDelete.leadId);
 
                   if (success) {
                     setShowConfirmDelete(false);

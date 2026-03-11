@@ -60,6 +60,7 @@ export default function FinalCTASection() {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          credentials: "include", // ⭐ VERY IMPORTANT
           body: JSON.stringify({
             name: form.name,
             email: form.email,
@@ -76,6 +77,12 @@ export default function FinalCTASection() {
       setMessageBox({
         status: "success",
         message: "Your counseling request has been submitted!",
+      });
+      setForm({
+        name: user?.name || "",
+        email: user?.email || "",
+        phone: user?.phone || "",
+        country: "",
       });
     } catch (err) {
       setMessageBox({
