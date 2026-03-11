@@ -7,12 +7,12 @@ import {
   HiHeart,
   HiOutlineFilter,
   HiX,
-  HiArrowRight,
   HiChevronDown,
 } from "react-icons/hi";
 import { motion, AnimatePresence, useAnimation } from "framer-motion";
 import Link from "next/link";
 const MotionLink = motion(Link);
+import MessageBox from "@/components/ui/MessageBox";
 
 import { useDispatch, useSelector } from "react-redux";
 import { fetchUniversities } from "@/store/universitySlice";
@@ -41,33 +41,21 @@ const heartVariants = {
   },
 };
 
-const modalVariants = {
-  hidden: { opacity: 0, scale: 0.85 },
-  visible: {
-    opacity: 1,
-    scale: 1,
-    transition: { duration: 0.4, ease: [0.4, 0, 0.2, 1] },
-  },
-  exit: { opacity: 0, scale: 0.9, transition: { duration: 0.25 } },
-};
-
-const backdropVariants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { duration: 0.3 } },
-  exit: { opacity: 0, transition: { duration: 0.2 } },
-};
-
 export default function CanadaUniversitiesClient() {
   const dispatch = useDispatch();
   const { list: universities } = useSelector((state) => state.universities);
+  const { user } = useSelector((state) => state.auth);
+
+  const [messageBox, setMessageBox] = useState({
+    status: null,
+    message: "",
+  });
 
   useEffect(() => {
     if (universities.length === 0) {
       dispatch(fetchUniversities());
     }
   }, [dispatch, universities.length]);
-
-  const country = "Canada";
 
   const [shortlisted, setShortlisted] = useState([]);
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -84,44 +72,141 @@ export default function CanadaUniversitiesClient() {
 
   const controls = useAnimation();
 
-  // ─── Memoized derived data ───────────────────────────────────────────────────────────
-  const shortlistedUnis = useMemo(
-    () => universities.filter((uni) => shortlisted.includes(uni._id)),
-    [shortlisted, universities],
-  );
+  useEffect(() => {
+    const loadShortlist = async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/shortlist`,
+          { credentials: "include" },
+        );
 
-  const toggleShortlist = (id) => {
-    setShortlisted((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
-    );
+        if (!res.ok) return;
+
+        const data = await res.json();
+
+        const ids = data.shortlist.map((u) => u.universityId);
+
+        setShortlisted(ids);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    if (user) {
+      loadShortlist();
+    }
+  }, [user]);
+
+  const toggleShortlist = async (uni) => {
+    if (!user) {
+      setMessageBox({
+        status: "error",
+        message: (
+          <span className="text-red-400">
+            Please login to save universities to your dashboard.
+          </span>
+        ),
+      });
+
+      setTimeout(() => {
+        setMessageBox({ status: null, message: "" });
+      }, 3000);
+
+      return;
+    }
+
+    const isAlreadyShortlisted = shortlisted.includes(uni._id);
+
+    try {
+      if (isAlreadyShortlisted) {
+        await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/university/shortlist/${uni._id}`,
+          {
+            method: "DELETE",
+            credentials: "include",
+          },
+        );
+
+        setShortlisted((prev) => prev.filter((id) => id !== uni._id));
+
+        setMessageBox({
+          status: "success",
+          message: (
+            <span className="text-yellow-400">
+              University removed from shortlist.
+            </span>
+          ),
+        });
+      } else {
+        await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/university/shortlist`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            credentials: "include",
+            body: JSON.stringify({
+              universityId: uni._id,
+              universityName: uni.name,
+              country: uni.country,
+            }),
+          },
+        );
+
+        setShortlisted((prev) => [...prev, uni._id]);
+
+        setMessageBox({
+          status: "success",
+          message: (
+            <span className="text-green-400">
+              University added to your shortlist.
+            </span>
+          ),
+        });
+      }
+    } catch (error) {
+      console.error(error);
+    }
+
+    setTimeout(() => {
+      setMessageBox({ status: null, message: "" });
+    }, 3000);
   };
 
   const filteredUnis = useMemo(() => {
     return universities.filter((uni) => {
       const countryMatch =
-        appliedCountry === "All Countries" || uni.country === appliedCountry;
+        appliedCountry === "All Countries" ||
+        uni.country?.toLowerCase() === appliedCountry.toLowerCase();
 
       const degreeMatch =
         appliedDegree === "All Degrees" ||
-        uni.courses?.some((course) =>
-          course.toLowerCase().includes(appliedDegree.toLowerCase()),
-        );
+        uni.courses?.some((course) => {
+          const level = course.level?.toLowerCase() || "";
+
+          if (appliedDegree === "Bachelors") return level === "bachelor";
+          if (appliedDegree === "Masters") return level === "master";
+          if (appliedDegree === "PhD") return level === "phd";
+
+          return true;
+        });
 
       let budgetMatch = appliedBudget === "Any Budget";
 
       if (appliedBudget !== "Any Budget") {
-        const tuitionStr = (uni.tuitionFee || "")
-          .replace(/,/g, "")
-          .split("-")[0]
-          .trim();
+        const fees =
+          uni.courses?.map((c) => {
+            const value = c.fees?.replace(/,/g, "").split("–")[0].trim();
+            return parseInt(value) || 0;
+          }) || [];
 
-        const tuitionNum = parseInt(tuitionStr) || 0;
+        const minFee = fees.length ? Math.min(...fees) : 0;
 
-        if (appliedBudget === "Under $15,000") budgetMatch = tuitionNum < 15000;
+        if (appliedBudget === "Under $15,000") budgetMatch = minFee < 15000;
         else if (appliedBudget === "$15,000 – $35,000")
-          budgetMatch = tuitionNum >= 15000 && tuitionNum <= 35000;
-        else if (appliedBudget === "Over $35,000")
-          budgetMatch = tuitionNum > 35000;
+          budgetMatch = minFee >= 15000 && minFee <= 35000;
+        else if (appliedBudget === "Over $35,000") budgetMatch = minFee > 35000;
       }
 
       return countryMatch && degreeMatch && budgetMatch;
@@ -146,6 +231,11 @@ export default function CanadaUniversitiesClient() {
 
   return (
     <>
+      <MessageBox
+        status={messageBox.status}
+        message={messageBox.message}
+        onClose={() => setMessageBox({ status: null, message: "" })}
+      />
       <div className="min-h-screen bg-gray-50 mt-5">
         {/* Hero – Optimized H1 */}
         <motion.header
@@ -156,12 +246,13 @@ export default function CanadaUniversitiesClient() {
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 md:py-20 text-center">
             <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">
-              Top Universities in Canada 2026 for Indian Students from Hyderabad
+              University Shortlisting Tool for Study Abroad 2026
             </h1>
+
             <p className="mt-5 text-xl md:text-2xl opacity-90 max-w-4xl mx-auto">
-              Compare QS World University Rankings 2026, tuition fees, intakes,
-              scholarships & post-study work options. Khizar Overseas: 98.7%
-              visa success, 5000+ students placed.
+              Compare top universities worldwide by country, degree, tuition
+              fees, rankings and courses. Find the best universities for
+              studying abroad and shortlist them easily with Khizar Overseas.
             </p>
 
             <div className="mt-8 flex flex-wrap justify-center gap-4">
@@ -287,12 +378,13 @@ export default function CanadaUniversitiesClient() {
                     filteredUnis.map((uni, i) => {
                       const isShortlisted = shortlisted.includes(uni._id);
                       return (
-                        <>
+                        <div key={uni._id} className="contents">
                           {i === 3 && (
                             <div className="sm:col-span-2 lg:col-span-3">
                               <StudentProCard variant="light" compact />
                             </div>
                           )}
+
                           <motion.div
                             key={uni._id}
                             custom={i}
@@ -337,7 +429,13 @@ export default function CanadaUniversitiesClient() {
                                   <span className="font-semibold text-[#2f4f4f]">
                                     Degree:
                                   </span>{" "}
-                                  {uni.courses?.join(", ")}
+                                  {[
+                                    ...new Set(
+                                      uni.courses?.map(
+                                        (course) => course.level,
+                                      ),
+                                    ),
+                                  ].join(", ")}
                                 </p>
                                 <p>
                                   <span className="font-semibold text-[#2f4f4f]">
@@ -350,7 +448,7 @@ export default function CanadaUniversitiesClient() {
                               <div className="flex gap-3 mt-auto">
                                 <motion.button
                                   whileTap={{ scale: 0.95 }}
-                                  onClick={() => toggleShortlist(uni._id)}
+                                  onClick={() => toggleShortlist(uni)}
                                   className={`flex-1 py-2.5 rounded-lg font-medium transition flex items-center justify-center gap-2 text-sm ${
                                     isShortlisted
                                       ? "bg-[#32cd32] text-white hover:bg-[#2ab92a]"
@@ -382,7 +480,7 @@ export default function CanadaUniversitiesClient() {
                               </div>
                             </div>
                           </motion.div>
-                        </>
+                        </div>
                       );
                     })
                   ) : (

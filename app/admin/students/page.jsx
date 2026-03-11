@@ -278,6 +278,14 @@ export default function StudentsAdminPage() {
                   <div className="p-10 text-center text-gray-600 min-h-[300px] flex items-center justify-center">
                     Loading students...
                   </div>
+                ) : students.length === 0 ? (
+                  <div className="p-16 text-center text-gray-500 text-lg">
+                    No students found.
+                  </div>
+                ) : filteredStudents.length === 0 ? (
+                  <div className="p-16 text-center text-gray-500 text-lg">
+                    No students match your search.
+                  </div>
                 ) : (
                   <table className="min-w-full divide-y divide-gray-200 table-auto">
                     <thead className="bg-gray-50">
