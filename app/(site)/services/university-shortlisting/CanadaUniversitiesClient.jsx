@@ -84,7 +84,7 @@ export default function CanadaUniversitiesClient() {
 
         const data = await res.json();
 
-        const ids = data.shortlist.map((u) => u.universityId);
+        const ids = data.shortlist?.map((u) => u.id) || [];
 
         setShortlisted(ids);
       } catch (err) {
@@ -148,8 +148,6 @@ export default function CanadaUniversitiesClient() {
             credentials: "include",
             body: JSON.stringify({
               universityId: uni._id,
-              universityName: uni.name,
-              country: uni.country,
             }),
           },
         );
