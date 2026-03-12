@@ -115,7 +115,7 @@ export default function CanadaUniversitiesClient() {
       return;
     }
 
-    const isAlreadyShortlisted = shortlisted.includes(uni._id);
+    const isAlreadyShortlisted = shortlisted.includes(String(uni._id));
 
     try {
       if (isAlreadyShortlisted) {
@@ -127,7 +127,7 @@ export default function CanadaUniversitiesClient() {
           },
         );
 
-        setShortlisted((prev) => prev.filter((id) => id !== uni._id));
+        setShortlisted((prev) => prev.filter((id) => id !== String(uni._id)));
 
         setMessageBox({
           status: "success",
@@ -152,7 +152,7 @@ export default function CanadaUniversitiesClient() {
           },
         );
 
-        setShortlisted((prev) => [...prev, uni._id]);
+        setShortlisted((prev) => [...prev, String(uni._id)]);
 
         setMessageBox({
           status: "success",
@@ -374,7 +374,9 @@ export default function CanadaUniversitiesClient() {
                 <AnimatePresence>
                   {filteredUnis.length > 0 ? (
                     filteredUnis.map((uni, i) => {
-                      const isShortlisted = shortlisted.includes(uni._id);
+                      const isShortlisted = shortlisted.includes(
+                        String(uni._id),
+                      );
                       return (
                         <div key={uni._id} className="contents">
                           {i === 3 && (
