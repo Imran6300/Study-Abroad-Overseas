@@ -41,8 +41,7 @@ export default function UniversityDetailLayout({ uni }) {
         },
       );
 
-      const text = await res.text(); // safer than res.json()
-
+      const text = await res.text();
       let data;
 
       try {
@@ -73,7 +72,7 @@ export default function UniversityDetailLayout({ uni }) {
       setMessage("Redirecting to application...");
 
       setTimeout(() => {
-        router.push("/application");
+        router.push(`/application?university=${uni.slug}`);
       }, 1200);
     } catch (error) {
       console.error(error);

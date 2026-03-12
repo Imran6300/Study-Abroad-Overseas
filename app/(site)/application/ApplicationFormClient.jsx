@@ -12,12 +12,51 @@ import Step7Documents from "@/components/applicationForm/Step7Documents";
 import Step8Final from "@/components/applicationForm/Step8Final";
 import MessageBox from "@/components/ui/MessageBox";
 
+import { useSearchParams } from "next/navigation";
+
 export default function ApplicationForm() {
   const [step, setStep] = useState(1);
   const router = useRouter();
   const [checkingAccess, setCheckingAccess] = useState(true);
   const [status, setStatus] = useState(null);
   const [message, setMessage] = useState("");
+  const searchParams = useSearchParams();
+  const universitySlug = searchParams.get("university");
+  useEffect(() => {
+    if (!universitySlug && !checkingAccess) {
+      setStatus("error");
+      setMessage("Please apply from a university page.");
+      setTimeout(() => router.push("/universities"), 1500);
+    }
+  }, [universitySlug, checkingAccess]);
+  useEffect(() => {
+    if (!universitySlug || checkingAccess) return;
+
+    const fetchUniversity = async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/university/${universitySlug}`,
+        );
+
+        const data = await res.json();
+
+        if (!data.success || !data.university) {
+          setStatus("error");
+          setMessage("University not found.");
+          setTimeout(() => router.push("/universities"), 1500);
+          return;
+        }
+
+        updateForm({
+          appliedUniversity: data.university,
+        });
+      } catch (err) {
+        console.error("Failed to fetch university", err);
+      }
+    };
+
+    fetchUniversity();
+  }, [universitySlug, checkingAccess]);
   useEffect(() => {
     const checkAccess = async () => {
       try {
@@ -77,7 +116,6 @@ export default function ApplicationForm() {
     emergencyPhone: "",
     qualification: "",
     school: "",
-    university: "",
     board: "",
     passingYear: "",
     cgpa: "",
@@ -87,7 +125,7 @@ export default function ApplicationForm() {
     studyLevel: "",
     field: "",
     intake: "",
-    universities: "",
+    appliedUniversity: null,
     budget: "",
     careerGoals: "",
     activities: "",
@@ -117,7 +155,24 @@ export default function ApplicationForm() {
 
   const submitApplication = async () => {
     try {
-      console.log("APPLICATION DATA", formData);
+      const payload = {
+        ...formData,
+        university: formData.appliedUniversity?._id,
+      };
+
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/application`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        },
+      );
+
+      if (!res.ok) throw new Error("Failed to submit");
 
       setStatus("success");
       setMessage("Application submitted successfully!");
@@ -158,6 +213,20 @@ export default function ApplicationForm() {
         style={{ paddingTop: "96px" }}
       >
         <div className="max-w-3xl mx-auto">
+          {formData.appliedUniversity && (
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+              <p className="text-sm text-gray-500">Applying to</p>
+
+              <h3 className="font-semibold text-lg text-gray-800">
+                {formData.appliedUniversity.name}
+              </h3>
+
+              <p className="text-sm text-gray-600">
+                {formData.appliedUniversity.city},{" "}
+                {formData.appliedUniversity.country}
+              </p>
+            </div>
+          )}
           {/* Header */}
           <div className="text-center mb-8">
             <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">

@@ -2,80 +2,122 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { HiOutlineUpload, HiOutlineEye, HiOutlineTrash } from "react-icons/hi";
+import {
+  HiOutlineUpload,
+  HiOutlineEye,
+  HiOutlineTrash,
+  HiOutlineExclamationCircle,
+} from "react-icons/hi";
 
 export default function DocumentsPage() {
   const initialDocs = [
-    { name: "Passport", required: true, status: "Pending", file: null },
+    {
+      name: "Passport",
+      required: true,
+      status: "Pending",
+      file: null,
+      maxSize: 5,
+    },
     {
       name: "Academic Transcripts",
       required: true,
       status: "Pending",
       file: null,
+      maxSize: 10,
     },
     {
       name: "Degree Certificate",
       required: true,
       status: "Pending",
       file: null,
+      maxSize: 5,
     },
     {
       name: "English Test (IELTS / TOEFL / PTE)",
       required: true,
       status: "Pending",
       file: null,
+      maxSize: 5,
     },
     {
       name: "Statement of Purpose (SOP)",
       required: true,
       status: "Pending",
       file: null,
+      maxSize: 2,
     },
     {
       name: "Letter of Recommendation (LOR)",
       required: true,
       status: "Pending",
       file: null,
+      maxSize: 2,
     },
 
-    // Optional but common
-    { name: "Resume / CV", required: false, status: "Pending", file: null },
-    { name: "Portfolio", required: false, status: "Pending", file: null },
+    {
+      name: "Resume / CV",
+      required: false,
+      status: "Pending",
+      file: null,
+      maxSize: 2,
+    },
+    {
+      name: "Portfolio",
+      required: false,
+      status: "Pending",
+      file: null,
+      maxSize: 10,
+    },
     {
       name: "Work Experience Letter",
       required: false,
       status: "Pending",
       file: null,
+      maxSize: 3,
     },
     {
       name: "Research Proposal (PhD)",
       required: false,
       status: "Pending",
       file: null,
+      maxSize: 5,
     },
     {
       name: "Financial Documents / Bank Statement",
       required: false,
       status: "Pending",
       file: null,
+      maxSize: 5,
     },
   ];
 
   const [documents, setDocuments] = useState(initialDocs);
+  const [error, setError] = useState("");
 
   const allowedTypes = ["application/pdf", "image/png", "image/jpeg"];
 
   const handleUpload = (index, file) => {
     if (!file) return;
 
+    setError("");
+
+    const maxSizeMB = documents[index].maxSize;
+    const maxSizeBytes = maxSizeMB * 1024 * 1024;
+
     if (!allowedTypes.includes(file.type)) {
-      alert("Only PDF, JPG, and PNG files are allowed.");
+      setError("Only PDF, JPG, and PNG files are allowed.");
+      return;
+    }
+
+    if (file.size > maxSizeBytes) {
+      setError(`${documents[index].name} must be smaller than ${maxSizeMB}MB`);
       return;
     }
 
     const updated = [...documents];
     updated[index].file = file;
     updated[index].status = "Uploaded";
+
     setDocuments(updated);
   };
 
@@ -88,7 +130,7 @@ export default function DocumentsPage() {
 
   const previewFile = (file) => {
     const url = URL.createObjectURL(file);
-    window.open(url);
+    window.open(url, "_blank");
   };
 
   const uploadedCount = documents.filter((d) => d.file).length;
@@ -105,6 +147,14 @@ export default function DocumentsPage() {
         </p>
       </div>
 
+      {/* Error Message */}
+      {error && (
+        <div className="mb-6 flex items-center gap-2 bg-red-500/10 border border-red-500/20 text-red-400 p-3 rounded-lg">
+          <HiOutlineExclamationCircle />
+          {error}
+        </div>
+      )}
+
       {/* Progress */}
       <div className="bg-white/5 border border-white/10 rounded-xl p-6 mb-10">
         <div className="flex justify-between mb-3 text-sm text-gray-300">
@@ -118,7 +168,7 @@ export default function DocumentsPage() {
           <div
             className="bg-[#4169E1] h-3 rounded-full transition-all"
             style={{ width: `${progress}%` }}
-          ></div>
+          />
         </div>
       </div>
 
@@ -153,15 +203,22 @@ export default function DocumentsPage() {
 
             {/* Upload */}
             {!doc.file ? (
-              <label className="flex items-center justify-center gap-2 border border-dashed border-white/20 rounded-xl p-4 cursor-pointer hover:bg-white/10 transition">
-                <HiOutlineUpload />
-                Upload File
-                <input
-                  type="file"
-                  className="hidden"
-                  onChange={(e) => handleUpload(index, e.target.files[0])}
-                />
-              </label>
+              <>
+                <label className="flex items-center justify-center gap-2 border border-dashed border-white/20 rounded-xl p-4 cursor-pointer hover:bg-white/10 transition">
+                  <HiOutlineUpload />
+                  Upload File
+                  <input
+                    type="file"
+                    className="hidden"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    onChange={(e) => handleUpload(index, e.target.files[0])}
+                  />
+                </label>
+
+                <p className="text-xs text-gray-400 mt-2 text-center">
+                  PDF, JPG, PNG • Max {doc.maxSize}MB
+                </p>
+              </>
             ) : (
               <div className="flex items-center justify-between mt-4">
                 <span className="text-sm text-gray-300 truncate max-w-[150px]">
