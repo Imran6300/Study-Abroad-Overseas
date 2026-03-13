@@ -34,7 +34,7 @@ export default function UniversityDetailLayout({ uni }) {
       setLoading(true);
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/application`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/applications/check-access`,
         {
           method: "GET",
           credentials: "include",

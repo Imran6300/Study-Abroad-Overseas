@@ -5,9 +5,30 @@ export default function Step7Documents({
   prevStep,
 }) {
   const handleFile = (e, field) => {
-    if (e.target.files?.[0]) {
-      updateForm({ [field]: e.target.files[0] });
+    const file = e.target.files?.[0];
+
+    if (!file) return;
+
+    const maxSize = 10 * 1024 * 1024;
+
+    if (file.size > maxSize) {
+      alert("File must be smaller than 10MB");
+      return;
     }
+
+    const allowedTypes = [
+      "application/pdf",
+      "image/jpeg",
+      "image/png",
+      "image/jpg",
+    ];
+
+    if (!allowedTypes.includes(file.type)) {
+      alert("Only PDF or Image files allowed");
+      return;
+    }
+
+    updateForm({ [field]: file });
   };
 
   const isPostgraduateOrPhD =
@@ -74,9 +95,15 @@ export default function Step7Documents({
             className={fileInputClasses}
           />
           {data[field.key] && (
-            <p className="text-green-600 text-sm mt-1 flex items-center gap-1">
+            <div className="mt-2 text-sm text-green-600">
               ✓ {data[field.key].name}
-            </p>
+              {data[field.key].type.startsWith("image/") && (
+                <img
+                  src={URL.createObjectURL(data[field.key])}
+                  className="mt-2 w-24 h-24 object-cover rounded-lg border"
+                />
+              )}
+            </div>
           )}
         </div>
       ))}

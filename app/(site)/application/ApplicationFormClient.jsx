@@ -11,6 +11,8 @@ import Step6Finance from "@/components/applicationForm/Step6Finance";
 import Step7Documents from "@/components/applicationForm/Step7Documents";
 import Step8Final from "@/components/applicationForm/Step8Final";
 import MessageBox from "@/components/ui/MessageBox";
+import { Elements } from "@stripe/react-stripe-js";
+import { stripePromise } from "@/lib/stripe";
 
 import { useSearchParams } from "next/navigation";
 
@@ -22,6 +24,7 @@ export default function ApplicationForm() {
   const [message, setMessage] = useState("");
   const searchParams = useSearchParams();
   const universitySlug = searchParams.get("university");
+  const [clientSecret, setClientSecret] = useState(null);
   useEffect(() => {
     if (!universitySlug && !checkingAccess) {
       setStatus("error");
@@ -61,7 +64,7 @@ export default function ApplicationForm() {
     const checkAccess = async () => {
       try {
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/application`,
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/applications/check-access`,
           {
             method: "GET",
             credentials: "include",
@@ -98,6 +101,25 @@ export default function ApplicationForm() {
 
     checkAccess();
   }, [router]);
+  useEffect(() => {
+    if (step !== 8) return;
+
+    const createIntent = async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/create-payment-intent`,
+          { method: "POST" },
+        );
+
+        const data = await res.json();
+        setClientSecret(data.clientSecret);
+      } catch (err) {
+        console.error("Payment intent error", err);
+      }
+    };
+
+    createIntent();
+  }, [step]);
   const [formData, setFormData] = useState({
     fullName: "",
     dob: "",
@@ -153,30 +175,78 @@ export default function ApplicationForm() {
   const nextStep = () => setStep(step + 1);
   const prevStep = () => setStep(step - 1);
 
-  const submitApplication = async () => {
+  const submitApplication = async (paymentId) => {
     try {
-      const payload = {
-        ...formData,
-        university: formData.appliedUniversity?._id,
-      };
+      const form = new FormData();
+
+      // TEXT FIELDS
+      form.append("fullName", formData.fullName);
+      form.append("dob", formData.dob);
+      form.append("gender", formData.gender);
+      form.append("nationality", formData.nationality);
+      form.append("passportNumber", formData.passportNumber);
+      form.append("passportExpiry", formData.passportExpiry);
+      form.append("mobile", formData.mobile);
+      form.append("whatsapp", formData.whatsapp);
+      form.append("email", formData.email);
+      form.append("address", formData.address);
+
+      form.append("paymentId", paymentId);
+
+      form.append("qualification", formData.qualification);
+      form.append("school", formData.school);
+      form.append("board", formData.board);
+      form.append("passingYear", formData.passingYear);
+      form.append("cgpa", formData.cgpa);
+
+      form.append("englishTest", formData.englishTest);
+      form.append("testDate", formData.testDate);
+      form.append("score", formData.score);
+
+      form.append("studyLevel", formData.studyLevel);
+      form.append("field", formData.field);
+      form.append("intake", formData.intake);
+      form.append("budget", formData.budget);
+
+      form.append("careerGoals", formData.careerGoals);
+      form.append("activities", formData.activities);
+      form.append("experience", formData.experience);
+
+      form.append("sponsor", formData.sponsor);
+      form.append("sponsorIncome", formData.sponsorIncome);
+      form.append("funds", formData.funds);
+
+      form.append("source", formData.source);
+      form.append("comments", formData.comments);
+
+      form.append("university", formData.appliedUniversity?._id);
+
+      // FILES
+      if (formData.passport) form.append("passport", formData.passport);
+      if (formData.photo) form.append("photo", formData.photo);
+      if (formData.marksheet10)
+        form.append("marksheet10", formData.marksheet10);
+      if (formData.marksheet12)
+        form.append("marksheet12", formData.marksheet12);
+      if (formData.resume) form.append("resume", formData.resume);
+      if (formData.bachelorDocs)
+        form.append("bachelorDocs", formData.bachelorDocs);
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/application`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/applications`,
         {
           method: "POST",
           credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
+          body: form,
         },
       );
 
-      if (!res.ok) throw new Error("Failed to submit");
+      if (!res.ok) throw new Error("Failed");
 
       setStatus("success");
       setMessage("Application submitted successfully!");
     } catch (error) {
+      console.error(error);
       setStatus("error");
       setMessage("Failed to submit application.");
     }
@@ -329,13 +399,15 @@ export default function ApplicationForm() {
                 prevStep={prevStep}
               />
             )}
-            {step === 8 && (
-              <Step8Final
-                data={formData}
-                updateForm={updateForm}
-                prevStep={prevStep}
-                submit={submitApplication}
-              />
+            {step === 8 && clientSecret && (
+              <Elements stripe={stripePromise} options={{ clientSecret }}>
+                <Step8Final
+                  data={formData}
+                  updateForm={updateForm}
+                  prevStep={prevStep}
+                  submit={submitApplication}
+                />
+              </Elements>
             )}
           </div>
 

@@ -1,10 +1,18 @@
 "use client";
 
 import { useState } from "react";
+import {
+  useStripe,
+  useElements,
+  PaymentElement,
+} from "@stripe/react-stripe-js";
 
 export default function Step8Final({ data, updateForm, prevStep, submit }) {
   const [paymentStatus, setPaymentStatus] = useState("idle"); // idle, processing, success, failed
   const [errorMsg, setErrorMsg] = useState("");
+
+  const stripe = useStripe();
+  const elements = useElements();
 
   const inputClasses = `
     w-full px-4 py-3 rounded-xl border border-gray-300 
@@ -23,71 +31,46 @@ export default function Step8Final({ data, updateForm, prevStep, submit }) {
   const labelClasses = "block text-sm font-semibold text-gray-700 mb-2";
 
   const handlePaymentAndSubmit = async () => {
-    if (!data.agreed) return;
+    if (!stripe || !elements) return;
+
+    if (paymentStatus === "processing") return;
+
+    if (!data.agreed) {
+      setErrorMsg("Please accept the agreement.");
+      return;
+    }
 
     setPaymentStatus("processing");
-    setErrorMsg("");
 
-    try {
-      // Step 1: Call your backend API to create Razorpay order
-      const res = await fetch("/api/create-order", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          amount: 2999, // Change to dynamic later if you add plan selector
-          currency: "INR",
-          receipt: `khizar-app-${Date.now()}`,
-        }),
-      });
+    const { error, paymentIntent } = await stripe.confirmPayment({
+      elements,
+      redirect: "if_required",
+    });
 
-      if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.error || "Failed to create payment order");
+    // If Stripe says already succeeded
+    if (error && error.code === "payment_intent_unexpected_state") {
+      const id = error.payment_intent?.id;
+
+      if (id) {
+        await submit(id);
+        window.location.href = "/dashboard/user";
+        return;
       }
+    }
 
-      const { orderId, amount, currency, key } = await res.json();
-
-      // Step 2: Open Razorpay checkout popup
-      const options = {
-        key: key, // Public key from backend
-        amount: amount,
-        currency: currency,
-        name: "Khizar Overseas",
-        description: "Application Processing Fee - Basic Plan",
-        order_id: orderId,
-        handler: function (response) {
-          // Payment success callback
-          console.log("Payment successful:", response);
-          setPaymentStatus("success");
-
-          // Call your original submit function (save to DB, send email, etc.)
-          submit();
-
-          // Optional: Redirect to dashboard or show success message
-          // window.location.href = "/dashboard?success=true";
-        },
-        prefill: {
-          name: data.fullName || "",
-          email: data.email || "",
-          contact: data.mobile || "",
-        },
-        theme: {
-          color: "#6366f1", // indigo/blue - matches your brand
-        },
-        modal: {
-          ondismiss: () => {
-            setPaymentStatus("idle");
-          },
-        },
-      };
-
-      // Initialize Razorpay (script should be loaded in layout or page)
-      const rzp = new window.Razorpay(options);
-      rzp.open();
-    } catch (err) {
-      console.error("Payment error:", err);
-      setErrorMsg(err.message || "Payment failed. Please try again.");
+    if (error) {
       setPaymentStatus("failed");
+      setErrorMsg(error.message);
+      return;
+    }
+
+    if (paymentIntent && paymentIntent.status === "succeeded") {
+      setPaymentStatus("success");
+      console.log("Submitting application with paymentId:", paymentIntent.id);
+
+      await submit(paymentIntent.id);
+
+      window.location.href = "/dashboard/user";
     }
   };
 
@@ -161,10 +144,14 @@ export default function Step8Final({ data, updateForm, prevStep, submit }) {
           </p>
         </div>
 
+        <div className="mt-4">
+          <PaymentElement />
+        </div>
+
         {/* Pay & Submit Button */}
         <button
           onClick={handlePaymentAndSubmit}
-          disabled={paymentStatus === "processing" || !data.agreed}
+          disabled={paymentStatus !== "idle" || !data.agreed}
           className={`
             w-full py-4 px-8 rounded-xl font-bold text-white text-lg shadow-xl
             transition-all duration-300 transform
