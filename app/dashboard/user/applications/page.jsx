@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import ApplicationsCard from "@/components/userdashboard/ApplicationsCard";
 import { motion } from "framer-motion";
 import { FileText, Clock, CheckCircle } from "lucide-react";
@@ -8,32 +9,65 @@ import { FileText, Clock, CheckCircle } from "lucide-react";
 export default function ApplicationsPage() {
   const router = useRouter();
 
-  const applications = [
-    {
-      id: 1,
-      university: "University of Toronto",
-      course: "MSc Computer Science",
-      country: "Canada",
-      status: "Under Review",
-      date: "12 Mar 2026",
-    },
-    {
-      id: 2,
-      university: "Harvard University",
-      course: "MBA",
-      country: "USA",
-      status: "Accepted",
-      date: "05 Mar 2026",
-    },
-  ];
+  const [applications, setApplications] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchApplications = async () => {
+      try {
+        const res = await fetch(
+          "https://overseas-backend-production-828d.up.railway.app/api/applications",
+          {
+            credentials: "include",
+            cache: "no-store",
+          },
+        );
+
+        const data = await res.json();
+
+        if (data.success) {
+          const formatted = data.applications.map((app) => ({
+            id: app._id,
+            slug: app.universitySlug,
+            university: app.universityName,
+            course: app.field,
+            country: app.country,
+            logo: app.logo?.url,
+            status: app.stage,
+            date: new Date(app.createdAt).toLocaleDateString(),
+          }));
+
+          setApplications(formatted);
+        }
+      } catch (err) {
+        console.error("Failed to fetch applications", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchApplications();
+  }, []);
 
   const handleWithdraw = (id) => {
     console.log("withdraw", id);
   };
 
   const total = applications.length;
+
   const accepted = applications.filter((a) => a.status === "Accepted").length;
-  const review = applications.filter((a) => a.status === "Under Review").length;
+
+  const review = applications.filter(
+    (a) => a.status === "Under Review" || a.status === "Documents Pending",
+  ).length;
+
+  if (loading) {
+    return (
+      <div className="pt-20 text-center text-gray-400">
+        Loading applications...
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-10 pt-16 sm:pt-5">

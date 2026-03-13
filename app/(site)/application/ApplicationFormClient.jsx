@@ -102,7 +102,7 @@ export default function ApplicationForm() {
     checkAccess();
   }, [router]);
   useEffect(() => {
-    if (step !== 8) return;
+    if (step !== 8 || clientSecret) return;
 
     const createIntent = async () => {
       try {
@@ -139,8 +139,16 @@ export default function ApplicationForm() {
     qualification: "",
     school: "",
     board: "",
+    listening: "",
+    reading: "",
+    writing: "",
+    speaking: "",
+
+    backlogs: "",
+    backlogsExplanation: "",
     passingYear: "",
     cgpa: "",
+
     englishTest: "",
     testDate: "",
     score: "",
@@ -210,7 +218,7 @@ export default function ApplicationForm() {
 
       form.append("careerGoals", formData.careerGoals);
       form.append("activities", formData.activities);
-      form.append("experience", formData.experience);
+      form.append("workExperience", formData.experience);
 
       form.append("sponsor", formData.sponsor);
       form.append("sponsorIncome", formData.sponsorIncome);
@@ -219,7 +227,19 @@ export default function ApplicationForm() {
       form.append("source", formData.source);
       form.append("comments", formData.comments);
 
-      form.append("university", formData.appliedUniversity?._id);
+      form.append("universitySlug", universitySlug);
+
+      form.append("emergencyName", formData.emergencyName);
+      form.append("emergencyRelation", formData.emergencyRelation);
+      form.append("emergencyPhone", formData.emergencyPhone);
+      form.append("agreed", formData.agreed);
+
+      form.append("listening", formData.listening);
+      form.append("reading", formData.reading);
+      form.append("writing", formData.writing);
+      form.append("speaking", formData.speaking);
+      form.append("backlogs", formData.backlogs);
+      form.append("backlogsExplanation", formData.backlogsExplanation);
 
       // FILES
       if (formData.passport) form.append("passport", formData.passport);
@@ -241,7 +261,11 @@ export default function ApplicationForm() {
         },
       );
 
-      if (!res.ok) throw new Error("Failed");
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || "Failed");
+      }
 
       setStatus("success");
       setMessage("Application submitted successfully!");

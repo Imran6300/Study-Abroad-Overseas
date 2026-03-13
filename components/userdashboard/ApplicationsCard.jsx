@@ -3,6 +3,18 @@
 import { motion } from "framer-motion";
 import { Calendar, Globe, Eye, XCircle } from "lucide-react";
 
+const stageToUserStatus = {
+  "Lead / Enquiry": "Application In Progress",
+  "Profile Completed": "Application In Progress",
+  "Documents Pending": "Documents Required",
+  "Application Submitted": "Application Submitted",
+  "Offer Received": "Offer Received",
+  "Visa Applied": "Visa Processing",
+  "Visa Approved": "Visa Approved",
+  "Enrolled / Completed": "Enrolled",
+  "Rejected / Lost": "Application Closed",
+};
+
 export default function ApplicationsCard({
   applications,
   handleWithdraw,
@@ -28,13 +40,33 @@ export default function ApplicationsCard({
   }
 
   const statusStyles = (status) => {
-    switch (status) {
-      case "Accepted":
-        return "bg-[#32CD32]/20 text-[#32CD32]";
-      case "Rejected":
-        return "bg-red-500/20 text-red-400";
-      case "Under Review":
+    const mapped = stageToUserStatus[status] || status;
+
+    switch (mapped) {
+      case "Application In Progress":
+        return "bg-blue-500/20 text-blue-400";
+
+      case "Documents Required":
+        return "bg-orange-500/20 text-orange-400";
+
+      case "Application Submitted":
         return "bg-yellow-500/20 text-yellow-400";
+
+      case "Offer Received":
+        return "bg-green-500/20 text-green-400";
+
+      case "Visa Processing":
+        return "bg-purple-500/20 text-purple-400";
+
+      case "Visa Approved":
+        return "bg-emerald-500/20 text-emerald-400";
+
+      case "Enrolled":
+        return "bg-[#32CD32]/20 text-[#32CD32]";
+
+      case "Application Closed":
+        return "bg-red-500/20 text-red-400";
+
       default:
         return "bg-gray-500/20 text-gray-300";
     }
@@ -54,8 +86,18 @@ export default function ApplicationsCard({
           {/* LEFT SIDE */}
           <div className="flex items-start gap-4">
             {/* University Logo Placeholder */}
-            <div className="w-12 h-12 rounded-xl bg-[#32CD32]/20 flex items-center justify-center text-[#32CD32] font-bold text-lg">
-              {app.university.charAt(0)}
+            <div className="w-12 h-12 rounded-xl overflow-hidden bg-white/10 flex items-center justify-center">
+              {app.logo ? (
+                <img
+                  src={app.logo}
+                  alt={app.university}
+                  className="w-full h-full object-contain"
+                />
+              ) : (
+                <span className="text-[#32CD32] font-bold text-lg">
+                  {app.university.charAt(0)}
+                </span>
+              )}
             </div>
 
             <div>
@@ -86,13 +128,13 @@ export default function ApplicationsCard({
             )}`}
           >
             <span className="w-2 h-2 rounded-full bg-current"></span>
-            {app.status}
+            {stageToUserStatus[app.status] || app.status}
           </div>
 
           {/* ACTION BUTTONS */}
           <div className="flex gap-3">
             <button
-              onClick={() => router.push(`/application/${app.id}`)}
+              onClick={() => router.push(`/universities/${app.slug}`)}
               className="flex items-center gap-2 border border-white/20 text-white px-4 py-2 rounded-lg hover:bg-white/10 transition"
             >
               <Eye size={16} />
