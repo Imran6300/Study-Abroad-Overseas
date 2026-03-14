@@ -30,7 +30,7 @@ export default function ApplicationsCard({
         </p>
 
         <button
-          onClick={() => router.push("/universities")}
+          onClick={() => router.push("/programs/universities")}
           className="mt-6 bg-[#32CD32] text-black px-6 py-3 rounded-xl font-semibold hover:bg-[#28b428] transition"
         >
           Explore Universities
