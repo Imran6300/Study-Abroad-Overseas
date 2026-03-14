@@ -16,7 +16,7 @@ export default function ApplicationsPage() {
     const fetchApplications = async () => {
       try {
         const res = await fetch(
-          "https://overseas-backend-production-828d.up.railway.app/api/applications",
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/applications`,
           {
             credentials: "include",
             cache: "no-store",

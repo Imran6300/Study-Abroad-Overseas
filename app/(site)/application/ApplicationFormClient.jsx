@@ -25,6 +25,7 @@ export default function ApplicationForm() {
   const searchParams = useSearchParams();
   const universitySlug = searchParams.get("university");
   const [clientSecret, setClientSecret] = useState(null);
+  const [hasChanges, setHasChanges] = useState(false);
   useEffect(() => {
     if (!universitySlug && !checkingAccess) {
       setStatus("error");
@@ -102,6 +103,60 @@ export default function ApplicationForm() {
     checkAccess();
   }, [router]);
   useEffect(() => {
+    if (checkingAccess) return;
+
+    const loadDraft = async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/applications/draft`,
+          {
+            credentials: "include",
+          },
+        );
+
+        const data = await res.json();
+
+        if (data.success && data.draft) {
+          const draft = data.draft;
+
+          setFormData((prev) => ({
+            ...prev,
+            ...draft.personalInfo,
+            ...draft.education,
+            ...draft.tests,
+            ...draft.programPreference,
+            ...draft.experience,
+            ...draft.finance,
+          }));
+
+          setStatus("success");
+          setMessage("Your draft was restored.");
+
+          // ⭐ Determine which step user reached
+          if (draft.finance?.funds) {
+            setStep(7);
+          } else if (draft.experience?.careerGoals) {
+            setStep(6);
+          } else if (draft.programPreference?.studyLevel) {
+            setStep(5);
+          } else if (draft.tests?.englishTest) {
+            setStep(4);
+          } else if (draft.education?.qualification) {
+            setStep(3);
+          } else if (draft.personalInfo?.fullName) {
+            setStep(2);
+          } else {
+            setStep(1);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load draft", err);
+      }
+    };
+
+    loadDraft();
+  }, [checkingAccess]);
+  useEffect(() => {
     if (step !== 8 || clientSecret) return;
 
     const createIntent = async () => {
@@ -178,10 +233,101 @@ export default function ApplicationForm() {
 
   const updateForm = (data) => {
     setFormData((prev) => ({ ...prev, ...data }));
+    setHasChanges(true);
+  };
+  const saveDraft = async () => {
+    try {
+      await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/applications/draft`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            personalInfo: {
+              fullName: formData.fullName,
+              dob: formData.dob,
+              gender: formData.gender,
+              nationality: formData.nationality,
+              passportNumber: formData.passportNumber,
+              passportExpiry: formData.passportExpiry,
+              address: formData.address,
+              mobile: formData.mobile,
+              whatsapp: formData.whatsapp,
+              email: formData.email,
+              emergencyContact: {
+                name: formData.emergencyName,
+                relation: formData.emergencyRelation,
+                phone: formData.emergencyPhone,
+              },
+            },
+
+            education: {
+              qualification: formData.qualification,
+              school: formData.school,
+              board: formData.board,
+              passingYear: formData.passingYear,
+              cgpa: formData.cgpa,
+              backlogs: formData.backlogs,
+              backlogsExplanation: formData.backlogsExplanation,
+            },
+
+            tests: {
+              englishTest: formData.englishTest,
+              testDate: formData.testDate,
+              score: formData.score,
+              listening: formData.listening,
+              reading: formData.reading,
+              writing: formData.writing,
+              speaking: formData.speaking,
+            },
+
+            programPreference: {
+              universitySlug,
+              studyLevel: formData.studyLevel,
+              field: formData.field,
+              intake: formData.intake,
+              budget: formData.budget,
+            },
+
+            experience: {
+              careerGoals: formData.careerGoals,
+              activities: formData.activities,
+              workExperience: formData.experience,
+            },
+
+            finance: {
+              sponsor: formData.sponsor,
+              sponsorIncome: formData.sponsorIncome,
+              funds: formData.funds,
+            },
+          }),
+        },
+      );
+    } catch (err) {
+      console.error("Draft save failed", err);
+    }
   };
 
-  const nextStep = () => setStep(step + 1);
-  const prevStep = () => setStep(step - 1);
+  useEffect(() => {
+    if (checkingAccess) return;
+
+    const interval = setInterval(() => {
+      if (hasChanges) {
+        saveDraft();
+      }
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, [checkingAccess, hasChanges]);
+
+  const nextStep = async () => {
+    await saveDraft();
+    setStep((prev) => prev + 1);
+  };
+  const prevStep = () => setStep((prev) => prev - 1);
 
   const submitApplication = async (paymentId) => {
     try {

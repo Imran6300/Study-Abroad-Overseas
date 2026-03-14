@@ -24,24 +24,6 @@ import DeadlineForm from "@/components/adminform/adddeadline";
 import NotesForm from "@/components/adminform/addnotes";
 import UserProfileSection from "@/components/adminform/addProfile";
 
-// Mock data – replace with real API later
-const mockApplications = [
-  {
-    id: "app1",
-    program: "Computer Science - BSc",
-    university: "University of Toronto",
-    status: "Submitted",
-    date: "2025-11-15",
-  },
-  {
-    id: "app2",
-    program: "Data Science - MSc",
-    university: "McGill University",
-    status: "Offer Received",
-    date: "2025-12-02",
-  },
-];
-
 const mockVisas = [
   {
     id: "visa1",
@@ -102,7 +84,7 @@ export default function StudentProfilePage() {
   const [activeTab, setActiveTab] = useState("userprofile");
   const [editing, setEditing] = useState(null);
 
-  const [applications, setApplications] = useState(mockApplications);
+  const [applications, setApplications] = useState([]);
   const [userProfile, setUserProfile] = useState(null);
   const [visas, setVisas] = useState(mockVisas);
   const [deadlines, setDeadlines] = useState(mockDeadlines);
@@ -200,6 +182,42 @@ export default function StudentProfilePage() {
     };
 
     if (id) fetchUserProfile();
+  }, [id]);
+  useEffect(() => {
+    const fetchApplications = async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/applications`,
+          {
+            credentials: "include",
+          },
+        );
+
+        const data = await res.json();
+        console.log("STATUS:", res.status);
+
+        console.log("APPLICATION API:", data);
+
+        if (data.success) {
+          const formatted = data.applications.map((app) => ({
+            id: app._id,
+            program: app.field,
+            university: app.universityName,
+            status: app.stage,
+            date: new Date(app.createdAt).toLocaleDateString(),
+            slug: app.universitySlug,
+            country: app.country,
+            logo: app.logo?.url,
+          }));
+
+          setApplications(formatted);
+        }
+      } catch (error) {
+        console.error("Application fetch error:", error);
+      }
+    };
+
+    if (id) fetchApplications();
   }, [id]);
 
   const startEdit = (type, item = null) => {
@@ -434,12 +452,24 @@ export default function StudentProfilePage() {
                         >
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                             <div className="flex-1">
-                              <p className="font-semibold text-gray-900">
-                                {app.program}
-                              </p>
-                              <p className="text-sm text-gray-600 mt-0.5">
-                                {app.university}
-                              </p>
+                              <div className="flex items-center gap-3">
+                                {app.logo && (
+                                  <img
+                                    src={app.logo}
+                                    alt={app.university}
+                                    className="w-10 h-10 object-contain rounded-md"
+                                  />
+                                )}
+
+                                <div>
+                                  <p className="font-semibold text-gray-900">
+                                    {app.program}
+                                  </p>
+                                  <p className="text-sm text-gray-600">
+                                    {app.university}
+                                  </p>
+                                </div>
+                              </div>
                               <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-xs text-gray-500">
                                 <span>
                                   Status:{" "}
