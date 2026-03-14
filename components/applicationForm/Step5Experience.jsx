@@ -39,7 +39,7 @@ export default function Step5Experience({
       </div>
 
       <div>
-        <label className={labelClasses}>Extracurricular Activities</label>
+        <label className={labelClasses}>Extra curricular Activities</label>
         <textarea
           placeholder="List your hobbies, sports, clubs, volunteer work..."
           value={data.activities}
