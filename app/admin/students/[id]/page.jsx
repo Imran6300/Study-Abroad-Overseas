@@ -187,7 +187,7 @@ export default function StudentProfilePage() {
     const fetchApplications = async () => {
       try {
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/applications`,
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/applications/${id}`,
           {
             credentials: "include",
           },
@@ -201,13 +201,13 @@ export default function StudentProfilePage() {
         if (data.success) {
           const formatted = data.applications.map((app) => ({
             id: app._id,
-            program: app.field,
-            university: app.universityName,
+            program: app.programPreference?.field,
+            university: app.university?.name,
             status: app.stage,
             date: new Date(app.createdAt).toLocaleDateString(),
-            slug: app.universitySlug,
-            country: app.country,
-            logo: app.logo?.url,
+            slug: app.programPreference?.universitySlug,
+            country: app.university?.country,
+            logo: app.university?.logo?.url,
           }));
 
           setApplications(formatted);
