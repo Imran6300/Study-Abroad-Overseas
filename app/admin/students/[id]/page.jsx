@@ -76,7 +76,6 @@ const mockNotes = [
 export default function StudentProfilePage() {
   const params = useParams();
   const id = params.id;
-  console.log("ID:", id);
   const router = useRouter();
   const { user } = useSelector((state) => state.auth);
   const counselorName = user?.name || "Counselor";
@@ -171,8 +170,6 @@ export default function StudentProfilePage() {
 
         const data = await res.json();
 
-        console.log("PROFILE API:", data);
-
         if (data.success) {
           setUserProfile(data.data); // VERY IMPORTANT
         }
@@ -195,8 +192,6 @@ export default function StudentProfilePage() {
 
         const data = await res.json();
         console.log("STATUS:", res.status);
-
-        console.log("APPLICATION API:", data);
 
         if (data.success) {
           const formatted = data.applications.map((app) => ({
