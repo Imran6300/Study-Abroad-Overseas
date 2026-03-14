@@ -1,8 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Elements } from "@stripe/react-stripe-js";
+import { stripePromise } from "@/lib/stripe";
+
 import Step1Personal from "@/components/applicationForm/Step1Personal";
-import { useRouter } from "next/navigation";
 import Step2Education from "@/components/applicationForm/Step2Education";
 import Step3Tests from "@/components/applicationForm/Step3Tests";
 import Step4Program from "@/components/applicationForm/Step4Program";
@@ -11,56 +14,82 @@ import Step6Finance from "@/components/applicationForm/Step6Finance";
 import Step7Documents from "@/components/applicationForm/Step7Documents";
 import Step8Final from "@/components/applicationForm/Step8Final";
 import MessageBox from "@/components/ui/MessageBox";
-import { Elements } from "@stripe/react-stripe-js";
-import { stripePromise } from "@/lib/stripe";
 
-import { useSearchParams } from "next/navigation";
+const initialFormData = {
+  fullName: "",
+  dob: "",
+  gender: "",
+  nationality: "",
+  passportNumber: "",
+  passportExpiry: "",
+  address: "",
+  mobile: "",
+  whatsapp: "",
+  email: "",
+  emergencyName: "",
+  emergencyRelation: "",
+  emergencyPhone: "",
+
+  qualification: "",
+  school: "",
+  board: "",
+  passingYear: "",
+  cgpa: "",
+  backlogs: "",
+  backlogsExplanation: "",
+
+  englishTest: "",
+  testDate: "",
+  score: "",
+  listening: "",
+  reading: "",
+  writing: "",
+  speaking: "",
+
+  studyLevel: "",
+  field: "",
+  intake: "",
+  budget: "",
+  appliedUniversity: null,
+
+  careerGoals: "",
+  activities: "",
+  experience: "",
+
+  sponsor: "",
+  sponsorIncome: "",
+  funds: "",
+
+  passport: null,
+  photo: null,
+  marksheet10: null,
+  marksheet12: null,
+  bachelorDocs: null,
+  englishScorecard: null,
+  resume: null,
+
+  source: "",
+  comments: "",
+  agreed: false,
+};
 
 export default function ApplicationForm() {
-  const [step, setStep] = useState(1);
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const universitySlug = searchParams.get("university");
+
+  const [step, setStep] = useState(1);
+  const [formData, setFormData] = useState(initialFormData);
+  const [clientSecret, setClientSecret] = useState(null);
+
   const [checkingAccess, setCheckingAccess] = useState(true);
   const [status, setStatus] = useState(null);
   const [message, setMessage] = useState("");
-  const searchParams = useSearchParams();
-  const universitySlug = searchParams.get("university");
-  const [clientSecret, setClientSecret] = useState(null);
-  const [hasChanges, setHasChanges] = useState(false);
-  useEffect(() => {
-    if (!universitySlug && !checkingAccess) {
-      setStatus("error");
-      setMessage("Please apply from a university page.");
-      setTimeout(() => router.push("/universities"), 1500);
-    }
-  }, [universitySlug, checkingAccess]);
-  useEffect(() => {
-    if (!universitySlug || checkingAccess) return;
 
-    const fetchUniversity = async () => {
-      try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/university/${universitySlug}`,
-        );
+  const saveTimeoutRef = useRef(null);
 
-        const data = await res.json();
-
-        if (!data.success || !data.university) {
-          setStatus("error");
-          setMessage("University not found.");
-          setTimeout(() => router.push("/universities"), 1500);
-          return;
-        }
-
-        updateForm({
-          appliedUniversity: data.university,
-        });
-      } catch (err) {
-        console.error("Failed to fetch university", err);
-      }
-    };
-
-    fetchUniversity();
-  }, [universitySlug, checkingAccess]);
+  // Check access
   useEffect(() => {
     const checkAccess = async () => {
       try {
@@ -73,35 +102,79 @@ export default function ApplicationForm() {
           },
         );
 
-        const data = await res.json();
-
         if (!res.ok) {
-          if (data.redirect === "/login") {
+          const data = await res.json();
+          if (data.redirect) {
+            setMessage(
+              data.redirect === "/login"
+                ? "Please login to access the application."
+                : "Please complete the assessment first.",
+            );
             setStatus("error");
-            setMessage("Please login to access the application.");
-            setTimeout(() => router.push("/login"), 1500);
+            setTimeout(() => router.push(data.redirect), 1800);
             return;
           }
-
-          if (data.redirect === "/assessment") {
-            setStatus("error");
-            setMessage("Please complete the assessment first.");
-            setTimeout(() => router.push("/assessment"), 1500);
-            return;
-          }
+          throw new Error("Access check failed");
         }
 
         setCheckingAccess(false);
-      } catch (error) {
-        console.error(error);
+      } catch (err) {
+        console.error("Access check failed", err);
         setStatus("error");
-        setMessage("Unable to verify your access.");
-        setTimeout(() => router.push("/login"), 1500);
+        setMessage("Unable to verify access. Please login again.");
+        setTimeout(() => router.push("/login"), 2000);
       }
     };
 
     checkAccess();
   }, [router]);
+
+  // Load university info
+  useEffect(() => {
+    if (checkingAccess || !universitySlug) return;
+
+    const fetchUniversity = async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/university/${universitySlug}`,
+        );
+        const data = await res.json();
+
+        if (!data.success || !data.university) {
+          setStatus("error");
+          setMessage("University not found.");
+          setTimeout(() => router.push("/universities"), 1800);
+          return;
+        }
+
+        setFormData((prev) => ({
+          ...prev,
+          appliedUniversity: data.university,
+        }));
+      } catch (err) {
+        console.error("Failed to load university", err);
+      }
+    };
+
+    fetchUniversity();
+  }, [checkingAccess, universitySlug, router]);
+
+  // Determine which step to show based on draft
+  const determineStepFromDraft = (draft) => {
+    if (!draft) return 1;
+
+    if (draft.personalInfo?.fullName) {
+      if (draft.finance?.funds) return 7;
+      if (draft.experience?.careerGoals) return 6;
+      if (draft.programPreference?.studyLevel) return 5;
+      if (draft.tests?.englishTest) return 4;
+      if (draft.education?.qualification) return 3;
+      return 2;
+    }
+    return 1;
+  };
+
+  // Load draft
   useEffect(() => {
     if (checkingAccess) return;
 
@@ -109,46 +182,51 @@ export default function ApplicationForm() {
       try {
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/applications/draft`,
-          {
-            credentials: "include",
-          },
+          { credentials: "include" },
         );
 
-        const data = await res.json();
+        if (!res.ok) return;
 
-        if (data.success && data.draft) {
-          const draft = data.draft;
+        const { success, draft } = await res.json();
+        if (!success || !draft) return;
 
-          setFormData((prev) => ({
-            ...prev,
-            ...draft.personalInfo,
-            ...draft.education,
-            ...draft.tests,
-            ...draft.programPreference,
-            ...draft.experience,
-            ...draft.finance,
-          }));
+        setFormData((prev) => ({
+          ...prev,
+          fullName: draft.personalInfo?.fullName || "",
+          dob: draft.personalInfo?.dob || "",
+          gender: draft.personalInfo?.gender || "",
+          nationality: draft.personalInfo?.nationality || "",
+          passportNumber: draft.personalInfo?.passportNumber || "",
+          passportExpiry: draft.personalInfo?.passportExpiry || "",
+          address: draft.personalInfo?.address || "",
+          mobile: draft.personalInfo?.mobile || "",
+          whatsapp: draft.personalInfo?.whatsapp || "",
+          email: draft.personalInfo?.email || "",
+          emergencyName: draft.personalInfo?.emergencyContact?.name || "",
+          emergencyRelation:
+            draft.personalInfo?.emergencyContact?.relation || "",
+          emergencyPhone: draft.personalInfo?.emergencyContact?.phone || "",
 
-          setStatus("success");
-          setMessage("Your draft was restored.");
+          ...draft.education,
+          ...draft.tests,
 
-          // ⭐ Determine which step user reached
-          if (draft.finance?.funds) {
-            setStep(7);
-          } else if (draft.experience?.careerGoals) {
-            setStep(6);
-          } else if (draft.programPreference?.studyLevel) {
-            setStep(5);
-          } else if (draft.tests?.englishTest) {
-            setStep(4);
-          } else if (draft.education?.qualification) {
-            setStep(3);
-          } else if (draft.personalInfo?.fullName) {
-            setStep(2);
-          } else {
-            setStep(1);
-          }
-        }
+          studyLevel: draft.programPreference?.studyLevel || "",
+          field: draft.programPreference?.field || "",
+          intake: draft.programPreference?.intake || "",
+          budget: draft.programPreference?.budget || "",
+
+          careerGoals: draft.experience?.careerGoals || "",
+          activities: draft.experience?.activities || "",
+          experience: draft.experience?.workExperience || "",
+
+          ...draft.finance,
+        }));
+
+        const nextStep = determineStepFromDraft(draft);
+        setStep(nextStep);
+
+        setStatus("success");
+        setMessage("Draft restored successfully");
       } catch (err) {
         console.error("Failed to load draft", err);
       }
@@ -156,95 +234,24 @@ export default function ApplicationForm() {
 
     loadDraft();
   }, [checkingAccess]);
-  useEffect(() => {
-    if (step !== 8 || clientSecret) return;
 
-    const createIntent = async () => {
-      try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/create-payment-intent`,
-          { method: "POST" },
-        );
+  // Debounced auto-save draft
+  const saveDraft = useCallback(async () => {
+    if (
+      !formData.fullName.trim() &&
+      !formData.email.trim() &&
+      !formData.mobile.trim()
+    ) {
+      return;
+    }
 
-        const data = await res.json();
-        setClientSecret(data.clientSecret);
-      } catch (err) {
-        console.error("Payment intent error", err);
-      }
-    };
-
-    createIntent();
-  }, [step]);
-  const [formData, setFormData] = useState({
-    fullName: "",
-    dob: "",
-    gender: "",
-    nationality: "",
-    passportNumber: "",
-    passportExpiry: "",
-    mobile: "",
-    whatsapp: "",
-    email: "",
-    address: "",
-    fatherName: "",
-    fatherOccupation: "",
-    emergencyName: "",
-    emergencyRelation: "",
-    emergencyPhone: "",
-    qualification: "",
-    school: "",
-    board: "",
-    listening: "",
-    reading: "",
-    writing: "",
-    speaking: "",
-
-    backlogs: "",
-    backlogsExplanation: "",
-    passingYear: "",
-    cgpa: "",
-
-    englishTest: "",
-    testDate: "",
-    score: "",
-    studyLevel: "",
-    field: "",
-    intake: "",
-    appliedUniversity: null,
-    budget: "",
-    careerGoals: "",
-    activities: "",
-    extracurricular: "",
-    experience: "",
-    sponsor: "",
-    sponsorIncome: "",
-    funds: "",
-    passport: null,
-    photo: null,
-    marksheet10: null,
-    marksheet12: null,
-    bachelorDocs: null,
-    englishScorecard: null,
-    resume: null,
-    source: "",
-    comments: "",
-    agreed: false,
-  });
-
-  const updateForm = (data) => {
-    setFormData((prev) => ({ ...prev, ...data }));
-    setHasChanges(true);
-  };
-  const saveDraft = async () => {
     try {
       await fetch(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/applications/draft`,
         {
           method: "POST",
           credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             personalInfo: {
               fullName: formData.fullName,
@@ -263,7 +270,6 @@ export default function ApplicationForm() {
                 phone: formData.emergencyPhone,
               },
             },
-
             education: {
               qualification: formData.qualification,
               school: formData.school,
@@ -273,7 +279,6 @@ export default function ApplicationForm() {
               backlogs: formData.backlogs,
               backlogsExplanation: formData.backlogsExplanation,
             },
-
             tests: {
               englishTest: formData.englishTest,
               testDate: formData.testDate,
@@ -283,7 +288,6 @@ export default function ApplicationForm() {
               writing: formData.writing,
               speaking: formData.speaking,
             },
-
             programPreference: {
               universitySlug,
               studyLevel: formData.studyLevel,
@@ -291,13 +295,11 @@ export default function ApplicationForm() {
               intake: formData.intake,
               budget: formData.budget,
             },
-
             experience: {
               careerGoals: formData.careerGoals,
               activities: formData.activities,
               workExperience: formData.experience,
             },
-
             finance: {
               sponsor: formData.sponsor,
               sponsorIncome: formData.sponsorIncome,
@@ -307,120 +309,131 @@ export default function ApplicationForm() {
         },
       );
     } catch (err) {
-      console.error("Draft save failed", err);
+      console.warn("Draft save failed", err);
     }
-  };
+  }, [formData, universitySlug]);
 
   useEffect(() => {
     if (checkingAccess) return;
 
-    const interval = setInterval(() => {
-      if (hasChanges) {
-        saveDraft();
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+
+    saveTimeoutRef.current = setTimeout(() => {
+      saveDraft();
+    }, 4000);
+
+    return () => {
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    };
+  }, [formData, checkingAccess, saveDraft]);
+
+  // Create payment intent when reaching step 8
+  useEffect(() => {
+    if (step !== 8 || clientSecret) return;
+
+    const createIntent = async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/create-payment-intent`,
+          { method: "POST", credentials: "include" },
+        );
+        const data = await res.json();
+        if (data.clientSecret) {
+          setClientSecret(data.clientSecret);
+        }
+      } catch (err) {
+        console.error("Failed to create payment intent", err);
       }
-    }, 10000);
+    };
 
-    return () => clearInterval(interval);
-  }, [checkingAccess, hasChanges]);
+    createIntent();
+  }, [step, clientSecret]);
 
-  const nextStep = async () => {
+  const updateForm = useCallback((updates) => {
+    setFormData((prev) => ({ ...prev, ...updates }));
+  }, []);
+
+  const nextStep = useCallback(async () => {
     await saveDraft();
-    setStep((prev) => prev + 1);
-  };
-  const prevStep = () => setStep((prev) => prev - 1);
+    setStep((prev) => Math.min(prev + 1, 8));
+  }, [saveDraft]);
+
+  const prevStep = useCallback(() => {
+    setStep((prev) => Math.max(prev - 1, 1));
+  }, []);
 
   const submitApplication = async (paymentId) => {
     try {
-      const form = new FormData();
+      const payload = new FormData();
 
-      // TEXT FIELDS
-      form.append("fullName", formData.fullName);
-      form.append("dob", formData.dob);
-      form.append("gender", formData.gender);
-      form.append("nationality", formData.nationality);
-      form.append("passportNumber", formData.passportNumber);
-      form.append("passportExpiry", formData.passportExpiry);
-      form.append("mobile", formData.mobile);
-      form.append("whatsapp", formData.whatsapp);
-      form.append("email", formData.email);
-      form.append("address", formData.address);
+      // Append all non-file, non-null fields
+      Object.entries(formData).forEach(([key, value]) => {
+        if (
+          value !== null &&
+          value !== undefined &&
+          typeof value !== "object"
+        ) {
+          payload.append(key, value);
+        }
+      });
 
-      form.append("paymentId", paymentId);
+      payload.append("universitySlug", universitySlug || "");
+      payload.append("paymentId", paymentId);
 
-      form.append("qualification", formData.qualification);
-      form.append("school", formData.school);
-      form.append("board", formData.board);
-      form.append("passingYear", formData.passingYear);
-      form.append("cgpa", formData.cgpa);
-
-      form.append("englishTest", formData.englishTest);
-      form.append("testDate", formData.testDate);
-      form.append("score", formData.score);
-
-      form.append("studyLevel", formData.studyLevel);
-      form.append("field", formData.field);
-      form.append("intake", formData.intake);
-      form.append("budget", formData.budget);
-
-      form.append("careerGoals", formData.careerGoals);
-      form.append("activities", formData.activities);
-      form.append("workExperience", formData.experience);
-
-      form.append("sponsor", formData.sponsor);
-      form.append("sponsorIncome", formData.sponsorIncome);
-      form.append("funds", formData.funds);
-
-      form.append("source", formData.source);
-      form.append("comments", formData.comments);
-
-      form.append("universitySlug", universitySlug);
-
-      form.append("emergencyName", formData.emergencyName);
-      form.append("emergencyRelation", formData.emergencyRelation);
-      form.append("emergencyPhone", formData.emergencyPhone);
-      form.append("agreed", formData.agreed);
-
-      form.append("listening", formData.listening);
-      form.append("reading", formData.reading);
-      form.append("writing", formData.writing);
-      form.append("speaking", formData.speaking);
-      form.append("backlogs", formData.backlogs);
-      form.append("backlogsExplanation", formData.backlogsExplanation);
-
-      // FILES
-      if (formData.passport) form.append("passport", formData.passport);
-      if (formData.photo) form.append("photo", formData.photo);
+      // Files
+      if (formData.passport) payload.append("passport", formData.passport);
+      if (formData.photo) payload.append("photo", formData.photo);
       if (formData.marksheet10)
-        form.append("marksheet10", formData.marksheet10);
+        payload.append("marksheet10", formData.marksheet10);
       if (formData.marksheet12)
-        form.append("marksheet12", formData.marksheet12);
-      if (formData.resume) form.append("resume", formData.resume);
+        payload.append("marksheet12", formData.marksheet12);
       if (formData.bachelorDocs)
-        form.append("bachelorDocs", formData.bachelorDocs);
+        payload.append("bachelorDocs", formData.bachelorDocs);
+      if (formData.resume) payload.append("resume", formData.resume);
+      if (formData.englishScorecard)
+        payload.append("englishScorecard", formData.englishScorecard);
 
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/applications`,
         {
           method: "POST",
           credentials: "include",
-          body: form,
+          body: payload,
         },
       );
 
-      const data = await res.json();
+      const result = await res.json();
 
-      if (!res.ok || !data.success) {
-        throw new Error(data.message || "Failed");
+      if (!res.ok || !result.success) {
+        throw new Error(result.message || "Submission failed");
       }
 
       setStatus("success");
       setMessage("Application submitted successfully!");
-    } catch (error) {
-      console.error(error);
+    } catch (err) {
+      console.error("Submit error:", err);
       setStatus("error");
-      setMessage("Failed to submit application.");
+      setMessage(err.message || "Failed to submit application");
     }
   };
+
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  if (checkingAccess) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-gray-600">
+        Checking access...
+      </div>
+    );
+  }
 
   const steps = [
     { num: 1, title: "Personal" },
@@ -433,14 +446,6 @@ export default function ApplicationForm() {
     { num: 8, title: "Review" },
   ];
 
-  if (checkingAccess) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-gray-600">
-        Checking access...
-      </div>
-    );
-  }
-
   return (
     <>
       <MessageBox
@@ -448,6 +453,7 @@ export default function ApplicationForm() {
         message={message}
         onClose={() => setStatus(null)}
       />
+
       <div
         className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-8 px-4 sm:px-6 lg:px-8"
         style={{ paddingTop: "96px" }}
@@ -456,18 +462,16 @@ export default function ApplicationForm() {
           {formData.appliedUniversity && (
             <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
               <p className="text-sm text-gray-500">Applying to</p>
-
               <h3 className="font-semibold text-lg text-gray-800">
                 {formData.appliedUniversity.name}
               </h3>
-
               <p className="text-sm text-gray-600">
                 {formData.appliedUniversity.city},{" "}
                 {formData.appliedUniversity.country}
               </p>
             </div>
           )}
-          {/* Header */}
+
           <div className="text-center mb-8">
             <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
               Student Application Form
@@ -477,15 +481,12 @@ export default function ApplicationForm() {
             </p>
           </div>
 
-          {/* Progress Bar */}
           <div className="mb-8">
             <div className="flex justify-between mb-2">
               {steps.map((s) => (
                 <div
                   key={s.num}
-                  className={`flex flex-col items-center ${
-                    step >= s.num ? "text-blue-600" : "text-gray-400"
-                  }`}
+                  className={`flex flex-col items-center ${step >= s.num ? "text-blue-600" : "text-gray-400"}`}
                 >
                   <div
                     className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-xs sm:text-sm font-semibold transition-all duration-300 ${
@@ -512,7 +513,6 @@ export default function ApplicationForm() {
             </div>
           </div>
 
-          {/* Form Card */}
           <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-8 border border-gray-100">
             {step === 1 && (
               <Step1Personal
@@ -581,7 +581,6 @@ export default function ApplicationForm() {
             )}
           </div>
 
-          {/* Footer */}
           <div className="text-center mt-6 text-gray-500 text-sm">
             Step {step} of 8 • All fields are required
           </div>
