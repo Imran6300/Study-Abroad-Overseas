@@ -23,6 +23,7 @@ import VisaCaseForm from "@/components/adminform/addvisa";
 import DeadlineForm from "@/components/adminform/adddeadline";
 import NotesForm from "@/components/adminform/addnotes";
 import UserProfileSection from "@/components/adminform/addProfile";
+import ConfirmationModal from "@/components/adminform/confirmmsg";
 
 const mockVisas = [
   {
@@ -112,22 +113,64 @@ export default function StudentProfilePage() {
   ]);
 
   const handleDelete = (type, itemId) => {
-    if (!window.confirm("Are you sure you want to delete this item?")) return;
+    setModal({
+      open: true,
+      title: "Delete Application",
+      message: "Are you sure you want to delete this application?",
+      confirmText: "Delete",
+      confirmVariant: "danger",
+      onConfirm: async () => {
+        try {
+          const res = await fetch(
+            `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/applications/${itemId}`,
+            {
+              method: "DELETE",
+              credentials: "include",
+            },
+          );
 
-    if (type === "applications") {
-      setApplications((prev) => prev.filter((item) => item.id !== itemId));
-    } else if (type === "visa") {
-      setVisas((prev) => prev.filter((item) => item.id !== itemId));
-    } else if (type === "deadlines") {
-      setDeadlines((prev) => prev.filter((item) => item.id !== itemId));
-    } else if (type === "notes") {
-      setNotes((prev) => prev.filter((item) => item.id !== itemId));
-    }
+          const data = await res.json();
 
-    if (editing?.item?.id === itemId) {
-      setEditing(null);
-    }
+          if (!res.ok) {
+            setModal({
+              open: true,
+              title: "Error",
+              message: data.message || "Failed to delete application",
+              confirmText: "OK",
+              confirmVariant: "danger",
+            });
+            return;
+          }
+
+          setApplications((prev) => prev.filter((item) => item._id !== itemId));
+
+          setModal({
+            open: true,
+            title: "Deleted",
+            message: "Application deleted successfully",
+            confirmText: "OK",
+            confirmVariant: "success",
+          });
+        } catch (error) {
+          setModal({
+            open: true,
+            title: "Server Error",
+            message: "Something went wrong",
+            confirmText: "OK",
+            confirmVariant: "danger",
+          });
+        }
+      },
+    });
   };
+  const [modal, setModal] = useState({
+    open: false,
+    title: "",
+    message: "",
+    confirmText: "Confirm",
+    confirmVariant: "danger",
+    onConfirm: null,
+  });
   const updateUserProfile = async (profileData) => {
     try {
       const res = await fetch(
@@ -210,19 +253,19 @@ export default function StudentProfilePage() {
       // update
       if (type === "applications") {
         setApplications((prev) =>
-          prev.map((it) => (it.id === updatedItem.id ? updatedItem : it)),
+          prev.map((it) => (it._id === updatedItem._id ? updatedItem : it)),
         );
       } else if (type === "visa") {
         setVisas((prev) =>
-          prev.map((it) => (it.id === updatedItem.id ? updatedItem : it)),
+          prev.map((it) => (it._id === updatedItem._id ? updatedItem : it)),
         );
       } else if (type === "deadlines") {
         setDeadlines((prev) =>
-          prev.map((it) => (it.id === updatedItem.id ? updatedItem : it)),
+          prev.map((it) => (it._id === updatedItem._id ? updatedItem : it)),
         );
       } else if (type === "notes") {
         setNotes((prev) =>
-          prev.map((it) => (it.id === updatedItem.id ? updatedItem : it)),
+          prev.map((it) => (it._id === updatedItem._id ? updatedItem : it)),
         );
       } else if (type === "userprofile") {
         setUserProfile(updatedItem);
@@ -455,7 +498,7 @@ export default function StudentProfilePage() {
                                 <span>
                                   Status:{" "}
                                   <span
-                                    className={`font-medium ${getStatusColor(app.status).split(" ")[1]}`}
+                                    className={`font-medium ${getStatusColor(app.stage).split(" ")[1]}`}
                                   >
                                     {app.stage}
                                   </span>
@@ -465,6 +508,18 @@ export default function StudentProfilePage() {
                                   {new Date(app.updatedAt).toLocaleDateString()}
                                 </span>
                               </div>
+
+                              {app.payment?.status === "paid" && (
+                                <span className="text-green-600 font-medium ml-2">
+                                  Paid
+                                </span>
+                              )}
+
+                              {app.payment?.status === "pending" && (
+                                <span className="text-orange-500 font-medium ml-2">
+                                  Payment Pending
+                                </span>
+                              )}
                             </div>
                             <div className="flex gap-2">
                               <button
@@ -476,7 +531,7 @@ export default function StudentProfilePage() {
                               </button>
                               <button
                                 onClick={() =>
-                                  handleDelete("applications", app.id)
+                                  handleDelete("applications", app._id)
                                 }
                                 className="p-2.5 text-red-600 hover:bg-red-50 rounded-lg transition"
                                 title="Delete"
@@ -498,8 +553,9 @@ export default function StudentProfilePage() {
                           : "Add New Application"}
                       </h3>
                       <AddApplicationForm
+                        studentId={id}
                         initialData={editing.item}
-                        onSuccess={(data) =>
+                        onSubmit={(data) =>
                           handleFormSuccess("applications", data)
                         }
                         onCancel={handleFormCancel}
@@ -837,6 +893,19 @@ export default function StudentProfilePage() {
           </div>
         </main>
       </div>
+      {modal.open && (
+        <ConfirmationModal
+          title={modal.title}
+          message={modal.message}
+          confirmText={modal.confirmText}
+          confirmVariant={modal.confirmVariant}
+          onConfirm={
+            modal.onConfirm ||
+            (() => setModal((prev) => ({ ...prev, open: false })))
+          }
+          onCancel={() => setModal((prev) => ({ ...prev, open: false }))}
+        />
+      )}
     </div>
   );
 }
