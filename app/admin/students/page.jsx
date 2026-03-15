@@ -18,6 +18,7 @@ import {
 } from "@/components/Animations/formanimations/animate";
 
 const STATUS_OPTIONS = ["Lead", "Applied", "Enrolled", "Closed"];
+const CONTACTED_STAGES = ["contacted", "qualified", "applied", "enrolled"];
 
 export default function StudentsAdminPage() {
   const router = useRouter();
@@ -378,13 +379,25 @@ export default function StudentsAdminPage() {
                               <input
                                 type="checkbox"
                                 className="sr-only peer"
-                                checked={student.status === "contacted"}
+                                checked={CONTACTED_STAGES.includes(
+                                  student.status,
+                                )}
+                                disabled={[
+                                  "qualified",
+                                  "applied",
+                                  "enrolled",
+                                  "lost",
+                                ].includes(student.status)}
                                 onChange={() => {
-                                  const newStatus =
-                                    student.status === "contacted"
-                                      ? "lead"
-                                      : "contacted";
-                                  updateStatus(student.leadId, newStatus);
+                                  if (student.status === "lead") {
+                                    updateStatus(student.leadId, "contacted");
+                                    return;
+                                  }
+
+                                  if (student.status === "contacted") {
+                                    updateStatus(student.leadId, "lead");
+                                    return;
+                                  }
                                 }}
                               />
                               <div

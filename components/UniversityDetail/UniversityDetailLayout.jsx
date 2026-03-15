@@ -65,7 +65,9 @@ export default function UniversityDetailLayout({ uni }) {
           return;
         }
 
-        throw new Error(data.message || "Something went wrong.");
+        setStatus("error");
+        setMessage(data.message || "Something went wrong.");
+        return;
       }
 
       setStatus("success");

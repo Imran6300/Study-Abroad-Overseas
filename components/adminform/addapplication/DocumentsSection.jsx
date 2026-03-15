@@ -1,6 +1,6 @@
 "use client";
 
-export default function DocumentsSection({ data }) {
+export default function DocumentsSection({ data = {} }) {
   const card =
     "bg-gray-50 border border-gray-300 rounded-xl p-4 flex flex-col items-center justify-between";
 
@@ -8,12 +8,12 @@ export default function DocumentsSection({ data }) {
     "bg-gray-100 p-6 rounded-xl border border-gray-300 space-y-6";
 
   const docs = [
-    { key: "passportUrl", label: "Passport Scan" },
-    { key: "photoUrl", label: "Passport Photo" },
-    { key: "marksheet10Url", label: "10th Marksheet" },
-    { key: "marksheet12Url", label: "12th Marksheet" },
-    { key: "resumeUrl", label: "Resume / CV" },
-    { key: "bachelorDocsUrl", label: "Bachelor Documents" },
+    { key: "passport", label: "Passport Scan" },
+    { key: "photo", label: "Passport Photo" },
+    { key: "marksheet10", label: "10th Marksheet" },
+    { key: "marksheet12", label: "12th Marksheet" },
+    { key: "resume", label: "Resume / CV" },
+    { key: "bachelorDocs", label: "Bachelor Documents" },
   ];
 
   const isImage = (url) => {
@@ -26,7 +26,7 @@ export default function DocumentsSection({ data }) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {docs.map((doc) => {
-          const file = data?.[doc.key];
+          const file = data?.[doc.key]?.url;
 
           return (
             <div key={doc.key} className={card}>

@@ -1,4 +1,4 @@
-export default function StageSection({ data, updateForm }) {
+export default function StageSection({ value, onChange }) {
   const stages = [
     "Lead / Enquiry",
     "Profile Completed",
@@ -20,8 +20,8 @@ export default function StageSection({ data, updateForm }) {
       </h3>
 
       <select
-        value={data.stage || ""}
-        onChange={(e) => updateForm({ stage: e.target.value })}
+        value={value || ""}
+        onChange={(e) => onChange(e.target.value)}
         className={input}
       >
         {stages.map((stage) => (

@@ -18,15 +18,31 @@ export default function AdminApplicationForm({
   onCancel,
 }) {
   const [form, setForm] = useState({});
-
   useEffect(() => {
-    setForm(initialData || {});
+    if (initialData) {
+      setForm({
+        stage: initialData.stage || "",
+        personalInfo: initialData.personalInfo || {},
+        education: initialData.education || {},
+        tests: initialData.tests || {},
+        programPreference: initialData.programPreference || {},
+        experience: initialData.experience || {},
+        finance: initialData.finance || {},
+        documents: initialData.documents || {},
+        source: initialData.source || "",
+        comments: initialData.comments || "",
+        agreed: initialData.agreed || false,
+      });
+    }
   }, [initialData]);
 
-  const updateForm = (fields) => {
+  const updateSection = (section, fields) => {
     setForm((prev) => ({
       ...prev,
-      ...fields,
+      [section]: {
+        ...prev[section],
+        ...fields,
+      },
     }));
   };
 
@@ -38,23 +54,64 @@ export default function AdminApplicationForm({
   return (
     <div className="bg-gray-200 p-8 rounded-2xl">
       <form onSubmit={handleSubmit} className="space-y-8">
-        <StageSection data={form} updateForm={updateForm} />
+        <StageSection
+          value={form.stage}
+          onChange={(value) =>
+            setForm((prev) => ({
+              ...prev,
+              stage: value,
+            }))
+          }
+        />
 
-        <PersonalSection data={form} updateForm={updateForm} />
+        <PersonalSection
+          data={form.personalInfo}
+          updateSection={(fields) => updateSection("personalInfo", fields)}
+        />
 
-        <EducationSection data={form} updateForm={updateForm} />
+        <EducationSection
+          data={form.education}
+          updateSection={(fields) => updateSection("education", fields)}
+        />
 
-        <TestsSection data={form} updateForm={updateForm} />
+        <TestsSection
+          data={form.tests}
+          updateSection={(fields) => updateSection("tests", fields)}
+        />
 
-        <ProgramSection data={form} updateForm={updateForm} />
+        <ProgramSection
+          data={form.programPreference}
+          updateSection={(fields) => updateSection("programPreference", fields)}
+        />
 
-        <ExperienceSection data={form} updateForm={updateForm} />
+        <ExperienceSection
+          data={form.experience}
+          updateSection={(fields) => updateSection("experience", fields)}
+        />
 
-        <FinanceSection data={form} updateForm={updateForm} />
+        <FinanceSection
+          data={form.finance}
+          updateSection={(fields) => updateSection("finance", fields)}
+        />
 
-        <DocumentsSection data={form} updateForm={updateForm} />
+        <DocumentsSection
+          data={form.documents}
+          updateSection={(fields) => updateSection("documents", fields)}
+        />
 
-        <FinalSection data={form} updateForm={updateForm} />
+        <FinalSection
+          data={{
+            comments: form.comments,
+            source: form.source,
+            agreed: form.agreed,
+          }}
+          updateSection={(fields) =>
+            setForm((prev) => ({
+              ...prev,
+              ...fields,
+            }))
+          }
+        />
 
         <div className="flex justify-end gap-4 pt-6 border-t border-gray-400">
           <button

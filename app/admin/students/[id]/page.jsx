@@ -185,30 +185,16 @@ export default function StudentProfilePage() {
       try {
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/applications/${id}`,
-          {
-            credentials: "include",
-          },
+          { credentials: "include" },
         );
 
         const data = await res.json();
-        console.log("STATUS:", res.status);
 
         if (data.success) {
-          const formatted = data.applications.map((app) => ({
-            id: app._id,
-            program: app.programPreference?.field,
-            university: app.university?.name,
-            status: app.stage,
-            date: new Date(app.createdAt).toLocaleDateString(),
-            slug: app.programPreference?.universitySlug,
-            country: app.university?.country,
-            logo: app.university?.logo?.url,
-          }));
-
-          setApplications(formatted);
+          setApplications(data.applications); // store full object
         }
       } catch (error) {
-        console.error("Application fetch error:", error);
+        console.error(error);
       }
     };
 
@@ -442,26 +428,26 @@ export default function StudentProfilePage() {
                     <div className="space-y-4">
                       {applications.map((app) => (
                         <div
-                          key={app.id}
+                          key={app._id}
                           className="bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-xl p-5 transition"
                         >
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                             <div className="flex-1">
                               <div className="flex items-center gap-3">
-                                {app.logo && (
+                                {app?.university?.logo?.url && (
                                   <img
-                                    src={app.logo}
-                                    alt={app.university}
+                                    src={app.university.logo.url}
+                                    alt={app.university?.name}
                                     className="w-10 h-10 object-contain rounded-md"
                                   />
                                 )}
 
                                 <div>
                                   <p className="font-semibold text-gray-900">
-                                    {app.program}
+                                    {app.programPreference?.field}
                                   </p>
                                   <p className="text-sm text-gray-600">
-                                    {app.university}
+                                    {app.university?.name}
                                   </p>
                                 </div>
                               </div>
@@ -471,10 +457,13 @@ export default function StudentProfilePage() {
                                   <span
                                     className={`font-medium ${getStatusColor(app.status).split(" ")[1]}`}
                                   >
-                                    {app.status}
+                                    {app.stage}
                                   </span>
                                 </span>
-                                <span>Date: {app.date}</span>
+                                <span>
+                                  Date:{" "}
+                                  {new Date(app.updatedAt).toLocaleDateString()}
+                                </span>
                               </div>
                             </div>
                             <div className="flex gap-2">
