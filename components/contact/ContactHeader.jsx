@@ -3,7 +3,29 @@ import { motion } from "framer-motion";
 
 import { Users, Award, Globe, Quote } from "lucide-react";
 
+import { useEffect, useState } from "react";
+
 const ContactHeader = () => {
+  const [students, setStudents] = useState([]);
+
+  useEffect(() => {
+    const fetchStudents = async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/testimonials`,
+        );
+        const data = await res.json();
+
+        if (data.success) {
+          setStudents(data.data.slice(0, 2)); // 👈 only 2 students
+        }
+      } catch (error) {
+        console.error("Failed to fetch testimonials", error);
+      }
+    };
+
+    fetchStudents();
+  }, []);
   return (
     <>
       {/* Header */}
@@ -59,19 +81,22 @@ const ContactHeader = () => {
         {/* Partner logos – scrollable on mobile if many */}
         <div className="mt-12 md:mt-16">
           <h3 className="text-center font-semibold text-xl sm:text-2xl mb-6 md:mb-8">
-            Trusted Partners & Associations
+            Universities Our Students Joined
           </h3>
           <div className="flex flex-wrap justify-center items-center gap-6 sm:gap-10 px-4">
-            {["british-council.png", "icef.png", "aaeri.png", "idp.png"].map(
-              (logo) => (
-                <img
-                  key={logo}
-                  src={`/partners/${logo}`}
-                  alt={logo.split(".")[0].replace("-", " ")}
-                  className="h-10 sm:h-12 md:h-14 opacity-80 hover:opacity-100 transition-opacity duration-300 object-contain"
-                />
-              ),
-            )}
+            {[
+              "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cc/Harvard_University_coat_of_arms.svg/330px-Harvard_University_coat_of_arms.svg.png",
+              "https://res.cloudinary.com/dbezaz49g/image/upload/v1771085407/overseas/universities/iww00p2tlkmubb5oflnt.png",
+              "https://identity.stanford.edu/wp-content/uploads/sites/3/2020/07/block-s-right.png",
+              "https://upload.wikimedia.org/wikipedia/en/thumb/b/b9/NUS_coat_of_arms.svg/330px-NUS_coat_of_arms.svg.png",
+            ].map((logo) => (
+              <img
+                key={logo}
+                src={`${logo}`}
+                alt={logo.split(".")[0].replace("-", " ")}
+                className="h-10 sm:h-12 md:h-14 opacity-80 hover:opacity-100 transition-opacity duration-300 object-contain"
+              />
+            ))}
           </div>
         </div>
 
@@ -81,38 +106,29 @@ const ContactHeader = () => {
             What Our Students Say
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-            {[
-              {
-                text: "Overseas Guide turned my dream of studying in the USA into reality. Exceptional support throughout!",
-                name: "Rahul K.",
-                course: "MS Computer Science",
-                uni: "University of California",
-                img: "/students/rahul.jpg",
-              },
-              {
-                text: "Smooth visa process and secured a full scholarship. Cannot recommend them enough!",
-                name: "Priya S.",
-                course: "MBA",
-                uni: "University of Toronto",
-                img: "/students/priya.jpg",
-              },
-            ].map((t, i) => (
+            {students.map((t) => (
               <div
-                key={i}
+                key={t._id}
                 className="bg-white/5 backdrop-blur-md rounded-xl p-6 border border-white/10 shadow-lg"
               >
                 <Quote className="text-[#32CD32] mb-3" size={28} />
-                <p className="text-gray-200 mb-5 leading-relaxed">"{t.text}"</p>
+
+                <p className="text-gray-200 mb-5 leading-relaxed">
+                  "{t.excerpt}"
+                </p>
+
                 <div className="flex items-center">
                   <img
-                    src={t.img}
-                    alt={t.name}
+                    src={t.photo?.url || "/students/default.jpg"}
+                    alt={t.studentName}
                     className="w-12 h-12 rounded-full mr-4 object-cover border-2 border-[#32CD32]/30"
                   />
+
                   <div>
-                    <h4 className="font-semibold">{t.name}</h4>
+                    <h4 className="font-semibold">{t.studentName}</h4>
+
                     <p className="text-gray-400 text-sm">
-                      {t.course} • {t.uni}
+                      {t.course} • {t.university}
                     </p>
                   </div>
                 </div>
