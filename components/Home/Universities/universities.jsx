@@ -3,9 +3,7 @@ import UniversitiesSlider from "./UniversitiesSlider.jsx";
 
 const Countries = ({ universities }) => {
   // ✅ Top 10 inside component
-  const Top10 = universities
-    .filter((uni) => uni.qsRanking && uni.qsRanking <= 10)
-    .sort((a, b) => a.qsRanking - b.qsRanking);
+  const Top10 = universities;
 
   // ✅ Infinite scroll items
   const infiniteItems = [...Top10, ...Top10, ...Top10];
@@ -34,16 +32,14 @@ const Countries = ({ universities }) => {
             >
               <Card
                 slug={item.slug}
-                image={item.images?.[0]?.url || item.logo?.url}
-                logo={item.logo?.url}
+                image={item.images?.[0]?.url}
+                logo={item.logo?.url} // ← add this line
                 name={item.name}
-                location={`${item.city}, ${item.country}`}
+                location={`${item.city ? item.city + ", " : ""}${item.country}`}
                 rank={item.qsRanking}
                 desc={item.description}
-                students={item.totalStudents?.toLocaleString() || "—"}
-                acceptance={
-                  item.acceptanceRate ? `${item.acceptanceRate}%` : "—"
-                }
+                students={item.totalStudents}
+                acceptance={item.acceptanceRate}
               />
             </div>
           ))}

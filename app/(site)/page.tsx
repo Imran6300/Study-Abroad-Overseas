@@ -10,9 +10,12 @@ import FinalCTASection from "../../components/Home/ReadyToStart/readytostart";
 
 
 async function getUniversities() {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/universities`, {
-    next: { revalidate: 3600 }
-  });
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/universities/featured`,
+    {
+      next: { revalidate: 3600 }
+    }
+  );
 
   if (!res.ok) {
     throw new Error("Failed to fetch universities");
@@ -20,10 +23,7 @@ async function getUniversities() {
 
   const data = await res.json();
 
-
-  return Array.isArray(data.universities)
-    ? data.universities
-    : [];
+  return data.universities || [];
 }
 
 export default async function Page() {

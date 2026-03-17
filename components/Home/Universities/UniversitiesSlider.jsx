@@ -24,12 +24,12 @@ export default function UniversitiesSlider({ items }) {
     const container = scrollRef.current;
     if (!container) return;
 
-    const cardWidth = 420;
+    const card = container.firstElementChild?.firstElementChild;
     const gap = 24;
-    const amount = cardWidth + gap;
+    const cardWidth = card?.offsetWidth || 300;
 
     container.scrollBy({
-      left: direction === "left" ? -amount : amount,
+      left: direction === "left" ? -(cardWidth + gap) : cardWidth + gap,
       behavior: "smooth",
     });
   };
@@ -50,15 +50,16 @@ export default function UniversitiesSlider({ items }) {
   };
 
   return (
-    <div className="relative w-full">
+    <div className="relative w-full overflow-hidden">
       {/* Left Arrow */}
       <button
         onClick={() => scroll("left")}
-        className="absolute left-0 top-1/2 -translate-y-1/2 z-10 
-        bg-white shadow-lg rounded-full p-3 
-        hover:bg-gray-100 transition"
+        className="absolute top-1/2 -translate-y-1/2 z-20
+bg-white/90 backdrop-blur-md shadow-md rounded-full
+p-2 sm:p-3
+left-2 sm:left-0 hidden sm:flex "
       >
-        <ChevronLeft size={24} />
+        <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" size={24} />
       </button>
 
       {/* Scroll Container */}
@@ -67,24 +68,23 @@ export default function UniversitiesSlider({ items }) {
         onScroll={handleScroll}
         className="overflow-x-auto no-scrollbar scroll-smooth h-full"
       >
-        <div className="flex gap-6 px-12">
+        <div className="flex gap-6 px-4 sm:px-8 md:px-12">
           {duplicated.map((item, index) => (
             <div
               key={`${item.slug}-${index}`}
-              className="min-w-[400px] max-w-[400px] shrink-0 h-full"
+              className="min-w-[280px] sm:min-w-[320px] md:min-w-[400px]
+max-w-[280px] sm:max-w-[320px] md:max-w-[400px] shrink-0 h-full"
             >
               <Card
                 slug={item.slug}
-                image={item.images?.[0]?.url || item.logo?.url}
-                logo={item.logo?.url}
+                image={item.images?.[0]?.url}
+                logo={item.logo?.url} // ← add this line
                 name={item.name}
-                location={`${item.city}, ${item.country}`}
+                location={`${item.city ? item.city + ", " : ""}${item.country}`}
                 rank={item.qsRanking}
                 desc={item.description}
-                students={item.totalStudents?.toLocaleString() || "—"}
-                acceptance={
-                  item.acceptanceRate ? `${item.acceptanceRate}%` : "—"
-                }
+                students={item.totalStudents}
+                acceptance={item.acceptanceRate}
               />
             </div>
           ))}
@@ -94,11 +94,14 @@ export default function UniversitiesSlider({ items }) {
       {/* Right Arrow */}
       <button
         onClick={() => scroll("right")}
-        className="absolute right-0 top-1/2 -translate-y-1/2 z-10 
-        bg-white shadow-lg rounded-full p-3 
-        hover:bg-gray-100 transition"
+        className="absolute top-1/2 -translate-y-1/2 z-20
+bg-white/90 backdrop-blur-md shadow-md rounded-full
+p-2 sm:p-3
+right-2 sm:right-0
+hidden sm:flex 
+"
       >
-        <ChevronRight size={24} />
+        <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" size={24} />
       </button>
     </div>
   );
