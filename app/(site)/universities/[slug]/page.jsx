@@ -5,11 +5,10 @@ export default async function Page({ params }) {
   const { slug } = await params;
 
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/university/${slug}`,
+    `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/universities/${slug}`,
     { cache: "no-store" },
   );
 
-  // ❗ handle non-JSON (404 / HTML) safely
   if (!res.ok) {
     notFound();
   }

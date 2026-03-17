@@ -67,7 +67,7 @@ export default function UniversitiesPage() {
     setLoading(true);
     setError(null);
     try {
-      const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/host/show-university-data?all=true`;
+      const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/host/universities?all=true`;
 
       const res = await fetch(url, { credentials: "include" });
 
@@ -187,7 +187,7 @@ export default function UniversitiesPage() {
 
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/host/show-university-data/${id}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/host/universities/${id}`,
         {
           method: "DELETE",
           credentials: "include",

@@ -1,9 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useDeferredValue, memo } from "react";
-import Image from "next/image";
-import Link from "next/link";
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { useState, useEffect } from "react";
 import UniversityCard from "@/components/ui/UniversityCard";
 
 const COUNTRIES = [
@@ -18,205 +15,149 @@ const COUNTRIES = [
   "Switzerland",
 ];
 
-const cardVariants = {
-  hidden: { opacity: 0, y: 24, scale: 0.98 },
-  visible: (i) => ({
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    transition: {
-      delay: i * 0.04, // faster stagger = better perceived speed
-      duration: 0.5,
-      ease: [0.25, 0.46, 0.45, 0.94],
-    },
-  }),
-  hover: {
-    y: -8,
-    scale: 1.025,
-    boxShadow: "0 20px 40px -12px rgba(0,0,0,0.12)",
-    transition: {
-      type: "spring",
-      stiffness: 400,
-      damping: 22,
-    },
-  },
-};
-
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.06, delayChildren: 0.1 },
-  },
-};
-
-const filterVariants = {
-  hidden: { opacity: 0, y: 10 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
-};
-
 export default function UniversitiesClient({ universities }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCountry, setSelectedCountry] = useState("All");
-  const [maxRank, setMaxRank] = useState(null);
-  const [maxAcceptance, setMaxAcceptance] = useState(null);
-  const [sortBy, setSortBy] = useState("rank");
 
-  const shouldReduceMotion = useReducedMotion();
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const [results, setResults] = useState(universities ?? []);
+  const [page, setPage] = useState(1);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
 
-  const deferredSearch = useDeferredValue(searchTerm);
+  // SEARCH / INITIAL LOAD
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const endpoint = searchTerm.trim()
+          ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/universities/search?q=${searchTerm}`
+          : `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/universities`;
 
-  const filteredUniversities = useMemo(() => {
-    let result = [...(universities || [])];
+        const res = await fetch(endpoint);
+        const data = await res.json();
 
-    const search = deferredSearch.toLowerCase().trim();
+        setResults(data?.universities ?? []);
+        setPage(1);
+        setHasMore(true);
+      } catch (err) {
+        console.error(err);
+      }
+    };
 
-    if (search) {
-      result = result.filter((uni) =>
-        [uni.name, uni.country, uni.city, uni.description, uni.desc].some(
-          (field) => field?.toLowerCase()?.includes(search),
-        ),
-      );
+    const timer = setTimeout(fetchData, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  const loadMore = async () => {
+    try {
+      setLoadingMore(true);
+      const nextPage = page + 1;
+
+      const endpoint = searchTerm.trim()
+        ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/universities/search?q=${searchTerm}&page=${nextPage}`
+        : `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/universities?page=${nextPage}`;
+
+      const res = await fetch(endpoint);
+      const data = await res.json();
+      const newUniversities = data?.universities ?? [];
+
+      // Deduplicate
+      setResults((prev) => {
+        const map = new Map();
+        [...prev, ...newUniversities].forEach((u) => {
+          if (!u) return;
+          map.set(u._id ?? u.slug ?? JSON.stringify(u), u);
+        });
+        return Array.from(map.values());
+      });
+
+      setPage(nextPage);
+      if (newUniversities.length === 0) setHasMore(false);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingMore(false);
     }
-
-    if (selectedCountry !== "All") {
-      result = result.filter(
-        (uni) => uni.country?.toLowerCase() === selectedCountry.toLowerCase(),
-      );
-    }
-
-    if (maxRank) {
-      result = result.filter(
-        (uni) => uni.qsRanking && Number(uni.qsRanking) <= maxRank,
-      );
-    }
-
-    if (maxAcceptance) {
-      result = result.filter(
-        (uni) =>
-          uni.acceptanceRate && Number(uni.acceptanceRate) <= maxAcceptance,
-      );
-    }
-
-    if (sortBy === "rank") {
-      result.sort((a, b) => (a.qsRanking || 9999) - (b.qsRanking || 9999));
-    } else if (sortBy === "students") {
-      result.sort((a, b) => (b.totalStudents || 0) - (a.totalStudents || 0));
-    }
-
-    return result;
-  }, [
-    universities,
-    deferredSearch,
-    selectedCountry,
-    maxRank,
-    maxAcceptance,
-    sortBy,
-  ]);
-
-  const clearFilters = () => {
-    setSearchTerm("");
-    setSelectedCountry("All");
-    setMaxRank(null);
-    setMaxAcceptance(null);
-    setSortBy("rank");
   };
 
   return (
-    <div className="min-h-screen bg-gray-50/40">
-      {/* Hero with animation */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7, ease: "easeOut" }}
-        className="bg-gradient-to-br from-blue-600/5 via-indigo-50 to-purple-50/20 pt-28 pb-20"
-      >
+    <div className="min-h-screen bg-gray-950 text-gray-100">
+      {/* HERO - simple fade in with CSS */}
+      <div className="bg-gradient-to-br from-blue-950/40 via-indigo-950/30 to-gray-950 pt-28 pb-24 border-b border-gray-800/50 animate-fade-in">
         <div className="max-w-7xl mx-auto px-6">
           <div className="max-w-3xl">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-gray-900 tracking-tight">
+            <h1 className="text-5xl md:text-6xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-blue-300 via-indigo-300 to-blue-200">
               Discover World-Class Universities
             </h1>
-            <p className="mt-5 text-xl text-gray-700 leading-relaxed">
+            <p className="mt-6 text-xl text-gray-300 leading-relaxed">
               Find your perfect university — compare rankings, programs,
               acceptance rates & student experience.
             </p>
           </div>
         </div>
-      </motion.div>
+      </div>
 
-      <main className="max-w-7xl mx-auto px-6 py-16 -mt-12">
-        <motion.div
-          variants={filterVariants}
-          initial="hidden"
-          animate="visible"
-          className="mb-14 space-y-7"
-        >
-          <div className="relative max-w-2xl mx-auto">
-            <input
-              type="search"
-              placeholder="Search by name, country, city..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-14 pr-6 py-5 rounded-2xl border border-gray-200 bg-white shadow-lg shadow-gray-200/30 focus:outline-none focus:ring-2 focus:ring-blue-400/40 focus:border-blue-400 text-lg transition"
-            />
-            <span className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400">
-              🔍
-            </span>
-          </div>
-
-          <div className="space-y-6">
-            <motion.div
-              variants={filterVariants}
-              className="flex flex-wrap gap-3 justify-center sm:justify-start"
+      <main className="max-w-7xl mx-auto px-6 py-16 -mt-16">
+        {/* SEARCH */}
+        <div className="relative max-w-2xl mx-auto mb-12">
+          <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+            <svg
+              className="h-6 w-6 text-gray-500"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
             >
-              {COUNTRIES.map((country) => (
-                <button
-                  key={country}
-                  onClick={() => setSelectedCountry(country)}
-                  className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all ${
-                    selectedCountry === country
-                      ? "bg-blue-600 text-white shadow-lg shadow-blue-200/50 scale-105"
-                      : "bg-white text-gray-700 border hover:bg-gray-50 hover:shadow"
-                  }`}
-                >
-                  {country}
-                </button>
-              ))}
-            </motion.div>
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
           </div>
-        </motion.div>
+          <input
+            type="search"
+            placeholder="Search university name, country, city..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-14 pr-6 py-5 rounded-2xl bg-gray-800/60 border border-gray-700 text-gray-100 placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 focus:bg-gray-800/90 transition-all outline-none text-lg shadow-lg shadow-black/20"
+          />
+        </div>
 
-        {filteredUniversities.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.4 }}
-            className="text-center py-20 text-gray-500"
-          >
-            No universities match your filters.
-          </motion.div>
+        {/* RESULTS */}
+        {results.length === 0 ? (
+          <div className="text-center py-24 text-gray-500 text-lg">
+            No universities match your search
+          </div>
         ) : (
-          <AnimatePresence mode="wait">
-            <motion.div
-              layout
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-7"
-            >
-              {filteredUniversities.map((uni, i) => (
-                <UniversityCard
-                  key={uni._id || uni.slug}
-                  uni={uni}
-                  index={i}
-                  mounted={mounted}
-                  shouldReduceMotion={shouldReduceMotion}
-                />
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
+              {results.map((uni, i) => (
+                <div
+                  key={uni?._id ?? uni?.slug ?? `uni-${i}`}
+                  className="opacity-100 transition-all duration-500"
+                >
+                  <UniversityCard
+                    uni={uni}
+                    index={i}
+                    // removed shouldReduceMotion since no motion
+                  />
+                </div>
               ))}
-            </motion.div>
-          </AnimatePresence>
+            </div>
+
+            {/* LOAD MORE */}
+            {hasMore && (
+              <div className="flex justify-center mt-16 mb-10">
+                <button
+                  onClick={loadMore}
+                  disabled={loadingMore}
+                  className="px-10 py-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold shadow-lg shadow-blue-900/30 disabled:opacity-50 disabled:shadow-none transition-all duration-200 text-lg"
+                >
+                  {loadingMore ? "Loading..." : "Load More Universities"}
+                </button>
+              </div>
+            )}
+          </>
         )}
       </main>
     </div>

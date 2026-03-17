@@ -136,7 +136,7 @@ export default function ApplicationForm() {
     const fetchUniversity = async () => {
       try {
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/university/${universitySlug}`,
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/universities/${universitySlug}`,
         );
         const data = await res.json();
 

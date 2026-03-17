@@ -213,8 +213,8 @@ export default function AddUniversityForm({
       form.imageFiles.forEach((file) => formData.append("images", file));
 
       const url = isEditMode
-        ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/host/edit-university-data/${initialData._id}`
-        : `${process.env.NEXT_PUBLIC_BACKEND_URL}/host/university-editor-form`;
+        ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/host/universities/${initialData._id}`
+        : `${process.env.NEXT_PUBLIC_BACKEND_URL}/host/universities`;
 
       const method = isEditMode ? "PUT" : "POST";
 
