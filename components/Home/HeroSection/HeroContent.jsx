@@ -4,6 +4,7 @@ import HeroSearch from "./HeroSearch";
 import dynamic from "next/dynamic";
 const TextType = dynamic(() => import("../../Animations/TextType"), {
   ssr: false,
+  loading: () => <span>Study in 100+ Countries</span>,
 });
 import { motion } from "framer-motion";
 import { memo } from "react";
@@ -29,15 +30,13 @@ function HeroContent() {
       </div>
 
       {/* TITLE — ONLY ANIMATED ELEMENT */}
-      <motion.h1
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={transition}
+      <h1
         className="
           font-extrabold text-[#111]
           leading-[1.15]
           text-[clamp(2.5rem,5vw,4rem)]
           max-[768px]:text-center
+          animate-fadeIn
         "
       >
         Build Your{" "}
@@ -46,7 +45,7 @@ function HeroContent() {
         </span>
         <br />
         with Confidence.
-      </motion.h1>
+      </h1>
 
       {/* SUBTITLE — STATIC */}
       <p

@@ -1,12 +1,15 @@
 import Link from "next/link";
+import Image from "next/image";
 
 export default function UniversityCard({ uni }) {
   return (
     <Link href={`/universities/${uni.slug}`}>
       <div className="group cursor-pointer bg-white rounded-2xl shadow-md hover:shadow-xl transition overflow-hidden border border-[#DCDCDC]">
-        <img
+        <Image
           src={uni.image}
           alt={uni.name}
+          width={400}
+          height={200}
           className="h-48 w-full object-cover group-hover:scale-105 transition"
         />
 

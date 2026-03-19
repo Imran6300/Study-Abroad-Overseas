@@ -8,7 +8,7 @@ export default function UniversitiesSlider({ items }) {
   const scrollRef = useRef(null);
 
   // Duplicate items 3 times
-  const duplicated = [...items, ...items, ...items];
+  const duplicated = [...items, ...items];
 
   useEffect(() => {
     const container = scrollRef.current;

@@ -96,16 +96,18 @@ function FAQItem({ item }) {
 
   return (
     <FadeContent blur>
-      <div className="bg-white/60 backdrop-blur-xl border border-white/30 rounded-2xl p-5 mb-4 shadow-[0_4px_20px_rgba(0,0,0,0.08)]">
+      <div className="bg-white/60 backdrop-blur-xl border border-white/30 rounded-2xl p-4 sm:p-5 mb-4 shadow-[0_4px_20px_rgba(0,0,0,0.08)]">
         <button
           onClick={() => setOpen(!open)}
           className="w-full flex items-center justify-between text-left"
           aria-expanded={open}
         >
-          <span className="text-lg font-semibold text-[#1A2433]">{item.q}</span>
+          <span className="text-base sm:text-lg font-semibold text-[#1A2433]">
+            {item.q}
+          </span>
           <span
             className={`
-              text-[#4169E1] text-2xl font-bold transition-transform duration-300
+              text-[#4169E1] text-xl sm:text-2xl font-bold transition-transform duration-300
               ${open ? "rotate-45" : ""}
             `}
           >
@@ -116,10 +118,10 @@ function FAQItem({ item }) {
         <div
           className={`
             overflow-hidden transition-all duration-300 ease-in-out
-            ${open ? "max-h-96 mt-4 opacity-100" : "max-h-0 opacity-0"}
+            ${open ? "max-h-96 mt-3 sm:mt-4 opacity-100" : "max-h-0 opacity-0"}
           `}
         >
-          <p className="text-gray-700 text-sm leading-6">{item.a}</p>
+          <p className="text-gray-700 text-xs sm:text-sm leading-6">{item.a}</p>
         </div>
       </div>
     </FadeContent>
@@ -141,7 +143,7 @@ export default function ScholarshipsFunding() {
         stats.forEach((stat, index) => {
           let start = 0;
           const end = stat.number;
-          const duration = 1400; // Slightly longer for smoother feel
+          const duration = 500;
           const increment = end / (duration / 16);
 
           const animate = () => {
@@ -173,25 +175,25 @@ export default function ScholarshipsFunding() {
   }, []);
 
   return (
-    <section className="w-full py-20 md:py-28 px-6 relative bg-gradient-to-b from-[#F3F8FF] to-[#E8F1FF] overflow-hidden">
+    <section className="w-full py-12 sm:py-16 md:py-24 px-4 sm:px-6 relative bg-gradient-to-b from-[#F3F8FF] to-[#E8F1FF] overflow-hidden">
       {/* Background Blobs */}
-      <div className="absolute top-10 right-10 w-72 h-72 bg-[#4169E1]/10 rounded-full blur-3xl"></div>
-      <div className="absolute bottom-10 left-0 w-72 h-72 bg-[#32CD32]/10 rounded-full blur-3xl"></div>
+      <div className="absolute top-6 sm:top-10 -right-12 sm:right-10 w-48 sm:w-72 h-48 sm:h-72 bg-[#4169E1]/10 rounded-full blur-3xl"></div>
+      <div className="absolute bottom-6 sm:bottom-10 -left-12 sm:left-0 w-48 sm:w-72 h-48 sm:h-72 bg-[#32CD32]/10 rounded-full blur-3xl"></div>
 
       {/* ⭐ Heading */}
       <FadeContent blur>
-        <div className="text-center max-w-3xl mx-auto mb-16 md:mb-20 relative z-10">
-          <h2 className="text-4xl md:text-5xl font-extrabold text-[#1A2433]">
+        <div className="text-center max-w-xl sm:max-w-2xl md:max-w-3xl mx-auto mb-12 sm:mb-14 md:mb-16 relative z-10">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#1A2433] leading-tight">
             Scholarships & Funding Support
           </h2>
 
-          <p className="text-gray-600 mt-4 text-lg leading-relaxed">
-            Our expert funding team helps students reduce their study-abroad
+          <p className="text-gray-600 mt-3 sm:mt-4 text-sm sm:text-base md:text-lg leading-relaxed">
+            Our expert funding team helps students reduce their study‑abroad
             cost through scholarships, grants, and financial aid — ensuring
             finances never stop your dream.
           </p>
 
-          <div className="w-32 h-[4px] bg-gradient-to-r from-[#4169E1] to-[#32CD32] mx-auto mt-6 rounded-full" />
+          <div className="w-24 sm:w-32 h-[3px] sm:h-[4px] bg-gradient-to-r from-[#4169E1] to-[#32CD32] mx-auto mt-4 sm:mt-6 rounded-full" />
         </div>
       </FadeContent>
 
@@ -199,23 +201,23 @@ export default function ScholarshipsFunding() {
       <FadeContent blur duration={700}>
         <div
           ref={statsRef}
-          className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6 mb-16 relative z-10"
+          className="max-w-3xl sm:max-w-5xl mx-auto grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-6 mb-12 sm:mb-16 relative z-10"
         >
           {stats.map((s, i) => (
             <div
               key={i}
               className="
                 bg-white/70 backdrop-blur-xl border border-white/40 rounded-2xl
-                py-8 px-4 flex flex-col items-center justify-center text-center
-                shadow-[0_6px_25px_rgba(0,0,0,0.08)]
+                py-5 px-3 sm:py-6 sm:px-4 md:py-8 md:px-4 flex flex-col items-center justify-center text-center
+                shadow-[0_4px_16px_rgba(0,0,0,0.08)]
               "
             >
-              <h3 className="text-3xl md:text-4xl font-extrabold text-[#4169E1]">
+              <h3 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#4169E1]">
                 {s.isCurrency ? "₹" : ""}
                 {animatedValues[i]}
                 {s.suffix}
               </h3>
-              <p className="text-gray-700 font-medium mt-2 text-sm md:text-base">
+              <p className="text-gray-700 font-medium mt-2 text-xs sm:text-sm md:text-base">
                 {s.label}
               </p>
             </div>
@@ -225,38 +227,38 @@ export default function ScholarshipsFunding() {
 
       {/* ⭐ CTA 1 */}
       <FadeContent blur>
-        <div className="text-center mb-16 sm:mb-20 md:mb-24 relative z-10 px-4">
+        <div className="text-center mb-12 sm:mb-16 md:mb-20 relative z-10 px-3 sm:px-4">
           <Link
             href="/assessment"
             className="
-        inline-flex items-center justify-center gap-2
-        w-full sm:w-auto
-        px-6 sm:px-10
-        py-4
-        rounded-full
-        font-semibold
-        text-white
-        text-base sm:text-lg
-        bg-gradient-to-r from-[#4169E1] to-[#32CD32]
-        shadow-[0_8px_24px_rgba(65,105,225,0.3)]
-        transition-all duration-300
-        active:scale-95
-        sm:hover:scale-105
-        sm:hover:shadow-[0_15px_40px_rgba(65,105,225,0.45)]
-      "
+inline-flex items-center justify-center gap-2
+w-full sm:w-auto
+px-6 sm:px-10
+py-4
+rounded-full
+font-semibold
+text-white
+text-base sm:text-lg
+bg-gradient-to-r from-[#4169E1] to-[#32CD32]
+shadow-[0_8px_24px_rgba(65,105,225,0.3)]
+transition-all duration-300
+active:scale-95
+sm:hover:scale-105
+sm:hover:shadow-[0_15px_40px_rgba(65,105,225,0.45)]
+"
           >
             Check Your Scholarship Eligibility
             <span className="text-lg sm:text-xl">→</span>
           </Link>
 
-          <p className="text-gray-600 mt-3 text-xs sm:text-sm">
+          <p className="text-gray-600 mt-2 text-xs sm:text-sm">
             Takes only 30 seconds • No charges • Instant result
           </p>
         </div>
       </FadeContent>
 
       {/* ⭐ Scholarship Cards - NOW WITH FIXED & EQUAL HEIGHT */}
-      <div className="max-w-[1350px] mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 relative z-10 px-4">
+      <div className="max-w-[1350px] mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8 relative z-10 px-3 sm:px-4">
         {scholarships.map((item, i) => {
           const Icon = item.icon;
           return (
@@ -264,44 +266,46 @@ export default function ScholarshipsFunding() {
               <div
                 className="
                   group bg-white/60 backdrop-blur-xl border border-white/30
-                  rounded-3xl p-8 md:p-10 shadow-[0_10px_40px_rgba(0,0,0,0.08)]
-                  transition-all duration-300 hover:-translate-y-3
-                  hover:shadow-[0_20px_60px_rgba(0,0,0,0.12)]
-                  flex flex-col h-full min-h-[520px]
+                  rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-10
+                  shadow-[0_8px_24px_rgba(0,0,0,0.08)]
+                  transition-all duration-300 hover:-translate-y-2 sm:hover:-translate-y-3
+                  hover:shadow-[0_16px_40px_rgba(0,0,0,0.12)]
+                  flex flex-col h-full
                 "
               >
                 {/* Icon */}
-                <div className="flex justify-center mb-8">
+                <div className="flex justify-center mb-6 sm:mb-7">
                   <div
                     className="
-                      w-20 h-20 rounded-2xl bg-gradient-to-br from-[#4169E1] to-[#32CD32]
+                      w-16 h-16 sm:w-18 sm:h-18 md:w-20 md:h-20 rounded-xl sm:rounded-2xl
+                      bg-gradient-to-br from-[#4169E1] to-[#32CD32]
                       flex items-center justify-center text-white 
-                      shadow-[0_10px_25px_rgba(65,105,225,0.35)]
+                      shadow-[0_8px_20px_rgba(65,105,225,0.35)]
                       group-hover:scale-110 transition-transform duration-500
                     "
                   >
-                    <Icon size={40} />
+                    <Icon size={32} />
                   </div>
                 </div>
 
                 {/* Title */}
-                <h3 className="text-xl md:text-2xl font-bold text-[#1A2433] text-center mb-4">
+                <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-[#1A2433] text-center mb-3 sm:mb-4">
                   {item.title}
                 </h3>
 
                 {/* Description - takes available space */}
-                <p className="text-gray-700 text-sm md:text-base text-center leading-relaxed mb-8 flex-grow">
+                <p className="text-gray-700 text-xs sm:text-sm md:text-base text-center leading-relaxed mb-4 sm:mb-6 flex-grow">
                   {item.desc}
                 </p>
 
                 {/* Points List - pushed to bottom */}
-                <ul className="space-y-3 mt-auto">
+                <ul className="space-y-2.5 sm:space-y-3 mt-auto">
                   {item.points.map((p, idx) => (
-                    <li key={idx} className="flex items-start gap-3">
-                      <span className="text-[#32CD32] text-xl font-bold mt-0.5">
+                    <li key={idx} className="flex items-start gap-2 sm:gap-3">
+                      <span className="text-[#32CD32] text-lg sm:text-xl font-bold mt-0.5">
                         •
                       </span>
-                      <span className="text-gray-700 text-sm md:text-base leading-relaxed">
+                      <span className="text-gray-700 text-xs sm:text-sm md:text-base leading-relaxed">
                         {p}
                       </span>
                     </li>
@@ -315,12 +319,12 @@ export default function ScholarshipsFunding() {
 
       {/* Footer Note */}
       <FadeContent blur delay={120}>
-        <div className="text-center max-w-3xl mx-auto mt-20 text-gray-700 relative z-10">
-          <p className="leading-relaxed text-base md:text-lg">
+        <div className="text-center max-w-lg sm:max-w-xl md:max-w-3xl mx-auto mt-16 sm:mt-20 text-gray-700 relative z-10">
+          <p className="leading-relaxed text-sm sm:text-base md:text-lg">
             From fully funded opportunities to tuition reductions and financial
             planning — we ensure every student gets maximum financial advantage.
           </p>
-          <p className="mt-4 font-semibold text-[#4169E1] text-lg">
+          <p className="mt-3 sm:mt-4 font-semibold text-[#4169E1] text-sm xs:text-base md:text-lg">
             Your dedicated funding mentor will guide you throughout.
           </p>
         </div>
@@ -328,8 +332,8 @@ export default function ScholarshipsFunding() {
 
       {/* ⭐ FAQ Section */}
       <FadeContent blur delay={160}>
-        <div className="max-w-3xl mx-auto mt-24 relative z-10">
-          <h3 className="text-3xl md:text-4xl font-bold text-center text-[#1A2433] mb-12">
+        <div className="max-w-xs sm:max-w-lg md:max-w-3xl mx-auto mt-16 sm:mt-20 md:mt-24 relative z-10">
+          <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-[#1A2433] mb-8 sm:mb-10 md:mb-12">
             Frequently Asked Questions
           </h3>
 
@@ -340,7 +344,7 @@ export default function ScholarshipsFunding() {
             },
             {
               q: "Can I get scholarships without high academic scores?",
-              a: "Yes — need-based, diversity-based, and course-specific scholarships do not require high marks.",
+              a: "Yes — need‑based, diversity‑based, and course‑specific scholarships do not require high marks.",
             },
             {
               q: "Do you help with education loans?",
@@ -352,7 +356,7 @@ export default function ScholarshipsFunding() {
             },
             {
               q: "Is the scholarship process complicated?",
-              a: "We simplify everything — eligibility checks, documentation, SOP/LOR preparation, applications, and follow-ups.",
+              a: "We simplify everything — eligibility checks, documentation, SOP/LOR preparation, applications, and follow‑ups.",
             },
           ].map((item, i) => (
             <FAQItem key={i} item={item} />
@@ -362,32 +366,32 @@ export default function ScholarshipsFunding() {
 
       {/* ⭐ Final CTA */}
       <FadeContent blur delay={200}>
-        <div className="text-center mt-14 sm:mt-16 md:mt-20 relative z-10 px-4">
+        <div className="text-center mt-12 sm:mt-14 md:mt-20 relative z-10 px-3 sm:px-4">
           <Link
             href="/assessment"
             className="
-        inline-flex items-center justify-center gap-2
-        w-full sm:w-auto
-        px-6 sm:px-10 md:px-12
-        py-4 sm:py-5
-        rounded-full
-        text-white
-        text-base sm:text-lg md:text-xl
-        font-semibold
-        bg-gradient-to-r from-[#4169E1] to-[#32CD32]
-        shadow-[0_10px_30px_rgba(65,105,225,0.35)]
-        transition-all duration-300
-        active:scale-95
-        sm:hover:scale-105
-        sm:hover:shadow-[0_20px_55px_rgba(65,105,225,0.5)]
-      "
+              inline-flex items-center justify-center gap-2
+w-full sm:w-auto
+px-6 sm:px-10 md:px-12
+py-4 sm:py-5
+rounded-full
+text-white
+text-base sm:text-lg md:text-xl
+font-semibold
+bg-gradient-to-r from-[#4169E1] to-[#32CD32]
+shadow-[0_10px_30px_rgba(65,105,225,0.35)]
+transition-all duration-300
+active:scale-95
+sm:hover:scale-105
+sm:hover:shadow-[0_20px_55px_rgba(65,105,225,0.5)]
+            "
           >
             Book Your Free Funding Consultation
-            <span className="text-lg sm:text-xl md:text-2xl">→</span>
+            <span className="text-sm sm:text-lg md:text-2xl">→</span>
           </Link>
 
-          <p className="text-gray-600 mt-3 sm:mt-4 text-xs sm:text-sm md:text-base">
-            Limited slots • Completely free • 1-on-1 Expert Guidance
+          <p className="text-gray-600 mt-2 sm:mt-3 md:mt-4 text-xs sm:text-sm md:text-base">
+            Limited slots • Completely free • 1‑on‑1 Expert Guidance
           </p>
         </div>
       </FadeContent>

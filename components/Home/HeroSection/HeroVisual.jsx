@@ -26,6 +26,8 @@ function HeroVisual() {
           priority
           quality={85}
           sizes="(max-width: 768px) 100vw, 480px"
+          placeholder="blur"
+          blurDataURL="/newHeroImage.webp"
           className="
              object-cover
             rounded-[28px]

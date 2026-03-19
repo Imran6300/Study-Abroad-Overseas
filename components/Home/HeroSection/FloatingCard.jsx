@@ -9,7 +9,7 @@ function FloatingCard({ position, strong, text }) {
         shadow-[0_12px_32px_rgba(0,0,0,0.12)]
         flex flex-col font-semibold
         border border-[rgba(65,105,225,0.25)]
-        animate-cardIntro
+        opacity-0 animate-fadeIn
         max-[1200px]:hidden
         ${position}
       `}

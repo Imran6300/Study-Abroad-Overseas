@@ -13,10 +13,9 @@ export default function ServicesCard({ Data }) {
   "
     >
       {Data.map((item, index) => (
-        <motion.div
+        <div
           key={index}
           initial={{ opacity: 0, y: 25 }}
-          whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: index * 0.08 }}
           viewport={{ once: true }}
         >
@@ -36,6 +35,7 @@ export default function ServicesCard({ Data }) {
             {/* Icon */}
             <div
               className="
+              animate-fadeIn
             w-14 h-14 mx-auto mb-5 rounded-full
             bg-gradient-to-br from-[#60A5FA] to-[#A78BFA]
             flex items-center justify-center
@@ -73,7 +73,7 @@ export default function ServicesCard({ Data }) {
               <Link href={item.link}>{item.BtnTitle || "Learn More"}</Link>
             </button>
           </div>
-        </motion.div>
+        </div>
       ))}
     </div>
   );
