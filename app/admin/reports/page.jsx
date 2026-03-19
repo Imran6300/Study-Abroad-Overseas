@@ -118,7 +118,64 @@ export default function ReportsPage() {
         });
       }
 
-      // Add same pattern for other 3 charts here
+      // Top Counselors Chart
+      if (counselorChartRef.current) {
+        counselorChartInstance.current?.destroy();
+
+        counselorChartInstance.current = new Chart(counselorChartRef.current, {
+          type: "bar",
+          data: {
+            labels: mockData.topCounselors.map((c) => c.name),
+            datasets: [
+              {
+                label: "Revenue",
+                data: mockData.topCounselors.map((c) => c.revenue),
+                backgroundColor: "#6366f1",
+              },
+            ],
+          },
+          options: { responsive: true },
+        });
+      }
+
+      // Application Status Chart
+      if (statusChartRef.current) {
+        statusChartInstance.current?.destroy();
+
+        statusChartInstance.current = new Chart(statusChartRef.current, {
+          type: "pie",
+          data: {
+            labels: mockData.statusBreakdown.map((s) => s.status),
+            datasets: [
+              {
+                data: mockData.statusBreakdown.map((s) => s.count),
+                backgroundColor: ["#10b981", "#3b82f6", "#f59e0b", "#ef4444"],
+              },
+            ],
+          },
+          options: { responsive: true },
+        });
+      }
+
+      // Revenue by Country Chart
+      if (countryChartRef.current) {
+        countryChartInstance.current?.destroy();
+
+        countryChartInstance.current = new Chart(countryChartRef.current, {
+          type: "bar",
+          data: {
+            labels: mockData.countries.map((c) => c.country),
+            datasets: [
+              {
+                label: "Revenue",
+                data: mockData.countries.map((c) => c.revenue),
+                backgroundColor: "#14b8a6",
+              },
+            ],
+          },
+          options: { responsive: true },
+        });
+      }
     });
 
     return () => {
