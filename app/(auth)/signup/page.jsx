@@ -282,7 +282,8 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#F7F9FC] flex items-center justify-center px-4 pb-10 pt-20 sm:pt-24 md:pt-[100px] lg:pt-28">
+    <div className="relative overflow-x-hidden min-h-screen w-full bg-[#F7F9FC] flex items-center justify-center px-4 pb-10 pt-20">
+      {" "}
       <div className="w-full max-w-[min(92vw,360px)] mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 12 }}

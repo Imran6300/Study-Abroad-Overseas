@@ -68,11 +68,12 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-76px)] mt-[76px] w-full px-4 sm:px-6 flex items-center justify-center bg-[#F7F9FC]">
+    <div className="relative overflow-x-hidden min-h-screen pt-[76px] w-full px-4 sm:px-6 flex items-center justify-center bg-[#F7F9FC]">
       {/* BACKGROUND BLOBS */}
-      <div className="absolute w-56 h-56 bg-[#4A6BFF]/20 blur-3xl rounded-full top-0 left-0 -translate-x-1/3 -translate-y-1/3" />
-      <div className="absolute w-56 h-56 bg-[#22C55E]/20 blur-3xl rounded-full bottom-0 right-0 translate-x-1/3 translate-y-1/3" />
-
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute w-56 h-56 bg-[#4A6BFF]/20 blur-3xl rounded-full top-0 left-0 -translate-x-1/3 -translate-y-1/3" />
+        <div className="absolute w-56 h-56 bg-[#22C55E]/20 blur-3xl rounded-full bottom-0 right-0 translate-x-1/3 translate-y-1/3" />
+      </div>
       {/* CARD */}
       <motion.div
         initial={{ opacity: 0, y: 30 }}
