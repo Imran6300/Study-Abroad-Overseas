@@ -111,7 +111,7 @@ export default function Scholarships() {
             {/* Primary CTAs for non-form users */}
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6">
               <Link
-                href="#lead-form"
+                href="/assessment"
                 className="group inline-flex items-center justify-center gap-2 px-7 py-4 bg-white rounded-2xl transition-all duration-300 hover:scale-[1.03] shadow-xl shadow-blue-500/30 text-sm sm:text-base font-semibold text-black"
               >
                 Start Free Scholarship Check
@@ -583,7 +583,7 @@ export default function Scholarships() {
 
           <div className="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6">
             <Link
-              href="#lead-form"
+              href="/assessment"
               className="group relative px-8 sm:px-12 py-4 sm:py-5 rounded-full overflow-hidden transition-all duration-300 hover:scale-[1.04] shadow-2xl shadow-blue-700/50 font-semibold text-sm sm:text-lg bg-white text-black"
             >
               <span className="relative z-10 flex items-center justify-center gap-3">
