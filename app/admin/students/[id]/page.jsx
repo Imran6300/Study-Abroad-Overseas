@@ -13,8 +13,10 @@ import {
   CheckCircle2,
   Send,
   UserRound,
+  Award,
 } from "lucide-react";
 
+import ScholarshipForm from "@/components/adminform/ScholarshipForm";
 import AdminSidebar from "@/components/admindashboard/AdminSidebar";
 import DashboardHeader from "@/components/admindashboard/DashboardHeader";
 import { useSelector } from "react-redux";
@@ -90,6 +92,8 @@ export default function StudentProfilePage() {
   const [deadlines, setDeadlines] = useState(mockDeadlines);
   const [notes, setNotes] = useState(mockNotes);
   const [documents] = useState([]);
+
+  const [scholarships, setScholarships] = useState([]);
 
   const [activities] = useState([
     {
@@ -282,6 +286,8 @@ export default function StudentProfilePage() {
         setNotes((prev) => [...prev, updatedItem]);
       } else if (type === "userprofile") {
         setUserProfile(updatedItem);
+      } else if (type === "scholarships") {
+        setScholarships((prev) => [...prev, updatedItem]);
       }
     }
 
@@ -301,6 +307,7 @@ export default function StudentProfilePage() {
     { key: "deadlines", label: "Deadlines", icon: Clock },
     { key: "activity", label: "Activity", icon: CheckCircle2 },
     { key: "notes", label: "Notes", icon: FileText },
+    { key: "scholarships", label: "Scholarships", icon: Award },
   ];
 
   const student = {
@@ -883,6 +890,52 @@ export default function StudentProfilePage() {
                       <NotesForm
                         initialData={editing.item}
                         onSuccess={(data) => handleFormSuccess("notes", data)}
+                        onCancel={handleFormCancel}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* SCHOLARSHIPS */}
+              {activeTab === "scholarships" && (
+                <div className="space-y-6">
+                  {/* HEADER */}
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-xl font-semibold text-gray-900">
+                      Scholarships
+                    </h2>
+
+                    <button
+                      onClick={() => startEdit("scholarships")}
+                      className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white rounded-lg"
+                    >
+                      <Plus size={16} /> Check Eligibility
+                    </button>
+                  </div>
+
+                  {/* LIST */}
+                  {scholarships.length === 0 ? (
+                    <div>No scholarship data</div>
+                  ) : (
+                    <div className="space-y-4">
+                      {scholarships.map((sch) => (
+                        <div key={sch.id}>{sch.name}</div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* ✅ FORM (INSIDE TAB) */}
+                  {editing?.type === "scholarships" && (
+                    <div className="mt-10 pt-8 border-t border-gray-100">
+                      <h3 className="text-lg font-semibold mb-5">
+                        Scholarship Eligibility
+                      </h3>
+
+                      <ScholarshipForm
+                        onSubmit={(data) =>
+                          handleFormSuccess("scholarships", data)
+                        }
                         onCancel={handleFormCancel}
                       />
                     </div>

@@ -1,9 +1,10 @@
 "use client";
 
-import { useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { motion, useScroll, useSpring, useInView } from "framer-motion";
 import StudentProCard from "@/components/upgrade/StudentProCard";
+import MessageBox from "@/components/ui/MessageBox"; // adjust path
 
 import {
   FaGlobeAmericas,
@@ -27,6 +28,89 @@ export default function Scholarships() {
   const containerRef = useRef(null);
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30 });
+  const [formData, setFormData] = useState({
+    fullName: "",
+    email: "",
+    currentLevel: "",
+    intake: "2026",
+    preferredCountry: "",
+    score: "",
+    fundingGoal: "",
+  });
+  const [loading, setLoading] = useState(false);
+
+  const [msg, setMsg] = useState({ status: "", message: "" });
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/scholarships`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include", // 🔥 IMPORTANT for auth
+          body: JSON.stringify(formData),
+        },
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setMsg({
+          status: "error",
+          message: data.message || "Something went wrong",
+        });
+        setLoading(false);
+        return;
+      }
+
+      setMsg({
+        status: "success",
+        message: "Form submitted successfully 🚀",
+      });
+
+      // optional reset
+      setFormData({
+        fullName: "",
+        email: "",
+        currentLevel: "",
+        intake: "2026",
+        preferredCountry: "",
+        score: "",
+        fundingGoal: "",
+      });
+    } catch (error) {
+      setMsg({
+        status: "error",
+        message: "Server error, try again later",
+      });
+    } finally {
+      setLoading(false); // 🔥 ALWAYS RUNS
+    }
+  };
+
+  useEffect(() => {
+    if (msg.status) {
+      const timer = setTimeout(() => {
+        setMsg({ status: "", message: "" });
+      }, 3000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [msg]);
 
   return (
     <main
@@ -162,11 +246,7 @@ export default function Scholarships() {
                 </div>
               </div>
 
-              <form
-                action="/assessment"
-                method="GET"
-                className="space-y-3 sm:space-y-4"
-              >
+              <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div className="space-y-1.5">
                     <label className="block text-xs font-medium text-white/70">
@@ -174,9 +254,11 @@ export default function Scholarships() {
                     </label>
                     <input
                       type="text"
-                      name="name"
+                      name="fullName"
                       required
                       placeholder="e.g. Ananya Sharma"
+                      value={formData.fullName}
+                      onChange={handleChange}
                       className="w-full rounded-xl bg-slate-900/80 border border-white/10 px-3 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400/60 placeholder:text-white/30"
                     />
                   </div>
@@ -189,6 +271,8 @@ export default function Scholarships() {
                       name="email"
                       required
                       placeholder="you@example.com"
+                      value={formData.email}
+                      onChange={handleChange}
                       className="w-full rounded-xl bg-slate-900/80 border border-white/10 px-3 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400/60 placeholder:text-white/30"
                     />
                   </div>
@@ -200,10 +284,11 @@ export default function Scholarships() {
                       Current level of study
                     </label>
                     <select
-                      name="current_level"
+                      name="currentLevel"
                       className="w-full rounded-xl bg-slate-900/80 border border-white/10 px-3 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400/60"
-                      defaultValue=""
                       required
+                      value={formData.currentLevel}
+                      onChange={handleChange}
                     >
                       <option value="" disabled>
                         Select option
@@ -223,7 +308,8 @@ export default function Scholarships() {
                     <select
                       name="intake"
                       className="w-full rounded-xl bg-slate-900/80 border border-white/10 px-3 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400/60"
-                      defaultValue="2026"
+                      value={formData.intake}
+                      onChange={handleChange}
                       required
                     >
                       <option value="2026">2026</option>
@@ -239,9 +325,10 @@ export default function Scholarships() {
                       Preferred countries
                     </label>
                     <select
-                      name="country"
+                      name="preferredCountry"
                       className="w-full rounded-xl bg-slate-900/80 border border-white/10 px-3 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400/60"
-                      defaultValue=""
+                      value={formData.preferredCountry}
+                      onChange={handleChange}
                       required
                     >
                       <option value="" disabled>
@@ -263,6 +350,8 @@ export default function Scholarships() {
                       type="text"
                       name="score"
                       placeholder="e.g. 8.4 CGPA / 86%"
+                      value={formData.score}
+                      onChange={handleChange}
                       className="w-full rounded-xl bg-slate-900/80 border border-white/10 px-3 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400/60 placeholder:text-white/30"
                     />
                   </div>
@@ -273,29 +362,31 @@ export default function Scholarships() {
                     What do you want funded?
                   </label>
                   <select
-                    name="funding_goal"
+                    name="fundingGoal"
                     className="w-full rounded-xl bg-slate-900/80 border border-white/10 px-3 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400/60"
-                    defaultValue=""
+                    value={formData.fundingGoal}
+                    onChange={handleChange}
                     required
                   >
                     <option value="" disabled>
                       Select option
                     </option>
-                    <option value="tuition_only">
-                      Major part of tuition fee
-                    </option>
-                    <option value="tuition_plus_living">
+                    <option value="tuition">Major part of tuition fee</option>
+                    <option value="partial">
                       Tuition + partial living costs
                     </option>
-                    <option value="full_ride">Near full-ride funding</option>
+                    <option value="full">Near full-ride funding</option>
                   </select>
                 </div>
 
                 <button
                   type="submit"
+                  disabled={loading}
                   className="mt-2 w-full inline-flex items-center justify-center gap-2 px-4 py-3.5 rounded-2xl bg-white text-black text-sm sm:text-base font-semibold shadow-lg shadow-blue-500/40 hover:scale-[1.02] hover:shadow-blue-500/60 transition-all"
                 >
-                  Get My Scholarship Possibility Report
+                  {loading
+                    ? "Submitting..."
+                    : "Get My Scholarship Possibility Report"}
                   <FaRocket className="text-sm sm:text-base" />
                 </button>
 
@@ -609,6 +700,11 @@ export default function Scholarships() {
           </p>
         </div>
       </section>
+      <MessageBox
+        status={msg.status}
+        message={msg.message}
+        onClose={() => setMsg({ status: "", message: "" })}
+      />
     </main>
   );
 }
