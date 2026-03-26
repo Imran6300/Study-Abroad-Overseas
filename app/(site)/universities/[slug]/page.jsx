@@ -2,8 +2,7 @@ import UniversityDetailLayout from "@/components/UniversityDetail/UniversityDeta
 import { notFound } from "next/navigation";
 
 export default async function Page({ params }) {
-  const { slug } = params;
-
+  const { slug } = await params;
   try {
     const [uniRes, similarRes] = await Promise.all([
       fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/universities/${slug}`, {
@@ -15,13 +14,12 @@ export default async function Page({ params }) {
       ),
     ]);
 
-    if (!uniRes.ok) return notFound();
-
     const uniData = await uniRes.json();
     const similarData = await similarRes.json();
 
-    if (!uniData?.success || !uniData?.university) {
-      return notFound();
+    if (!uniData?.university) {
+      console.log("INVALID UNI DATA:", uniData);
+      notFound();
     }
 
     return (
@@ -34,6 +32,7 @@ export default async function Page({ params }) {
       />
     );
   } catch (err) {
-    return notFound();
+    console.log("PAGE ERROR:", err);
+    notFound();
   }
 }

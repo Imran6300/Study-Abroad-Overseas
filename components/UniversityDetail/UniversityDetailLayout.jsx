@@ -117,26 +117,34 @@ export default function UniversityDetailLayout({ uni, similarUniversities }) {
           <main className="lg:col-span-2 space-y-8 md:space-y-10 lg:space-y-12">
             {/* ================= RESPONSIVE IMAGE CAROUSEL ================= */}
             <div className="rounded-2xl border border-[#1E3A5F] overflow-hidden bg-black shadow-2xl">
-              <Swiper
-                modules={[Navigation, Pagination, Autoplay]}
-                navigation
-                pagination={{ clickable: true }}
-                autoplay={{ delay: 4000, disableOnInteraction: false }}
-                loop={images.length > 1}
-                className="w-full h-[220px] sm:h-[300px] md:h-[360px] lg:h-[420px]"
-              >
-                {images.map((img, index) => (
-                  <SwiperSlide key={index}>
-                    <div className="relative w-full h-full">
-                      <img
-                        src={img}
-                        alt={`slide-${index}`}
-                        className="absolute inset-0 w-full h-full object-cover"
-                      />
-                    </div>
-                  </SwiperSlide>
-                ))}
-              </Swiper>
+              {images.length > 0 ? (
+                <Swiper
+                  modules={[Navigation, Pagination, Autoplay]}
+                  navigation
+                  pagination={{ clickable: true }}
+                  autoplay={{ delay: 4000, disableOnInteraction: false }}
+                  loop={images.length > 1}
+                  className="w-full h-[220px] sm:h-[300px] md:h-[360px] lg:h-[420px]"
+                >
+                  {images.map((img, index) => (
+                    <SwiperSlide key={index}>
+                      <div className="relative w-full h-full">
+                        <img
+                          src={img}
+                          alt={`slide-${index}`}
+                          className="absolute inset-0 w-full h-full object-cover"
+                        />
+                      </div>
+                    </SwiperSlide>
+                  ))}
+                </Swiper>
+              ) : (
+                <img
+                  src={fallbackImage}
+                  alt={uni.name}
+                  className="w-full h-[220px] sm:h-[300px] object-cover"
+                />
+              )}
             </div>
 
             {/* OVERVIEW */}
@@ -234,7 +242,8 @@ export default function UniversityDetailLayout({ uni, similarUniversities }) {
                     similarUni.images?.campus ||
                     similarUni.images?.classroom ||
                     similarUni.images?.building ||
-                    similarUni.logo?.url,
+                    similarUni.logo?.url ||
+                    "/images/default-university.jpg",
                   location: `${similarUni.city}, ${similarUni.country}`,
                 }}
               />

@@ -20,7 +20,7 @@ export default function SimilarUniversityCard({ uni }) {
             alt={uni.name}
             className="w-full h-full object-cover"
             onError={(e) => {
-              e.currentTarget.src = "/images/default-university.jpg";
+              e.currentTarget.src = "https://placehold.net/600x600.png";
             }}
           />
         </div>
