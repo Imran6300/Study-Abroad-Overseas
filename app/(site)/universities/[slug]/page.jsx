@@ -2,28 +2,38 @@ import UniversityDetailLayout from "@/components/UniversityDetail/UniversityDeta
 import { notFound } from "next/navigation";
 
 export default async function Page({ params }) {
-  const { slug } = await params;
+  const { slug } = params;
 
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/universities/${slug}`,
-    { cache: "no-store" },
-  );
+  try {
+    const [uniRes, similarRes] = await Promise.all([
+      fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/universities/${slug}`, {
+        cache: "no-store",
+      }),
+      fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/universities/similar/${slug}`,
+        { cache: "no-store" },
+      ),
+    ]);
 
-  if (!res.ok) {
-    notFound();
+    if (!uniRes.ok) return notFound();
+
+    const uniData = await uniRes.json();
+    const similarData = await similarRes.json();
+
+    if (!uniData?.success || !uniData?.university) {
+      return notFound();
+    }
+
+    return (
+      <UniversityDetailLayout
+        uni={{
+          ...uniData.university,
+          courses: uniData.courses,
+        }}
+        similarUniversities={similarData?.universities || []}
+      />
+    );
+  } catch (err) {
+    return notFound();
   }
-
-  const data = await res.json();
-
-  if (!data?.success || !data?.university) {
-    notFound();
-  }
-  return (
-    <UniversityDetailLayout
-      uni={{
-        ...data.university,
-        courses: data.courses,
-      }}
-    />
-  );
 }

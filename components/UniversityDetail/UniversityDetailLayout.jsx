@@ -1,6 +1,5 @@
 "use client";
 import SimilarUniversityCard from "./SimilarUniversityCard";
-import { useSelector } from "react-redux";
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -12,11 +11,12 @@ import "swiper/css/pagination";
 
 import { Navigation, Pagination, Autoplay } from "swiper/modules";
 
-export default function UniversityDetailLayout({ uni }) {
-  const universities = useSelector((state) => state.universities.list);
+export default function UniversityDetailLayout({ uni, similarUniversities }) {
   const [status, setStatus] = useState(null);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const similar = similarUniversities;
 
   /* ================= NORMALIZED VALUES ================= */
   const location = `${uni.city || ""}`.trim();
@@ -88,10 +88,6 @@ export default function UniversityDetailLayout({ uni }) {
       setLoading(false);
     }
   };
-
-  const similarUniversities = useMemo(() => {
-    return universities.filter((u) => u.slug !== uni.slug).slice(0, 3);
-  }, [universities, uni.slug]);
 
   return (
     <section className="bg-[#0A192F] text-[#CCD6F6] min-h-screen pt-20 md:pt-32">
@@ -227,23 +223,27 @@ export default function UniversityDetailLayout({ uni }) {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 pb-20">
         <h2 className="text-2xl font-bold mb-6 px-2">Similar Universities</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-          {similarUniversities.map((similarUni) => (
-            <SimilarUniversityCard
-              key={similarUni.slug}
-              uni={{
-                slug: similarUni.slug,
-                name: similarUni.name,
-                image:
-                  similarUni.images?.campus ||
-                  similarUni.images?.classroom ||
-                  similarUni.images?.building ||
-                  similarUni.logo?.url,
-                location: `${similarUni.city}, ${similarUni.country}`,
-                rank: similarUni.qsRanking,
-                desc: similarUni.description,
-              }}
-            />
-          ))}
+          {similar && similar.length > 0 ? (
+            similar.map((similarUni) => (
+              <SimilarUniversityCard
+                key={similarUni.slug}
+                uni={{
+                  slug: similarUni.slug,
+                  name: similarUni.name,
+                  image:
+                    similarUni.images?.campus ||
+                    similarUni.images?.classroom ||
+                    similarUni.images?.building ||
+                    similarUni.logo?.url,
+                  location: `${similarUni.city}, ${similarUni.country}`,
+                }}
+              />
+            ))
+          ) : (
+            <p className="text-[#8892B0] text-sm px-2">
+              No similar universities found.
+            </p>
+          )}
         </div>
       </section>
     </section>
