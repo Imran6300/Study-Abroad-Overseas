@@ -187,3 +187,11 @@ body::-webkit-scrollbar {
 .sidebar-scroll::-webkit-scrollbar-thumb:hover {
   background: rgba(50, 205, 50, 0.7);
 }
+
+.swiper {
+  padding-bottom: 20px;
+}
+
+.swiper-slide {
+  height: auto;
+}

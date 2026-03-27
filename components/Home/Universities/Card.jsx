@@ -16,6 +16,7 @@ export default function UniversityCard({
   slug,
   logo,
 }) {
+  console.log(image);
   return (
     <div
       className="
@@ -23,7 +24,7 @@ export default function UniversityCard({
         bg-white 
         border border-gray-200 
         rounded-2xl overflow-hidden 
-        shadow-md hover:shadow-xl 
+        shadow-sm hover:shadow-xl
         transition-all duration-300 
         hover:-translate-y-1.5 hover:border-blue-200 
         flex flex-col
@@ -33,7 +34,7 @@ export default function UniversityCard({
       {/* IMAGE SECTION */}
       <div className="relative h-48 sm:h-52 overflow-hidden">
         <Image
-          src={image || "/university-fallback.jpg"}
+          src={image || "https://placehold.net/600x600.png"}
           alt={name}
           fill
           className="object-cover transition-transform duration-700 group-hover:scale-105"

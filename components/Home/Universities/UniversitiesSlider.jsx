@@ -1,108 +1,72 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Autoplay } from "swiper/modules";
+
+// Import styles
+import "swiper/css";
+import "swiper/css/navigation";
+
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Card from "./Card";
 
 export default function UniversitiesSlider({ items }) {
-  const scrollRef = useRef(null);
-
-  // Duplicate items 3 times
-  const duplicated = [...items, ...items];
-
-  useEffect(() => {
-    const container = scrollRef.current;
-    if (!container) return;
-
-    const singleWidth = container.scrollWidth / 3;
-
-    // Start from middle copy
-    container.scrollLeft = singleWidth;
-  }, []);
-
-  const scroll = (direction) => {
-    const container = scrollRef.current;
-    if (!container) return;
-
-    const card = container.firstElementChild?.firstElementChild;
-    const gap = 24;
-    const cardWidth = card?.offsetWidth || 300;
-
-    container.scrollBy({
-      left: direction === "left" ? -(cardWidth + gap) : cardWidth + gap,
-      behavior: "smooth",
-    });
-  };
-
-  const handleScroll = () => {
-    const container = scrollRef.current;
-    if (!container) return;
-
-    const singleWidth = container.scrollWidth / 3;
-
-    if (container.scrollLeft <= 0) {
-      container.scrollLeft = singleWidth;
-    }
-
-    if (container.scrollLeft >= singleWidth * 2) {
-      container.scrollLeft = singleWidth;
-    }
-  };
-
   return (
     <div className="relative w-full overflow-hidden">
-      {/* Left Arrow */}
-      <button
-        onClick={() => scroll("left")}
-        className="absolute top-1/2 -translate-y-1/2 z-20
-bg-white/90 backdrop-blur-md shadow-md rounded-full
-p-2 sm:p-3
-left-2 sm:left-0 hidden sm:flex "
-      >
-        <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" size={24} />
-      </button>
-
-      {/* Scroll Container */}
-      <div
-        ref={scrollRef}
-        onScroll={handleScroll}
-        className="overflow-x-auto no-scrollbar scroll-smooth h-full"
-      >
-        <div className="flex gap-6 px-4 sm:px-8 md:px-12">
-          {duplicated.map((item, index) => (
-            <div
-              key={`${item.slug}-${index}`}
-              className="min-w-[280px] sm:min-w-[320px] md:min-w-[400px]
-max-w-[280px] sm:max-w-[320px] md:max-w-[400px] shrink-0 h-full"
-            >
-              <Card
-                slug={item.slug}
-                image={item.images?.[0]?.url}
-                logo={item.logo?.url} // ← add this line
-                name={item.name}
-                location={`${item.city ? item.city + ", " : ""}${item.country}`}
-                rank={item.qsRanking}
-                desc={item.description}
-                students={item.totalStudents}
-                acceptance={item.acceptanceRate}
-              />
-            </div>
-          ))}
-        </div>
+      {/* Custom Navigation Buttons */}
+      <div className="swiper-button-prev-custom absolute left-2 top-1/2 z-20 -translate-y-1/2 cursor-pointer bg-white p-3 rounded-full shadow-md hidden md:flex">
+        <ChevronLeft />
       </div>
 
-      {/* Right Arrow */}
-      <button
-        onClick={() => scroll("right")}
-        className="absolute top-1/2 -translate-y-1/2 z-20
-bg-white/90 backdrop-blur-md shadow-md rounded-full
-p-2 sm:p-3
-right-2 sm:right-0
-hidden sm:flex 
-"
+      <div className="swiper-button-next-custom absolute right-2 top-1/2 z-20 -translate-y-1/2 cursor-pointer bg-white p-3 rounded-full shadow-md hidden md:flex">
+        <ChevronRight />
+      </div>
+
+      <Swiper
+        modules={[Navigation, Autoplay]}
+        spaceBetween={24}
+        slidesPerView={1.2}
+        loop={true} // ✅ safe (Swiper handles internally, not SEO issue)
+        navigation={{
+          nextEl: ".swiper-button-next-custom",
+          prevEl: ".swiper-button-prev-custom",
+        }}
+        autoplay={{
+          delay: 2500,
+          disableOnInteraction: false,
+        }}
+        breakpoints={{
+          640: {
+            slidesPerView: 1.5,
+          },
+          768: {
+            slidesPerView: 2,
+          },
+          1024: {
+            slidesPerView: 3,
+          },
+          1280: {
+            slidesPerView: 3.5,
+          },
+        }}
+        className="px-4 sm:px-8  md:px-12 py-4 "
       >
-        <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" size={24} />
-      </button>
+        {items.map((item) => (
+          <SwiperSlide key={item.slug}>
+            <Card
+              slug={item.slug}
+              image={item.images?.campus}
+              logo={item.logo?.url}
+              name={item.name}
+              location={`${item.city ? item.city + ", " : ""}${item.country}`}
+              rank={item.qsRanking}
+              desc={item.description}
+              students={item.totalStudents}
+              acceptance={item.acceptanceRate}
+            />
+          </SwiperSlide>
+        ))}
+      </Swiper>
     </div>
   );
 }
