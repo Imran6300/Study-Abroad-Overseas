@@ -52,7 +52,6 @@ export default function UniversitiesPage() {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
-  const ITEMS_PER_PAGE = 10;
 
   const [mode, setMode] = useState(null); // null | "add" | "edit"
   const [selectedUniversity, setSelectedUniversity] = useState(null);
@@ -63,13 +62,17 @@ export default function UniversitiesPage() {
   const isFormOpen = mode !== null;
 
   // ─── Data Fetching ──────────────────────────────────────────
+  const [totalPages, setTotalPages] = useState(1);
+
   const fetchUniversities = useCallback(async () => {
     setLoading(true);
     setError(null);
-    try {
-      const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/host/universities?all=true`;
 
-      const res = await fetch(url, { credentials: "include" });
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/host/admin/universities?page=${currentPage}&limit=10&search=${debouncedSearch}`,
+        { credentials: "include" },
+      );
 
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
@@ -77,15 +80,15 @@ export default function UniversitiesPage() {
       }
 
       const data = await res.json();
+
       setUniversities(data.universities || []);
+      setTotalPages(data.totalPages || 1);
     } catch (err) {
-      setError(getErrorMessage(err));
-      console.error("Fetch universities failed:", err);
+      setError(err.message);
     } finally {
       setLoading(false);
     }
-  }, []);
-  ``;
+  }, [currentPage, debouncedSearch]);
 
   useEffect(() => {
     fetchUniversities();
@@ -131,25 +134,6 @@ export default function UniversitiesPage() {
   }, [universities, sortConfig]);
 
   // ─── Filtering & Pagination ─────────────────────────────────
-  const trimmedSearch = (debouncedSearch || "").trim().toLowerCase();
-
-  const filteredUniversities = getSortedUniversities().filter((u) => {
-    if (!trimmedSearch) return true;
-
-    const term = trimmedSearch;
-    return (
-      (u.name || "").toLowerCase().includes(term) ||
-      (u.country || "").toLowerCase().includes(term) ||
-      (u.city || "").toLowerCase().includes(term)
-    );
-  });
-
-  const totalPages = Math.ceil(filteredUniversities.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const paginatedUniversities = filteredUniversities.slice(
-    startIndex,
-    startIndex + ITEMS_PER_PAGE,
-  );
 
   // Auto-correct page if out of bounds
   useEffect(() => {
@@ -354,7 +338,7 @@ export default function UniversitiesPage() {
                     Try Again
                   </button>
                 </div>
-              ) : filteredUniversities.length === 0 ? (
+              ) : universities.length === 0 ? (
                 <div className="p-12 text-center text-gray-500 min-h-[240px] flex flex-col items-center justify-center">
                   {debouncedSearch ? (
                     <>
@@ -418,7 +402,7 @@ export default function UniversitiesPage() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-200 bg-white">
-                        {paginatedUniversities.map((uni) => (
+                        {universities.map((uni) => (
                           <tr
                             key={uni._id}
                             className="hover:bg-gray-50 transition-colors h-20 align-middle"
@@ -491,15 +475,10 @@ export default function UniversitiesPage() {
                   </div>
 
                   {/* Pagination - always show when results exist */}
-                  {filteredUniversities.length > 0 && (
+                  {universities.length > 0 && (
                     <div className="px-6 py-4 flex flex-col sm:flex-row items-center justify-between border-t gap-4 text-sm text-gray-600">
                       <div>
-                        Showing {startIndex + 1}–
-                        {Math.min(
-                          startIndex + ITEMS_PER_PAGE,
-                          filteredUniversities.length,
-                        )}{" "}
-                        of {filteredUniversities.length}
+                        Page {currentPage} of {totalPages}
                       </div>
 
                       {totalPages > 1 && (
