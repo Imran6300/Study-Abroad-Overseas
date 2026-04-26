@@ -27,7 +27,7 @@ const Countries = ({ universities }) => {
             >
               <Card
                 slug={item.slug}
-                image={item.images?.campus}
+                image={item.images?.[0]?.url}
                 logo={item.logo?.url}
                 name={item.name}
                 location={`${item.city ? item.city + ", " : ""}${item.country}`}
