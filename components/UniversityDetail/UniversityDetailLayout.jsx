@@ -8,8 +8,33 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
+import Image from "next/image";
 
 import { Navigation, Pagination, Autoplay } from "swiper/modules";
+
+const getOptimizedUrl = (url, width) => {
+  if (!url) return "";
+  return url.replace("/upload/", `/upload/f_auto,q_auto,w_${width}/`);
+};
+
+const shimmer = (w, h) => `
+  <svg width="${w}" height="${h}" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="g">
+        <stop stopColor="#333" offset="20%" />
+        <stop stopColor="#444" offset="50%" />
+        <stop stopColor="#333" offset="70%" />
+      </linearGradient>
+    </defs>
+    <rect width="${w}" height="${h}" fill="#333" />
+    <rect id="r" width="${w}" height="${h}" fill="url(#g)" />
+    <animate xlink:href="#r" attributeName="x" from="-${w}" to="${w}" dur="1s" repeatCount="indefinite" />
+  </svg>
+`;
+const toBase64 = (str) =>
+  typeof window === "undefined"
+    ? Buffer.from(str).toString("base64")
+    : window.btoa(str);
 
 export default function UniversityDetailLayout({ uni, similarUniversities }) {
   const [status, setStatus] = useState(null);
@@ -27,13 +52,10 @@ export default function UniversityDetailLayout({ uni, similarUniversities }) {
   const intake = uni.intakes?.join(", ") ?? "Fall, Spring";
   const description = uni.description ?? "";
 
-  const images = [
-    uni.images?.campus,
-    uni.images?.classroom,
-    uni.images?.building,
-  ].filter(Boolean);
+  const images = uni.images?.map((img) => img.url) || [];
 
-  const fallbackImage = uni.logo?.url || "/images/default-university.jpg";
+  const fallbackImage =
+    getOptimizedUrl(uni.logo?.url, 800) || "/images/default-university.jpg";
 
   const courses = Array.isArray(uni.courses) ? uni.courses : [];
   const admissionRequirements = uni.admissionRequirements ?? [];
@@ -129,21 +151,36 @@ export default function UniversityDetailLayout({ uni, similarUniversities }) {
                   {images.map((img, index) => (
                     <SwiperSlide key={index}>
                       <div className="relative w-full h-full">
-                        <img
-                          src={img}
+                        <Image
+                          src={getOptimizedUrl(img, 800)}
                           alt={`slide-${index}`}
-                          className="absolute inset-0 w-full h-full object-cover"
+                          fill
+                          sizes="(max-width: 768px) 100vw, 50vw"
+                          className="object-cover"
+                          placeholder="blur"
+                          blurDataURL={`data:image/svg+xml;base64,${toBase64(
+                            shimmer(700, 475),
+                          )}`}
+                          priority={index === 0} // ✅ ADD THIS
                         />
                       </div>
                     </SwiperSlide>
                   ))}
                 </Swiper>
               ) : (
-                <img
-                  src={fallbackImage}
-                  alt={uni.name}
-                  className="w-full h-[220px] sm:h-[300px] object-cover"
-                />
+                <div className="relative w-full h-[220px] sm:h-[300px]">
+                  <Image
+                    src={fallbackImage}
+                    alt={uni.name}
+                    fill
+                    className="object-cover"
+                    placeholder="blur"
+                    blurDataURL={`data:image/svg+xml;base64,${toBase64(
+                      shimmer(700, 475),
+                    )}`}
+                    priority
+                  />
+                </div>
               )}
             </div>
 
@@ -239,9 +276,7 @@ export default function UniversityDetailLayout({ uni, similarUniversities }) {
                   slug: similarUni.slug,
                   name: similarUni.name,
                   image:
-                    similarUni.images?.campus ||
-                    similarUni.images?.classroom ||
-                    similarUni.images?.building ||
+                    similarUni.images?.[0]?.url ||
                     similarUni.logo?.url ||
                     "/images/default-university.jpg",
                   location: `${similarUni.city}, ${similarUni.country}`,
