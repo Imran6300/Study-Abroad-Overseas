@@ -122,7 +122,7 @@ export default function UniversityCard({
 
         {/* CTA */}
         <Link
-          href={slug ? `/universities/${slug}` : "#"}
+          href={slug ? `/programs/universities/${slug}` : "#"}
           className="
             mt-5 inline-flex items-center justify-center gap-2 
             bg-blue-600 hover:bg-blue-700 

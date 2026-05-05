@@ -179,7 +179,8 @@ export default async function ProgramPage({ params }) {
           "@type": "CollegeOrUniversity",
           name: uni.name,
           url:
-            uni.website || `https://khizaroverseas.in/universities/${uni.slug}`,
+            uni.website ||
+            `https://khizaroverseas.in/programs/universities/${uni.slug}`,
         },
         location: {
           "@type": "Country",

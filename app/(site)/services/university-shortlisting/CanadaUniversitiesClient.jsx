@@ -471,7 +471,7 @@ export default function CanadaUniversitiesClient() {
                                 </motion.button>
 
                                 <MotionLink
-                                  href={`/universities/${uni.slug}`}
+                                  href={`/programs/universities/${uni.slug}`}
                                   whileHover={{ scale: 1.02 }}
                                   className="flex-1 border border-gray-300 text-gray-700 py-2.5 rounded-lg text-sm hover:bg-gray-50 transition text-center"
                                 >

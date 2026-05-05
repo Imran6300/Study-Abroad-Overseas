@@ -146,7 +146,9 @@ export default function SavedUniversitiesPage() {
               {/* ACTION BUTTONS */}
               <div className="flex gap-3 pt-2">
                 <button
-                  onClick={() => router.push(`/universities/${uni.slug}`)}
+                  onClick={() =>
+                    router.push(`/programs/universities/${uni.slug}`)
+                  }
                   className="flex-1 bg-[#4169E1] hover:bg-[#365ad3] text-white text-sm py-2 rounded-lg flex items-center justify-center gap-2"
                 >
                   <ExternalLink size={16} />

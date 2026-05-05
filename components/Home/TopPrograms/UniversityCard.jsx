@@ -3,7 +3,7 @@ import Image from "next/image";
 
 export default function UniversityCard({ uni }) {
   return (
-    <Link href={`/universities/${uni.slug}`}>
+    <Link href={`/programs/universities/${uni.slug}`}>
       <div className="group cursor-pointer bg-white rounded-2xl shadow-md hover:shadow-xl transition overflow-hidden border border-[#DCDCDC]">
         <Image
           src={uni.image}

@@ -277,7 +277,10 @@ export default function CourseDetailPage({ slug }) {
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {program.topUniversities?.length > 0 ? (
                     program.topUniversities.map((uni, i) => (
-                      <Link key={uni._id} href={`/universities/${uni.slug}`}>
+                      <Link
+                        key={uni._id}
+                        href={`/programs/universities/${uni.slug}`}
+                      >
                         <motion.div
                           initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}

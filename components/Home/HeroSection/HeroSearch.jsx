@@ -28,13 +28,13 @@ export default function HeroSearch() {
       }
 
       if (data.type === "university") {
-        router.push(`/universities/${data.data.slug}`);
+        router.push(`/programs/universities/${data.data.slug}`);
         return;
       }
 
       if (data.type === "course") {
         router.push(
-          `/universities/${data.data.university.slug}?course=${encodeURIComponent(
+          `/programs/universities/${data.data.university.slug}?course=${encodeURIComponent(
             data.data.course,
           )}`,
         );

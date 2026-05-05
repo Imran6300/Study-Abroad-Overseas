@@ -134,7 +134,7 @@ export default function ApplicationsCard({
           {/* ACTION BUTTONS */}
           <div className="flex gap-3">
             <button
-              onClick={() => router.push(`/universities/${app.slug}`)}
+              onClick={() => router.push(`/programs/universities/${app.slug}`)}
               className="flex items-center gap-2 border border-white/20 text-white px-4 py-2 rounded-lg hover:bg-white/10 transition"
             >
               <Eye size={16} />

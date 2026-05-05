@@ -164,7 +164,7 @@ export default function CountryDetail({ country }) {
               item: {
                 "@type": "CollegeOrUniversity",
                 name: uni.name,
-                url: `${process.env.NEXT_PUBLIC_FRONTEND_URL}/universities/${uni.slug}`,
+                url: `${process.env.NEXT_PUBLIC_FRONTEND_URL}/programs/universities/${uni.slug}`,
                 address: {
                   "@type": "PostalAddress",
                   addressCountry: uni.country,
@@ -363,7 +363,7 @@ export default function CountryDetail({ country }) {
                       QS Rank #{uni.qsRanking}
                     </p>
                     <Link
-                      href={`/universities/${uni.slug}`}
+                      href={`/programs/universities/${uni.slug}`}
                       className="mt-4 inline-block text-[#38BDF8] hover:underline"
                     >
                       View Details →
