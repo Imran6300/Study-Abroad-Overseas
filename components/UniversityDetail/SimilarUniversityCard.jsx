@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function SimilarUniversityCard({ uni }) {
   return (
-    <Link href={`/universities/${uni.slug}`} className="block">
+    <Link href={`/programs/universities/${uni.slug}`} className="block">
       <div
         className="
           bg-[#112240] border border-[#1E3A5F]

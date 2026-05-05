@@ -85,9 +85,9 @@ export default function UniversitiesClient({ universities }) {
       <div className="bg-gradient-to-br from-blue-950/40 via-indigo-950/30 to-gray-950 pt-28 pb-24 border-b border-gray-800/50 animate-fade-in">
         <div className="max-w-7xl mx-auto px-6">
           <div className="max-w-3xl">
-            <h1 className="text-5xl md:text-6xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-blue-300 via-indigo-300 to-blue-200">
-              Discover World-Class Universities
-            </h1>
+            <h2 className="text-5xl md:text-6xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-blue-300 via-indigo-300 to-blue-200">
+              Top Universities Abroad for Indian Students
+            </h2>
             <p className="mt-6 text-xl text-gray-300 leading-relaxed">
               Find your perfect university — compare rankings, programs,
               acceptance rates & student experience.

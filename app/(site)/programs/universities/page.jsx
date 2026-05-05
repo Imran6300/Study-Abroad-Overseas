@@ -1,12 +1,35 @@
 import UniversitiesClient from "./UniversitiesClient";
+import Link from "next/link";
+
+export const metadata = {
+  title: "Top Universities Abroad for Indian Students (2026)",
+  description:
+    "Explore top universities in UK, USA, Canada & more. Compare courses, fees, rankings and apply easily.",
+};
 
 export default async function UniversitiesPage() {
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/universities`,
-    { cache: "no-store" },
   );
-
   const data = await res.json();
 
-  return <UniversitiesClient universities={data.universities} />;
+  return (
+    <>
+      <h1>Top Universities Abroad for Indian Students</h1>
+
+      <div className="sr-only">
+        <ul>
+          {data.universities.slice(0, 20).map((uni) => (
+            <li key={uni._id}>
+              <Link href={`/programs/universities/${uni.slug}`}>
+                {uni.name} - {uni.country}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <UniversitiesClient universities={data.universities} />
+    </>
+  );
 }

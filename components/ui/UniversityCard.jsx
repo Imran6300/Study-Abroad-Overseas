@@ -47,7 +47,7 @@ const UniversityCard = memo(function UniversityCard({
       className="will-change-transform"
     >
       <Link
-        href={`/universities/${uni.slug}`}
+        href={`/programs/universities/${uni.slug}`}
         className="group bg-gray-900 rounded-2xl overflow-hidden border border-gray-800 shadow-lg hover:shadow-2xl hover:border-blue-800/40 transition-all duration-300 flex flex-col h-full"
       >
         <div className="relative h-52 sm:h-56 overflow-hidden">
