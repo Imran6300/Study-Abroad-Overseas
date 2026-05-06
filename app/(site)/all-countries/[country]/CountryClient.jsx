@@ -4,7 +4,6 @@ import Image from "next/image";
 import { LazyMotion, domAnimation, m } from "framer-motion";
 import { memo, useMemo } from "react";
 import Link from "next/link";
-import { useSelector } from "react-redux";
 
 /* ================= ANIMATIONS ================= */
 const fadeUp = {
@@ -22,9 +21,7 @@ const cleanArray = (arr = []) =>
     typeof item === "string" ? item.replace(/[\[\]"]/g, "").trim() : item,
   );
 
-export default function CountryDetail({ country }) {
-  const allUniversities = useSelector((state) => state.universities.list);
-
+export default function CountryDetail({ country, universities = [] }) {
   if (!country) return null;
 
   const {
@@ -59,12 +56,7 @@ export default function CountryDetail({ country }) {
     },
   ];
 
-  const universities = useMemo(() => {
-    if (!allUniversities?.length) return [];
-    return allUniversities.filter(
-      (uni) => uni.country?.toLowerCase().replace(/\s+/g, "-") === slug,
-    );
-  }, [allUniversities, slug]);
+  const filteredUniversities = universities;
 
   // ── All schemas combined into one clean block ─────────────────────────────
   const schemas = [
@@ -208,6 +200,15 @@ export default function CountryDetail({ country }) {
                 Study in {name} 2026
               </m.h1>
 
+              <div className="mt-6">
+                <Link
+                  href={`/programs/universities?country=${name}`}
+                  className="text-cyan-400 underline"
+                >
+                  View all universities in {name}
+                </Link>
+              </div>
+
               <m.p
                 variants={fadeUp}
                 initial="hidden"
@@ -343,8 +344,18 @@ export default function CountryDetail({ country }) {
                 viewport={{ once: true }}
                 className="text-3xl lg:text-4xl font-bold mb-12 text-center lg:text-left"
               >
-                Top Universities in {name} 2026
+                Top Universities in {country.name} 2026
               </m.h2>
+
+              <ul>
+                {filteredUniversities.slice(0, 20).map((uni) => (
+                  <li key={uni._id}>
+                    <Link href={`/programs/universities/${uni.slug}`}>
+                      {uni.name} in {name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
 
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {universities.map((uni, i) => (

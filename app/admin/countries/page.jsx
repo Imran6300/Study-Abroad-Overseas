@@ -40,7 +40,7 @@ export default function CountriesPage() {
   const fetchCountries = async () => {
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/country`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/countries`,
         {
           credentials: "include",
         },
@@ -76,7 +76,7 @@ export default function CountriesPage() {
   const openView = async (country) => {
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/country/${country.slug}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/countries/${country.slug}`,
         { credentials: "include" },
       );
 
@@ -94,7 +94,7 @@ export default function CountriesPage() {
   const openEdit = async (country) => {
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/country/${country.slug}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/countries/${country.slug}`,
         { credentials: "include" },
       );
 

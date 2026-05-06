@@ -74,10 +74,18 @@ export default async function CountryPage({ params }) {
   const { country: slug } = await params;
 
   const country = await getCountry(slug);
+  const uniRes = await fetch(
+    `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/universities?country=${slug}`,
+    { next: { revalidate: 86400 } },
+  );
+
+  const uniData = await uniRes.json();
 
   if (!country) {
     notFound();
   }
 
-  return <CountryClient country={country} />;
+  return (
+    <CountryClient country={country} universities={uniData.universities} />
+  );
 }

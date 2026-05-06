@@ -125,6 +125,14 @@ export default function UniversityDetailLayout({ uni, similarUniversities }) {
           <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold leading-tight">
             {uni.name}
           </h1>
+          <p>
+            <Link
+              href={`/all-countries/${uni.country}`}
+              className="text-blue-400 underline"
+            >
+              Study in {uni.country}
+            </Link>
+          </p>
           <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-sm text-[#8892B0]">
             <span>{location}</span>
             <span className="hidden sm:inline">•</span>
