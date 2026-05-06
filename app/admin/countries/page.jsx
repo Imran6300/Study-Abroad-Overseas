@@ -40,7 +40,7 @@ export default function CountriesPage() {
   const fetchCountries = async () => {
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/countries`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/country`,
         {
           credentials: "include",
         },
@@ -76,7 +76,7 @@ export default function CountriesPage() {
   const openView = async (country) => {
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/countries/${country.slug}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/country/${country.slug}`,
         { credentials: "include" },
       );
 
@@ -94,7 +94,7 @@ export default function CountriesPage() {
   const openEdit = async (country) => {
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/countries/${country.slug}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/country/${country.slug}`,
         { credentials: "include" },
       );
 
@@ -117,7 +117,7 @@ export default function CountriesPage() {
   const handleDeleteConfirmed = async () => {
     try {
       await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/host/country/${countryToDelete.slug}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/country/${countryToDelete.slug}`,
         {
           method: "DELETE",
           credentials: "include",
@@ -151,7 +151,7 @@ export default function CountriesPage() {
 
       if (mode === "add") {
         res = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/host/country`,
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/country`,
           {
             method: "POST",
             body: formData,
@@ -162,7 +162,7 @@ export default function CountriesPage() {
 
       if (mode === "edit" && selectedCountry) {
         res = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/host/country/${selectedCountry.slug}`,
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/country/${selectedCountry.slug}`,
           {
             method: "PUT",
             body: formData,
