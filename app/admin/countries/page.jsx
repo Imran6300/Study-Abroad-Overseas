@@ -25,6 +25,16 @@ export default function CountriesPage() {
   const CounselorName = user?.name;
   const [countries, setCountries] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+
+  const [page, setPage] = useState(1);
+
+  const [pagination, setPagination] = useState({
+    total: 0,
+    totalPages: 1,
+    hasNextPage: false,
+    hasPrevPage: false,
+  });
 
   const [submitting, setSubmitting] = useState(false);
   const [messageModal, setMessageModal] = useState({
@@ -34,13 +44,19 @@ export default function CountriesPage() {
   });
 
   useEffect(() => {
-    fetchCountries();
-  }, []);
+    const delay = setTimeout(() => {
+      fetchCountries(1, search);
+    }, 400);
 
-  const fetchCountries = async () => {
+    return () => clearTimeout(delay);
+  }, [search]);
+
+  const fetchCountries = async (currentPage = 1, searchQuery = search) => {
     try {
+      setLoading(true);
+
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/countries`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/countries?page=${currentPage}&limit=10&search=${encodeURIComponent(searchQuery)}`,
         {
           credentials: "include",
         },
@@ -50,6 +66,10 @@ export default function CountriesPage() {
 
       if (data.success) {
         setCountries(data.data);
+
+        setPagination(data.pagination);
+
+        setPage(data.pagination.page);
       }
     } catch (err) {
       console.error("Error fetching countries:", err);
@@ -58,7 +78,6 @@ export default function CountriesPage() {
     }
   };
 
-  const [search, setSearch] = useState("");
   const [justAdded, setJustAdded] = useState(false);
 
   const [mode, setMode] = useState(null); // "add" | "edit" | "view" | null
@@ -124,7 +143,7 @@ export default function CountriesPage() {
         },
       );
 
-      await fetchCountries();
+      await fetchCountries(page, search);
     } catch (err) {
       console.error("Delete failed:", err);
     }
@@ -178,7 +197,7 @@ export default function CountriesPage() {
       }
 
       // ✅ SUCCESS
-      await fetchCountries();
+      await fetchCountries(page, search);
 
       setMessageModal({
         open: true,
@@ -202,12 +221,6 @@ export default function CountriesPage() {
       setSubmitting(false);
     }
   };
-
-  const filteredCountries = countries.filter(
-    (c) =>
-      c.name.toLowerCase().includes(search.toLowerCase()) ||
-      (c.continent || "").toLowerCase().includes(search.toLowerCase()),
-  );
 
   return (
     <div className="flex min-h-screen bg-gray-50 relative">
@@ -354,7 +367,7 @@ export default function CountriesPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
-                    {filteredCountries.map((country) => (
+                    {countries.map((country) => (
                       <motion.tr
                         key={country._id}
                         className="hover:bg-gray-50 transition-colors"
@@ -435,10 +448,35 @@ export default function CountriesPage() {
                     ))}
                   </tbody>
                 </table>
+                <div className="flex items-center justify-between mt-5 px-4 py-3 border-t border-gray-200 bg-gray-50">
+                  <button
+                    onClick={() => fetchCountries(page - 1)}
+                    disabled={!pagination.hasPrevPage}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-100 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    ← Prev
+                  </button>
+
+                  <p className="text-sm text-gray-500 font-medium">
+                    Page{" "}
+                    <span className="text-gray-900 font-semibold">
+                      {pagination.page}
+                    </span>{" "}
+                    of {pagination.totalPages}
+                  </p>
+
+                  <button
+                    onClick={() => fetchCountries(page + 1)}
+                    disabled={!pagination.hasNextPage}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-100 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    Next →
+                  </button>
+                </div>
               </div>
             </motion.div>
 
-            {filteredCountries.length === 0 && (
+            {countries.length === 0 && (
               <motion.p
                 variants={itemVariants}
                 className="text-center mt-12 text-gray-500 text-lg"
