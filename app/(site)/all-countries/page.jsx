@@ -2,10 +2,8 @@ import CountriesClient from "./allCountriesClient";
 
 async function getCountries() {
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/countries`,
-    {
-      cache: "no-store",
-    },
+    `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/countries?page=1&limit=20`,
+    { next: { revalidate: 3600 } },
   );
 
   if (!res.ok) {
