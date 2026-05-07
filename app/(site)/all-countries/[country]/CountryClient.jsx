@@ -343,16 +343,6 @@ export default function CountryDetail({ country, universities = [] }) {
                 Top Universities in {country.name} 2026
               </m.h2>
 
-              <ul>
-                {filteredUniversities.slice(0, 20).map((uni) => (
-                  <li key={uni._id}>
-                    <Link href={`/programs/universities/${uni.slug}`}>
-                      {uni.name} in {name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {universities.map((uni, i) => (
                   <m.div
