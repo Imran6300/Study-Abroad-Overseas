@@ -16,10 +16,6 @@ const fadeUp = {
 };
 
 /* Clean malformed backend arrays safely */
-const cleanArray = (arr = []) =>
-  arr.map((item) =>
-    typeof item === "string" ? item.replace(/[\[\]"]/g, "").trim() : item,
-  );
 
 export default function CountryDetail({ country, universities = [] }) {
   if (!country) return null;
@@ -240,22 +236,22 @@ export default function CountryDetail({ country, universities = [] }) {
             <div className="space-y-16 lg:space-y-20">
               <ContentBlock
                 title={`Popular Courses to Study in ${name} in 2026`}
-                items={cleanArray(popularCourses)}
+                items={popularCourses}
               />
 
               <ContentBlock
                 title={`Career Opportunities After Studying in ${name}`}
-                items={cleanArray(careerOpportunities)}
+                items={careerOpportunities}
               />
 
               <ContentBlock
                 title="Scholarships & Financial Aid for International Students"
-                items={cleanArray(scholarships)}
+                items={scholarships}
               />
 
               <ContentBlock
                 title={`Eligibility Requirements to Study in ${name}`}
-                items={cleanArray(eligibilityRequirements)}
+                items={eligibilityRequirements}
               />
 
               {/* WHY STUDY */}
