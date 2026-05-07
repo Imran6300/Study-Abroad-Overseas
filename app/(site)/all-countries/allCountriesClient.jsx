@@ -173,6 +173,7 @@ export default function CountriesClient({ countries = [] }) {
                     flag={country.flagImage?.url}
                     capital={country.capital}
                     visaSuccessRate={country.visaSuccessRate}
+                    visaSuccessRateEstimated={country.visaSuccessRateEstimated}
                     priority={index < 4}
                   />
                 ))}

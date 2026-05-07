@@ -22,6 +22,7 @@ const CountryCard = memo(function CountryCard({
   flag,
   capital,
   visaSuccessRate,
+  visaSuccessRateEstimated,
   hrefPrefix = "/all-countries",
   buttonText = "Explore Programs",
   priority = false,
@@ -71,9 +72,10 @@ const CountryCard = memo(function CountryCard({
             <p className="mt-2 text-gray-400 text-base">Capital: {capital}</p>
           )}
 
-          {visaSuccessRate && (
+          {typeof visaSuccessRate === "number" && (
             <p className="mt-1 text-sm text-cyan-400 font-medium">
               Visa Success Rate: {visaSuccessRate}%
+              {visaSuccessRateEstimated ? " est." : ""}
             </p>
           )}
 
