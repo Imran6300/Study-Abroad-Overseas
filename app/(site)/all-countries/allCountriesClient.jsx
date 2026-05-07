@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useMemo, memo, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { LazyMotion, m } from "framer-motion";
 import Link from "next/link";
-import Image from "next/image";
 import { Search, ArrowRight, X } from "lucide-react";
 import CountryCard from "@/components/ui/CountryCard";
 
@@ -27,19 +26,11 @@ const fadeUp = {
   },
 };
 
-const normalize = (str = "") =>
-  str
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .trim();
-
 export default function CountriesClient({
   initialCountries = [],
   initialPagination,
 }) {
   const [searchTerm, setSearchTerm] = useState("");
-  const [appliedSearch, setAppliedSearch] = useState("");
   const [selectedRegion, setSelectedRegion] = useState("All Regions");
 
   const [countries, setCountries] = useState(initialCountries);
@@ -50,67 +41,83 @@ export default function CountriesClient({
 
   const [loadingMore, setLoadingMore] = useState(false);
 
-  useEffect(() => {
-    const delay = setTimeout(() => {
-      setAppliedSearch(searchTerm);
-    }, 300);
+  const [loading, setLoading] = useState(false);
 
-    return () => clearTimeout(delay);
-  }, [searchTerm]);
-
-  const clearSearch = () => {
-    setSearchTerm("");
-    setAppliedSearch("");
-  };
-
-  const loadMoreCountries = async () => {
+  // FETCH COUNTRIES
+  const fetchCountries = async (reset = false) => {
     try {
-      setLoadingMore(true);
+      if (reset) {
+        setLoading(true);
+      }
 
-      const nextPage = page + 1;
+      const targetPage = reset ? 1 : page + 1;
+
+      const regionQuery =
+        selectedRegion !== "All Regions"
+          ? `&continent=${encodeURIComponent(selectedRegion)}`
+          : "";
+
+      const searchQuery = searchTerm
+        ? `&search=${encodeURIComponent(searchTerm)}`
+        : "";
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/countries?page=${nextPage}&limit=20`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/countries?page=${targetPage}&limit=20${regionQuery}${searchQuery}`,
       );
 
       const data = await res.json();
 
-      setCountries((prev) => [...prev, ...data.data]);
+      if (reset) {
+        setCountries(data.data);
+      } else {
+        setCountries((prev) => [...prev, ...data.data]);
+      }
 
       setPage(data.pagination.page);
 
       setHasNextPage(data.pagination.hasNextPage);
     } catch (error) {
-      console.error("Load more error:", error);
+      console.error("Fetch countries error:", error);
     } finally {
+      setLoading(false);
       setLoadingMore(false);
     }
   };
 
-  const filteredCountries = useMemo(() => {
-    const query = normalize(appliedSearch);
-    const keywords = query.split(" ").filter(Boolean);
+  // SEARCH + FILTER EFFECT
+  useEffect(() => {
+    const delay = setTimeout(() => {
+      fetchCountries(true);
+    }, 400);
 
-    return countries.filter((country) => {
-      const searchableText = normalize(
-        `${country.name} ${country.capital} ${country.continent}`,
-      );
+    return () => clearTimeout(delay);
+  }, [searchTerm, selectedRegion]);
 
-      const matchesSearch =
-        keywords.length === 0 ||
-        keywords.every((word) => searchableText.includes(word));
+  // CLEAR SEARCH
+  const clearSearch = () => {
+    setSearchTerm("");
+  };
 
-      const matchesRegion =
-        selectedRegion === "All Regions" ||
-        country.continent === selectedRegion;
+  // LOAD MORE
+  const loadMoreCountries = async () => {
+    try {
+      setLoadingMore(true);
 
-      return matchesSearch && matchesRegion;
-    });
-  }, [countries, appliedSearch, selectedRegion]);
+      await fetchCountries(false);
+    } catch (error) {
+      console.error("Load more error:", error);
+    }
+  };
 
+  // REGION LIST
   const regions = [
     "All Regions",
-    ...new Set(countries.map((c) => c.continent)),
+    "Asia",
+    "Europe",
+    "North America",
+    "South America",
+    "Africa",
+    "Oceania",
   ];
 
   return (
@@ -124,6 +131,7 @@ export default function CountriesClient({
           className="pt-40 pb-24 relative overflow-hidden"
         >
           <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 via-purple-900/10 to-transparent" />
+
           <div className="max-w-7xl mx-auto px-6 text-center relative z-10">
             <m.h1
               variants={fadeUp}
@@ -131,6 +139,7 @@ export default function CountriesClient({
             >
               Discover Your Dream Study Destination
             </m.h1>
+
             <m.p
               variants={fadeUp}
               className="mt-6 text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto"
@@ -138,6 +147,7 @@ export default function CountriesClient({
               Explore top countries with world-class education, scholarships,
               and global career opportunities.
             </m.p>
+
             <m.div variants={fadeUp} className="mt-10">
               <Link
                 href="/assessment"
@@ -159,12 +169,14 @@ export default function CountriesClient({
                     className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
                     size={20}
                   />
+
                   <input
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder="Search country or keyword..."
                     className="w-full bg-transparent border border-white/20 rounded-2xl pl-12 pr-12 py-4 text-white placeholder-gray-400 focus:outline-none focus:border-cyan-400 transition"
                   />
+
                   {searchTerm && (
                     <button
                       onClick={clearSearch}
@@ -193,39 +205,48 @@ export default function CountriesClient({
         {/* COUNTRY GRID */}
         <m.section className="py-24 px-6">
           <div className="max-w-7xl mx-auto">
-            {filteredCountries.length === 0 ? (
+            {loading ? (
+              <div className="text-center py-16 text-gray-400 text-xl">
+                Searching countries...
+              </div>
+            ) : countries.length === 0 ? (
               <div className="text-center py-16 text-gray-400 text-xl">
                 No countries found matching your search.
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                {filteredCountries.map((country, index) => (
-                  <CountryCard
-                    key={country._id}
-                    title={country.name}
-                    slug={country.slug}
-                    image={country.heroImage?.url}
-                    flag={country.flagImage?.url}
-                    capital={country.capital}
-                    visaSuccessRate={country.visaSuccessRate}
-                    visaSuccessRateEstimated={country.visaSuccessRateEstimated}
-                    priority={index < 4}
-                  />
-                ))}
-              </div>
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                  {countries.map((country, index) => (
+                    <CountryCard
+                      key={country._id}
+                      title={country.name}
+                      slug={country.slug}
+                      image={country.heroImage?.url}
+                      flag={country.flagImage?.url}
+                      capital={country.capital}
+                      visaSuccessRate={country.visaSuccessRate}
+                      visaSuccessRateEstimated={
+                        country.visaSuccessRateEstimated
+                      }
+                      priority={index < 4}
+                    />
+                  ))}
+                </div>
+
+                {hasNextPage && (
+                  <div className="flex justify-center mt-16">
+                    <button
+                      onClick={loadMoreCountries}
+                      disabled={loadingMore}
+                      className="px-8 py-4 rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-500 text-[#020617] font-bold hover:scale-105 transition-transform disabled:opacity-50"
+                    >
+                      {loadingMore ? "Loading..." : "Load More Countries"}
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </div>
-          {hasNextPage && (
-            <div className="flex justify-center mt-16">
-              <button
-                onClick={loadMoreCountries}
-                disabled={loadingMore}
-                className="px-8 py-4 rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-500 text-[#020617] font-bold hover:scale-105 transition-transform disabled:opacity-50"
-              >
-                {loadingMore ? "Loading..." : "Load More Countries"}
-              </button>
-            </div>
-          )}
         </m.section>
       </main>
     </LazyMotion>
