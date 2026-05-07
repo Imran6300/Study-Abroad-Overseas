@@ -344,7 +344,7 @@ export default function CountryDetail({ country, universities = [] }) {
               </m.h2>
 
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {universities.map((uni, i) => (
+                {universities.slice(0, 12).map((uni, i) => (
                   <m.div
                     key={uni._id}
                     initial={{ opacity: 0, y: 20 }}
