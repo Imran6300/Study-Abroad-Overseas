@@ -34,10 +34,21 @@ const normalize = (str = "") =>
     .replace(/[\u0300-\u036f]/g, "")
     .trim();
 
-export default function CountriesClient({ countries = [] }) {
+export default function CountriesClient({
+  initialCountries = [],
+  initialPagination,
+}) {
   const [searchTerm, setSearchTerm] = useState("");
   const [appliedSearch, setAppliedSearch] = useState("");
   const [selectedRegion, setSelectedRegion] = useState("All Regions");
+
+  const [countries, setCountries] = useState(initialCountries);
+
+  const [page, setPage] = useState(initialPagination.page);
+
+  const [hasNextPage, setHasNextPage] = useState(initialPagination.hasNextPage);
+
+  const [loadingMore, setLoadingMore] = useState(false);
 
   useEffect(() => {
     const delay = setTimeout(() => {
@@ -50,6 +61,30 @@ export default function CountriesClient({ countries = [] }) {
   const clearSearch = () => {
     setSearchTerm("");
     setAppliedSearch("");
+  };
+
+  const loadMoreCountries = async () => {
+    try {
+      setLoadingMore(true);
+
+      const nextPage = page + 1;
+
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/countries?page=${nextPage}&limit=20`,
+      );
+
+      const data = await res.json();
+
+      setCountries((prev) => [...prev, ...data.data]);
+
+      setPage(data.pagination.page);
+
+      setHasNextPage(data.pagination.hasNextPage);
+    } catch (error) {
+      console.error("Load more error:", error);
+    } finally {
+      setLoadingMore(false);
+    }
   };
 
   const filteredCountries = useMemo(() => {
@@ -180,6 +215,17 @@ export default function CountriesClient({ countries = [] }) {
               </div>
             )}
           </div>
+          {hasNextPage && (
+            <div className="flex justify-center mt-16">
+              <button
+                onClick={loadMoreCountries}
+                disabled={loadingMore}
+                className="px-8 py-4 rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-500 text-[#020617] font-bold hover:scale-105 transition-transform disabled:opacity-50"
+              >
+                {loadingMore ? "Loading..." : "Load More Countries"}
+              </button>
+            </div>
+          )}
         </m.section>
       </main>
     </LazyMotion>
