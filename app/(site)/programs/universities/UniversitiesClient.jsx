@@ -15,8 +15,11 @@ const COUNTRIES = [
   "Switzerland",
 ];
 
-export default function UniversitiesClient({ universities }) {
-  const [searchTerm, setSearchTerm] = useState("");
+export default function UniversitiesClient({
+  universities,
+  initialSearch = "",
+}) {
+  const [searchTerm, setSearchTerm] = useState(initialSearch);
   const [selectedCountry, setSelectedCountry] = useState("All");
 
   const [results, setResults] = useState(universities ?? []);
@@ -29,7 +32,7 @@ export default function UniversitiesClient({ universities }) {
     const fetchData = async () => {
       try {
         const endpoint = searchTerm.trim()
-          ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/universities/search?q=${searchTerm}`
+          ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/universities/search?q=${encodeURIComponent(searchTerm)}`
           : `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/universities`;
 
         const res = await fetch(endpoint);

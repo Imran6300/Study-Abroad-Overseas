@@ -198,7 +198,7 @@ export default function CountryDetail({ country, universities = [] }) {
 
               <div className="mt-6">
                 <Link
-                  href={`/programs/universities?country=${name}`}
+                  href={`/programs/universities?search=${encodeURIComponent(name)}`}
                   className="text-cyan-400 underline"
                 >
                   View all universities in {name}
