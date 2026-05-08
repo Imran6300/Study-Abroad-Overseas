@@ -74,6 +74,12 @@ export default async function CountryPage({ params }) {
   const { country: slug } = await params;
 
   const country = await getCountry(slug);
+
+  // IMPORTANT: CHECK BEFORE FETCHING UNIVERSITIES
+  if (!country) {
+    notFound();
+  }
+
   let universities = [];
 
   try {
@@ -86,14 +92,11 @@ export default async function CountryPage({ params }) {
 
     if (uniRes.ok) {
       const uniData = await uniRes.json();
+
       universities = uniData.universities || [];
     }
   } catch (error) {
     console.error("Universities fetch failed:", error);
-  }
-
-  if (!country) {
-    notFound();
   }
 
   return <CountryClient country={country} universities={universities} />;

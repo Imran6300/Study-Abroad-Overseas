@@ -330,7 +330,7 @@ export default function CountryDetail({ country, universities = [] }) {
         </section>
 
         {/* TOP UNIVERSITIES */}
-        {universities.length > 0 && (
+        {Array.isArray(universities) && universities.length > 0 && (
           <section className="py-20 lg:py-28 border-t border-white/10">
             <div className="max-w-7xl mx-auto px-6">
               <m.h2
@@ -378,8 +378,12 @@ export default function CountryDetail({ country, universities = [] }) {
 
 /* ================= MEMOIZED COMPONENTS (unchanged) ================= */
 
-const ContentBlock = memo(function ContentBlock({ title, items = [] }) {
-  if (!items.length) return null;
+const ContentBlock = memo(function ContentBlock({ title, items }) {
+  // SAFE ARRAY CHECK
+  const safeItems = Array.isArray(items) ? items : [];
+
+  // DON'T RENDER EMPTY BLOCKS
+  if (safeItems.length === 0) return null;
 
   return (
     <m.div
@@ -391,9 +395,9 @@ const ContentBlock = memo(function ContentBlock({ title, items = [] }) {
       <h2 className="text-2xl lg:text-3xl font-bold mb-8">{title}</h2>
 
       <ul className="grid sm:grid-cols-2 gap-4">
-        {items.map((item) => (
+        {safeItems.map((item, index) => (
           <m.li
-            key={item}
+            key={`${item}-${index}`}
             whileHover={{ scale: 1.02 }}
             className="bg-[#0B0F19] border border-white/10 rounded-xl p-5 hover:border-[#38BDF8]/30 transition"
           >

@@ -360,7 +360,7 @@ const DesktopDropdown = ({ type, label, active, onToggle, items }) => {
               onClick={onToggle}
               className="block px-5 py-3 mx-2 rounded-lg text-gray-700 hover:bg-blue-600 hover:text-white"
             >
-              {item.name}
+              {typeof item === "object" ? item.name : item}
             </Link>
           </li>
         ))}
@@ -629,7 +629,7 @@ const MobileDropdown = ({
           <div className="py-3 px-3 bg-black/20 flex flex-col gap-1">
             {items.map((item) => (
               <Link
-                key={item.name}
+                key={typeof item === "object" ? item.name : item}
                 href={getHref(item)}
                 onClick={() => {
                   onToggle();
@@ -637,7 +637,7 @@ const MobileDropdown = ({
                 }}
                 className="block px-5 py-3 rounded-lg hover:bg-white/10 active:bg-white/15 transition-colors"
               >
-                {item.name}
+                {typeof item === "object" ? item.name : item}
               </Link>
             ))}
           </div>

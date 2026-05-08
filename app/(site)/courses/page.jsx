@@ -7,6 +7,7 @@ import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import CourseCard from "@/components/ui/CourseCard";
 import StudentProCard from "@/components/upgrade/StudentProCard";
+import React from "react";
 
 /* ================= DATA ================= */
 import { useDispatch, useSelector } from "react-redux";
@@ -207,7 +208,7 @@ export default function Courses() {
             className="grid sm:grid-cols-2 lg:grid-cols-3 gap-10"
           >
             {filteredCourses.map((course, i) => (
-              <>
+              <React.Fragment key={course._id}>
                 {i === 3 && (
                   <div className="col-span-full">
                     <StudentProCard
@@ -217,8 +218,9 @@ export default function Courses() {
                     />
                   </div>
                 )}
-                <CourseCard key={course._id} course={course} />
-              </>
+
+                <CourseCard course={course} />
+              </React.Fragment>
             ))}
           </motion.div>
         )}
