@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import CountryClient from "./CountryClient";
 import { notFound } from "next/navigation";
 
@@ -11,7 +13,7 @@ async function getCountry(slug) {
 
   try {
     const res = await fetch(`${baseUrl}/api/countries/${slug}`, {
-      next: { revalidate: 86400 },
+      cache: "no-store",
     });
 
     if (!res.ok) return null;
@@ -57,18 +59,18 @@ export async function generateMetadata({ params }) {
   };
 }
 
-export async function generateStaticParams() {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/countries`,
-    { next: { revalidate: 86400 } },
-  );
+// export async function generateStaticParams() {
+//   const res = await fetch(
+//     `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/countries`,
+//     { cache: "no-store" },
+//   );
 
-  const data = await res.json();
+//   const data = await res.json();
 
-  return data.data.map((country) => ({
-    country: country.slug,
-  }));
-}
+//   return data.data.map((country) => ({
+//     country: country.slug,
+//   }));
+// }
 
 export default async function CountryPage({ params }) {
   const { country: slug } = await params;
@@ -86,7 +88,7 @@ export default async function CountryPage({ params }) {
     const uniRes = await fetch(
       `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/universities?country=${encodeURIComponent(country.name)}`,
       {
-        next: { revalidate: 86400 },
+        cache: "no-store",
       },
     );
 
