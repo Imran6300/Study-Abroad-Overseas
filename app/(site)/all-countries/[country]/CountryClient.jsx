@@ -44,11 +44,11 @@ export default function CountryDetail({ country, universities = [] }) {
     },
     {
       question: `Which courses are most popular for international students in ${name}?`,
-      answer: `The most popular and in-demand courses in ${name} for international students include ${popularCourses?.join(", ")}. These programs are highly employable, often come with scholarship options, co-op/internship opportunities, and clear post-study work visa pathways. Many lead to high-paying jobs in global companies. We help Indian students choose the right course based on their background, budget, and career goals.`,
+      answer: `The most popular and in-demand courses in ${name} for international students include ${(popularCourses || []).join(", ")}. These programs are highly employable, often come with scholarship options, co-op/internship opportunities, and clear post-study work visa pathways. Many lead to high-paying jobs in global companies. We help Indian students choose the right course based on their background, budget, and career goals.`,
     },
     {
       question: `What scholarships are available for Indian students in ${name}?`,
-      answer: `Indian students can apply for a wide range of scholarships in ${name}, including ${scholarships?.slice(0, 5).join(", ")} and many university-specific, government-funded, and merit-based awards. Scholarships range from 10–100% tuition waivers to full-ride packages including living expenses. Most require strong academics (70–90%+), good IELTS/TOEFL/PTE scores, and sometimes essays or interviews. Our Hyderabad counselors identify the best scholarships for your profile and assist with applications — completely free.`,
+      answer: `Indian students can apply for a wide range of scholarships in ${name}, including ${(scholarships || []).slice(0, 5).join(", ")} and many university-specific, government-funded, and merit-based awards. Scholarships range from 10–100% tuition waivers to full-ride packages including living expenses. Most require strong academics (70–90%+), good IELTS/TOEFL/PTE scores, and sometimes essays or interviews. Our Hyderabad counselors identify the best scholarships for your profile and assist with applications — completely free.`,
     },
   ];
 
@@ -378,7 +378,9 @@ export default function CountryDetail({ country, universities = [] }) {
 
 /* ================= MEMOIZED COMPONENTS (unchanged) ================= */
 
-const ContentBlock = memo(function ContentBlock({ title, items }) {
+const ContentBlock = memo(function ContentBlock({ title, items = [] }) {
+  if (!items.length) return null;
+
   return (
     <m.div
       variants={fadeUp}
@@ -387,6 +389,7 @@ const ContentBlock = memo(function ContentBlock({ title, items }) {
       viewport={{ once: true }}
     >
       <h2 className="text-2xl lg:text-3xl font-bold mb-8">{title}</h2>
+
       <ul className="grid sm:grid-cols-2 gap-4">
         {items.map((item) => (
           <m.li

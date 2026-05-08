@@ -74,18 +74,27 @@ export default async function CountryPage({ params }) {
   const { country: slug } = await params;
 
   const country = await getCountry(slug);
-  const uniRes = await fetch(
-    `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/universities?country=${slug}`,
-    { next: { revalidate: 86400 } },
-  );
+  let universities = [];
 
-  const uniData = await uniRes.json();
+  try {
+    const uniRes = await fetch(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/universities?country=${encodeURIComponent(country.name)}`,
+      {
+        next: { revalidate: 86400 },
+      },
+    );
+
+    if (uniRes.ok) {
+      const uniData = await uniRes.json();
+      universities = uniData.universities || [];
+    }
+  } catch (error) {
+    console.error("Universities fetch failed:", error);
+  }
 
   if (!country) {
     notFound();
   }
 
-  return (
-    <CountryClient country={country} universities={uniData.universities} />
-  );
+  return <CountryClient country={country} universities={universities} />;
 }
