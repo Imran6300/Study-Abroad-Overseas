@@ -1,4 +1,4 @@
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
 
 import CountryClient from "./CountryClient";
 import { notFound } from "next/navigation";
@@ -13,7 +13,7 @@ async function getCountry(slug) {
 
   try {
     const res = await fetch(`${baseUrl}/api/countries/${slug}`, {
-      cache: "no-store",
+      next: { revalidate: 3600 },
     });
 
     if (!res.ok) return null;
@@ -75,7 +75,7 @@ export default async function CountryPage({ params }) {
     const uniRes = await fetch(
       `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/universities?country=${encodeURIComponent(country.name)}`,
       {
-        cache: "no-store",
+        next: { revalidate: 3600 },
       },
     );
 
