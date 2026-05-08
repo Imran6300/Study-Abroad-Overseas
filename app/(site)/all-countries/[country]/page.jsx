@@ -59,19 +59,6 @@ export async function generateMetadata({ params }) {
   };
 }
 
-// export async function generateStaticParams() {
-//   const res = await fetch(
-//     `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/countries`,
-//     { cache: "no-store" },
-//   );
-
-//   const data = await res.json();
-
-//   return data.data.map((country) => ({
-//     country: country.slug,
-//   }));
-// }
-
 export default async function CountryPage({ params }) {
   const { country: slug } = await params;
 
