@@ -184,13 +184,13 @@ const MemoizedDesktopNav = memo(() => {
         active={active === "Countries"}
         onToggle={() => setActive(active === "Countries" ? null : "Countries")}
         items={[
-          "USA",
-          "UK",
-          "Canada",
-          "Australia",
-          "Germany",
-          "China",
-          "All Countries",
+          { name: "USA", slug: "united-states" },
+          { name: "UK", slug: "united-kingdom" },
+          { name: "Canada", slug: "canada" },
+          { name: "Australia", slug: "australia" },
+          { name: "Germany", slug: "germany" },
+          { name: "China", slug: "china" },
+          { name: "All Countries", slug: "" },
         ]}
       />
       <DesktopDropdown
@@ -311,23 +311,26 @@ const NavItem = ({ label, link }) => (
 
 const DesktopDropdown = ({ type, label, active, onToggle, items }) => {
   const getHref = (item) => {
-    const slug = item.toLowerCase().replace(/\s+/g, "-");
-    const isAllItem = item.toLowerCase().includes("all");
-    switch (type) {
-      case "countries":
-        return isAllItem ? "/all-countries" : `/all-countries/${slug}`;
-      case "courses":
-        return isAllItem
-          ? "/courses"
-          : `/courses?category=${COURSE_CATEGORY_MAP[item]}`;
-
-      case "programs":
-        return `/programs/${slug}`;
-      default:
-        return `/${slug}`;
+    if (type === "countries") {
+      return item.slug ? `/all-countries/${item.slug}` : "/all-countries";
     }
-  };
 
+    if (type === "courses") {
+      const isAllItem = item === "All Courses";
+
+      return isAllItem
+        ? "/courses"
+        : `/courses?category=${COURSE_CATEGORY_MAP[item]}`;
+    }
+
+    if (type === "programs") {
+      const slug = item.toLowerCase().replace(/\s+/g, "-");
+
+      return `/programs/${slug}`;
+    }
+
+    return "/";
+  };
   return (
     <li className="relative">
       <button
@@ -357,7 +360,7 @@ const DesktopDropdown = ({ type, label, active, onToggle, items }) => {
               onClick={onToggle}
               className="block px-5 py-3 mx-2 rounded-lg text-gray-700 hover:bg-blue-600 hover:text-white"
             >
-              {item}
+              {item.name}
             </Link>
           </li>
         ))}
@@ -429,18 +432,16 @@ const MobileMenu = ({ open, onClose, isLoggedIn, handleLogout, user }) => {
                 isOpen={activeDropdown === "countries"}
                 onToggle={() => toggleDropdown("countries")}
                 items={[
-                  "USA",
-                  "UK",
-                  "Canada",
-                  "Australia",
-                  "Germany",
-                  "China",
-                  "All Countries",
+                  { name: "USA", slug: "united-states" },
+                  { name: "UK", slug: "united-kingdom" },
+                  { name: "Canada", slug: "canada" },
+                  { name: "Australia", slug: "australia" },
+                  { name: "Germany", slug: "germany" },
+                  { name: "China", slug: "china" },
+                  { name: "All Countries", slug: "" },
                 ]}
                 getHref={(item) =>
-                  item.includes("All")
-                    ? "/all-countries"
-                    : `/all-countries/${toSlug(item)}`
+                  item.slug ? `/all-countries/${item.slug}` : "/all-countries"
                 }
                 onClose={onClose}
               />
@@ -628,7 +629,7 @@ const MobileDropdown = ({
           <div className="py-3 px-3 bg-black/20 flex flex-col gap-1">
             {items.map((item) => (
               <Link
-                key={item}
+                key={item.name}
                 href={getHref(item)}
                 onClick={() => {
                   onToggle();
@@ -636,7 +637,7 @@ const MobileDropdown = ({
                 }}
                 className="block px-5 py-3 rounded-lg hover:bg-white/10 active:bg-white/15 transition-colors"
               >
-                {item}
+                {item.name}
               </Link>
             ))}
           </div>
