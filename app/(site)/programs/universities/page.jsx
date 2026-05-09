@@ -34,10 +34,10 @@ export default async function UniversitiesPage({ searchParams }) {
 
       <div className="sr-only">
         <ul>
-          {data.universities.slice(0, 20).map((uni) => (
+          {(data?.universities || []).slice(0, 20).map((uni) => (
             <li key={uni._id}>
               <Link href={`/programs/universities/${uni.slug}`}>
-                {uni.name} - {uni.country}
+                {uni.name} - {uni.country?.name}
               </Link>
             </li>
           ))}
@@ -45,7 +45,7 @@ export default async function UniversitiesPage({ searchParams }) {
       </div>
 
       <UniversitiesClient
-        universities={data.universities}
+        universities={data?.universities || []}
         initialSearch={search}
       />
     </>

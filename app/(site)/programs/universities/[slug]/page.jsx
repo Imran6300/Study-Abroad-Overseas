@@ -29,8 +29,8 @@ export async function generateMetadata({ params }) {
     const uni = data.university;
 
     return {
-      title: `${uni.name} in ${uni.country} for Indian Students | Fees, Courses, Admission 2026`,
-      description: `Study at ${uni.name} in ${uni.country}. Check fees, courses, ranking, scholarships and admission process for Indian students.`,
+      title: `${uni.name} in ${uni.country?.name} for Indian Students | Fees, Courses, Admission 2026`,
+      description: `Study at ${uni.name} in ${uni.country?.name}. Check fees, courses, ranking, scholarships and admission process for Indian students.`,
     };
   } catch (error) {
     console.log("Metadata error:", error);
@@ -73,7 +73,7 @@ export default async function Page({ params }) {
             name: uni.name,
             address: {
               "@type": "PostalAddress",
-              addressCountry: uni.country,
+              addressCountry: uni.country?.name,
             },
           }),
         }}

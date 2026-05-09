@@ -401,7 +401,11 @@ const ContentBlock = memo(function ContentBlock({ title, items }) {
             whileHover={{ scale: 1.02 }}
             className="bg-[#0B0F19] border border-white/10 rounded-xl p-5 hover:border-[#38BDF8]/30 transition"
           >
-            <span className="text-gray-200">{item}</span>
+            <span className="text-gray-200">
+              {typeof item === "object"
+                ? item.title || item.name || "Unknown"
+                : item}
+            </span>
           </m.li>
         ))}
       </ul>

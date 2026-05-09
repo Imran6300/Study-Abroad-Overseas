@@ -41,7 +41,7 @@ export default function CoursesPage() {
   const fetchCourses = async () => {
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/host/courses`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/courses`,
         {
           credentials: "include",
         },
@@ -119,7 +119,7 @@ export default function CoursesPage() {
   const handleDeleteConfirmed = async () => {
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/host/courses/${courseToDelete.slug}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/courses/${courseToDelete.slug}`,
         {
           method: "DELETE",
           credentials: "include",
@@ -188,8 +188,8 @@ export default function CoursesPage() {
       const isEdit = mode === "edit";
 
       const url = isEdit
-        ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/host/courses/${selectedCourse.slug}`
-        : `${process.env.NEXT_PUBLIC_BACKEND_URL}/host/courses`;
+        ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/courses/${selectedCourse.slug}`
+        : `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/courses`;
 
       const method = isEdit ? "PUT" : "POST";
 

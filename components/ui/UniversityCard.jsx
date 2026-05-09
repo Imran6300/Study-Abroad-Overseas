@@ -92,9 +92,9 @@ const UniversityCard = memo(function UniversityCard({
                 {uni.name}
               </h3>
               <p className="text-sm text-gray-300 mt-0.5">
-                {uni.city && uni.country
-                  ? `${uni.city}, ${uni.country}`
-                  : uni.country || "—"}
+                {uni.city && uni.country?.name
+                  ? `${uni.city}, ${uni.country.name}`
+                  : uni.country?.name || "—"}
               </p>
             </div>
           </div>

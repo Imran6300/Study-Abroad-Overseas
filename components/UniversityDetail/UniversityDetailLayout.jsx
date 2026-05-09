@@ -52,7 +52,10 @@ export default function UniversityDetailLayout({ uni, similarUniversities }) {
   const intake = uni.intakes?.join(", ") ?? "Fall, Spring";
   const description = uni.description ?? "";
 
-  const images = uni.images?.map((img) => img.url) || [];
+  const images =
+    Array.isArray(uni.images) && uni.images.length > 0
+      ? uni.images.map((img) => img.url)
+      : [];
 
   const fallbackImage =
     getOptimizedUrl(uni.logo?.url, 800) || "/images/default-university.jpg";
@@ -127,10 +130,10 @@ export default function UniversityDetailLayout({ uni, similarUniversities }) {
           </h1>
           <p>
             <Link
-              href={`/all-countries/${uni.country}`}
+              href={`/all-countries/${uni.country?.slug}`}
               className="text-blue-400 underline"
             >
-              Study in {uni.country}
+              Study in {uni.country?.name}
             </Link>
           </p>
           <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-sm text-[#8892B0]">
@@ -287,7 +290,7 @@ export default function UniversityDetailLayout({ uni, similarUniversities }) {
                     similarUni.images?.[0]?.url ||
                     similarUni.logo?.url ||
                     "/images/default-university.jpg",
-                  location: `${similarUni.city}, ${similarUni.country}`,
+                  location: `${similarUni.city}, ${similarUni.country?.name}`,
                 }}
               />
             ))
