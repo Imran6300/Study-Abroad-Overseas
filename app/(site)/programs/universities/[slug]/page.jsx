@@ -28,6 +28,10 @@ export async function generateMetadata({ params }) {
     }
 
     const uni = data.university;
+    const confidence = uni.confidenceScore || 0;
+    const descriptionLength = uni.description?.length || 0;
+
+    const shouldIndex = confidence >= 0.75 && descriptionLength >= 300;
 
     const canonicalUrl = `https://www.khizaroverseas.in/programs/universities/${slug}`;
 
@@ -37,13 +41,18 @@ export async function generateMetadata({ params }) {
       description: `Study at ${uni.name} in ${uni.country?.name}. Check fees, courses, ranking, scholarships and admission process for Indian students.`,
 
       alternates: {
-        canonical: canonicalUrl,
+        canonical: `https://www.khizaroverseas.in/programs/universities/${slug}`,
+      },
+
+      robots: {
+        index: shouldIndex,
+        follow: true,
       },
 
       openGraph: {
         title: `${uni.name} in ${uni.country?.name}`,
         description: `Study at ${uni.name} in ${uni.country?.name}.`,
-        url: canonicalUrl,
+        url: `https://www.khizaroverseas.in/programs/universities/${slug}`,
         siteName: "Khizar Overseas",
         type: "website",
       },
