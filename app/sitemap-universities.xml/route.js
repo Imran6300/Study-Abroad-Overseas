@@ -13,7 +13,9 @@ export async function GET() {
 
   allUniversities.push(...firstData.universities);
 
-  for (let i = 2; i <= totalPages; i++) {
+  const MAX_PAGES = 5;
+
+  for (let i = 2; i <= Math.min(totalPages, MAX_PAGES); i++) {
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/universities?page=${i}`,
     );
