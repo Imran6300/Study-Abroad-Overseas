@@ -124,15 +124,20 @@ export default function UniversitiesPage() {
   const getSortedUniversities = useCallback(() => {
     if (!sortConfig.key) return universities;
 
+    const getValue = (obj, key) => {
+      if (key === "country") return obj.country?.name || "";
+      return obj[key] ?? "";
+    };
+
     return [...universities].sort((a, b) => {
-      const aVal = String(a[sortConfig.key] ?? "").toLowerCase();
-      const bVal = String(b[sortConfig.key] ?? "").toLowerCase();
+      const aVal = String(getValue(a, sortConfig.key)).toLowerCase();
+      const bVal = String(getValue(b, sortConfig.key)).toLowerCase();
+
       return sortConfig.direction === "asc"
         ? aVal.localeCompare(bVal)
         : bVal.localeCompare(aVal);
     });
   }, [universities, sortConfig]);
-
   // ─── Filtering & Pagination ─────────────────────────────────
 
   // Auto-correct page if out of bounds
@@ -402,7 +407,7 @@ export default function UniversitiesPage() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-200 bg-white">
-                        {universities.map((uni) => (
+                        {getSortedUniversities().map((uni) => (
                           <tr
                             key={uni._id}
                             className="hover:bg-gray-50 transition-colors h-20 align-middle"
@@ -428,7 +433,7 @@ export default function UniversitiesPage() {
                               {uni.name || "—"}
                             </td>
                             <td className="px-4 py-4 text-sm text-gray-600 hidden sm:table-cell">
-                              {uni.country || "—"}
+                              {uni.country?.name || "—"}
                             </td>
                             <td className="px-4 py-4 text-sm text-gray-600 hidden md:table-cell">
                               {uni.city || "—"}
