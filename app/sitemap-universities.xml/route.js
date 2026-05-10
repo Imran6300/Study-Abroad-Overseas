@@ -25,12 +25,7 @@ export async function GET() {
     allUniversities.push(...data.universities);
   }
 
-  const validUniversities = allUniversities.filter((uni) => {
-    const confidence = uni.confidenceScore || 0;
-    const descriptionLength = uni.description?.length || 0;
-
-    return confidence >= 0.75 && descriptionLength >= 300;
-  });
+  const validUniversities = allUniversities;
 
   const urls = validUniversities
     .map(
