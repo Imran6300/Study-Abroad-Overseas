@@ -1,11 +1,12 @@
 export default async function sitemap() {
-  const baseUrl = "https://khizaroverseas.in";
+  const baseUrl = "https://www.khizaroverseas.in";
 
   let allUniversities = [];
 
   const firstRes = await fetch(
     `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/universities?page=1`,
   );
+
   const firstData = await firstRes.json();
 
   const totalPages = firstData.totalPages;
@@ -16,7 +17,9 @@ export default async function sitemap() {
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/universities?page=${i}`,
     );
+
     const data = await res.json();
+
     allUniversities.push(...data.universities);
   }
 
@@ -30,6 +33,7 @@ export default async function sitemap() {
       url: `${baseUrl}/programs/universities`,
       lastModified: new Date(),
     },
+
     ...universityUrls,
   ];
 }

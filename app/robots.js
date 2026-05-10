@@ -4,6 +4,7 @@ export default function robots() {
       userAgent: "*",
       allow: "/",
     },
-    sitemap: "https://khizaroverseas.in/sitemap.xml",
+
+    sitemap: "https://www.khizaroverseas.in/sitemap.xml",
   };
 }
