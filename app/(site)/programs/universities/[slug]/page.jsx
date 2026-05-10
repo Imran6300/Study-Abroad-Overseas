@@ -8,11 +8,12 @@ export async function generateMetadata({ params }) {
     const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/universities/${slug}`;
 
     const res = await fetch(url, {
-      next: { revalidate: 60 }, // IMPORTANT
+      next: { revalidate: 60 },
     });
 
     if (!res.ok) {
       console.log("Metadata fetch failed:", res.status);
+
       return {
         title: "University",
       };
@@ -28,9 +29,30 @@ export async function generateMetadata({ params }) {
 
     const uni = data.university;
 
+    const canonicalUrl = `https://www.khizaroverseas.in/programs/universities/${slug}`;
+
     return {
       title: `${uni.name} in ${uni.country?.name} for Indian Students | Fees, Courses, Admission 2026`,
+
       description: `Study at ${uni.name} in ${uni.country?.name}. Check fees, courses, ranking, scholarships and admission process for Indian students.`,
+
+      alternates: {
+        canonical: canonicalUrl,
+      },
+
+      openGraph: {
+        title: `${uni.name} in ${uni.country?.name}`,
+        description: `Study at ${uni.name} in ${uni.country?.name}.`,
+        url: canonicalUrl,
+        siteName: "Khizar Overseas",
+        type: "website",
+      },
+
+      twitter: {
+        card: "summary_large_image",
+        title: `${uni.name} in ${uni.country?.name}`,
+        description: `Study at ${uni.name} in ${uni.country?.name}.`,
+      },
     };
   } catch (error) {
     console.log("Metadata error:", error);

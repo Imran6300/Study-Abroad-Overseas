@@ -3,8 +3,21 @@ import Link from "next/link";
 
 export const metadata = {
   title: "Top Universities Abroad for Indian Students (2026)",
+
   description:
     "Explore top universities in UK, USA, Canada & more. Compare courses, fees, rankings and apply easily.",
+
+  alternates: {
+    canonical: "https://www.khizaroverseas.in/programs/universities",
+  },
+
+  openGraph: {
+    title: "Top Universities Abroad for Indian Students (2026)",
+    description: "Explore top universities in UK, USA, Canada & more.",
+    url: "https://www.khizaroverseas.in/programs/universities",
+    siteName: "Khizar Overseas",
+    type: "website",
+  },
 };
 
 export default async function UniversitiesPage({ searchParams }) {
