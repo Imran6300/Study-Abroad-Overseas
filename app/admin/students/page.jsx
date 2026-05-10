@@ -45,9 +45,22 @@ export default function StudentsAdminPage() {
           `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/lead`,
           { credentials: "include" },
         );
+
+        console.log("STATUS:", res.status);
+        console.log("DATA:", data);
+
         const data = await res.json();
 
-        const formatted = data.leads.map((lead) => ({
+        console.log("API RESPONSE:", data);
+
+        // SAFE CHECK
+        const leadsArray = Array.isArray(data?.leads)
+          ? data.leads
+          : Array.isArray(data)
+            ? data
+            : [];
+
+        const formatted = leadsArray.map((lead) => ({
           id: lead.user || null,
           leadId: lead._id,
 
@@ -422,15 +435,6 @@ export default function StudentsAdminPage() {
                 )}
               </div>
             </motion.div>
-
-            {!loading && filteredStudents.length === 0 && (
-              <motion.p
-                variants={itemVariants}
-                className="text-center mt-10 sm:mt-12 text-gray-500 text-base sm:text-lg px-4"
-              >
-                No students found matching your search.
-              </motion.p>
-            )}
           </motion.div>
 
           {/* Delete Confirmation */}

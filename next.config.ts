@@ -6,6 +6,17 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 
 const nextConfig = {
   reactStrictMode: true,
+
+  async redirects() {
+    return [
+      {
+        source: "/universities/:slug",
+        destination: "/programs/universities/:slug",
+        permanent: true,
+      },
+    ];
+  },
+
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "res.cloudinary.com" },
@@ -15,7 +26,7 @@ const nextConfig = {
       { protocol: "https", hostname: "shutterstock.com" },
       { protocol: "https", hostname: "media.istockphoto.com" },
       { protocol: "https", hostname: "logo.clearbit.com" },
-      { protocol: "https", hostname: "placehold.co" }, // ✅ FIXED
+      { protocol: "https", hostname: "placehold.co" },
     ],
     qualities: [68, 72, 75, 78],
   },
