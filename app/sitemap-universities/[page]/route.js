@@ -1,57 +1,45 @@
+export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 export const revalidate = 3600;
 
-export async function GET() {
+export async function GET(req, { params }) {
   try {
     const baseUrl = "https://www.khizaroverseas.in";
 
-    // FIRST REQUEST
-    const firstRes = await fetch(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/universities?page=1`,
-      {
-        next: { revalidate: 3600 },
-      },
-    );
+    // DYNAMIC SITEMAP NUMBER
+    const sitemapPage = Number(params.page || 1);
 
-    if (!firstRes.ok) {
-      throw new Error("Failed to fetch first universities page");
-    }
+    // HOW MANY API PAGES PER SITEMAP
+    const PAGES_PER_SITEMAP = 100;
 
-    const firstData = await firstRes.json();
+    // CALCULATE START/END
+    const startPage = (sitemapPage - 1) * PAGES_PER_SITEMAP + 1;
 
-    const totalPages = firstData.totalPages || 1;
+    const endPage = sitemapPage * PAGES_PER_SITEMAP;
 
-    // IMPORTANT:
-    // Start with lower number for stability
-    // Later you can increase gradually
-    const MAX_PAGES = 50;
+    let allUniversities = [];
 
-    let allUniversities = [...(firstData.universities || [])];
-
-    // PARALLEL FETCHING (VERY FAST)
+    // PARALLEL REQUESTS
     const requests = [];
 
-    for (let i = 2; i <= Math.min(totalPages, MAX_PAGES); i++) {
+    for (let i = startPage; i <= endPage; i++) {
       requests.push(
         fetch(
           `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/universities?page=${i}`,
           {
             next: { revalidate: 3600 },
           },
-        ).then((res) => {
-          if (!res.ok) {
-            throw new Error(`Failed on page ${i}`);
-          }
+        ).then(async (res) => {
+          if (!res.ok) return null;
 
           return res.json();
         }),
       );
     }
 
-    // FETCH ALL TOGETHER
     const results = await Promise.all(requests);
 
-    // MERGE ALL UNIVERSITIES
+    // MERGE DATA
     results.forEach((data) => {
       if (data?.universities?.length) {
         allUniversities.push(...data.universities);
@@ -63,8 +51,17 @@ export async function GET() {
       new Map(allUniversities.map((uni) => [uni.slug, uni])).values(),
     );
 
-    // GENERATE XML URLS
-    const urls = uniqueUniversities
+    // FILTER GOOD QUALITY UNIVERSITIES
+    const validUniversities = uniqueUniversities.filter((uni) => {
+      const confidence = uni.confidenceScore || 0;
+
+      const descriptionLength = uni.description?.length || 0;
+
+      return confidence >= 0.75 && descriptionLength >= 300;
+    });
+
+    // XML URLS
+    const urls = validUniversities
       .filter((uni) => uni?.slug)
       .map(
         (uni) => `
