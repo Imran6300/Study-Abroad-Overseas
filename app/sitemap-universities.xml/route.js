@@ -13,7 +13,7 @@ export async function GET() {
 
   allUniversities.push(...firstData.universities);
 
-  const MAX_PAGES = 5;
+  const MAX_PAGES = 50;
 
   for (let i = 2; i <= Math.min(totalPages, MAX_PAGES); i++) {
     const res = await fetch(
