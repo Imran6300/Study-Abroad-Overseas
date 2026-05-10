@@ -1,4 +1,4 @@
-export default async function sitemap() {
+export async function GET() {
   const baseUrl = "https://www.khizaroverseas.in";
 
   let allUniversities = [];
@@ -25,14 +25,28 @@ export default async function sitemap() {
 
   const validUniversities = allUniversities.filter((uni) => {
     const confidence = uni.confidenceScore || 0;
-
     const descriptionLength = uni.description?.length || 0;
 
     return confidence >= 0.75 && descriptionLength >= 300;
   });
 
-  return validUniversities.map((uni) => ({
-    url: `${baseUrl}/programs/universities/${uni.slug}`,
-    lastModified: new Date(),
-  }));
+  const urls = validUniversities
+    .map(
+      (uni) => `
+    <url>
+      <loc>${baseUrl}/programs/universities/${uni.slug}</loc>
+    </url>`,
+    )
+    .join("");
+
+  const body = `<?xml version="1.0" encoding="UTF-8"?>
+  <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    ${urls}
+  </urlset>`;
+
+  return new Response(body, {
+    headers: {
+      "Content-Type": "application/xml",
+    },
+  });
 }
