@@ -6,13 +6,14 @@ export async function GET(req, { params }) {
   try {
     const baseUrl = "https://www.khizaroverseas.in";
 
-    // DYNAMIC SITEMAP NUMBER
+    // CURRENT SITEMAP PAGE
     const sitemapPage = Number(params.page || 1);
 
-    // HOW MANY API PAGES PER SITEMAP
-    const PAGES_PER_SITEMAP = 100;
+    // 50 API pages × 20 universities
+    // ≈ 1000 universities per sitemap
+    const PAGES_PER_SITEMAP = 50;
 
-    // CALCULATE START/END
+    // PAGE RANGE
     const startPage = (sitemapPage - 1) * PAGES_PER_SITEMAP + 1;
 
     const endPage = sitemapPage * PAGES_PER_SITEMAP;
@@ -28,18 +29,21 @@ export async function GET(req, { params }) {
           `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/universities?page=${i}`,
           {
             next: { revalidate: 3600 },
+            signal: AbortSignal.timeout(15000),
           },
-        ).then(async (res) => {
-          if (!res.ok) return null;
+        )
+          .then(async (res) => {
+            if (!res.ok) return null;
 
-          return res.json();
-        }),
+            return res.json();
+          })
+          .catch(() => null),
       );
     }
 
     const results = await Promise.all(requests);
 
-    // MERGE DATA
+    // MERGE UNIVERSITIES
     results.forEach((data) => {
       if (data?.universities?.length) {
         allUniversities.push(...data.universities);
@@ -51,7 +55,7 @@ export async function GET(req, { params }) {
       new Map(allUniversities.map((uni) => [uni.slug, uni])).values(),
     );
 
-    // FILTER GOOD QUALITY UNIVERSITIES
+    // QUALITY FILTERING
     const validUniversities = uniqueUniversities.filter((uni) => {
       const confidence = uni.confidenceScore || 0;
 
@@ -67,12 +71,13 @@ export async function GET(req, { params }) {
         (uni) => `
     <url>
       <loc>${baseUrl}/programs/universities/${uni.slug}</loc>
-      <lastmod>${new Date().toISOString()}</lastmod>
+      <lastmod>${new Date(
+        uni.updatedAt || uni.createdAt || Date.now(),
+      ).toISOString()}</lastmod>
     </url>`,
       )
       .join("");
 
-    // FINAL XML
     const body = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${urls}
@@ -85,7 +90,7 @@ ${urls}
       },
     });
   } catch (error) {
-    console.error("SITEMAP ERROR:", error);
+    console.error("UNIVERSITIES SITEMAP ERROR:", error);
 
     return new Response("Failed to generate sitemap", {
       status: 500,

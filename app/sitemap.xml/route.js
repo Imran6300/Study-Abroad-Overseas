@@ -1,18 +1,28 @@
+export const runtime = "nodejs";
+export const revalidate = 3600;
+
 export async function GET() {
-  const baseUrl = "https://www.khizaroverseas.in";
+  try {
+    const baseUrl = "https://www.khizaroverseas.in";
 
-  const totalSitemaps = 10;
+    // TOTAL ESTIMATED UNIVERSITIES
+    const totalUniversities = 10000;
 
-  const universitySitemaps = Array.from(
-    { length: totalSitemaps },
-    (_, i) => `
-      <sitemap>
-        <loc>${baseUrl}/sitemap-universities/${i + 1}</loc>
-      </sitemap>
-    `,
-  ).join("");
+    // APPROX 1000 URLs PER SITEMAP
+    const universitiesPerSitemap = 1000;
 
-  const body = `<?xml version="1.0" encoding="UTF-8"?>
+    const totalSitemaps = Math.ceil(totalUniversities / universitiesPerSitemap);
+
+    // UNIVERSITY SITEMAPS
+    const universitySitemaps = Array.from(
+      { length: totalSitemaps },
+      (_, i) => `
+<sitemap>
+  <loc>${baseUrl}/sitemap-universities/${i + 1}</loc>
+</sitemap>`,
+    ).join("");
+
+    const body = `<?xml version="1.0" encoding="UTF-8"?>
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 
 ${universitySitemaps}
@@ -23,9 +33,17 @@ ${universitySitemaps}
 
 </sitemapindex>`;
 
-  return new Response(body, {
-    headers: {
-      "Content-Type": "application/xml",
-    },
-  });
+    return new Response(body, {
+      headers: {
+        "Content-Type": "application/xml",
+        "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
+      },
+    });
+  } catch (error) {
+    console.error("MAIN SITEMAP ERROR:", error);
+
+    return new Response("Failed to generate sitemap index", {
+      status: 500,
+    });
+  }
 }
