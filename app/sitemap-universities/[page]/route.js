@@ -74,7 +74,11 @@ export async function GET(req, { params }) {
     const validUniversities = uniqueUniversities.filter((uni) => {
       const confidence = Number(uni?.enrichment?.confidenceScore || 0);
 
-      return uni?.slug && uni?.name && confidence >= 0.75;
+      const hasSlug = Boolean(uni?.slug);
+
+      const hasName = Boolean(uni?.name);
+
+      return hasSlug && hasName && confidence >= 0.75;
     });
     console.log("VALID UNIVERSITIES:", validUniversities.length);
 
