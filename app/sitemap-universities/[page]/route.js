@@ -1,5 +1,7 @@
 export const dynamic = "force-dynamic";
+
 export const runtime = "nodejs";
+
 export const revalidate = 3600;
 
 export async function GET(req, { params }) {
@@ -9,8 +11,8 @@ export async function GET(req, { params }) {
     // CURRENT SITEMAP PAGE
     const sitemapPage = Number(params.page || 1);
 
-    // 50 API pages × 20 universities
-    // ≈ 1000 universities per sitemap
+    // 50 API pages
+    // ≈ 1000 universities
     const PAGES_PER_SITEMAP = 50;
 
     // PAGE RANGE
@@ -30,10 +32,8 @@ export async function GET(req, { params }) {
           {
             next: { revalidate: 3600 },
 
-            // SAFETY TIMEOUT
             signal: AbortSignal.timeout(15000),
 
-            // CACHE OPTIMIZATION
             cache: "force-cache",
           },
         )
@@ -65,37 +65,32 @@ export async function GET(req, { params }) {
       new Map(allUniversities.map((uni) => [uni.slug, uni])).values(),
     );
 
-    // SMART QUALITY FILTER
-    // DO NOT OVER FILTER DURING ENRICHMENT PHASE
+    console.log("TOTAL UNIVERSITIES:", uniqueUniversities.length);
+
+    // QUALITY FILTERING
+    // IMPORTANT:
+    // confidenceScore MUST exist
+    // in listing API response
     const validUniversities = uniqueUniversities.filter((uni) => {
-      const confidence = Number(uni?.confidenceScore || 0);
+      const confidence = Number(uni?.enrichment?.confidenceScore || 0);
 
-      const descriptionLength = uni?.description?.trim()?.length || 0;
-
-      const hasSlug = Boolean(uni?.slug);
-
-      const hasName = Boolean(uni?.name);
-
-      // MAIN FILTER
-      return (
-        hasSlug && hasName && (descriptionLength >= 120 || confidence >= 0.45)
-      );
+      return uni?.slug && uni?.name && confidence >= 0.75;
     });
-
-    console.log("TOTAL:", uniqueUniversities.length);
-
-    console.log("VALID:", validUniversities.length);
+    console.log("VALID UNIVERSITIES:", validUniversities.length);
 
     // GENERATE XML URLS
     const urls = validUniversities
       .map(
         (uni) => `
   <url>
-    <loc>${baseUrl}/programs/universities/${uni.slug}</loc>
 
-    <lastmod>${new Date(
-      uni.updatedAt || uni.createdAt || Date.now(),
-    ).toISOString()}</lastmod>
+    <loc>
+      ${baseUrl}/programs/universities/${uni.slug}
+    </loc>
+
+    <lastmod>
+      ${new Date(uni.updatedAt || uni.createdAt || Date.now()).toISOString()}
+    </lastmod>
 
   </url>`,
       )
@@ -103,6 +98,7 @@ export async function GET(req, { params }) {
 
     // FINAL XML
     const body = `<?xml version="1.0" encoding="UTF-8"?>
+
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 
 ${urls}
@@ -115,7 +111,6 @@ ${urls}
       headers: {
         "Content-Type": "application/xml; charset=utf-8",
 
-        // CDN CACHE
         "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
       },
     });
