@@ -4,12 +4,14 @@ export const runtime = "nodejs";
 
 export const revalidate = 3600;
 
-export async function GET(req, { params }) {
+export async function GET(req, context) {
   try {
     const baseUrl = "https://www.khizaroverseas.in";
 
     // CURRENT SITEMAP PAGE
-    const sitemapPage = Number(params.page || 1);
+    const sitemapPage = Number(context?.params?.page || 1);
+
+    console.log("SITEMAP PAGE:", sitemapPage);
 
     // 50 API pages
     // ≈ 1000 universities
