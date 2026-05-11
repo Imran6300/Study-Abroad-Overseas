@@ -29,7 +29,12 @@ export async function GET(req, { params }) {
           `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/universities?page=${i}`,
           {
             next: { revalidate: 3600 },
+
+            // SAFETY TIMEOUT
             signal: AbortSignal.timeout(15000),
+
+            // CACHE OPTIMIZATION
+            cache: "force-cache",
           },
         )
           .then(async (res) => {
@@ -37,10 +42,15 @@ export async function GET(req, { params }) {
 
             return res.json();
           })
-          .catch(() => null),
+          .catch((error) => {
+            console.error(`FAILED PAGE ${i}:`, error);
+
+            return null;
+          }),
       );
     }
 
+    // FETCH ALL IN PARALLEL
     const results = await Promise.all(requests);
 
     // MERGE UNIVERSITIES
@@ -55,45 +65,75 @@ export async function GET(req, { params }) {
       new Map(allUniversities.map((uni) => [uni.slug, uni])).values(),
     );
 
-    // QUALITY FILTERING
+    // SMART QUALITY FILTER
+    // DO NOT OVER FILTER DURING ENRICHMENT PHASE
     const validUniversities = uniqueUniversities.filter((uni) => {
-      const confidence = uni.confidenceScore || 0;
+      const confidence = Number(uni?.confidenceScore || 0);
 
-      const descriptionLength = uni.description?.length || 0;
+      const descriptionLength = uni?.description?.trim()?.length || 0;
 
-      return confidence >= 0.75 && descriptionLength >= 300;
+      const hasSlug = Boolean(uni?.slug);
+
+      const hasName = Boolean(uni?.name);
+
+      // MAIN FILTER
+      return (
+        hasSlug && hasName && (descriptionLength >= 120 || confidence >= 0.45)
+      );
     });
 
-    // XML URLS
+    console.log("TOTAL:", uniqueUniversities.length);
+
+    console.log("VALID:", validUniversities.length);
+
+    // GENERATE XML URLS
     const urls = validUniversities
-      .filter((uni) => uni?.slug)
       .map(
         (uni) => `
-    <url>
-      <loc>${baseUrl}/programs/universities/${uni.slug}</loc>
-      <lastmod>${new Date(
-        uni.updatedAt || uni.createdAt || Date.now(),
-      ).toISOString()}</lastmod>
-    </url>`,
+  <url>
+    <loc>${baseUrl}/programs/universities/${uni.slug}</loc>
+
+    <lastmod>${new Date(
+      uni.updatedAt || uni.createdAt || Date.now(),
+    ).toISOString()}</lastmod>
+
+  </url>`,
       )
       .join("");
 
+    // FINAL XML
     const body = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
 ${urls}
+
 </urlset>`;
 
     return new Response(body, {
+      status: 200,
+
       headers: {
-        "Content-Type": "application/xml",
+        "Content-Type": "application/xml; charset=utf-8",
+
+        // CDN CACHE
         "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
       },
     });
   } catch (error) {
     console.error("UNIVERSITIES SITEMAP ERROR:", error);
 
-    return new Response("Failed to generate sitemap", {
-      status: 500,
-    });
+    return new Response(
+      `<?xml version="1.0" encoding="UTF-8"?>
+<error>
+  <message>Failed to generate sitemap</message>
+</error>`,
+      {
+        status: 500,
+
+        headers: {
+          "Content-Type": "application/xml; charset=utf-8",
+        },
+      },
+    );
   }
 }
