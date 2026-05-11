@@ -4,17 +4,15 @@ export const runtime = "nodejs";
 
 export const revalidate = 3600;
 
-export async function GET(req, context) {
+export async function GET(req, { params }) {
   try {
     const baseUrl = "https://www.khizaroverseas.in";
 
-    // DYNAMIC PARAM
-    const { page } = await context.params;
-
-    const sitemapPage = Number(page || 1);
+    // FIXED PARAMS
+    const sitemapPage = Number(params.page || 1);
 
     // 50 API pages
-    // ≈ 1000 universities
+    // around 1000 universities
     const PAGES_PER_SITEMAP = 50;
 
     // PAGE RANGE
@@ -24,7 +22,7 @@ export async function GET(req, context) {
 
     let allUniversities = [];
 
-    // PARALLEL FETCH REQUESTS
+    // PARALLEL REQUESTS
     const requests = [];
 
     for (let i = startPage; i <= endPage; i++) {
@@ -56,7 +54,7 @@ export async function GET(req, context) {
       );
     }
 
-    // FETCH ALL DATA
+    // FETCH ALL
     const results = await Promise.all(requests);
 
     // MERGE UNIVERSITIES
@@ -74,8 +72,6 @@ export async function GET(req, context) {
     console.log("TOTAL UNIVERSITIES:", uniqueUniversities.length);
 
     // QUALITY FILTERING
-    // CURRENTLY USING 0.5
-    // FOR BETTER INDEXING SCALE
     const validUniversities = uniqueUniversities.filter((uni) => {
       const confidence = Number(uni?.enrichment?.confidenceScore || 0);
 
@@ -84,28 +80,20 @@ export async function GET(req, context) {
 
     console.log("VALID UNIVERSITIES:", validUniversities.length);
 
-    // GENERATE XML URLS
+    // XML URLS
     const urls = validUniversities
       .map(
         (uni) => `
 <url>
-
-  <loc>
-    ${baseUrl}/programs/universities/${uni.slug}
-  </loc>
+  <loc>${baseUrl}/programs/universities/${uni.slug}</loc>
 
   <lastmod>
     ${new Date(uni.updatedAt || uni.createdAt || Date.now()).toISOString()}
   </lastmod>
 
-  <changefreq>
-    weekly
-  </changefreq>
+  <changefreq>weekly</changefreq>
 
-  <priority>
-    0.8
-  </priority>
-
+  <priority>0.8</priority>
 </url>`,
       )
       .join("");
@@ -133,7 +121,6 @@ ${urls}
 
     return new Response(
       `<?xml version="1.0" encoding="UTF-8"?>
-
 <error>
   <message>
     Failed to generate sitemap
