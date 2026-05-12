@@ -55,7 +55,7 @@ export default function LoginPage() {
       if (role === "admin" || role === "super_admin") {
         router.replace("/dashboard/admin-dashboard");
       } else if (role === "counselor") {
-        router.replace("/admin/students");
+        router.replace("/dashboard/counselor-dashboard");
       } else if (role === "editor") {
         router.replace("/admin/universities");
       } else {

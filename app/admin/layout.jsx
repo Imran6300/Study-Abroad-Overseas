@@ -13,7 +13,7 @@ const roleAccess = {
     "/admin/blog",
   ],
   counselor: [
-    "/admin/students",
+    "/dashboard/counselor-dashboard",
     "/admin/applications",
     "/admin/visa",
     "/admin/deadlines",
@@ -46,9 +46,7 @@ export default function AdminLayout({ children }) {
       return;
     }
 
-    const isAllowed = allowedRoutes.some((route) =>
-      pathname.startsWith(route)
-    );
+    const isAllowed = allowedRoutes.some((route) => pathname.startsWith(route));
 
     if (!isAllowed) {
       router.replace("/dashboard/user");
@@ -67,9 +65,7 @@ export default function AdminLayout({ children }) {
 
   if (!allowedRoutes) return null;
 
-  const isAllowed = allowedRoutes.some((route) =>
-    pathname.startsWith(route)
-  );
+  const isAllowed = allowedRoutes.some((route) => pathname.startsWith(route));
 
   if (!isAllowed) return null;
 

@@ -20,12 +20,17 @@ export default function DashboardSidebar() {
     { href: "/dashboard/user/documents", label: "Documents", icon: "📄" },
     { href: "/dashboard/user/visa", label: "Visa Progress", icon: "🛂" },
 
-    { href: "/assessment", label: "Assessment", icon: "📝" },
     { href: "/dashboard/user/scholarships", label: "Scholarships", icon: "💰" },
     { href: "/dashboard/user/settings", label: "Settings", icon: "⚙️" },
   ];
 
-  const isActive = (href) => pathname.startsWith(href);
+  const isActive = (href) => {
+    if (href === "/dashboard/user") {
+      return pathname === href;
+    }
+
+    return pathname.startsWith(href);
+  };
 
   return (
     <>

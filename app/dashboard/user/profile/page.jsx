@@ -115,27 +115,33 @@ export default function ProfilePage() {
         }
 
         const data = await res.json();
+        if (!res.ok) {
+          console.error(data.message || "Failed to fetch profile");
+          return;
+        }
+        const profile = data?.data || {};
+
         setProfileExists(true);
 
         setFormData({
-          fullName: data.data.fullName || user?.name || "",
-          email: data.data.email || user?.email || "",
-          phone: data.data.phone || "",
-          qualification: data.data.qualification || "",
-          fieldOfStudy: data.data.fieldOfStudy || "",
-          graduationYear: data.data.graduationYear || "",
-          gpa: data.data.gpa || "",
-          preferredCountry: data.data.preferredCountry || "",
-          intendedIntake: data.data.intendedIntake || "",
-          dateOfBirth: data.data.dateOfBirth?.split("T")[0] || "",
-          gender: data.data.gender || "",
-          nationality: data.data.nationality || "",
-          passportNumber: data.data.passportNumber || "",
-          passportExpiry: data.data.passportExpiry?.split("T")[0] || "",
+          fullName: profile.fullName || user?.name || "",
+          email: profile.email || user?.email || "",
+          phone: profile.phone || "",
+          qualification: profile.qualification || "",
+          fieldOfStudy: profile.fieldOfStudy || "",
+          graduationYear: profile.graduationYear || "",
+          gpa: profile.gpa || "",
+          preferredCountry: profile.preferredCountry || "",
+          intendedIntake: profile.intendedIntake || "",
+          dateOfBirth: profile.dateOfBirth?.split("T")[0] || "",
+          gender: profile.gender || "",
+          nationality: profile.nationality || "",
+          passportNumber: profile.passportNumber || "",
+          passportExpiry: profile.passportExpiry?.split("T")[0] || "",
         });
 
-        if (data.data.profilePicture?.secure_url) {
-          setImagePreview(data.data.profilePicture.secure_url);
+        if (profile.profilePicture?.secure_url) {
+          setImagePreview(profile.profilePicture.secure_url);
         }
       } catch (err) {
         console.error(err);

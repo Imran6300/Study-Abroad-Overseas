@@ -4,8 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 
-import AdminSidebar from "@/components/admindashboard/AdminSidebar";
-import DashboardHeader from "@/components/admindashboard/DashboardHeader";
+import CounselorSidebar from "@/components/counselordashboard/CounselorSidebar";
 import AddStudentForm from "@/components/adminform/addstudents";
 import ConfirmationModal from "@/components/adminform/confirmmsg";
 import { useSelector } from "react-redux";
@@ -176,27 +175,9 @@ export default function StudentsAdminPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <AdminSidebar />
-
-      <div className="flex-1 flex flex-col">
-        <DashboardHeader
-          title={
-            mode === "add"
-              ? "Add New Student"
-              : mode === "edit"
-                ? "Edit Student"
-                : mode === "view"
-                  ? "View Student"
-                  : "Student Management"
-          }
-          counselorName={CounselorName}
-          onButtonClick={
-            isFormOpen ? () => setMode(null) : () => setMode("add")
-          }
-        />
-
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto bg-gray-50">
+    <div className="min-h-screen bg-gray-50">
+      <div className="flex-1 flex flex-col ">
+        <main className="flex-1 w-full p-4 sm:p-6 lg:p-8 overflow-auto bg-gray-50">
           {/* Backdrop */}
           <AnimatePresence>
             {isFormOpen && (
@@ -283,10 +264,15 @@ export default function StudentsAdminPage() {
 
             {/* Table wrapper */}
             <motion.div
-              className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200 mx-1 sm:mx-0"
+              className="w-full
+    bg-white
+    rounded-2xl
+    shadow-sm
+    overflow-hidden
+    border border-gray-200"
               variants={itemVariants}
             >
-              <div className="overflow-x-auto">
+              <div className="w-full overflow-x-auto">
                 {loading ? (
                   <div className="p-10 text-center text-gray-600 min-h-[300px] flex items-center justify-center">
                     Loading students...
@@ -300,7 +286,7 @@ export default function StudentsAdminPage() {
                     No students match your search.
                   </div>
                 ) : (
-                  <table className="min-w-full divide-y divide-gray-200 table-auto">
+                  <table className="w-full divide-y divide-gray-200 table-auto">
                     <thead className="bg-gray-50">
                       <tr>
                         <th className="px-4 py-3 sm:px-6 sm:py-4 text-left text-xs sm:text-sm font-semibold text-gray-700 whitespace-nowrap">
@@ -368,7 +354,9 @@ export default function StudentsAdminPage() {
                               {student.id && (
                                 <button
                                   onClick={() =>
-                                    router.push(`/admin/students/${student.id}`)
+                                    router.push(
+                                      `/dashboard/counselor-dashboard/students/${student.id}`,
+                                    )
                                   }
                                   className="text-sky-600 hover:text-sky-800 text-sm"
                                 >

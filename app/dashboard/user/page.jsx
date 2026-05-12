@@ -36,6 +36,10 @@ export default function DashboardPage() {
   const dispatch = useDispatch();
   const router = useRouter();
 
+  const notificationRef = useRef(null);
+
+  const [showNotifications, setShowNotifications] = useState(false);
+
   const [profileCompletion, setProfileCompletion] = useState(0);
   const [applications, setApplications] = useState([]);
   const [progress, setProgress] = useState(0);
@@ -50,7 +54,9 @@ export default function DashboardPage() {
         setShowNotifications(false);
       }
     };
+
     document.addEventListener("mousedown", handleClickOutside);
+
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
