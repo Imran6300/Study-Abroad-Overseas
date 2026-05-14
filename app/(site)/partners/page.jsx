@@ -6,7 +6,10 @@ import {
   useTransform,
   AnimatePresence,
 } from "framer-motion";
-import { useState, useRef } from "react";
+import axios from "axios";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState, useRef, useEffect } from "react";
 import {
   FaArrowRight,
   FaRobot,
@@ -39,18 +42,14 @@ import {
   FaCheck,
   FaRocket,
   FaMapMarkerAlt,
-  FaBriefcase as FaWork,
 } from "react-icons/fa";
 
 /* ─── CONSTANTS ─── */
-
 const BLUE = "#4169E1";
 const GREEN = "#32CD32";
 const ORANGE = "#FF8C00";
-const CREAM = "#FFFACD";
 
 /* ─── FORM CONFIG ─── */
-
 const FORM_STEPS = [
   {
     id: "basic",
@@ -90,30 +89,25 @@ const FORM_STEPS = [
 ];
 
 const INITIAL_FORM = {
-  // Basic
   fullName: "",
   email: "",
   phone: "",
   whatsapp: "",
   country: "",
   city: "",
-  // Business
   agencyName: "",
   website: "",
   yearsInBusiness: "",
   agencyType: "",
   studentsPerMonth: "",
-  // Operations
   countries: [],
   services: [],
   currentSystem: "",
   teamSize: "",
-  // Branding
   wantsBrandedPortal: "",
   brandingName: "",
   hasLogo: "",
   wantsCustomDomain: "",
-  // Intent
   whyJoin: "",
   biggestChallenge: "",
   interestedFeatures: [],
@@ -121,14 +115,14 @@ const INITIAL_FORM = {
 };
 
 /* ─── PARTNER FORM MODAL ─── */
-
 function PartnerFormModal({ isOpen, onClose }) {
   const [step, setStep] = useState(0);
   const [form, setForm] = useState(INITIAL_FORM);
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const totalSteps = FORM_STEPS.length;
-  const progress = ((step + 1) / totalSteps) * 100;
   const currentStep = FORM_STEPS[step];
 
   const update = (key, value) => setForm((p) => ({ ...p, [key]: value }));
@@ -140,12 +134,34 @@ function PartnerFormModal({ isOpen, onClose }) {
         : [...p[key], value],
     }));
 
-  const handleNext = () => {
+  const submitPartnerApplication = async () => {
+    try {
+      setLoading(true);
+      setError("");
+      const recaptchaToken = await window.grecaptcha.execute(
+        process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY,
+        { action: "lead_submit" },
+      );
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/partners`,
+        { ...form, recaptchaToken },
+      );
+      if (response.data.success) setSubmitted(true);
+    } catch (err) {
+      setError(
+        err?.response?.data?.message ||
+          "Something went wrong. Please try again.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleNext = async () => {
     if (step < totalSteps - 1) setStep((s) => s + 1);
-    else setSubmitted(true);
+    else await submitPartnerApplication();
   };
   const handleBack = () => setStep((s) => s - 1);
-
   const handleClose = () => {
     onClose();
     setTimeout(() => {
@@ -159,7 +175,6 @@ function PartnerFormModal({ isOpen, onClose }) {
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Backdrop */}
           <motion.div
             key="backdrop"
             initial={{ opacity: 0 }}
@@ -169,162 +184,158 @@ function PartnerFormModal({ isOpen, onClose }) {
             onClick={handleClose}
             className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm"
           />
-
-          {/* Modal */}
           <motion.div
             key="modal"
             initial={{ opacity: 0, scale: 0.92, y: 40 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.94, y: 20 }}
             transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
+            className="fixed inset-0 z-[99999] overflow-y-auto"
           >
-            <div
-              className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto pointer-events-auto bg-[#080d1c] border border-white/10 rounded-[32px] shadow-[0_40px_120px_rgba(0,0,0,0.9)]"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Ambient glow */}
+            <div className="min-h-full flex items-start justify-center px-3 py-6 sm:px-4 sm:py-10">
               <div
-                className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-40 blur-[80px] rounded-full opacity-30 pointer-events-none transition-all duration-700"
-                style={{ background: currentStep.color }}
-              />
-
-              {/* Close */}
-              <button
-                onClick={handleClose}
-                className="absolute top-5 right-5 z-10 w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/60 hover:text-white transition-all"
+                className="relative w-full max-w-lg pointer-events-auto bg-[#080d1c] border border-white/10 rounded-2xl sm:rounded-[32px] shadow-[0_40px_120px_rgba(0,0,0,0.9)]"
+                onClick={(e) => e.stopPropagation()}
               >
-                <FaTimes className="text-sm" />
-              </button>
+                <div
+                  className="absolute top-0 left-1/2 -translate-x-1/2 w-64 sm:w-96 h-32 sm:h-40 blur-[80px] rounded-full opacity-30 pointer-events-none transition-all duration-700"
+                  style={{ background: currentStep.color }}
+                />
+                <button
+                  onClick={handleClose}
+                  className="absolute top-4 right-4 z-10 w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/60 hover:text-white transition-all"
+                >
+                  <FaTimes className="text-sm" />
+                </button>
 
-              {!submitted ? (
-                <div className="relative">
-                  {/* Header */}
-                  <div className="px-8 pt-8 pb-6 border-b border-white/8">
-                    {/* Step dots */}
-                    <div className="flex gap-2 mb-6">
-                      {FORM_STEPS.map((s, i) => (
-                        <div key={i} className="flex items-center gap-2">
-                          <motion.div
-                            animate={{
-                              width: i === step ? 28 : 8,
-                              background:
-                                i < step
-                                  ? GREEN
-                                  : i === step
-                                    ? currentStep.color
-                                    : "rgba(255,255,255,0.15)",
-                            }}
-                            transition={{ duration: 0.4 }}
-                            className="h-2 rounded-full"
-                          />
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Step badge */}
-                    <div className="flex items-center gap-3 mb-3">
-                      <div
-                        className="w-10 h-10 rounded-2xl flex items-center justify-center text-base"
-                        style={{
-                          background: `${currentStep.color}20`,
-                          color: currentStep.color,
-                        }}
-                      >
-                        {currentStep.icon}
+                {!submitted ? (
+                  <div className="relative">
+                    <div className="px-4 sm:px-6 pt-5 sm:pt-6 pb-4 border-b border-white/8">
+                      <div className="flex gap-2 mb-5">
+                        {FORM_STEPS.map((s, i) => (
+                          <div key={i} className="flex items-center gap-2">
+                            <motion.div
+                              animate={{
+                                width: i === step ? 28 : 8,
+                                background:
+                                  i < step
+                                    ? GREEN
+                                    : i === step
+                                      ? currentStep.color
+                                      : "rgba(255,255,255,0.15)",
+                              }}
+                              transition={{ duration: 0.4 }}
+                              className="h-2 rounded-full"
+                            />
+                          </div>
+                        ))}
                       </div>
-                      <div>
+                      <div className="flex items-center gap-3 mb-3">
+                        <div
+                          className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl flex items-center justify-center text-sm sm:text-base flex-shrink-0"
+                          style={{
+                            background: `${currentStep.color}20`,
+                            color: currentStep.color,
+                          }}
+                        >
+                          {currentStep.icon}
+                        </div>
                         <p className="text-xs text-white/40 font-semibold uppercase tracking-widest">
                           Step {step + 1} of {totalSteps}
                         </p>
                       </div>
+                      <h2 className="text-2xl sm:text-3xl font-black">
+                        {currentStep.title}
+                      </h2>
+                      <p className="text-white/50 text-sm mt-1">
+                        {currentStep.subtitle}
+                      </p>
                     </div>
 
-                    <h2 className="text-3xl font-black">{currentStep.title}</h2>
-                    <p className="text-white/50 text-sm mt-1">
-                      {currentStep.subtitle}
-                    </p>
-                  </div>
+                    <div className="px-4 sm:px-6 py-4 sm:py-5">
+                      <AnimatePresence mode="wait">
+                        <motion.div
+                          key={step}
+                          initial={{ opacity: 0, x: 30 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -30 }}
+                          transition={{ duration: 0.3, ease: "easeOut" }}
+                        >
+                          {step === 0 && (
+                            <Step1Basic form={form} update={update} />
+                          )}
+                          {step === 1 && (
+                            <Step2Business form={form} update={update} />
+                          )}
+                          {step === 2 && (
+                            <Step3Operations
+                              form={form}
+                              update={update}
+                              toggle={toggle}
+                            />
+                          )}
+                          {step === 3 && (
+                            <Step4Branding form={form} update={update} />
+                          )}
+                          {step === 4 && (
+                            <Step5Intent
+                              form={form}
+                              update={update}
+                              toggle={toggle}
+                            />
+                          )}
+                        </motion.div>
+                      </AnimatePresence>
+                    </div>
 
-                  {/* Body */}
-                  <div className="px-8 py-7">
-                    <AnimatePresence mode="wait">
-                      <motion.div
-                        key={step}
-                        initial={{ opacity: 0, x: 30 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -30 }}
-                        transition={{ duration: 0.3, ease: "easeOut" }}
+                    {error && (
+                      <div className="px-4 sm:px-8 mb-3">
+                        <div className="bg-red-500/10 border border-red-500/20 text-red-300 rounded-xl px-4 py-3 text-sm">
+                          {error}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="px-4 sm:px-6 pb-5 sm:pb-6 flex items-center justify-between gap-3">
+                      <button
+                        onClick={handleBack}
+                        disabled={step === 0}
+                        className={`flex items-center gap-2 px-4 sm:px-5 py-3 rounded-xl font-semibold text-sm transition-all ${step === 0 ? "opacity-0 pointer-events-none" : "bg-white/8 hover:bg-white/15 text-white/70 hover:text-white border border-white/10"}`}
                       >
-                        {step === 0 && (
-                          <Step1Basic form={form} update={update} />
+                        <FaArrowLeft className="text-xs" /> Back
+                      </button>
+                      <motion.button
+                        whileHover={{ scale: 1.03 }}
+                        whileTap={{ scale: 0.97 }}
+                        onClick={handleNext}
+                        disabled={loading}
+                        className="flex items-center gap-2 sm:gap-3 px-5 sm:px-6 py-3 rounded-2xl font-bold text-sm sm:text-base transition-all shadow-lg"
+                        style={{
+                          background: currentStep.color,
+                          boxShadow: `0 8px 32px ${currentStep.color}50`,
+                        }}
+                      >
+                        {step === totalSteps - 1 ? (
+                          loading ? (
+                            "Submitting..."
+                          ) : (
+                            <>
+                              <FaRocket className="text-sm" /> Submit
+                              Application
+                            </>
+                          )
+                        ) : (
+                          <>
+                            Continue <FaArrowRight className="text-sm" />
+                          </>
                         )}
-                        {step === 1 && (
-                          <Step2Business form={form} update={update} />
-                        )}
-                        {step === 2 && (
-                          <Step3Operations
-                            form={form}
-                            update={update}
-                            toggle={toggle}
-                          />
-                        )}
-                        {step === 3 && (
-                          <Step4Branding form={form} update={update} />
-                        )}
-                        {step === 4 && (
-                          <Step5Intent
-                            form={form}
-                            update={update}
-                            toggle={toggle}
-                          />
-                        )}
-                      </motion.div>
-                    </AnimatePresence>
+                      </motion.button>
+                    </div>
                   </div>
-
-                  {/* Footer */}
-                  <div className="px-8 pb-8 flex items-center justify-between gap-4">
-                    <button
-                      onClick={handleBack}
-                      disabled={step === 0}
-                      className={`flex items-center gap-2 px-5 py-3 rounded-xl font-semibold text-sm transition-all ${
-                        step === 0
-                          ? "opacity-0 pointer-events-none"
-                          : "bg-white/8 hover:bg-white/15 text-white/70 hover:text-white border border-white/10"
-                      }`}
-                    >
-                      <FaArrowLeft className="text-xs" />
-                      Back
-                    </button>
-
-                    <motion.button
-                      whileHover={{ scale: 1.03 }}
-                      whileTap={{ scale: 0.97 }}
-                      onClick={handleNext}
-                      className="flex items-center gap-3 px-8 py-3.5 rounded-2xl font-bold text-base transition-all shadow-lg"
-                      style={{
-                        background: currentStep.color,
-                        boxShadow: `0 8px 32px ${currentStep.color}50`,
-                      }}
-                    >
-                      {step === totalSteps - 1 ? (
-                        <>
-                          <FaRocket className="text-sm" />
-                          Submit Application
-                        </>
-                      ) : (
-                        <>
-                          Continue
-                          <FaArrowRight className="text-sm" />
-                        </>
-                      )}
-                    </motion.button>
-                  </div>
-                </div>
-              ) : (
-                <SuccessScreen onClose={handleClose} form={form} />
-              )}
+                ) : (
+                  <SuccessScreen onClose={handleClose} form={form} />
+                )}
+              </div>
             </div>
           </motion.div>
         </>
@@ -333,8 +344,7 @@ function PartnerFormModal({ isOpen, onClose }) {
   );
 }
 
-/* ─── FORM STEP COMPONENTS ─── */
-
+/* ─── FORM FIELD ─── */
 function FormField({ label, children, hint }) {
   return (
     <div className="space-y-1.5">
@@ -348,24 +358,25 @@ function FormField({ label, children, hint }) {
 }
 
 const inputCls =
-  "w-full bg-white/6 border border-white/10 hover:border-white/20 focus:border-[#4169E1]/60 focus:bg-white/8 rounded-xl px-4 py-3 text-sm text-white placeholder-white/25 outline-none transition-all";
-
+  "w-full bg-[#111827] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-gray-400 outline-none focus:border-[#4169E1] focus:ring-2 focus:ring-[#4169E1]/30 transition-all";
 const selectCls =
-  "w-full bg-white/6 border border-white/10 hover:border-white/20 focus:border-[#4169E1]/60 rounded-xl px-4 py-3 text-sm text-white outline-none transition-all appearance-none";
+  "w-full bg-[#111827] border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-[#4169E1] focus:ring-2 focus:ring-[#4169E1]/30 transition-all";
 
 function OptionPill({ label, selected, color = BLUE, onClick }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border"
+      className="flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all border"
       style={{
         background: selected ? `${color}20` : "rgba(255,255,255,0.04)",
         borderColor: selected ? color : "rgba(255,255,255,0.1)",
         color: selected ? "#fff" : "rgba(255,255,255,0.5)",
       }}
     >
-      {selected && <FaCheck className="text-xs" style={{ color }} />}
+      {selected && (
+        <FaCheck className="text-xs flex-shrink-0" style={{ color }} />
+      )}
       {label}
     </button>
   );
@@ -373,8 +384,8 @@ function OptionPill({ label, selected, color = BLUE, onClick }) {
 
 function Step1Basic({ form, update }) {
   return (
-    <div className="grid grid-cols-2 gap-4">
-      <div className="col-span-2">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+      <div className="col-span-1 sm:col-span-2">
         <FormField label="Full Name *">
           <input
             className={inputCls}
@@ -384,7 +395,7 @@ function Step1Basic({ form, update }) {
           />
         </FormField>
       </div>
-      <div className="col-span-2">
+      <div className="col-span-1 sm:col-span-2">
         <FormField label="Business Email *">
           <input
             className={inputCls}
@@ -453,33 +464,26 @@ function Step1Basic({ form, update }) {
 
 function Step2Business({ form, update }) {
   return (
-    <div className="space-y-5">
-      <div className="grid grid-cols-2 gap-4">
-        <div className="col-span-2">
-          <FormField label="Agency / Consultancy Name *">
-            <input
-              className={inputCls}
-              placeholder="Global Overseas Consultancy"
-              value={form.agencyName}
-              onChange={(e) => update("agencyName", e.target.value)}
-            />
-          </FormField>
-        </div>
-        <div className="col-span-2">
-          <FormField
-            label="Website URL"
-            hint="Optional — helps us verify your business"
-          >
-            <input
-              className={inputCls}
-              placeholder="https://youragency.com"
-              value={form.website}
-              onChange={(e) => update("website", e.target.value)}
-            />
-          </FormField>
-        </div>
-      </div>
-
+    <div className="space-y-4 sm:space-y-5">
+      <FormField label="Agency / Consultancy Name *">
+        <input
+          className={inputCls}
+          placeholder="Global Overseas Consultancy"
+          value={form.agencyName}
+          onChange={(e) => update("agencyName", e.target.value)}
+        />
+      </FormField>
+      <FormField
+        label="Website URL"
+        hint="Optional — helps us verify your business"
+      >
+        <input
+          className={inputCls}
+          placeholder="https://youragency.com"
+          value={form.website}
+          onChange={(e) => update("website", e.target.value)}
+        />
+      </FormField>
       <FormField label="Years In Business">
         <div className="flex flex-wrap gap-2">
           {["Just Started", "1–2 Years", "3–5 Years", "5+ Years"].map((y) => (
@@ -493,7 +497,6 @@ function Step2Business({ form, update }) {
           ))}
         </div>
       </FormField>
-
       <FormField label="Agency Type *">
         <div className="flex flex-wrap gap-2">
           {[
@@ -512,7 +515,6 @@ function Step2Business({ form, update }) {
           ))}
         </div>
       </FormField>
-
       <FormField
         label="Students Handled Per Month *"
         hint="This helps us understand your scale"
@@ -535,7 +537,7 @@ function Step2Business({ form, update }) {
 
 function Step3Operations({ form, update, toggle }) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 sm:space-y-6">
       <FormField label="Countries You Send Students To">
         <div className="flex flex-wrap gap-2">
           {[
@@ -557,7 +559,6 @@ function Step3Operations({ form, update, toggle }) {
           ))}
         </div>
       </FormField>
-
       <FormField label="Services You Provide">
         <div className="flex flex-wrap gap-2">
           {[
@@ -578,7 +579,6 @@ function Step3Operations({ form, update, toggle }) {
           ))}
         </div>
       </FormField>
-
       <FormField
         label="Current System Used"
         hint="Be honest — this helps us tailor your onboarding"
@@ -601,7 +601,6 @@ function Step3Operations({ form, update, toggle }) {
           ))}
         </div>
       </FormField>
-
       <FormField label="Team Size">
         <div className="flex flex-wrap gap-2">
           {[
@@ -626,7 +625,7 @@ function Step3Operations({ form, update, toggle }) {
 
 function Step4Branding({ form, update }) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 sm:space-y-6">
       <FormField
         label="Do You Want Your Own Branded Portal?"
         hint="Your students will see only your brand — not ours"
@@ -643,7 +642,6 @@ function Step4Branding({ form, update }) {
           ))}
         </div>
       </FormField>
-
       <FormField
         label="Preferred Branding Name"
         hint="How would you like your portal to be titled?"
@@ -655,9 +653,8 @@ function Step4Branding({ form, update }) {
           onChange={(e) => update("brandingName", e.target.value)}
         />
       </FormField>
-
       <FormField label="Do You Have a Logo?">
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {["Yes", "No", "In Progress"].map((o) => (
             <OptionPill
               key={o}
@@ -669,12 +666,11 @@ function Step4Branding({ form, update }) {
           ))}
         </div>
       </FormField>
-
       <FormField
         label="Want Custom Domain Support?"
         hint="e.g. portal.youragency.com"
       >
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {["Yes", "No", "Later"].map((o) => (
             <OptionPill
               key={o}
@@ -686,7 +682,6 @@ function Step4Branding({ form, update }) {
           ))}
         </div>
       </FormField>
-
       {form.wantsCustomDomain === "Yes" && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
@@ -708,19 +703,18 @@ function Step4Branding({ form, update }) {
 
 function Step5Intent({ form, update, toggle }) {
   return (
-    <div className="space-y-5">
+    <div className="space-y-4 sm:space-y-5">
       <FormField
         label="Why Do You Want To Join?"
         hint="Be specific — this helps us prioritize your account"
       >
         <textarea
-          className={`${inputCls} resize-none h-24`}
-          placeholder="We're currently using spreadsheets and losing track of students. We want a professional system that makes us look bigger than we are..."
+          className={`${inputCls} resize-none h-20 sm:h-24`}
+          placeholder="We're currently using spreadsheets and losing track of students..."
           value={form.whyJoin}
           onChange={(e) => update("whyJoin", e.target.value)}
         />
       </FormField>
-
       <FormField label="Biggest Operational Challenge">
         <div className="flex flex-wrap gap-2">
           {[
@@ -741,7 +735,6 @@ function Step5Intent({ form, update, toggle }) {
           ))}
         </div>
       </FormField>
-
       <FormField label="Features You're Most Excited About">
         <div className="flex flex-wrap gap-2">
           {[
@@ -763,7 +756,6 @@ function Step5Intent({ form, update, toggle }) {
           ))}
         </div>
       </FormField>
-
       <FormField label="Preferred Demo Time">
         <select
           className={selectCls}
@@ -791,20 +783,17 @@ function Step5Intent({ form, update, toggle }) {
 }
 
 /* ─── SUCCESS SCREEN ─── */
-
 function SuccessScreen({ onClose, form }) {
+  const router = useRouter();
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      className="relative px-8 py-16 text-center overflow-hidden"
+      className="relative px-5 sm:px-8 py-12 sm:py-16 text-center overflow-hidden"
     >
-      {/* Background effects */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(50,205,50,0.15),transparent_60%)]" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,rgba(65,105,225,0.1),transparent_60%)]" />
-
-      {/* Animated checkmark */}
       <div className="relative mb-8">
         <motion.div
           initial={{ scale: 0 }}
@@ -815,7 +804,7 @@ function SuccessScreen({ onClose, form }) {
             type: "spring",
             bounce: 0.5,
           }}
-          className="w-24 h-24 rounded-full bg-[#32CD32]/20 border-2 border-[#32CD32]/50 flex items-center justify-center mx-auto"
+          className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-[#32CD32]/20 border-2 border-[#32CD32]/50 flex items-center justify-center mx-auto"
         >
           <motion.div
             initial={{ scale: 0 }}
@@ -827,11 +816,9 @@ function SuccessScreen({ onClose, form }) {
               bounce: 0.6,
             }}
           >
-            <FaCheck className="text-[#32CD32] text-4xl" />
+            <FaCheck className="text-[#32CD32] text-3xl sm:text-4xl" />
           </motion.div>
         </motion.div>
-
-        {/* Ripples */}
         {[1, 2, 3].map((i) => (
           <motion.div
             key={i}
@@ -843,28 +830,27 @@ function SuccessScreen({ onClose, form }) {
               repeat: Infinity,
               repeatDelay: 0.5,
             }}
-            className="absolute inset-0 rounded-full border border-[#32CD32]/30 mx-auto w-24 h-24"
+            className="absolute inset-0 rounded-full border border-[#32CD32]/30 mx-auto w-20 h-20 sm:w-24 sm:h-24"
             style={{ left: "50%", transform: "translateX(-50%)" }}
           />
         ))}
       </div>
-
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
       >
-        <h2 className="text-4xl font-black mb-3">
+        <h2 className="text-3xl sm:text-4xl font-black mb-3">
           Application <span className="text-[#32CD32]">Received!</span>
         </h2>
-        <p className="text-white/60 text-lg leading-relaxed mb-2">
+        <p className="text-white/60 text-base sm:text-lg leading-relaxed mb-2">
           Hey{" "}
           <span className="text-white font-semibold">
             {form.fullName || "there"}
           </span>
           ! 🎉
         </p>
-        <p className="text-white/50 leading-relaxed max-w-md mx-auto mb-10">
+        <p className="text-white/50 leading-relaxed max-w-md mx-auto mb-8 sm:mb-10 text-sm sm:text-base">
           We've received your partner application for{" "}
           <span className="text-white font-semibold">
             {form.agencyName || "your agency"}
@@ -872,9 +858,7 @@ function SuccessScreen({ onClose, form }) {
           . Our team will review it and reach out within 24 hours to schedule
           your demo.
         </p>
-
-        {/* What's next */}
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-6 text-left mb-8 max-w-sm mx-auto">
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-5 sm:p-6 text-left mb-8 max-w-sm mx-auto">
           <p className="text-xs font-bold text-white/40 uppercase tracking-widest mb-4">
             What Happens Next
           </p>
@@ -908,22 +892,12 @@ function SuccessScreen({ onClose, form }) {
             ))}
           </div>
         </div>
-
-        <motion.button
-          whileHover={{ scale: 1.03 }}
-          whileTap={{ scale: 0.97 }}
-          onClick={onClose}
-          className="bg-[#4169E1] hover:bg-[#3157cf] text-white font-bold px-10 py-4 rounded-2xl transition-all shadow-[0_8px_32px_rgba(65,105,225,0.4)]"
-        >
-          Back to Homepage
-        </motion.button>
       </motion.div>
     </motion.div>
   );
 }
 
 /* ─── FEATURES DATA ─── */
-
 const FEATURES_DETAILED = [
   {
     id: "whitelabel",
@@ -1122,21 +1096,20 @@ const COMPARISON_ROWS = [
 ];
 
 /* ─── MINI PREVIEW COMPONENTS ─── */
-
 function WhiteLabelPreview() {
   return (
     <div className="rounded-2xl overflow-hidden border border-white/10 bg-[#0a0f1e]">
-      <div className="flex items-center gap-2 px-4 py-3 bg-white/5 border-b border-white/10">
-        <div className="w-3 h-3 rounded-full bg-red-400/70" />
-        <div className="w-3 h-3 rounded-full bg-yellow-400/70" />
-        <div className="w-3 h-3 rounded-full bg-green-400/70" />
-        <div className="flex-1 mx-3 bg-white/10 rounded-md px-3 py-1 text-xs text-white/50 font-mono">
+      <div className="flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-3 bg-white/5 border-b border-white/10">
+        <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-red-400/70" />
+        <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-yellow-400/70" />
+        <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-green-400/70" />
+        <div className="flex-1 mx-2 sm:mx-3 bg-white/10 rounded-md px-2 sm:px-3 py-1 text-xs text-white/50 font-mono truncate">
           portal.<span className="text-[#4169E1]">youragency</span>.com
         </div>
       </div>
-      <div className="p-5">
-        <div className="flex items-center gap-3 mb-5">
-          <div className="w-9 h-9 rounded-xl bg-[#4169E1] flex items-center justify-center font-black text-sm">
+      <div className="p-4 sm:p-5">
+        <div className="flex items-center gap-3 mb-4 sm:mb-5">
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#4169E1] flex items-center justify-center font-black text-xs sm:text-sm flex-shrink-0">
             YA
           </div>
           <div>
@@ -1144,7 +1117,7 @@ function WhiteLabelPreview() {
             <p className="text-xs text-white/40">Student Portal</p>
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2 sm:gap-3">
           {[
             "My Applications",
             "Documents",
@@ -1153,10 +1126,10 @@ function WhiteLabelPreview() {
           ].map((item) => (
             <div
               key={item}
-              className="bg-white/5 border border-white/10 rounded-xl p-3"
+              className="bg-white/5 border border-white/10 rounded-xl p-2 sm:p-3"
             >
               <p className="text-xs text-white/50">{item}</p>
-              <div className="w-8 h-1.5 mt-2 rounded-full bg-[#4169E1]/60" />
+              <div className="w-8 h-1.5 mt-1.5 sm:mt-2 rounded-full bg-[#4169E1]/60" />
             </div>
           ))}
         </div>
@@ -1173,7 +1146,7 @@ function CRMPreview() {
     { name: "Ravi S.", stage: "Lead", progress: 20, color: "#9b59b6" },
   ];
   return (
-    <div className="rounded-2xl bg-[#0a0f1e] border border-white/10 p-5 space-y-3">
+    <div className="rounded-2xl bg-[#0a0f1e] border border-white/10 p-4 sm:p-5 space-y-3">
       <div className="flex justify-between items-center mb-2">
         <p className="font-semibold text-sm">Student Pipeline</p>
         <span className="text-xs text-[#32CD32] bg-[#32CD32]/10 px-2 py-1 rounded-full">
@@ -1183,7 +1156,7 @@ function CRMPreview() {
       {students.map((s) => (
         <div key={s.name} className="flex items-center gap-3">
           <div
-            className="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold shrink-0"
+            className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center text-xs font-bold shrink-0"
             style={{ background: `${s.color}20`, color: s.color }}
           >
             {s.name[0]}
@@ -1195,7 +1168,7 @@ function CRMPreview() {
             </div>
             <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
               <div
-                className="h-full rounded-full transition-all"
+                className="h-full rounded-full"
                 style={{ width: `${s.progress}%`, background: s.color }}
               />
             </div>
@@ -1228,7 +1201,7 @@ function ApplicationPreview() {
     },
   ];
   return (
-    <div className="rounded-2xl bg-[#0a0f1e] border border-white/10 p-5 space-y-3">
+    <div className="rounded-2xl bg-[#0a0f1e] border border-white/10 p-4 sm:p-5 space-y-3">
       <p className="font-semibold text-sm mb-2">Active Applications</p>
       {apps.map((a) => (
         <div
@@ -1236,7 +1209,7 @@ function ApplicationPreview() {
           className="flex items-center gap-3 p-3 rounded-xl border"
           style={{ background: `${a.color}08`, borderColor: `${a.color}25` }}
         >
-          <span className="text-xl">{a.flag}</span>
+          <span className="text-lg sm:text-xl flex-shrink-0">{a.flag}</span>
           <div className="flex-1 min-w-0">
             <p className="text-xs font-semibold truncate">{a.uni}</p>
             <p className="text-xs mt-0.5" style={{ color: a.color }}>
@@ -1267,7 +1240,7 @@ function TeamPreview() {
     },
   ];
   return (
-    <div className="rounded-2xl bg-[#0a0f1e] border border-white/10 p-5 space-y-3">
+    <div className="rounded-2xl bg-[#0a0f1e] border border-white/10 p-4 sm:p-5 space-y-3">
       <div className="flex justify-between items-center mb-2">
         <p className="font-semibold text-sm">Team Performance</p>
         <span className="text-xs text-[#9b59b6] bg-[#9b59b6]/10 px-2 py-1 rounded-full">
@@ -1276,7 +1249,7 @@ function TeamPreview() {
       </div>
       {members.map((m) => (
         <div key={m.name} className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-[#9b59b6]/20 text-[#9b59b6] text-xs font-bold flex items-center justify-center shrink-0">
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#9b59b6]/20 text-[#9b59b6] text-xs font-bold flex items-center justify-center shrink-0">
             {m.initials}
           </div>
           <div className="flex-1 min-w-0">
@@ -1297,37 +1270,39 @@ function AnalyticsPreview() {
   const bars = [65, 80, 45, 90, 70, 55, 85];
   const labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   return (
-    <div className="rounded-2xl bg-[#0a0f1e] border border-white/10 p-5">
-      <div className="flex justify-between items-center mb-4">
+    <div className="rounded-2xl bg-[#0a0f1e] border border-white/10 p-4 sm:p-5">
+      <div className="flex justify-between items-center mb-3 sm:mb-4">
         <p className="font-semibold text-sm">Applications This Week</p>
         <span className="text-xs text-[#32CD32] font-bold">+23%</span>
       </div>
-      <div className="flex items-end gap-2 h-20">
+      <div className="flex items-end gap-1.5 sm:gap-2 h-16 sm:h-20">
         {bars.map((h, i) => (
           <div key={i} className="flex-1 flex flex-col items-center gap-1">
             <div
-              className="w-full rounded-t-md transition-all"
+              className="w-full rounded-t-md"
               style={{
                 height: `${h}%`,
                 background: h === 90 ? BLUE : `${BLUE}40`,
               }}
             />
-            <p className="text-[9px] text-white/30">{labels[i]}</p>
+            <p className="text-[8px] sm:text-[9px] text-white/30">
+              {labels[i]}
+            </p>
           </div>
         ))}
       </div>
-      <div className="grid grid-cols-3 gap-2 mt-4">
+      <div className="grid grid-cols-3 gap-2 mt-3 sm:mt-4">
         <div className="text-center">
-          <p className="text-lg font-black text-[#4169E1]">92%</p>
-          <p className="text-[10px] text-white/40">Visa Rate</p>
+          <p className="text-base sm:text-lg font-black text-[#4169E1]">92%</p>
+          <p className="text-[9px] sm:text-[10px] text-white/40">Visa Rate</p>
         </div>
         <div className="text-center">
-          <p className="text-lg font-black text-[#32CD32]">315</p>
-          <p className="text-[10px] text-white/40">Matches</p>
+          <p className="text-base sm:text-lg font-black text-[#32CD32]">315</p>
+          <p className="text-[9px] sm:text-[10px] text-white/40">Matches</p>
         </div>
         <div className="text-center">
-          <p className="text-lg font-black text-[#FF8C00]">$18k</p>
-          <p className="text-[10px] text-white/40">Revenue</p>
+          <p className="text-base sm:text-lg font-black text-[#FF8C00]">$18k</p>
+          <p className="text-[9px] sm:text-[10px] text-white/40">Revenue</p>
         </div>
       </div>
     </div>
@@ -1342,8 +1317,10 @@ function AutomationPreview() {
     { label: "Send reminder if 3 days left", color: GREEN, done: false },
   ];
   return (
-    <div className="rounded-2xl bg-[#0a0f1e] border border-white/10 p-5">
-      <p className="font-semibold text-sm mb-4">Active Automation Flow</p>
+    <div className="rounded-2xl bg-[#0a0f1e] border border-white/10 p-4 sm:p-5">
+      <p className="font-semibold text-sm mb-3 sm:mb-4">
+        Active Automation Flow
+      </p>
       <div className="space-y-2">
         {flows.map((f, i) => (
           <div key={i} className="flex items-center gap-3">
@@ -1377,12 +1354,229 @@ function AutomationPreview() {
   );
 }
 
-/* ─── MAIN PAGE ─── */
+/* ─── HERO DASHBOARD ─── */
+function HeroDashboard() {
+  return (
+    <div className="relative bg-[#080d1c] border border-white/10 rounded-2xl sm:rounded-[28px] overflow-hidden shadow-[0_30px_100px_rgba(0,0,0,0.6)]">
+      <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 bg-white/3 border-b border-white/8">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <div className="flex gap-1.5 sm:gap-2 flex-shrink-0">
+            <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-red-400/60" />
+            <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-yellow-400/60" />
+            <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-green-400/60" />
+          </div>
+          <div className="hidden sm:block bg-white/8 rounded-lg px-4 py-1.5 text-xs text-white/40 font-mono ml-2 sm:ml-4 truncate max-w-[200px] md:max-w-none">
+            portal.<span className="text-[#4169E1]">youragency</span>
+            .com/dashboard
+          </div>
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-[#4169E1] flex items-center justify-center text-xs font-black">
+            YA
+          </div>
+          <p className="text-sm font-semibold hidden md:block">Your Agency</p>
+        </div>
+      </div>
 
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-0">
+        <div className="hidden md:block border-r border-white/8 p-5 space-y-2">
+          {[
+            { icon: <FaChartLine />, label: "Overview", active: true },
+            { icon: <FaUserGraduate />, label: "Students", active: false },
+            { icon: <FaUniversity />, label: "Applications", active: false },
+            { icon: <FaFileAlt />, label: "Documents", active: false },
+            { icon: <FaUsers />, label: "Team", active: false },
+            { icon: <FaBell />, label: "Automations", active: false },
+          ].map((item, i) => (
+            <div
+              key={i}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all ${item.active ? "bg-[#4169E1]/20 text-white border border-[#4169E1]/30" : "text-white/40"}`}
+            >
+              <span style={{ color: item.active ? BLUE : undefined }}>
+                {item.icon}
+              </span>
+              {item.label}
+            </div>
+          ))}
+        </div>
+
+        <div className="md:col-span-2 p-4 sm:p-6">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-4 sm:mb-6">
+            {[
+              { label: "Active Students", value: "128", color: BLUE },
+              { label: "Applications", value: "47", color: GREEN },
+              { label: "Visas Pending", value: "12", color: ORANGE },
+              { label: "Revenue", value: "$18k", color: "#9b59b6" },
+            ].map((card) => (
+              <div
+                key={card.label}
+                className="rounded-xl sm:rounded-2xl p-3 sm:p-4"
+                style={{
+                  background: `${card.color}12`,
+                  border: `1px solid ${card.color}25`,
+                }}
+              >
+                <p className="text-[10px] sm:text-xs text-white/40 leading-tight">
+                  {card.label}
+                </p>
+                <p
+                  className="text-xl sm:text-2xl font-black mt-1"
+                  style={{ color: card.color }}
+                >
+                  {card.value}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          <div className="bg-white/5 border border-white/8 rounded-xl sm:rounded-2xl p-4 sm:p-5 mb-3 sm:mb-4">
+            <div className="flex justify-between items-center mb-3 sm:mb-4">
+              <p className="text-sm font-semibold">Application Pipeline</p>
+              <span className="text-xs text-[#32CD32]">+18% this month</span>
+            </div>
+            <div className="flex items-end gap-1 sm:gap-2 h-12 sm:h-16">
+              {[40, 65, 55, 80, 70, 90, 75, 85, 60, 95, 80, 100].map((h, i) => (
+                <div
+                  key={i}
+                  className="flex-1 rounded-t"
+                  style={{
+                    height: `${h}%`,
+                    background: h >= 90 ? BLUE : `${BLUE}35`,
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+
+          <div className="bg-white/5 border border-white/8 rounded-xl sm:rounded-2xl p-4 sm:p-5">
+            <p className="text-sm font-semibold mb-3 sm:mb-4">
+              Recent Students
+            </p>
+            <div className="space-y-2 sm:space-y-3">
+              {[
+                {
+                  name: "Aisha Malik",
+                  dest: "Canada",
+                  status: "Offer Received",
+                  c: GREEN,
+                },
+                {
+                  name: "James Osei",
+                  dest: "UK",
+                  status: "Under Review",
+                  c: BLUE,
+                },
+                {
+                  name: "Sara Kim",
+                  dest: "Australia",
+                  status: "Docs Required",
+                  c: ORANGE,
+                },
+              ].map((s, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <div
+                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center text-xs font-bold shrink-0"
+                    style={{ background: `${s.c}20`, color: s.c }}
+                  >
+                    {s.name[0]}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold truncate">{s.name}</p>
+                    <p className="text-xs text-white/40">{s.dest}</p>
+                  </div>
+                  <span
+                    className="text-xs px-2 py-1 rounded-full shrink-0 whitespace-nowrap"
+                    style={{ background: `${s.c}15`, color: s.c }}
+                  >
+                    {s.status}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── SCALABILITY VISUAL ─── */
+function ScalabilityVisual() {
+  const tiers = [
+    {
+      label: "Startup",
+      students: "10–50",
+      icon: <FaUserGraduate />,
+      color: BLUE,
+      h: "40%",
+    },
+    {
+      label: "Growing",
+      students: "50–500",
+      icon: <FaUsers />,
+      color: GREEN,
+      h: "60%",
+    },
+    {
+      label: "Enterprise",
+      students: "500–10k+",
+      icon: <FaBuilding />,
+      color: ORANGE,
+      h: "100%",
+    },
+  ];
+  return (
+    <div className="bg-white/5 border border-white/10 rounded-2xl sm:rounded-3xl p-6 sm:p-8">
+      <p className="text-sm font-semibold text-[#dcdcdc]/60 mb-4 sm:mb-6">
+        Agency Growth Tiers
+      </p>
+      <div className="flex items-end gap-3 sm:gap-4 h-28 sm:h-40 mb-3 sm:mb-4">
+        {tiers.map((t, i) => (
+          <div key={i} className="flex-1 flex flex-col items-center gap-2">
+            <p className="text-xs text-white/40 text-center leading-tight">
+              {t.students}
+            </p>
+            <motion.div
+              initial={{ height: 0 }}
+              whileInView={{ height: t.h }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8, delay: i * 0.2, ease: "easeOut" }}
+              className="w-full rounded-t-xl flex items-start justify-center pt-3"
+              style={{
+                background: `${t.color}25`,
+                border: `1px solid ${t.color}40`,
+              }}
+            >
+              <span style={{ color: t.color }}>{t.icon}</span>
+            </motion.div>
+          </div>
+        ))}
+      </div>
+      <div className="flex gap-4">
+        {tiers.map((t, i) => (
+          <div key={i} className="flex-1 text-center">
+            <p className="text-xs font-semibold" style={{ color: t.color }}>
+              {t.label}
+            </p>
+          </div>
+        ))}
+      </div>
+      <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-[#4169E1]/10 border border-[#4169E1]/20 rounded-xl sm:rounded-2xl text-center">
+        <p className="text-xs sm:text-sm text-[#dcdcdc]/70">
+          Same platform. Same price structure.{" "}
+          <span className="text-[#4169E1] font-bold">Infinite scale.</span>
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/* ─── MAIN PAGE ─── */
 export default function PartnersPage() {
   const [activeFeature, setActiveFeature] = useState(0);
   const [openFaq, setOpenFaq] = useState(null);
   const [formOpen, setFormOpen] = useState(false);
+  const [mobileFeatureOpen, setMobileFeatureOpen] = useState(false);
   const featuresRef = useRef(null);
 
   const openForm = () => setFormOpen(true);
@@ -1412,27 +1606,26 @@ export default function PartnersPage() {
 
   return (
     <main className="relative overflow-hidden">
-      {/* Partner Form Modal */}
       <PartnerFormModal isOpen={formOpen} onClose={() => setFormOpen(false)} />
 
       {/* Background ambient glows */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-[#4169E1]/8 blur-[120px] rounded-full" />
-        <div className="absolute top-1/2 right-0 w-[400px] h-[400px] bg-[#32CD32]/6 blur-[100px] rounded-full" />
-        <div className="absolute bottom-1/4 left-0 w-[300px] h-[300px] bg-[#FF8C00]/5 blur-[100px] rounded-full" />
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-0 left-1/4 w-[300px] sm:w-[600px] h-[300px] sm:h-[600px] bg-[#4169E1]/8 blur-[80px] sm:blur-[120px] rounded-full" />
+        <div className="absolute top-1/2 right-0 w-[200px] sm:w-[400px] h-[200px] sm:h-[400px] bg-[#32CD32]/6 blur-[60px] sm:blur-[100px] rounded-full" />
+        <div className="absolute bottom-1/4 left-0 w-[150px] sm:w-[300px] h-[150px] sm:h-[300px] bg-[#FF8C00]/5 blur-[60px] sm:blur-[100px] rounded-full" />
       </div>
 
       {/* ── HERO ── */}
-      <section className="relative px-6 md:px-14 pt-36 pb-28">
+      <section className="relative px-4 sm:px-6 md:px-14 pt-24 sm:pt-32 md:pt-36 pb-16 sm:pb-20 md:pb-28">
         <div className="max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="flex justify-center mb-8"
+            className="flex justify-center mb-6 sm:mb-8"
           >
-            <div className="inline-flex items-center gap-2 bg-[#4169E1]/15 border border-[#4169E1]/30 rounded-full px-5 py-2.5 text-sm text-[#9bb2ff]">
-              <div className="w-2 h-2 rounded-full bg-[#32CD32] animate-pulse" />
+            <div className="inline-flex items-center gap-2 bg-[#4169E1]/15 border border-[#4169E1]/30 rounded-full px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm text-[#9bb2ff] text-center">
+              <div className="w-2 h-2 rounded-full bg-[#32CD32] animate-pulse flex-shrink-0" />
               The Operating System for Overseas Education Agencies
             </div>
           </motion.div>
@@ -1443,7 +1636,7 @@ export default function PartnersPage() {
             transition={{ duration: 0.7 }}
             className="text-center max-w-5xl mx-auto"
           >
-            <h1 className="text-6xl md:text-8xl font-black leading-[1.02] tracking-tight">
+            <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black leading-[1.05] sm:leading-[1.02] tracking-tight">
               Run Your Entire
               <span className="block">
                 <span className="text-[#4169E1]">Consultancy</span>{" "}
@@ -1451,19 +1644,19 @@ export default function PartnersPage() {
               </span>
               <span className="block text-[#FF8C00]">One Platform.</span>
             </h1>
-            <p className="mt-8 text-xl text-[#dcdcdc]/70 leading-relaxed max-w-3xl mx-auto">
+            <p className="mt-5 sm:mt-8 text-base sm:text-lg md:text-xl text-[#dcdcdc]/70 leading-relaxed max-w-3xl mx-auto px-2">
               White-label infrastructure that puts your brand front and center.
               Student CRM, university applications, visa workflows, team
               management — all powered by AI, all under your name.
             </p>
-            <div className="mt-12 flex flex-wrap gap-4 justify-center">
+            <div className="mt-8 sm:mt-12 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
               <motion.button
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={openForm}
-                className="group bg-[#4169E1] hover:bg-[#3157cf] px-8 py-4 rounded-2xl font-bold text-lg transition-all shadow-[0_12px_48px_rgba(65,105,225,0.4)]"
+                className="w-full sm:w-auto group bg-[#4169E1] hover:bg-[#3157cf] px-6 sm:px-8 py-3.5 sm:py-4 rounded-2xl font-bold text-base sm:text-lg transition-all shadow-[0_12px_48px_rgba(65,105,225,0.4)]"
               >
-                <span className="flex items-center gap-3">
+                <span className="flex items-center justify-center gap-3">
                   Become a Partner
                   <FaArrowRight className="group-hover:translate-x-1.5 transition-transform" />
                 </span>
@@ -1471,9 +1664,9 @@ export default function PartnersPage() {
               <motion.button
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
-                className="flex items-center gap-3 border border-white/15 hover:border-[#32CD32]/50 hover:bg-[#32CD32]/8 px-8 py-4 rounded-2xl font-bold text-lg transition-all"
+                className="w-full sm:w-auto flex items-center justify-center gap-3 border border-white/15 hover:border-[#32CD32]/50 hover:bg-[#32CD32]/8 px-6 sm:px-8 py-3.5 sm:py-4 rounded-2xl font-bold text-base sm:text-lg transition-all"
               >
-                <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/10 flex items-center justify-center">
                   <FaPlay className="text-xs ml-0.5" />
                 </div>
                 Watch Demo
@@ -1481,11 +1674,12 @@ export default function PartnersPage() {
             </div>
           </motion.div>
 
+          {/* Stats */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.3 }}
-            className="mt-20 max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4"
+            className="mt-12 sm:mt-16 md:mt-20 max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4"
           >
             {[
               { number: "20+", label: "Partner Agencies", color: BLUE },
@@ -1495,21 +1689,27 @@ export default function PartnersPage() {
             ].map((s) => (
               <div
                 key={s.label}
-                className="bg-white/5 border border-white/10 rounded-2xl p-6 text-center backdrop-blur-xl"
+                className="bg-white/5 border border-white/10 rounded-2xl p-4 sm:p-6 text-center backdrop-blur-xl"
               >
-                <h3 className="text-4xl font-black" style={{ color: s.color }}>
+                <h3
+                  className="text-3xl sm:text-4xl font-black"
+                  style={{ color: s.color }}
+                >
                   {s.number}
                 </h3>
-                <p className="text-sm text-[#dcdcdc]/60 mt-2">{s.label}</p>
+                <p className="text-xs sm:text-sm text-[#dcdcdc]/60 mt-1 sm:mt-2">
+                  {s.label}
+                </p>
               </div>
             ))}
           </motion.div>
 
+          {/* Hero Dashboard */}
           <motion.div
             initial={{ opacity: 0, y: 60 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.9, delay: 0.4 }}
-            className="mt-20 max-w-6xl mx-auto"
+            className="mt-12 sm:mt-16 md:mt-20 max-w-6xl mx-auto"
           >
             <HeroDashboard />
           </motion.div>
@@ -1517,28 +1717,28 @@ export default function PartnersPage() {
       </section>
 
       {/* ── POSITIONING STATEMENT ── */}
-      <section className="px-6 md:px-14 py-20">
+      <section className="px-4 sm:px-6 md:px-14 py-12 sm:py-16 md:py-20">
         <div className="max-w-7xl mx-auto">
-          <div className="relative overflow-hidden bg-gradient-to-r from-[#4169E1]/15 via-white/5 to-[#32CD32]/10 border border-white/10 rounded-[36px] p-12 md:p-16">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-[#4169E1]/20 blur-[80px] rounded-full" />
-            <div className="relative grid md:grid-cols-2 gap-12 items-center">
+          <div className="relative overflow-hidden bg-gradient-to-r from-[#4169E1]/15 via-white/5 to-[#32CD32]/10 border border-white/10 rounded-2xl sm:rounded-[36px] p-6 sm:p-10 md:p-16">
+            <div className="absolute top-0 right-0 w-48 sm:w-64 h-48 sm:h-64 bg-[#4169E1]/20 blur-[80px] rounded-full" />
+            <div className="relative grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-10 md:gap-12 items-center">
               <div>
-                <p className="text-[#32CD32] font-semibold uppercase tracking-[0.2em] text-sm mb-4">
+                <p className="text-[#32CD32] font-semibold uppercase tracking-[0.2em] text-xs sm:text-sm mb-3 sm:mb-4">
                   Our Philosophy
                 </p>
-                <h2 className="text-4xl md:text-5xl font-black leading-tight">
+                <h2 className="text-3xl sm:text-4xl md:text-5xl font-black leading-tight">
                   You own the students{" "}
                   <span className="text-[#dcdcdc]/40">and the brand.</span>
                   <br />
                   <span className="text-[#4169E1]">We own the tech.</span>
                 </h2>
-                <p className="mt-6 text-[#dcdcdc]/70 leading-relaxed text-lg">
+                <p className="mt-4 sm:mt-6 text-[#dcdcdc]/70 leading-relaxed text-base sm:text-lg">
                   We're not a consultancy. We're the invisible technology layer
                   that powers your consultancy. Your students never see us —
                   they see you.
                 </p>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 {[
                   { icon: <FaLayerGroup />, text: "White-label everything" },
                   { icon: <FaShieldAlt />, text: "Your data, always" },
@@ -1549,10 +1749,14 @@ export default function PartnersPage() {
                 ].map((item, i) => (
                   <div
                     key={i}
-                    className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-2xl p-4"
+                    className="flex items-center gap-2 sm:gap-3 bg-white/5 border border-white/10 rounded-xl sm:rounded-2xl p-3 sm:p-4"
                   >
-                    <span className="text-[#4169E1]">{item.icon}</span>
-                    <p className="text-sm font-medium">{item.text}</p>
+                    <span className="text-[#4169E1] flex-shrink-0">
+                      {item.icon}
+                    </span>
+                    <p className="text-xs sm:text-sm font-medium">
+                      {item.text}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -1562,26 +1766,30 @@ export default function PartnersPage() {
       </section>
 
       {/* ── FEATURES DEEP DIVE ── */}
-      <section ref={featuresRef} className="px-6 md:px-14 py-24">
+      <section
+        ref={featuresRef}
+        className="px-4 sm:px-6 md:px-14 py-16 sm:py-20 md:py-24"
+      >
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <p className="text-[#32CD32] font-semibold uppercase tracking-[0.2em] text-sm">
+          <div className="text-center mb-10 sm:mb-14 md:mb-16">
+            <p className="text-[#32CD32] font-semibold uppercase tracking-[0.2em] text-xs sm:text-sm">
               Platform Features
             </p>
-            <h2 className="text-5xl md:text-7xl font-black mt-5">
+            <h2 className="text-4xl sm:text-5xl md:text-7xl font-black mt-4 sm:mt-5">
               Everything You<span className="text-[#FF8C00]"> Need.</span>
             </h2>
-            <p className="mt-6 text-[#dcdcdc]/60 text-lg max-w-2xl mx-auto">
+            <p className="mt-4 sm:mt-6 text-[#dcdcdc]/60 text-base sm:text-lg max-w-lg mx-auto">
               Six complete systems, deeply integrated, beautifully branded.
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-3 justify-center mb-12">
+          {/* Feature tabs — scrollable on mobile */}
+          <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-3 sm:pb-0 sm:flex-wrap sm:justify-center mb-8 sm:mb-12 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide">
             {FEATURES_DETAILED.map((f, i) => (
               <button
                 key={f.id}
                 onClick={() => setActiveFeature(i)}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold transition-all border ${
+                className={`flex items-center gap-2 px-3 sm:px-5 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-semibold transition-all border flex-shrink-0 ${
                   activeFeature === i
                     ? "border-[#4169E1] bg-[#4169E1]/20 text-white"
                     : "border-white/10 bg-white/5 text-[#dcdcdc]/60 hover:border-white/20 hover:text-white"
@@ -1604,13 +1812,13 @@ export default function PartnersPage() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.4 }}
-              className="bg-white/5 border border-white/10 rounded-[36px] overflow-hidden"
+              className="bg-white/5 border border-white/10 rounded-2xl sm:rounded-[36px] overflow-hidden"
             >
-              <div className="grid lg:grid-cols-2">
-                <div className="p-10 md:p-14">
-                  <div className="flex items-center gap-3 mb-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2">
+                <div className="p-6 sm:p-10 md:p-14">
+                  <div className="flex items-center gap-3 mb-5 sm:mb-6">
                     <div
-                      className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl"
+                      className="w-11 h-11 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center text-xl sm:text-2xl"
                       style={{
                         background: `${FEATURES_DETAILED[activeFeature].color}20`,
                         color: FEATURES_DETAILED[activeFeature].color,
@@ -1628,34 +1836,36 @@ export default function PartnersPage() {
                       {FEATURES_DETAILED[activeFeature].badge}
                     </span>
                   </div>
-                  <h3 className="text-3xl md:text-4xl font-black leading-tight">
+                  <h3 className="text-xl sm:text-2xl md:text-4xl font-black leading-tight">
                     {FEATURES_DETAILED[activeFeature].title}
                   </h3>
                   <p
-                    className="mt-2 text-lg font-semibold"
+                    className="mt-2 text-base sm:text-lg font-semibold"
                     style={{ color: FEATURES_DETAILED[activeFeature].color }}
                   >
                     {FEATURES_DETAILED[activeFeature].tagline}
                   </p>
-                  <p className="mt-5 text-[#dcdcdc]/70 leading-relaxed text-lg">
+                  <p className="mt-4 sm:mt-5 text-[#dcdcdc]/70 leading-relaxed text-sm sm:text-lg">
                     {FEATURES_DETAILED[activeFeature].description}
                   </p>
-                  <ul className="mt-8 space-y-3">
+                  <ul className="mt-6 sm:mt-8 space-y-2 sm:space-y-3">
                     {FEATURES_DETAILED[activeFeature].points.map((pt, i) => (
                       <li key={i} className="flex items-start gap-3">
                         <FaCheckCircle
-                          className="mt-0.5 shrink-0"
+                          className="mt-0.5 shrink-0 text-sm sm:text-base"
                           style={{
                             color: FEATURES_DETAILED[activeFeature].color,
                           }}
                         />
-                        <span className="text-[#dcdcdc]/80">{pt}</span>
+                        <span className="text-[#dcdcdc]/80 text-sm sm:text-base">
+                          {pt}
+                        </span>
                       </li>
                     ))}
                   </ul>
                 </div>
                 <div
-                  className="flex items-center justify-center p-10 md:p-14"
+                  className="flex items-center justify-center p-6 sm:p-10 md:p-14 border-t lg:border-t-0 border-white/6"
                   style={{
                     background: `radial-gradient(ellipse at center, ${FEATURES_DETAILED[activeFeature].color}08, transparent 70%)`,
                     borderLeft: "1px solid rgba(255,255,255,0.06)",
@@ -1672,19 +1882,19 @@ export default function PartnersPage() {
       </section>
 
       {/* ── HOW IT WORKS ── */}
-      <section className="px-6 md:px-14 py-24">
+      <section className="px-4 sm:px-6 md:px-14 py-16 sm:py-20 md:py-24">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <p className="text-[#4169E1] font-semibold uppercase tracking-[0.2em] text-sm">
+          <div className="text-center mb-10 sm:mb-14 md:mb-16">
+            <p className="text-[#4169E1] font-semibold uppercase tracking-[0.2em] text-xs sm:text-sm">
               Simple Onboarding
             </p>
-            <h2 className="text-5xl md:text-7xl font-black mt-5">
+            <h2 className="text-4xl sm:text-5xl md:text-7xl font-black mt-4 sm:mt-5">
               Live In<span className="text-[#32CD32]"> 24 Hours.</span>
             </h2>
           </div>
           <div className="relative">
             <div className="hidden md:block absolute top-10 left-[12.5%] right-[12.5%] h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
-            <div className="grid md:grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
               {PROCESS_STEPS.map((step, i) => (
                 <motion.div
                   key={i}
@@ -1692,10 +1902,10 @@ export default function PartnersPage() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: i * 0.1 }}
-                  className="relative"
+                  className="relative flex flex-col items-center md:items-start text-center md:text-left"
                 >
                   <div
-                    className="w-20 h-20 rounded-3xl flex items-center justify-center text-2xl mx-auto md:mx-0 mb-6 relative z-10"
+                    className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl flex items-center justify-center text-xl sm:text-2xl mb-4 sm:mb-6 relative z-10"
                     style={{
                       background: `${step.color}20`,
                       border: `1px solid ${step.color}30`,
@@ -1704,16 +1914,16 @@ export default function PartnersPage() {
                   >
                     {step.icon}
                     <div
-                      className="absolute -top-2 -right-2 w-6 h-6 rounded-full text-xs font-black flex items-center justify-center"
+                      className="absolute -top-2 -right-2 w-5 h-5 sm:w-6 sm:h-6 rounded-full text-xs font-black flex items-center justify-center"
                       style={{ background: step.color }}
                     >
                       {i + 1}
                     </div>
                   </div>
-                  <h3 className="text-xl font-bold mb-3 text-center md:text-left">
+                  <h3 className="text-lg sm:text-xl font-bold mb-2 sm:mb-3">
                     {step.title}
                   </h3>
-                  <p className="text-[#dcdcdc]/60 leading-relaxed text-center md:text-left">
+                  <p className="text-[#dcdcdc]/60 leading-relaxed text-sm sm:text-base">
                     {step.desc}
                   </p>
                 </motion.div>
@@ -1724,91 +1934,98 @@ export default function PartnersPage() {
       </section>
 
       {/* ── COMPARISON TABLE ── */}
-      <section className="px-6 md:px-14 py-24">
+      <section className="px-4 sm:px-6 md:px-14 py-16 sm:py-20 md:py-24">
         <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-16">
-            <p className="text-[#FF8C00] font-semibold uppercase tracking-[0.2em] text-sm">
+          <div className="text-center mb-10 sm:mb-14 md:mb-16">
+            <p className="text-[#FF8C00] font-semibold uppercase tracking-[0.2em] text-xs sm:text-sm">
               Why Switch
             </p>
-            <h2 className="text-5xl md:text-7xl font-black mt-5">
+            <h2 className="text-4xl sm:text-5xl md:text-7xl font-black mt-4 sm:mt-5">
               See The<span className="text-[#FF8C00]"> Difference.</span>
             </h2>
           </div>
-          <div className="bg-white/5 border border-white/10 rounded-[32px] overflow-hidden">
-            <div className="grid grid-cols-4 bg-white/5 border-b border-white/10">
-              <div className="p-5 text-sm font-semibold text-[#dcdcdc]/50">
-                Feature
-              </div>
-              <div className="p-5 text-center">
-                <div className="inline-flex items-center gap-2 text-sm font-bold text-white bg-[#4169E1]/20 border border-[#4169E1]/40 px-3 py-1.5 rounded-xl">
-                  <FaLayerGroup className="text-[#4169E1]" />
-                  Our Platform
+          <div className="bg-white/5 border border-white/10 rounded-2xl sm:rounded-[32px] overflow-hidden overflow-x-auto">
+            <div className="min-w-[480px]">
+              <div className="grid grid-cols-4 bg-white/5 border-b border-white/10">
+                <div className="p-3 sm:p-5 text-xs sm:text-sm font-semibold text-[#dcdcdc]/50">
+                  Feature
+                </div>
+                <div className="p-3 sm:p-5 text-center">
+                  <div className="inline-flex items-center gap-1 sm:gap-2 text-xs sm:text-sm font-bold text-white bg-[#4169E1]/20 border border-[#4169E1]/40 px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl">
+                    <FaLayerGroup className="text-[#4169E1]" />
+                    <span className="hidden sm:inline">Our Platform</span>
+                    <span className="sm:hidden">Us</span>
+                  </div>
+                </div>
+                <div className="p-3 sm:p-5 text-center text-xs sm:text-sm font-semibold text-[#dcdcdc]/50">
+                  <span className="hidden sm:inline">Traditional Agency</span>
+                  <span className="sm:hidden">Traditional</span>
+                </div>
+                <div className="p-3 sm:p-5 text-center text-xs sm:text-sm font-semibold text-[#dcdcdc]/50">
+                  <span className="hidden sm:inline">Generic SaaS</span>
+                  <span className="sm:hidden">Generic</span>
                 </div>
               </div>
-              <div className="p-5 text-center text-sm font-semibold text-[#dcdcdc]/50">
-                Traditional Agency
-              </div>
-              <div className="p-5 text-center text-sm font-semibold text-[#dcdcdc]/50">
-                Generic SaaS
-              </div>
+              {COMPARISON_ROWS.map((row, i) => (
+                <div
+                  key={i}
+                  className="grid grid-cols-4 border-b border-white/5 hover:bg-white/3 transition-colors"
+                >
+                  <div className="p-3 sm:p-5 text-xs sm:text-sm text-[#dcdcdc]/80">
+                    {row.label}
+                  </div>
+                  <div className="p-3 sm:p-5 flex justify-center items-center">
+                    <FaCheckCircle className="text-[#32CD32] text-base sm:text-lg" />
+                  </div>
+                  <div className="p-3 sm:p-5 flex justify-center items-center">
+                    {row.traditional ? (
+                      <FaCheckCircle className="text-[#32CD32]/50 text-base sm:text-lg" />
+                    ) : (
+                      <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full border border-white/10 flex items-center justify-center">
+                        <div className="w-2 h-0.5 bg-white/20 rounded-full" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-3 sm:p-5 flex justify-center items-center">
+                    {row.generic ? (
+                      <FaCheckCircle className="text-[#32CD32]/50 text-base sm:text-lg" />
+                    ) : (
+                      <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full border border-white/10 flex items-center justify-center">
+                        <div className="w-2 h-0.5 bg-white/20 rounded-full" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
-            {COMPARISON_ROWS.map((row, i) => (
-              <div
-                key={i}
-                className="grid grid-cols-4 border-b border-white/5 hover:bg-white/3 transition-colors"
-              >
-                <div className="p-5 text-sm text-[#dcdcdc]/80">{row.label}</div>
-                <div className="p-5 flex justify-center">
-                  <FaCheckCircle className="text-[#32CD32] text-lg" />
-                </div>
-                <div className="p-5 flex justify-center">
-                  {row.traditional ? (
-                    <FaCheckCircle className="text-[#32CD32]/50 text-lg" />
-                  ) : (
-                    <div className="w-5 h-5 rounded-full border border-white/10 flex items-center justify-center">
-                      <div className="w-2 h-0.5 bg-white/20 rounded-full" />
-                    </div>
-                  )}
-                </div>
-                <div className="p-5 flex justify-center">
-                  {row.generic ? (
-                    <FaCheckCircle className="text-[#32CD32]/50 text-lg" />
-                  ) : (
-                    <div className="w-5 h-5 rounded-full border border-white/10 flex items-center justify-center">
-                      <div className="w-2 h-0.5 bg-white/20 rounded-full" />
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
           </div>
         </div>
       </section>
 
       {/* ── SCALABILITY SECTION ── */}
-      <section className="px-6 md:px-14 py-24">
+      <section className="px-4 sm:px-6 md:px-14 py-16 sm:py-20 md:py-24">
         <div className="max-w-7xl mx-auto">
-          <div className="relative overflow-hidden bg-gradient-to-br from-[#0a0f1e] to-[#0d1428] border border-white/10 rounded-[40px] p-12 md:p-20">
-            <div className="absolute -top-20 -right-20 w-80 h-80 bg-[#4169E1]/20 blur-[100px] rounded-full" />
-            <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-[#32CD32]/10 blur-[100px] rounded-full" />
-            <div className="relative grid md:grid-cols-2 gap-16 items-center">
+          <div className="relative overflow-hidden bg-gradient-to-br from-[#0a0f1e] to-[#0d1428] border border-white/10 rounded-2xl sm:rounded-[40px] p-6 sm:p-12 md:p-20">
+            <div className="absolute -top-20 -right-20 w-60 sm:w-80 h-60 sm:h-80 bg-[#4169E1]/20 blur-[100px] rounded-full" />
+            <div className="absolute -bottom-20 -left-20 w-60 sm:w-80 h-60 sm:h-80 bg-[#32CD32]/10 blur-[100px] rounded-full" />
+            <div className="relative grid grid-cols-1 md:grid-cols-2 gap-10 sm:gap-16 items-center">
               <div>
-                <div className="inline-flex items-center gap-2 bg-[#4169E1]/15 border border-[#4169E1]/30 rounded-full px-4 py-2 text-sm text-[#9bb2ff] mb-8">
+                <div className="inline-flex items-center gap-2 bg-[#4169E1]/15 border border-[#4169E1]/30 rounded-full px-4 py-2 text-xs sm:text-sm text-[#9bb2ff] mb-6 sm:mb-8">
                   <FaChartLine />
                   Enterprise-Ready Infrastructure
                 </div>
-                <h2 className="text-4xl md:text-6xl font-black leading-tight">
+                <h2 className="text-3xl sm:text-4xl md:text-6xl font-black leading-tight">
                   From <span className="text-[#4169E1]">10 students</span>
                   <br />
                   to <span className="text-[#32CD32]">10,000 students</span>
                   <br />— one platform.
                 </h2>
-                <p className="mt-8 text-[#dcdcdc]/70 leading-relaxed text-lg">
+                <p className="mt-6 sm:mt-8 text-[#dcdcdc]/70 leading-relaxed text-sm sm:text-lg">
                   Our infrastructure scales automatically as your agency grows.
                   Add counselors, branches, and students without ever worrying
                   about technical limits.
                 </p>
-                <div className="mt-10 grid grid-cols-2 gap-4">
+                <div className="mt-6 sm:mt-10 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   {[
                     { label: "Unlimited students", icon: <FaUserGraduate /> },
                     { label: "Unlimited counselors", icon: <FaUsers /> },
@@ -1816,7 +2033,7 @@ export default function PartnersPage() {
                     { label: "99.9% uptime SLA", icon: <FaShieldAlt /> },
                   ].map((item, i) => (
                     <div key={i} className="flex items-center gap-3">
-                      <span className="text-[#32CD32] text-sm">
+                      <span className="text-[#32CD32] text-sm flex-shrink-0">
                         {item.icon}
                       </span>
                       <p className="text-sm text-[#dcdcdc]/80">{item.label}</p>
@@ -1831,17 +2048,17 @@ export default function PartnersPage() {
       </section>
 
       {/* ── TESTIMONIALS ── */}
-      <section className="px-6 md:px-14 py-24">
+      <section className="px-4 sm:px-6 md:px-14 py-16 sm:py-20 md:py-24">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <p className="text-[#32CD32] font-semibold uppercase tracking-[0.2em] text-sm">
+          <div className="text-center mb-10 sm:mb-14 md:mb-16">
+            <p className="text-[#32CD32] font-semibold uppercase tracking-[0.2em] text-xs sm:text-sm">
               Partner Stories
             </p>
-            <h2 className="text-5xl md:text-7xl font-black mt-5">
+            <h2 className="text-4xl sm:text-5xl md:text-7xl font-black mt-4 sm:mt-5">
               Agencies That<span className="text-[#4169E1]"> Scaled.</span>
             </h2>
           </div>
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
             {TESTIMONIALS.map((t, i) => (
               <motion.div
                 key={i}
@@ -1849,21 +2066,23 @@ export default function PartnersPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: i * 0.1 }}
-                className="bg-white/5 border border-white/10 rounded-[28px] p-8 hover:border-[#4169E1]/30 transition-all"
+                className="bg-white/5 border border-white/10 rounded-2xl sm:rounded-[28px] p-6 sm:p-8 hover:border-[#4169E1]/30 transition-all"
               >
-                <FaQuoteLeft className="text-[#4169E1]/40 text-3xl mb-6" />
-                <p className="text-[#dcdcdc]/80 leading-relaxed mb-8">
+                <FaQuoteLeft className="text-[#4169E1]/40 text-2xl sm:text-3xl mb-4 sm:mb-6" />
+                <p className="text-[#dcdcdc]/80 leading-relaxed mb-6 sm:mb-8 text-sm sm:text-base">
                   {t.text}
                 </p>
-                <div className="flex items-center gap-4 pt-6 border-t border-white/10">
-                  <div className="w-12 h-12 rounded-2xl bg-[#4169E1]/20 flex items-center justify-center font-black text-sm text-[#4169E1]">
+                <div className="flex items-center gap-3 sm:gap-4 pt-4 sm:pt-6 border-t border-white/10">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-[#4169E1]/20 flex items-center justify-center font-black text-xs sm:text-sm text-[#4169E1] flex-shrink-0">
                     {t.avatar}
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <p className="font-bold text-sm">{t.name}</p>
-                    <p className="text-xs text-[#dcdcdc]/50">{t.agency}</p>
+                    <p className="text-xs text-[#dcdcdc]/50 truncate">
+                      {t.agency}
+                    </p>
                   </div>
-                  <div className="ml-auto flex gap-1">
+                  <div className="ml-auto flex gap-0.5 sm:gap-1 flex-shrink-0">
                     {Array.from({ length: t.rating }).map((_, i) => (
                       <FaStar key={i} className="text-[#FF8C00] text-xs" />
                     ))}
@@ -1876,24 +2095,26 @@ export default function PartnersPage() {
       </section>
 
       {/* ── FAQ ── */}
-      <section className="px-6 md:px-14 py-24">
+      <section className="px-4 sm:px-6 md:px-14 py-16 sm:py-20 md:py-24">
         <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-5xl md:text-6xl font-black">
+          <div className="text-center mb-10 sm:mb-14 md:mb-16">
+            <h2 className="text-4xl sm:text-5xl md:text-6xl font-black">
               Common<span className="text-[#FF8C00]"> Questions.</span>
             </h2>
           </div>
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {faqs.map((faq, i) => (
               <div
                 key={i}
-                className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden hover:border-white/20 transition-all"
+                className="bg-white/5 border border-white/10 rounded-xl sm:rounded-2xl overflow-hidden hover:border-white/20 transition-all"
               >
                 <button
                   onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                  className="w-full flex items-center justify-between p-6 text-left"
+                  className="w-full flex items-center justify-between p-4 sm:p-6 text-left gap-4"
                 >
-                  <p className="font-semibold text-lg pr-6">{faq.q}</p>
+                  <p className="font-semibold text-sm sm:text-lg leading-snug">
+                    {faq.q}
+                  </p>
                   <FaChevronDown
                     className={`shrink-0 text-[#4169E1] transition-transform duration-300 ${openFaq === i ? "rotate-180" : ""}`}
                   />
@@ -1907,7 +2128,7 @@ export default function PartnersPage() {
                       transition={{ duration: 0.3 }}
                       className="overflow-hidden"
                     >
-                      <p className="px-6 pb-6 text-[#dcdcdc]/70 leading-relaxed">
+                      <p className="px-4 sm:px-6 pb-4 sm:pb-6 text-[#dcdcdc]/70 leading-relaxed text-sm sm:text-base">
                         {faq.a}
                       </p>
                     </motion.div>
@@ -1920,44 +2141,45 @@ export default function PartnersPage() {
       </section>
 
       {/* ── FINAL CTA ── */}
-      <section className="px-6 md:px-14 py-28">
+      <section className="px-4 sm:px-6 md:px-14 py-16 sm:py-20 md:py-28">
         <div className="max-w-6xl mx-auto">
-          <div className="relative overflow-hidden bg-gradient-to-br from-[#4169E1]/25 via-[#0f172a] to-[#32CD32]/15 border border-white/10 rounded-[48px] px-8 py-24 text-center">
+          <div className="relative overflow-hidden bg-gradient-to-br from-[#4169E1]/25 via-[#0f172a] to-[#32CD32]/15 border border-white/10 rounded-2xl sm:rounded-[48px] px-5 sm:px-8 py-16 sm:py-20 md:py-24 text-center">
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(65,105,225,0.3),transparent_60%)]" />
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(50,205,50,0.15),transparent_60%)]" />
 
-            <div className="absolute top-10 left-10 w-16 h-16 rounded-2xl bg-[#4169E1]/20 border border-[#4169E1]/30 flex items-center justify-center text-[#4169E1] text-xl hidden md:flex">
+            {/* Corner icons — hidden on very small screens */}
+            <div className="absolute top-6 sm:top-10 left-6 sm:left-10 w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-[#4169E1]/20 border border-[#4169E1]/30 items-center justify-center text-[#4169E1] text-lg sm:text-xl hidden sm:flex">
               <FaLayerGroup />
             </div>
-            <div className="absolute top-10 right-10 w-16 h-16 rounded-2xl bg-[#32CD32]/20 border border-[#32CD32]/30 flex items-center justify-center text-[#32CD32] text-xl hidden md:flex">
+            <div className="absolute top-6 sm:top-10 right-6 sm:right-10 w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-[#32CD32]/20 border border-[#32CD32]/30 items-center justify-center text-[#32CD32] text-lg sm:text-xl hidden sm:flex">
               <FaChartLine />
             </div>
-            <div className="absolute bottom-10 left-10 w-16 h-16 rounded-2xl bg-[#FF8C00]/20 border border-[#FF8C00]/30 flex items-center justify-center text-[#FF8C00] text-xl hidden md:flex">
+            <div className="absolute bottom-6 sm:bottom-10 left-6 sm:left-10 w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-[#FF8C00]/20 border border-[#FF8C00]/30 items-center justify-center text-[#FF8C00] text-lg sm:text-xl hidden sm:flex">
               <FaUsers />
             </div>
-            <div className="absolute bottom-10 right-10 w-16 h-16 rounded-2xl bg-[#9b59b6]/20 border border-[#9b59b6]/30 flex items-center justify-center text-[#9b59b6] text-xl hidden md:flex">
+            <div className="absolute bottom-6 sm:bottom-10 right-6 sm:right-10 w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-[#9b59b6]/20 border border-[#9b59b6]/30 items-center justify-center text-[#9b59b6] text-lg sm:text-xl hidden sm:flex">
               <FaGlobe />
             </div>
 
             <div className="relative">
-              <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-5 py-2.5 text-sm mb-10">
-                <div className="w-2 h-2 rounded-full bg-[#32CD32] animate-pulse" />
+              <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm mb-8 sm:mb-10">
+                <div className="w-2 h-2 rounded-full bg-[#32CD32] animate-pulse flex-shrink-0" />
                 Now accepting new partners
               </div>
-              <h2 className="text-5xl md:text-7xl font-black leading-[1.05]">
+              <h2 className="text-4xl sm:text-5xl md:text-7xl font-black leading-[1.05]">
                 Ready To Power
                 <span className="block text-[#FF8C00]">Your Agency?</span>
               </h2>
-              <p className="mt-8 text-xl text-[#dcdcdc]/70 max-w-2xl mx-auto leading-relaxed">
+              <p className="mt-6 sm:mt-8 text-base sm:text-xl text-[#dcdcdc]/70 max-w-2xl mx-auto leading-relaxed">
                 Join agencies already running their entire consultancy on our
                 platform. Your brand, our infrastructure — live in 24 hours.
               </p>
-              <div className="mt-12 flex flex-wrap gap-5 justify-center">
+              <div className="mt-8 sm:mt-12 flex flex-col sm:flex-row gap-3 sm:gap-5 justify-center items-center">
                 <motion.button
                   whileHover={{ scale: 1.04 }}
                   whileTap={{ scale: 0.96 }}
                   onClick={openForm}
-                  className="bg-[#FF8C00] hover:bg-[#ff9f2f] text-white font-bold px-10 py-5 rounded-2xl text-xl transition-all shadow-[0_12px_48px_rgba(255,140,0,0.4)]"
+                  className="w-full sm:w-auto bg-[#FF8C00] hover:bg-[#ff9f2f] text-white font-bold px-8 sm:px-10 py-4 sm:py-5 rounded-2xl text-lg sm:text-xl transition-all shadow-[0_12px_48px_rgba(255,140,0,0.4)]"
                 >
                   Start Partner Journey
                 </motion.button>
@@ -1965,13 +2187,13 @@ export default function PartnersPage() {
                   whileHover={{ scale: 1.04 }}
                   whileTap={{ scale: 0.96 }}
                   onClick={openForm}
-                  className="flex items-center gap-3 border border-white/20 hover:border-white/40 hover:bg-white/5 px-10 py-5 rounded-2xl text-xl font-bold transition-all"
+                  className="w-full sm:w-auto flex items-center justify-center gap-3 border border-white/20 hover:border-white/40 hover:bg-white/5 px-8 sm:px-10 py-4 sm:py-5 rounded-2xl text-lg sm:text-xl font-bold transition-all"
                 >
                   <FaEnvelope />
                   Talk to Sales
                 </motion.button>
               </div>
-              <p className="mt-8 text-sm text-[#dcdcdc]/40">
+              <p className="mt-6 sm:mt-8 text-xs sm:text-sm text-[#dcdcdc]/40">
                 No setup fees. Cancel anytime. White-glove onboarding included.
               </p>
             </div>
@@ -1979,214 +2201,5 @@ export default function PartnersPage() {
         </div>
       </section>
     </main>
-  );
-}
-
-/* ─── HERO DASHBOARD ─── */
-
-function HeroDashboard() {
-  return (
-    <div className="relative bg-[#080d1c] border border-white/10 rounded-[28px] overflow-hidden shadow-[0_30px_100px_rgba(0,0,0,0.6)]">
-      <div className="flex items-center justify-between px-6 py-4 bg-white/3 border-b border-white/8">
-        <div className="flex items-center gap-3">
-          <div className="flex gap-2">
-            <div className="w-3 h-3 rounded-full bg-red-400/60" />
-            <div className="w-3 h-3 rounded-full bg-yellow-400/60" />
-            <div className="w-3 h-3 rounded-full bg-green-400/60" />
-          </div>
-          <div className="bg-white/8 rounded-lg px-4 py-1.5 text-xs text-white/40 font-mono ml-4">
-            portal.<span className="text-[#4169E1]">youragency</span>
-            .com/dashboard
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-[#4169E1] flex items-center justify-center text-xs font-black">
-            YA
-          </div>
-          <p className="text-sm font-semibold hidden md:block">Your Agency</p>
-        </div>
-      </div>
-      <div className="grid md:grid-cols-3 gap-0">
-        <div className="hidden md:block border-r border-white/8 p-5 space-y-2">
-          {[
-            { icon: <FaChartLine />, label: "Overview", active: true },
-            { icon: <FaUserGraduate />, label: "Students", active: false },
-            { icon: <FaUniversity />, label: "Applications", active: false },
-            { icon: <FaFileAlt />, label: "Documents", active: false },
-            { icon: <FaUsers />, label: "Team", active: false },
-            { icon: <FaBell />, label: "Automations", active: false },
-          ].map((item, i) => (
-            <div
-              key={i}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all ${item.active ? "bg-[#4169E1]/20 text-white border border-[#4169E1]/30" : "text-white/40"}`}
-            >
-              <span style={{ color: item.active ? BLUE : undefined }}>
-                {item.icon}
-              </span>
-              {item.label}
-            </div>
-          ))}
-        </div>
-        <div className="md:col-span-2 p-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-            {[
-              { label: "Active Students", value: "128", color: BLUE },
-              { label: "Applications", value: "47", color: GREEN },
-              { label: "Visas Pending", value: "12", color: ORANGE },
-              { label: "Revenue", value: "$18k", color: "#9b59b6" },
-            ].map((card) => (
-              <div
-                key={card.label}
-                className="rounded-2xl p-4"
-                style={{
-                  background: `${card.color}12`,
-                  border: `1px solid ${card.color}25`,
-                }}
-              >
-                <p className="text-xs text-white/40">{card.label}</p>
-                <p
-                  className="text-2xl font-black mt-1"
-                  style={{ color: card.color }}
-                >
-                  {card.value}
-                </p>
-              </div>
-            ))}
-          </div>
-          <div className="bg-white/5 border border-white/8 rounded-2xl p-5 mb-4">
-            <div className="flex justify-between items-center mb-4">
-              <p className="text-sm font-semibold">Application Pipeline</p>
-              <span className="text-xs text-[#32CD32]">+18% this month</span>
-            </div>
-            <div className="flex items-end gap-2 h-16">
-              {[40, 65, 55, 80, 70, 90, 75, 85, 60, 95, 80, 100].map((h, i) => (
-                <div
-                  key={i}
-                  className="flex-1 rounded-t"
-                  style={{
-                    height: `${h}%`,
-                    background: h >= 90 ? BLUE : `${BLUE}35`,
-                  }}
-                />
-              ))}
-            </div>
-          </div>
-          <div className="bg-white/5 border border-white/8 rounded-2xl p-5">
-            <p className="text-sm font-semibold mb-4">Recent Students</p>
-            <div className="space-y-3">
-              {[
-                {
-                  name: "Aisha Malik",
-                  dest: "Canada",
-                  status: "Offer Received",
-                  c: GREEN,
-                },
-                {
-                  name: "James Osei",
-                  dest: "UK",
-                  status: "Under Review",
-                  c: BLUE,
-                },
-                {
-                  name: "Sara Kim",
-                  dest: "Australia",
-                  status: "Docs Required",
-                  c: ORANGE,
-                },
-              ].map((s, i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <div
-                    className="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold shrink-0"
-                    style={{ background: `${s.c}20`, color: s.c }}
-                  >
-                    {s.name[0]}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold">{s.name}</p>
-                    <p className="text-xs text-white/40">{s.dest}</p>
-                  </div>
-                  <span
-                    className="text-xs px-2 py-1 rounded-full shrink-0"
-                    style={{ background: `${s.c}15`, color: s.c }}
-                  >
-                    {s.status}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ─── SCALABILITY VISUAL ─── */
-
-function ScalabilityVisual() {
-  const tiers = [
-    {
-      label: "Startup",
-      students: "10–50",
-      icon: <FaUserGraduate />,
-      color: BLUE,
-      h: "40%",
-    },
-    {
-      label: "Growing",
-      students: "50–500",
-      icon: <FaUsers />,
-      color: GREEN,
-      h: "60%",
-    },
-    {
-      label: "Enterprise",
-      students: "500–10k+",
-      icon: <FaBuilding />,
-      color: ORANGE,
-      h: "100%",
-    },
-  ];
-  return (
-    <div className="bg-white/5 border border-white/10 rounded-3xl p-8">
-      <p className="text-sm font-semibold text-[#dcdcdc]/60 mb-6">
-        Agency Growth Tiers
-      </p>
-      <div className="flex items-end gap-4 h-40 mb-4">
-        {tiers.map((t, i) => (
-          <div key={i} className="flex-1 flex flex-col items-center gap-2">
-            <p className="text-xs text-white/40">{t.students}</p>
-            <motion.div
-              initial={{ height: 0 }}
-              whileInView={{ height: t.h }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8, delay: i * 0.2, ease: "easeOut" }}
-              className="w-full rounded-t-xl flex items-start justify-center pt-3"
-              style={{
-                background: `${t.color}25`,
-                border: `1px solid ${t.color}40`,
-              }}
-            >
-              <span style={{ color: t.color }}>{t.icon}</span>
-            </motion.div>
-          </div>
-        ))}
-      </div>
-      <div className="flex gap-4">
-        {tiers.map((t, i) => (
-          <div key={i} className="flex-1 text-center">
-            <p className="text-xs font-semibold" style={{ color: t.color }}>
-              {t.label}
-            </p>
-          </div>
-        ))}
-      </div>
-      <div className="mt-6 p-4 bg-[#4169E1]/10 border border-[#4169E1]/20 rounded-2xl text-center">
-        <p className="text-sm text-[#dcdcdc]/70">
-          Same platform. Same price structure.{" "}
-          <span className="text-[#4169E1] font-bold">Infinite scale.</span>
-        </p>
-      </div>
-    </div>
   );
 }

@@ -20,6 +20,7 @@
     "@tiptap/pm": "^3.20.0",
     "@tiptap/react": "^3.20.0",
     "@tiptap/starter-kit": "^3.20.0",
+    "axios": "^1.16.1",
     "chart.js": "^4.5.1",
     "framer-motion": "^12.29.0",
     "fs": "^0.0.1-security",
