@@ -214,7 +214,7 @@ const MemoizedDesktopNav = memo(() => {
         items={["Scholarships", "Universities", "Visa Guidance"]}
       />
       <NavItem label="Why Us" link="/why-us" />
-      <NavItem label="Success Stories" link="/success-stories" />
+      <NavItem label="For Partners" link="/partners" />
 
       {/* ← Add Blog here */}
       <NavItem label="Blog" link="/blog" />
@@ -478,8 +478,8 @@ const MobileMenu = ({ open, onClose, isLoggedIn, handleLogout, user }) => {
 
               <MobileNavItem label="Why Us" link="/why-us" onClose={onClose} />
               <MobileNavItem
-                label="Success Stories"
-                link="/success-stories"
+                label="For Parents"
+                link="/parents"
                 onClose={onClose}
               />
               <MobileNavItem label="Blog" link="/blog" onClose={onClose} />
