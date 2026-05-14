@@ -5,15 +5,10 @@ export async function GET() {
   try {
     const baseUrl = "https://www.khizaroverseas.in";
 
-    // TOTAL ESTIMATED UNIVERSITIES
     const totalUniversities = 10000;
-
-    // APPROX 1000 URLs PER SITEMAP
     const universitiesPerSitemap = 1000;
-
     const totalSitemaps = Math.ceil(totalUniversities / universitiesPerSitemap);
 
-    // UNIVERSITY SITEMAPS
     const universitySitemaps = Array.from(
       { length: totalSitemaps },
       (_, i) => `
@@ -31,6 +26,10 @@ ${universitySitemaps}
   <loc>${baseUrl}/sitemap-countries</loc>
 </sitemap>
 
+<sitemap>
+  <loc>${baseUrl}/sitemap-static</loc>
+</sitemap>
+
 </sitemapindex>`;
 
     return new Response(body, {
@@ -41,9 +40,6 @@ ${universitySitemaps}
     });
   } catch (error) {
     console.error("MAIN SITEMAP ERROR:", error);
-
-    return new Response("Failed to generate sitemap index", {
-      status: 500,
-    });
+    return new Response("Failed to generate sitemap index", { status: 500 });
   }
 }
