@@ -3,6 +3,8 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDebounce } from "use-debounce";
+
+import axios from "axios";
 import {
   X,
   Search,
@@ -116,9 +118,17 @@ function StatCard({ label, value, icon: Icon, color, trend }) {
 // ─── Badge ────────────────────────────────────────────────────────────────────
 function Badge({ status }) {
   const map = {
+    pending: "bg-amber-100 text-amber-700 border-amber-200",
+
+    approved: "bg-emerald-100 text-emerald-700 border-emerald-200",
+
+    rejected: "bg-red-100 text-red-700 border-red-200",
+
+    reviewing: "bg-sky-100 text-sky-700 border-sky-200",
+
+    onboarding: "bg-violet-100 text-violet-700 border-violet-200",
+
     Active: "bg-emerald-100 text-emerald-700 border-emerald-200",
-    Inactive: "bg-gray-100 text-gray-600 border-gray-200",
-    Pending: "bg-amber-100 text-amber-700 border-amber-200",
   };
   return (
     <span
@@ -194,7 +204,7 @@ function ApplicationRow({
 
       {/* Status */}
       <td className="px-4 sm:px-6 py-4">
-        <Badge status="Pending" />
+        <Badge status={application.status} />
       </td>
 
       {/* Actions */}
@@ -290,7 +300,7 @@ function CounselorRow({ counselor, openDeleteConfirm }) {
     "bg-rose-100 text-rose-700",
     "bg-amber-100 text-amber-700",
   ];
-  const avatarColor = avatarColors[counselor.id % avatarColors.length];
+  const avatarColor = avatarColors[counselor.name.length % avatarColors.length];
 
   return (
     <motion.tr
@@ -329,7 +339,7 @@ function CounselorRow({ counselor, openDeleteConfirm }) {
       {/* Specialization — hidden on small screens */}
       <td className="px-4 sm:px-6 py-4 hidden xl:table-cell">
         <div className="flex flex-wrap gap-1">
-          {counselor.specialization.split(", ").map((s) => (
+          {(counselor.specialization || "").split(", ").map((s) => (
             <span
               key={s}
               className="text-xs bg-sky-50 text-sky-700 border border-sky-100 px-2 py-0.5 rounded-full"
@@ -502,14 +512,14 @@ function ApplicationModal({ application, onClose, onApprove, onReject }) {
             <div className="sm:col-span-2">
               <DetailItem
                 label="Countries Served"
-                value={application.countries.join(", ")}
+                value={(application.countries || []).join(", ")}
                 icon={Globe}
               />
             </div>
             <div className="sm:col-span-2">
               <DetailItem
                 label="Services Offered"
-                value={application.services.join(", ")}
+                value={(application.services || []).join(", ")}
                 icon={Star}
               />
             </div>
@@ -559,72 +569,94 @@ export default function CounselorsAdminPage() {
     setTimeout(() => setToast(null), 3200);
   }, []);
 
-  // ── Mock data ──
+  const fetchPartners = useCallback(async () => {
+    try {
+      setLoading(true);
+
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/partners`,
+        {
+          withCredentials: true,
+        },
+      );
+
+      const partners = response.data.data || [];
+
+      // Approved partners
+      const activePartners = partners
+        .filter((partner) => partner.status === "approved")
+        .map((partner) => ({
+          id: partner.id,
+
+          name: partner.fullName,
+
+          email: partner.email,
+
+          phone: partner.phone,
+
+          agencyName: partner.agencyName,
+
+          specialization: partner.specializationCountries?.join(", ") || "N/A",
+
+          assignedStudents: 0,
+
+          successRate: "0%",
+
+          status: "Active",
+        }));
+
+      // Pending applications
+      const pendingApplications = partners
+        .filter((partner) => partner.status === "pending")
+        .map((partner) => ({
+          id: partner.id,
+
+          fullName: partner.fullName,
+
+          email: partner.email,
+
+          phone: partner.phone,
+
+          country: partner.country,
+
+          city: partner.city,
+
+          agencyName: partner.agencyName,
+
+          website: partner.website,
+
+          agencyType: partner.agencyType,
+
+          studentsPerMonth: partner.studentsPerMonth,
+
+          countries: partner.specializationCountries || [],
+
+          services: partner.services || [],
+
+          wantsBrandedPortal: partner.wantsBrandedPortal,
+
+          brandingName: partner.brandingName,
+
+          status: partner.status,
+
+          submittedAt: new Date(partner.createdAt).toLocaleDateString(),
+        }));
+
+      setCounselors(activePartners);
+
+      setApplications(pendingApplications);
+    } catch (err) {
+      console.error("FETCH PARTNERS ERROR:", err);
+
+      showToast("Failed to load partners.", "error");
+    } finally {
+      setLoading(false);
+    }
+  }, [showToast]);
+
   useEffect(() => {
-    const mockCounselors = [
-      {
-        id: 1,
-        agencyName: "GlobalPath Overseas",
-        name: "Sara Ahmed",
-        email: "sara@overseas.com",
-        phone: "+91 98765 12345",
-        specialization: "Canada, UK",
-        assignedStudents: 28,
-        successRate: "94%",
-        status: "Active",
-        lastActive: "2026-01-29",
-      },
-      {
-        id: 2,
-        agencyName: "SkyBridge Consultancy",
-        name: "John Mathew",
-        email: "john@overseas.com",
-        phone: "+91 87654 98765",
-        specialization: "Australia, USA",
-        assignedStudents: 35,
-        successRate: "89%",
-        status: "Active",
-        lastActive: "2026-01-28",
-      },
-      {
-        id: 3,
-        agencyName: "EduVision Overseas",
-        name: "Aisha Khan",
-        email: "aisha@overseas.com",
-        phone: "+91 76543 21098",
-        specialization: "Germany, Ireland",
-        assignedStudents: 19,
-        successRate: "92%",
-        status: "Active",
-        lastActive: "2026-01-25",
-      },
-    ];
-
-    const mockApplications = [
-      {
-        id: 101,
-        fullName: "Ahmed Khan",
-        email: "ahmed@futurepath.com",
-        phone: "+91 9999999999",
-        country: "India",
-        city: "Hyderabad",
-        agencyName: "FuturePath Overseas",
-        website: "https://futurepath.com",
-        agencyType: "Small Agency",
-        studentsPerMonth: "10–50",
-        countries: ["Canada", "UK"],
-        services: ["Visa Guidance", "Admissions"],
-        wantsBrandedPortal: "Yes",
-        brandingName: "FuturePath Portal",
-        status: "Pending",
-        submittedAt: "2026-05-14",
-      },
-    ];
-
-    setCounselors(mockCounselors);
-    setApplications(mockApplications);
-    setLoading(false);
-  }, []);
+    fetchPartners();
+  }, [fetchPartners]);
 
   // ── Handlers ──
   const openDeleteConfirm = useCallback((counselor) => {
@@ -632,43 +664,80 @@ export default function CounselorsAdminPage() {
     setShowConfirmDelete(true);
   }, []);
 
-  const handleDeleteConfirmed = useCallback(() => {
-    setCounselors((prev) => prev.filter((c) => c.id !== counselorToDelete.id));
-    setShowConfirmDelete(false);
-    setCounselorToDelete(null);
-    showToast(`${counselorToDelete.name} has been removed.`, "error");
-  }, [counselorToDelete, showToast]);
+  const handleDeleteConfirmed = useCallback(async () => {
+    try {
+      await axios.delete(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/partners/${counselorToDelete.id}`,
+        {
+          withCredentials: true,
+        },
+      );
+
+      showToast(`${counselorToDelete.name} removed successfully.`, "success");
+
+      await fetchPartners();
+
+      setShowConfirmDelete(false);
+
+      setCounselorToDelete(null);
+    } catch (err) {
+      console.error(err);
+
+      showToast("Failed to delete partner.", "error");
+    }
+  }, [counselorToDelete, fetchPartners, showToast]);
 
   const handleApprove = useCallback(
-    (application) => {
-      const newCounselor = {
-        id: Date.now(),
-        name: application.fullName,
-        email: application.email,
-        phone: application.phone,
-        specialization: application.countries.join(", "),
-        assignedStudents: 0,
-        successRate: "0%",
-        status: "Active",
-        agencyName: application.agencyName,
-      };
-      setCounselors((prev) => [...prev, newCounselor]);
-      setApplications((prev) => prev.filter((a) => a.id !== application.id));
-      setSelectedApplication(null);
-      showToast(`${application.fullName} approved as a partner!`, "success");
+    async (application) => {
+      console.log("APPROVE APPLICATION:", application);
+      console.log("APPROVE ID:", application.id);
+      try {
+        await axios.put(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/partners/${application.id}`,
+          {
+            status: "approved",
+          },
+          {
+            withCredentials: true,
+          },
+        );
+
+        showToast(`${application.fullName} approved successfully.`, "success");
+
+        await fetchPartners();
+      } catch (err) {
+        console.error(err);
+
+        showToast("Failed to approve partner.", "error");
+      }
     },
-    [showToast],
+    [fetchPartners, showToast],
   );
 
   const handleReject = useCallback(
-    (id) => {
-      const app = applications.find((a) => a.id === id);
-      setApplications((prev) => prev.filter((a) => a.id !== id));
-      setSelectedApplication(null);
-      if (app)
-        showToast(`Application from ${app.agencyName} rejected.`, "warning");
+    async (id) => {
+      console.log("REJECT ID:", id);
+      try {
+        await axios.put(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/partners/${id}`,
+          {
+            status: "rejected",
+          },
+          {
+            withCredentials: true,
+          },
+        );
+
+        showToast("Application rejected.", "warning");
+
+        await fetchPartners();
+      } catch (err) {
+        console.error(err);
+
+        showToast("Failed to reject application.", "error");
+      }
     },
-    [applications, showToast],
+    [fetchPartners, showToast],
   );
 
   // ── Filtered data ──
