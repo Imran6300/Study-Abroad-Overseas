@@ -8,11 +8,7 @@
    Disable Chrome Autofill BG
    =========================== */
 
-     input,
-     textarea,
-     select {
-       color: white !important;
-     }
+
 
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
