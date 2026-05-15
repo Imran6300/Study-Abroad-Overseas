@@ -75,30 +75,53 @@ export default async function WhyChooseUs() {
   const data = await res.json();
   const testimonials = data.success ? data.data.slice(0, 6) : []; // ← increased to 6 if you have enough good ones
 
+  const totalReviews = testimonials.length;
+
+  const averageRating =
+    testimonials.reduce((acc, curr) => {
+      return acc + Number(curr.rating || 5);
+    }, 0) / totalReviews;
+
   const schema = {
     "@context": "https://schema.org",
     "@type": "Organization",
+
     name: "Khizar Overseas",
+
     url: process.env.NEXT_PUBLIC_FRONTEND_URL,
+
     logo: `${process.env.NEXT_PUBLIC_FRONTEND_URL}/logo.png`,
+
     description:
       "Leading study abroad consultants in Hyderabad with 98.7% visa success rate helping students study in USA, UK, Canada, Australia, Germany and more.",
-    sameAs: [
-      // add your social profiles
-      "https://www.facebook.com/profile.php?id=61553895275238&rdid=Peg2Nkx4KdECSUkD&share_url=https%3A%2F%2Fwww.facebook.com%2Fshare%2F1DNf4akFXe%2F#",
-    ],
+
+    sameAs: ["https://www.facebook.com/profile.php?id=61553895275238"],
+
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: averageRating.toFixed(1),
+      reviewCount: totalReviews.toString(),
+      bestRating: "5",
+      worstRating: "1",
+    },
+
     review: testimonials.map((t) => ({
       "@type": "Review",
+
       reviewRating: {
         "@type": "Rating",
-        ratingValue: t.rating || "5", // if you have rating field
+        ratingValue: String(t.rating || 5),
         bestRating: "5",
+        worstRating: "1",
       },
+
       reviewBody: t.excerpt || t.fullDescription?.slice(0, 180) || "",
+
       author: {
         "@type": "Person",
         name: t.studentName,
       },
+
       datePublished: t.createdAt || new Date().toISOString().split("T")[0],
     })),
   };
