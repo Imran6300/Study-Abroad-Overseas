@@ -12,70 +12,52 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-const deadlines = [
-  {
-    id: 1,
-    title: "Upload Passport",
-    university: "Hellenic College of Noah",
-    dueDate: "May 20, 2026",
-    daysLeft: 2,
-    priority: "High",
-    status: "pending",
-    category: "document",
-  },
-  {
-    id: 2,
-    title: "Submit IELTS Scorecard",
-    university: "Hellenic College of Noah",
-    dueDate: "May 24, 2026",
-    daysLeft: 6,
-    priority: "Medium",
-    status: "pending",
-    category: "test",
-  },
-  {
-    id: 3,
-    title: "SOP Final Review",
-    university: "University of Athens",
-    dueDate: "May 14, 2026",
-    daysLeft: -2,
-    priority: "Urgent",
-    status: "overdue",
-    category: "sop",
-  },
-  {
-    id: 4,
-    title: "Profile Review Completed",
-    university: "Hellenic College of Noah",
-    dueDate: "May 10, 2026",
-    daysLeft: 0,
-    priority: "Low",
-    status: "completed",
-    category: "review",
-  },
-];
+import { useDispatch, useSelector } from "react-redux";
+import { useEffect } from "react";
+
+import {
+  fetchMyDeadlines,
+  markDeadlineCompleteAsync,
+} from "@/store/deadlineSlice";
 
 export default function DeadlinesPage() {
-  const pending = deadlines.filter((d) => d.status === "pending");
-  const completed = deadlines.filter((d) => d.status === "completed");
-  const overdue = deadlines.filter((d) => d.status === "overdue");
+  const dispatch = useDispatch();
+
+  const { deadlines, loading, error } = useSelector((state) => state.deadline);
+  const pending = deadlines?.upcoming || [];
+
+  const completed = deadlines?.completed || [];
+
+  const overdue = deadlines?.overdue || [];
+
+  const counts = deadlines?.counts || {};
   const router = useRouter();
 
-  const upcomingThisWeek = deadlines.filter(
-    (d) => d.status === "pending" && d.daysLeft >= 0 && d.daysLeft <= 7,
-  );
+  useEffect(() => {
+    dispatch(fetchMyDeadlines());
+  }, [dispatch]);
 
   const getPriorityStyles = (priority) => {
     switch (priority) {
-      case "Urgent":
+      case "urgent":
         return "bg-red-500/20 text-red-300 border-red-500/30";
-      case "High":
+      case "high":
         return "bg-orange-500/20 text-orange-300 border-orange-500/30";
-      case "Medium":
+      case "medium":
         return "bg-yellow-500/20 text-yellow-300 border-yellow-500/30";
       default:
         return "bg-blue-500/20 text-blue-300 border-blue-500/30";
     }
+  };
+
+  const getDaysLeft = (dueDate) => {
+    const today = new Date();
+
+    const due = new Date(dueDate);
+
+    const diffTime = due - today;
+
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   };
 
   const getStatusStyles = (status) => {
@@ -98,7 +80,7 @@ export default function DeadlinesPage() {
 
   const renderDeadlineCard = (item) => (
     <motion.div
-      key={item.id}
+      key={item._id}
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ y: -2 }}
@@ -123,11 +105,13 @@ export default function DeadlinesPage() {
           </div>
 
           <div className="space-y-1">
-            <p className="text-gray-300 text-sm">{item.university}</p>
+            <p className="text-gray-300 text-sm">
+              {item.university?.name || "University Not Assigned"}
+            </p>
 
             <div className="flex items-center gap-2 text-gray-400 text-sm">
               <CalendarDays size={15} />
-              {item.dueDate}
+              {new Date(item.dueDate).toLocaleDateString()}
             </div>
           </div>
         </div>
@@ -135,11 +119,11 @@ export default function DeadlinesPage() {
         <div className="flex flex-col items-start lg:items-end gap-3">
           {item.status !== "completed" && (
             <div
-              className={`font-bold text-sm ${getDaysLeftColor(item.daysLeft)}`}
+              className={`font-bold text-sm ${getDaysLeftColor(getDaysLeft(item.dueDate))}`}
             >
-              {item.daysLeft < 0
-                ? `${Math.abs(item.daysLeft)} days overdue`
-                : `${item.daysLeft} days left`}
+              {getDaysLeft(item.dueDate) < 0
+                ? `${Math.abs(getDaysLeft(item.dueDate))} days overdue`
+                : `${getDaysLeft(item.dueDate)} days left`}
             </div>
           )}
 
@@ -154,7 +138,10 @@ export default function DeadlinesPage() {
               </button>
             )}
             {item.status !== "completed" && (
-              <button className="flex items-center gap-2 px-4 py-2 rounded-xl border border-green-500/30 bg-green-500/10 hover:bg-green-500/20 text-green-300 text-sm font-medium transition-all">
+              <button
+                onClick={() => dispatch(markDeadlineCompleteAsync(item._id))}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl border border-green-500/30 bg-green-500/10 hover:bg-green-500/20 text-green-300 text-sm font-medium transition-all"
+              >
                 <CheckCircle2 size={16} />
                 Mark Complete
               </button>
@@ -164,6 +151,16 @@ export default function DeadlinesPage() {
       </div>
     </motion.div>
   );
+
+  if (loading) {
+    return (
+      <div className="text-white text-center py-20">Loading deadlines...</div>
+    );
+  }
+
+  if (error) {
+    return <div className="text-red-400 text-center py-20">{error}</div>;
+  }
 
   return (
     <div className="min-h-screen space-y-8 pt-16 sm:pt-5">
@@ -188,7 +185,7 @@ export default function DeadlinesPage() {
             <div>
               <p className="text-gray-400 text-sm">Pending Tasks</p>
               <h3 className="text-3xl font-bold text-white mt-1">
-                {pending.length}
+                {counts.pendingTasks || 0}
               </h3>
             </div>
 
@@ -205,7 +202,7 @@ export default function DeadlinesPage() {
               <p className="text-gray-400 text-sm">Upcoming This Week</p>
 
               <h3 className="text-3xl font-bold text-white mt-1">
-                {upcomingThisWeek.length}
+                {counts.upcomingThisWeek || 0}
               </h3>
             </div>
 
@@ -222,7 +219,7 @@ export default function DeadlinesPage() {
               <p className="text-gray-400 text-sm">Overdue</p>
 
               <h3 className="text-3xl font-bold text-white mt-1">
-                {overdue.length}
+                {counts.overdue || 0}
               </h3>
             </div>
 
@@ -239,7 +236,7 @@ export default function DeadlinesPage() {
               <p className="text-gray-400 text-sm">Completed</p>
 
               <h3 className="text-3xl font-bold text-white mt-1">
-                {completed.length}
+                {counts.completed || 0}
               </h3>
             </div>
 

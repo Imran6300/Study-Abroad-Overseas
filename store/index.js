@@ -3,6 +3,7 @@ import authReducer from "./authSlice";
 import universityReducer from "./universitySlice";
 import courseReducer from "./courseSlice";
 import leadReducer from "./leadSlice";
+import deadlineReducer from "./deadlineSlice";
 
 export const store = configureStore({
   reducer: {
@@ -10,5 +11,6 @@ export const store = configureStore({
     universities: universityReducer,
     courses: courseReducer,
     lead: leadReducer,
+    deadline: deadlineReducer,
   },
 });
