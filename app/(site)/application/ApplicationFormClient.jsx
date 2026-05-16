@@ -2,8 +2,6 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Elements } from "@stripe/react-stripe-js";
-import { stripePromise } from "@/lib/stripe";
 
 import Step1Personal from "@/components/applicationForm/Step1Personal";
 import Step2Education from "@/components/applicationForm/Step2Education";
@@ -11,8 +9,7 @@ import Step3Tests from "@/components/applicationForm/Step3Tests";
 import Step4Program from "@/components/applicationForm/Step4Program";
 import Step5Experience from "@/components/applicationForm/Step5Experience";
 import Step6Finance from "@/components/applicationForm/Step6Finance";
-import Step7Documents from "@/components/applicationForm/Step7Documents";
-import Step8Final from "@/components/applicationForm/Step8Final";
+import Step7Final from "@/components/applicationForm/Step7Final";
 import MessageBox from "@/components/ui/MessageBox";
 
 const initialFormData = {
@@ -60,14 +57,6 @@ const initialFormData = {
   sponsorIncome: "",
   funds: "",
 
-  passport: null,
-  photo: null,
-  marksheet10: null,
-  marksheet12: null,
-  bachelorDocs: null,
-  englishScorecard: null,
-  resume: null,
-
   source: "",
   comments: "",
   agreed: false,
@@ -81,7 +70,6 @@ export default function ApplicationForm() {
 
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState(initialFormData);
-  const [clientSecret, setClientSecret] = useState(null);
 
   const [checkingAccess, setCheckingAccess] = useState(true);
   const [status, setStatus] = useState(null);
@@ -329,42 +317,20 @@ export default function ApplicationForm() {
     };
   }, [formData, checkingAccess, saveDraft]);
 
-  // Create payment intent when reaching step 8
-  useEffect(() => {
-    if (step !== 8 || clientSecret) return;
-
-    const createIntent = async () => {
-      try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/create-payment-intent`,
-          { method: "POST", credentials: "include" },
-        );
-        const data = await res.json();
-        if (data.clientSecret) {
-          setClientSecret(data.clientSecret);
-        }
-      } catch (err) {
-        console.error("Failed to create payment intent", err);
-      }
-    };
-
-    createIntent();
-  }, [step, clientSecret]);
-
   const updateForm = useCallback((updates) => {
     setFormData((prev) => ({ ...prev, ...updates }));
   }, []);
 
   const nextStep = useCallback(async () => {
     await saveDraft();
-    setStep((prev) => Math.min(prev + 1, 8));
+    setStep((prev) => Math.min(prev + 1, 7));
   }, [saveDraft]);
 
   const prevStep = useCallback(() => {
     setStep((prev) => Math.max(prev - 1, 1));
   }, []);
 
-  const submitApplication = async (paymentId) => {
+  const submitApplication = async () => {
     try {
       const payload = new FormData();
 
@@ -380,20 +346,6 @@ export default function ApplicationForm() {
       });
 
       payload.append("universitySlug", universitySlug || "");
-      payload.append("paymentId", paymentId);
-
-      // Files
-      if (formData.passport) payload.append("passport", formData.passport);
-      if (formData.photo) payload.append("photo", formData.photo);
-      if (formData.marksheet10)
-        payload.append("marksheet10", formData.marksheet10);
-      if (formData.marksheet12)
-        payload.append("marksheet12", formData.marksheet12);
-      if (formData.bachelorDocs)
-        payload.append("bachelorDocs", formData.bachelorDocs);
-      if (formData.resume) payload.append("resume", formData.resume);
-      if (formData.englishScorecard)
-        payload.append("englishScorecard", formData.englishScorecard);
 
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/applications`,
@@ -414,8 +366,11 @@ export default function ApplicationForm() {
       setMessage("Application submitted successfully!");
     } catch (err) {
       console.error("Submit error:", err);
+
       setStatus("error");
       setMessage(err.message || "Failed to submit application");
+
+      throw err;
     }
   };
 
@@ -442,8 +397,7 @@ export default function ApplicationForm() {
     { num: 4, title: "Program" },
     { num: 5, title: "Experience" },
     { num: 6, title: "Finance" },
-    { num: 7, title: "Documents" },
-    { num: 8, title: "Review" },
+    { num: 7, title: "Review" },
   ];
 
   console.log(formData);
@@ -479,7 +433,7 @@ export default function ApplicationForm() {
               Student Application Form
             </h1>
             <p className="text-gray-600 mt-2">
-              Complete your application in 8 easy steps
+              Complete your application in 7 easy steps
             </p>
           </div>
 
@@ -510,7 +464,7 @@ export default function ApplicationForm() {
             <div className="relative h-2 bg-gray-200 rounded-full">
               <div
                 className="absolute h-full bg-gradient-to-r from-blue-600 to-purple-600 rounded-full transition-all duration-500"
-                style={{ width: `${((step - 1) / 7) * 100}%` }}
+                style={{ width: `${((step - 1) / 6) * 100}%` }}
               />
             </div>
           </div>
@@ -563,28 +517,19 @@ export default function ApplicationForm() {
                 prevStep={prevStep}
               />
             )}
+
             {step === 7 && (
-              <Step7Documents
+              <Step7Final
                 data={formData}
                 updateForm={updateForm}
-                nextStep={nextStep}
                 prevStep={prevStep}
+                submit={submitApplication}
               />
-            )}
-            {step === 8 && clientSecret && (
-              <Elements stripe={stripePromise} options={{ clientSecret }}>
-                <Step8Final
-                  data={formData}
-                  updateForm={updateForm}
-                  prevStep={prevStep}
-                  submit={submitApplication}
-                />
-              </Elements>
             )}
           </div>
 
           <div className="text-center mt-6 text-gray-500 text-sm">
-            Step {step} of 8 • All fields are required
+            Step {step} of 7 • All fields are required
           </div>
         </div>
       </div>
