@@ -11,7 +11,7 @@ export const fetchMyDeadlines = createAsyncThunk(
   async (_, thunkAPI) => {
     try {
       const response = await axios.get(
-        `${BACKEND_URL}/api/user-deadlines/my-deadlines`,
+        `${BACKEND_URL}/user/user-deadlines/my-deadlines`,
         {
           withCredentials: true,
         },
@@ -34,7 +34,7 @@ export const markDeadlineCompleteAsync = createAsyncThunk(
   async (id, thunkAPI) => {
     try {
       const response = await axios.patch(
-        `${BACKEND_URL}/api/user-deadlines/my-deadline/${id}/mark-complete`,
+        `${BACKEND_URL}/user/user-deadlines/my-deadline/${id}/mark-complete`,
         {},
         {
           withCredentials: true,
