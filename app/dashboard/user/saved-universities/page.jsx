@@ -90,8 +90,19 @@ export default function SavedUniversitiesPage() {
       {/* UNIVERSITY LIST */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {universities.length === 0 && (
-          <div className="text-gray-400">
-            You haven't shortlisted any universities yet.
+          <div className="text-gray-400 space-y-3">
+            <p>You haven't shortlisted any universities yet.</p>
+
+            <a
+              href="https://www.khizaroverseas.in/services/university-shortlisting"
+              className="
+        inline-flex items-center gap-2
+        text-emerald-400 hover:text-emerald-300
+        font-medium transition-colors duration-200
+      "
+            >
+              Shortlist Universities →
+            </a>
           </div>
         )}
 
