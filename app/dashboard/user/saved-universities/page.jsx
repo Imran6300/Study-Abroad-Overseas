@@ -14,9 +14,12 @@ export default function SavedUniversitiesPage() {
 
   const fetchShortlist = async () => {
     try {
-      const res = await fetch(`${NEXT_PUBLIC_BACKEND_URL}/user/shortlist`, {
-        credentials: "include",
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/user/shortlist`,
+        {
+          credentials: "include",
+        },
+      );
 
       const data = await res.json();
 
