@@ -14,12 +14,9 @@ export default function SavedUniversitiesPage() {
 
   const fetchShortlist = async () => {
     try {
-      const res = await fetch(
-        "https://overseas-backend-production-828d.up.railway.app/auth/shortlist",
-        {
-          credentials: "include",
-        },
-      );
+      const res = await fetch(`${NEXT_PUBLIC_BACKEND_URL}/auth/shortlist`, {
+        credentials: "include",
+      });
 
       const data = await res.json();
 

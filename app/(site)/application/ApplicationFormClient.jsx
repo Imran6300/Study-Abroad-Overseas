@@ -446,6 +446,8 @@ export default function ApplicationForm() {
     { num: 8, title: "Review" },
   ];
 
+  console.log(formData);
+
   return (
     <>
       <MessageBox
@@ -467,7 +469,7 @@ export default function ApplicationForm() {
               </h3>
               <p className="text-sm text-gray-600">
                 {formData.appliedUniversity.city},{" "}
-                {formData.appliedUniversity.country}
+                {formData.appliedUniversity.country?.name}
               </p>
             </div>
           )}

@@ -100,7 +100,7 @@ export default function DashboardPage() {
       })
       .catch(console.error);
 
-    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/applications/me`, {
+    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/applications`, {
       credentials: "include",
     })
       .then((res) => res.json())
@@ -122,6 +122,7 @@ export default function DashboardPage() {
     if (!confirm("Withdraw this application?")) return;
     try {
       const res = await fetch(`/api/applications/${id}/withdraw`, {
+        credentials: "include",
         method: "PATCH",
       });
       if (res.ok) {

@@ -581,11 +581,24 @@ export default function CountryDetail({ country, universities = [] }) {
       },
       {
         question: `Which courses are most popular for international students in ${name}?`,
-        answer: `The most popular and in-demand courses in ${name} for international students include ${(popularCourses || []).join(", ")}. These programs are highly employable, often come with scholarship options, co-op/internship opportunities, and clear post-study work visa pathways. Many lead to high-paying jobs in global companies. We help Indian students choose the right course based on their background, budget, and career goals.`,
+        answer: `The most popular and in-demand courses in ${name} for international students include ${(
+          popularCourses || []
+        )
+          .map((course) => (typeof course === "object" ? course.name : course))
+          .join(
+            ", ",
+          )}. These programs are highly employable, often come with scholarship options, co-op/internship opportunities, and clear post-study work visa pathways. Many lead to high-paying jobs in global companies. We help Indian students choose the right course based on their background, budget, and career goals.`,
       },
       {
         question: `What scholarships are available for Indian students in ${name}?`,
-        answer: `Indian students can apply for a wide range of scholarships in ${name}, including ${(scholarships || []).slice(0, 5).join(", ")} and many university-specific, government-funded, and merit-based awards. Scholarships range from 10–100% tuition waivers to full-ride packages including living expenses. Most require strong academics (70–90%+), good IELTS/TOEFL/PTE scores, and sometimes essays or interviews. Our Hyderabad counselors identify the best scholarships for your profile and assist with applications — completely free.`,
+        answer: `Indian students can apply for a wide range of scholarships in ${name}, including ${(
+          scholarships || []
+        )
+          .slice(0, 5)
+          .map((item) => (typeof item === "object" ? item.name : item))
+          .join(
+            ", ",
+          )} and many university-specific, government-funded, and merit-based awards. Scholarships range from 10–100% tuition waivers to full-ride packages including living expenses. Most require strong academics (70–90%+), good IELTS/TOEFL/PTE scores, and sometimes essays or interviews. Our Hyderabad counselors identify the best scholarships for your profile and assist with applications — completely free.`,
       },
     ],
     [name, visaSuccessRate, popularCourses, scholarships],
