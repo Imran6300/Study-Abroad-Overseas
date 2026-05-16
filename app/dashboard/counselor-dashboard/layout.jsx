@@ -37,22 +37,22 @@ export default function CounselorLayout({ children }) {
 
   // ROUTES WHERE HEADER SHOULD BE HIDDEN
   const hideHeaderRoutes = ["/dashboard/counselor-dashboard/settings"];
-
   const shouldHideHeader = hideHeaderRoutes.includes(pathname);
 
   const getPageTitle = () => {
-    if (pathname === "/dashboard/counselor-dashboard") {
-      return "Dashboard";
-    }
-
-    if (pathname === "/dashboard/counselor-dashboard/students") {
+    if (pathname === "/dashboard/counselor-dashboard") return "Dashboard";
+    if (pathname === "/dashboard/counselor-dashboard/students")
       return "Student Management";
-    }
-
-    if (pathname.includes("/students/")) {
+    if (pathname.startsWith("/dashboard/counselor-dashboard/students/"))
       return "Student Profile";
-    }
-
+    if (pathname === "/dashboard/counselor-dashboard/khizar-applications")
+      return "Managed Applications";
+    if (
+      pathname.startsWith("/dashboard/counselor-dashboard/khizar-applications/")
+    )
+      return "Application Details";
+    if (pathname === "/dashboard/counselor-dashboard/settings")
+      return "Settings";
     return "Counselor Dashboard";
   };
 

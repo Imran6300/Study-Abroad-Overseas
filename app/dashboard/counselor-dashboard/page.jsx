@@ -7,6 +7,7 @@ import CounselorRecentActivity from "@/components/counselordashboard/CounselorRe
 import CounselorTasks from "@/components/counselordashboard/CounselorTasks";
 import CounselorStudentsTable from "@/components/counselordashboard/CounselorStudentsTable";
 import CounselorAnalytics from "@/components/counselordashboard/CounselorAnalytics";
+import ApplicationPipelineBoard from "@/components/counselordashboard/Applicationpipelineboard";
 
 export default function CounselorDashboardPage() {
   return (
@@ -15,6 +16,9 @@ export default function CounselorDashboardPage() {
         <CounselorKpiCards />
 
         <CounselorAnalytics />
+        <div className="mb-8">
+          <ApplicationPipelineBoard applications={[]} />
+        </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-8">
           <div className="xl:col-span-2">
