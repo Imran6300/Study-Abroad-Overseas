@@ -76,7 +76,7 @@ export default function CanadaUniversitiesClient() {
     const loadShortlist = async () => {
       try {
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/shortlist`,
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/user/shortlist`,
           { credentials: "include" },
         );
 
@@ -120,7 +120,7 @@ export default function CanadaUniversitiesClient() {
     try {
       if (isAlreadyShortlisted) {
         await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/university/shortlist/${uni._id}`,
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/user/university/shortlist/${uni._id}`,
           {
             method: "DELETE",
             credentials: "include",
@@ -139,7 +139,7 @@ export default function CanadaUniversitiesClient() {
         });
       } else {
         await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/university/shortlist`,
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/user/university/shortlist`,
           {
             method: "POST",
             headers: {

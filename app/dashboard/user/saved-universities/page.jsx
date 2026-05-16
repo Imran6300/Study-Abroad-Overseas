@@ -14,7 +14,7 @@ export default function SavedUniversitiesPage() {
 
   const fetchShortlist = async () => {
     try {
-      const res = await fetch(`${NEXT_PUBLIC_BACKEND_URL}/auth/shortlist`, {
+      const res = await fetch(`${NEXT_PUBLIC_BACKEND_URL}/user/shortlist`, {
         credentials: "include",
       });
 
@@ -39,7 +39,7 @@ export default function SavedUniversitiesPage() {
       setRemovingId(id);
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/university/shortlist/${id}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/user/university/shortlist/${id}`,
         {
           method: "DELETE",
           credentials: "include",
