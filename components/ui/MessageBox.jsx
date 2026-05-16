@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 
 export default function MessageBox({ status, message, onClose }) {
   if (!status) return null;
@@ -9,7 +9,7 @@ export default function MessageBox({ status, message, onClose }) {
 
   return (
     <AnimatePresence>
-      <motion.div
+      <m.div
         initial={{ opacity: 0, x: 40, scale: 0.95 }}
         animate={{ opacity: 1, x: 0, scale: 1 }}
         exit={{ opacity: 0, x: 40 }}
@@ -35,7 +35,7 @@ export default function MessageBox({ status, message, onClose }) {
         >
           ✕
         </button>
-      </motion.div>
+      </m.div>
     </AnimatePresence>
   );
 }

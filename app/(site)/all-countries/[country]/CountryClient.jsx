@@ -4,6 +4,12 @@ import Image from "next/image";
 import { LazyMotion, m, AnimatePresence } from "framer-motion";
 import { memo, useState, useCallback, useMemo } from "react";
 import Link from "next/link";
+
+import axios from "axios";
+
+import MessageBox from "@/components/ui/MessageBox";
+
+import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 import {
   PhoneCall,
   Star,
@@ -127,7 +133,68 @@ const FiveStars = memo(function FiveStars({ size = 14 }) {
    field) eliminates re-renders on every keystroke.
    onClose is stable via useCallback in parent.
 ───────────────────────────────────────────────────────── */
-const LeadModal = memo(function LeadModal({ onClose, countryName }) {
+const LeadModal = memo(function LeadModal({
+  onClose,
+  countryName,
+  setMessage,
+  setMessageStatus,
+}) {
+  const { executeRecaptcha } = useGoogleReCaptcha();
+
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      setLoading(true);
+
+      if (!executeRecaptcha) {
+        setMessageStatus("error");
+        setMessage("Recaptcha not ready");
+        return;
+      }
+
+      const formData = new FormData(e.target);
+
+      const captchaToken = await executeRecaptcha("country_lead_form");
+
+      const payload = {
+        fullName: formData.get("fullName"),
+        email: formData.get("email"),
+        phone: formData.get("phone"),
+        intake: formData.get("intake"),
+        countryName,
+        captchaToken,
+      };
+
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/country/lead`,
+        payload,
+        {
+          withCredentials: true,
+        },
+      );
+
+      if (response.data.success) {
+        setMessageStatus("success");
+
+        setMessage("Lead submitted successfully!");
+
+        e.target.reset();
+
+        onClose();
+      }
+    } catch (error) {
+      console.error(error);
+
+      setMessageStatus("error");
+
+      setMessage(error?.response?.data?.message || "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <AnimatePresence>
       <m.div
@@ -164,13 +231,7 @@ const LeadModal = memo(function LeadModal({ onClose, countryName }) {
             </div>
           </div>
 
-          <form
-            className="space-y-4"
-            onSubmit={(e) => {
-              e.preventDefault();
-              onClose();
-            }}
-          >
+          <form className="space-y-4" onSubmit={handleSubmit}>
             <input
               type="text"
               name="fullName"
@@ -204,16 +265,21 @@ const LeadModal = memo(function LeadModal({ onClose, countryName }) {
               <option value="" disabled>
                 Preferred Intake
               </option>
-              <option>Sep 2025</option>
-              <option>Jan 2026</option>
-              <option>May 2026</option>
-              <option>Sep 2026</option>
+
+              <option value="Sep">September</option>
+
+              <option value="Jan">January</option>
+
+              <option value="May">May</option>
+
+              <option value="Others">Others</option>
             </select>
             <button
               type="submit"
+              disabled={loading}
               className="w-full bg-gradient-to-r from-cyan-400 to-blue-500 text-[#020617] py-4 rounded-xl font-bold text-base hover:scale-[1.02] transition-transform shadow-lg shadow-cyan-500/20"
             >
-              Book My Free Session →
+              {loading ? "Submitting..." : "Book My Free Session →"}
             </button>
           </form>
 
@@ -478,6 +544,9 @@ const UniCard = memo(function UniCard({ uni, index }) {
 ───────────────────────────────────────────────────────── */
 export default function CountryDetail({ country, universities = [] }) {
   const [modalOpen, setModalOpen] = useState(false);
+  const [messageStatus, setMessageStatus] = useState("");
+
+  const [message, setMessage] = useState("");
 
   /* PERF: useCallback → stable refs → memo'd children never
      re-render when parent state changes for other reasons. */
@@ -622,9 +691,25 @@ export default function CountryDetail({ country, universities = [] }) {
 
       {/* PERF: Modal only mounted when open — eliminates DOM nodes
           and all Framer Motion overhead when not needed. */}
-      {modalOpen && <LeadModal onClose={closeModal} countryName={name} />}
+      {modalOpen && (
+        <LeadModal
+          onClose={closeModal}
+          countryName={name}
+          setMessage={setMessage}
+          setMessageStatus={setMessageStatus}
+        />
+      )}
 
       <FloatingCTA onOpen={openModal} />
+
+      <MessageBox
+        status={messageStatus}
+        message={message}
+        onClose={() => {
+          setMessageStatus("");
+          setMessage("");
+        }}
+      />
 
       <main className="bg-[#020617] text-white min-h-screen relative">
         {/* ── HERO ── */}

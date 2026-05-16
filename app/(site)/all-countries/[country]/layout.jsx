@@ -1,3 +1,5 @@
+import Providers from "@/components/providers/Providers";
+
 export default function CountryLayout({ children }) {
-  return children;
+  return <Providers>{children}</Providers>;
 }
