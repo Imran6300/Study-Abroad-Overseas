@@ -73,6 +73,7 @@ function LeadModal({ onClose, setMessage, setMessageStatus }) {
         email: formData.get("email"),
         phone: formData.get("phone"),
         intake: formData.get("intake"),
+        countryName: "University Shortlisting Inquiry",
         captchaToken,
       };
 

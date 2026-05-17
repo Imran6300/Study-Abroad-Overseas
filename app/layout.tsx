@@ -194,7 +194,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           `}
         </Script>
         <GoogleAnalytics />
-
       </body>
     </html>
   );

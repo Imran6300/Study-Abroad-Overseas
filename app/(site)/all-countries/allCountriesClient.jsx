@@ -89,6 +89,7 @@ function LeadModal({ onClose, setMessage, setMessageStatus }) {
         email: formData.get("email"),
         phone: formData.get("phone"),
         intake: formData.get("intake"),
+        countryName: "General Study Abroad Inquiry",
         captchaToken,
       };
 
