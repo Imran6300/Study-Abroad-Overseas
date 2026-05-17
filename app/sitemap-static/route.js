@@ -1,32 +1,25 @@
 export const runtime = "nodejs";
-export const revalidate = 86400; // re-check once a day is plenty for static pages
+export const revalidate = 86400;
 
 export async function GET() {
   const baseUrl = "https://www.khizaroverseas.in";
 
-  // Add every static/marketing page here as you build them
   const staticPages = [
-    {
-      url: "/",
-      lastmod: new Date().toISOString(),
-      priority: "1.0",
-      changefreq: "weekly",
-    },
-    {
-      url: "/partners",
-      lastmod: new Date().toISOString(),
-      priority: "0.9",
-      changefreq: "monthly",
-    },
-    // future pages: /about, /contact, /blog, etc.
+    { url: "/", priority: "1.0", changefreq: "weekly" },
+    { url: "/all-countries", priority: "0.95", changefreq: "daily" },
+    { url: "/programs/universities", priority: "0.95", changefreq: "daily" },
+    { url: "/partners", priority: "0.8", changefreq: "monthly" },
+    { url: "/assessment", priority: "0.9", changefreq: "monthly" },
   ];
+
+  const now = new Date().toISOString();
 
   const urls = staticPages
     .map(
       (page) => `
   <url>
     <loc>${baseUrl}${page.url}</loc>
-    <lastmod>${page.lastmod}</lastmod>
+    <lastmod>${now}</lastmod>
     <changefreq>${page.changefreq}</changefreq>
     <priority>${page.priority}</priority>
   </url>`,

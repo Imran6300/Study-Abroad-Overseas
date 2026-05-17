@@ -6,38 +6,49 @@ export async function GET() {
   try {
     const baseUrl = "https://www.khizaroverseas.in";
 
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/countries?page=1&limit=500`,
-      {
-        next: { revalidate: 3600 },
-        signal: AbortSignal.timeout(15000),
-      },
-    );
+    let allCountries = [];
+    let page = 1;
+    let hasMore = true;
 
-    if (!res.ok) {
-      throw new Error("Failed to fetch countries");
+    // Paginate through all countries
+    while (hasMore) {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/countries?page=${page}&limit=100`,
+        {
+          next: { revalidate: 3600 },
+          signal: AbortSignal.timeout(15000),
+        },
+      );
+
+      if (!res.ok) break;
+
+      const data = await res.json();
+      const countries = data?.data ?? [];
+
+      if (countries.length === 0) {
+        hasMore = false;
+      } else {
+        allCountries.push(...countries);
+        hasMore = data?.pagination?.hasNextPage ?? false;
+        page++;
+      }
     }
 
-    const data = await res.json();
-
-    const countries = data?.data || [];
-
-    // REMOVE DUPLICATES
-    const uniqueCountries = Array.from(
-      new Map(countries.map((country) => [country.slug, country])).values(),
+    // Deduplicate by slug
+    const unique = Array.from(
+      new Map(allCountries.map((c) => [c.slug, c])).values(),
     );
 
-    // XML URLS
-    const urls = uniqueCountries
-      .filter((country) => country?.slug)
+    const urls = unique
+      .filter((c) => c?.slug && c?.name)
       .map(
-        (country) => `
-    <url>
-      <loc>${baseUrl}/all-countries/${country.slug}</loc>
-      <lastmod>${new Date(
-        country.updatedAt || country.createdAt || Date.now(),
-      ).toISOString()}</lastmod>
-    </url>`,
+        (c) => `
+<url>
+  <loc>${baseUrl}/all-countries/${c.slug}</loc>
+  <lastmod>${new Date(c.updatedAt || c.createdAt || Date.now()).toISOString()}</lastmod>
+  <changefreq>weekly</changefreq>
+  <priority>0.9</priority>
+</url>`,
       )
       .join("");
 
@@ -47,16 +58,17 @@ ${urls}
 </urlset>`;
 
     return new Response(body, {
+      status: 200,
       headers: {
-        "Content-Type": "application/xml",
+        "Content-Type": "application/xml; charset=utf-8",
         "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
       },
     });
   } catch (error) {
     console.error("COUNTRIES SITEMAP ERROR:", error);
-
-    return new Response("Failed to generate countries sitemap", {
-      status: 500,
-    });
+    return new Response(
+      `<?xml version="1.0" encoding="UTF-8"?><error><message>Failed to generate sitemap</message></error>`,
+      { status: 500, headers: { "Content-Type": "application/xml" } },
+    );
   }
 }
