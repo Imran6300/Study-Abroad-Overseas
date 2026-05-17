@@ -5,12 +5,22 @@ import { useEffect, useState } from "react";
 import ApplicationsCard from "@/components/userdashboard/ApplicationsCard";
 import { motion } from "framer-motion";
 import { FileText, Clock, CheckCircle } from "lucide-react";
+import ConfirmationModal from "@/components/adminform/confirmmsg";
 
 export default function ApplicationsPage() {
   const router = useRouter();
 
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const [modal, setModal] = useState({
+    open: false,
+    title: "",
+    message: "",
+    confirmText: "Confirm",
+    confirmVariant: "danger",
+    onConfirm: null,
+  });
 
   useEffect(() => {
     const fetchApplications = async () => {
@@ -50,7 +60,64 @@ export default function ApplicationsPage() {
   }, []);
 
   const handleWithdraw = (id) => {
-    console.log("withdraw", id);
+    setModal({
+      open: true,
+      title: "Withdraw Application",
+      message:
+        "Are you sure you want to withdraw this application? This action cannot be undone from your dashboard.",
+      confirmText: "Withdraw",
+      confirmVariant: "danger",
+
+      onConfirm: async () => {
+        try {
+          const res = await fetch(
+            `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/applications/${id}/withdraw`,
+            {
+              method: "DELETE",
+              credentials: "include",
+            },
+          );
+
+          const data = await res.json();
+
+          if (!res.ok) {
+            throw new Error(data.message || "Failed to withdraw application");
+          }
+
+          // remove instantly from UI
+          setApplications((prev) => prev.filter((app) => app._id !== id));
+
+          // success modal
+          setModal({
+            open: true,
+            title: "Application Withdrawn",
+            message: "Your application has been withdrawn successfully.",
+            confirmText: "OK",
+            confirmVariant: "success",
+            onConfirm: () =>
+              setModal((prev) => ({
+                ...prev,
+                open: false,
+              })),
+          });
+        } catch (err) {
+          console.error(err);
+
+          setModal({
+            open: true,
+            title: "Error",
+            message: err.message || "Something went wrong.",
+            confirmText: "OK",
+            confirmVariant: "danger",
+            onConfirm: () =>
+              setModal((prev) => ({
+                ...prev,
+                open: false,
+              })),
+          });
+        }
+      },
+    });
   };
 
   const total = applications.length;
@@ -116,6 +183,29 @@ export default function ApplicationsPage() {
         handleWithdraw={handleWithdraw}
         router={router}
       />
+
+      {modal.open && (
+        <ConfirmationModal
+          title={modal.title}
+          message={modal.message}
+          confirmText={modal.confirmText}
+          confirmVariant={modal.confirmVariant}
+          onConfirm={
+            modal.onConfirm ||
+            (() =>
+              setModal((prev) => ({
+                ...prev,
+                open: false,
+              })))
+          }
+          onCancel={() =>
+            setModal((prev) => ({
+              ...prev,
+              open: false,
+            }))
+          }
+        />
+      )}
     </div>
   );
 }
