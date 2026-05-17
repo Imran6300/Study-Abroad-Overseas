@@ -1661,16 +1661,6 @@ export default function PartnersPage() {
                   <FaArrowRight className="group-hover:translate-x-1.5 transition-transform" />
                 </span>
               </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                className="w-full sm:w-auto flex items-center justify-center gap-3 border border-white/15 hover:border-[#32CD32]/50 hover:bg-[#32CD32]/8 px-6 sm:px-8 py-3.5 sm:py-4 rounded-2xl font-bold text-base sm:text-lg transition-all"
-              >
-                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/10 flex items-center justify-center">
-                  <FaPlay className="text-xs ml-0.5" />
-                </div>
-                Watch Demo
-              </motion.button>
             </div>
           </motion.div>
 
