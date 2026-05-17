@@ -47,6 +47,58 @@ export const markDeadlineCompleteAsync = createAsyncThunk(
   },
 );
 
+export const uploadDeadlineDocumentAsync = createAsyncThunk(
+  "deadline/uploadDocument",
+
+  async ({ id, file }, thunkAPI) => {
+    try {
+      const formData = new FormData();
+
+      formData.append("document", file);
+
+      const response = await axios.patch(
+        `${BACKEND_URL}/user/my-deadline/${id}/upload-doc`,
+        formData,
+        {
+          withCredentials: true,
+
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        },
+      );
+
+      return response.data;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(
+        error.response?.data?.message || "Upload failed",
+      );
+    }
+  },
+);
+
+export const deleteDeadlineDocumentAsync = createAsyncThunk(
+  "deadline/deleteDocument",
+
+  async (id, thunkAPI) => {
+    try {
+      const response = await axios.patch(
+        `${BACKEND_URL}/user/my-deadline/${id}/delete-doc`,
+        {},
+        {
+          withCredentials: true,
+        },
+      );
+
+      return response.data;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(
+        error.response?.data?.message || "Delete failed",
+      );
+    }
+  },
+);
+
 const initialState = {
   deadlines: {
     upcoming: [],
@@ -67,6 +119,24 @@ const deadlineSlice = createSlice({
 
   extraReducers: (builder) => {
     builder
+
+      .addCase(uploadDeadlineDocumentAsync.pending, (state) => {
+        state.loading = true;
+      })
+
+      .addCase(uploadDeadlineDocumentAsync.fulfilled, (state) => {
+        state.loading = false;
+      })
+
+      .addCase(uploadDeadlineDocumentAsync.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      .addCase(markDeadlineCompleteAsync.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
 
       // ================= FETCH =================
 
@@ -94,12 +164,16 @@ const deadlineSlice = createSlice({
 
       // ================= MARK COMPLETE =================
 
-      .addCase(markDeadlineCompleteAsync.fulfilled, (state, action) => {
-        const updatedDeadline = action.payload?.deadline;
+      .addCase(deleteDeadlineDocumentAsync.fulfilled, (state) => {
+        state.loading = false;
+      })
 
-        state.deadlines = state.deadlines.map((item) =>
-          item._id === updatedDeadline._id ? updatedDeadline : item,
-        );
+      .addCase(markDeadlineCompleteAsync.pending, (state) => {
+        state.loading = true;
+      })
+
+      .addCase(markDeadlineCompleteAsync.fulfilled, (state) => {
+        state.loading = false;
       });
   },
 });

@@ -2,6 +2,13 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { useDispatch } from "react-redux";
+
+import {
+  uploadDeadlineDocumentAsync,
+  deleteDeadlineDocumentAsync,
+  fetchMyDeadlines,
+} from "@/store/deadlineSlice";
 import {
   HiOutlineUpload,
   HiOutlineEye,
@@ -9,132 +16,52 @@ import {
   HiOutlineExclamationCircle,
 } from "react-icons/hi";
 
-export default function DocumentsPage() {
-  const initialDocs = [
-    {
-      name: "Passport",
-      required: true,
-      status: "Pending",
-      file: null,
-      maxSize: 5,
-    },
-    {
-      name: "Academic Transcripts",
-      required: true,
-      status: "Pending",
-      file: null,
-      maxSize: 10,
-    },
-    {
-      name: "Degree Certificate",
-      required: true,
-      status: "Pending",
-      file: null,
-      maxSize: 5,
-    },
-    {
-      name: "English Test (IELTS / TOEFL / PTE)",
-      required: true,
-      status: "Pending",
-      file: null,
-      maxSize: 5,
-    },
-    {
-      name: "Statement of Purpose (SOP)",
-      required: true,
-      status: "Pending",
-      file: null,
-      maxSize: 2,
-    },
-    {
-      name: "Letter of Recommendation (LOR)",
-      required: true,
-      status: "Pending",
-      file: null,
-      maxSize: 2,
-    },
+export default function DocumentChecklist({ documents, loading }) {
+  const dispatch = useDispatch();
 
-    {
-      name: "Resume / CV",
-      required: false,
-      status: "Pending",
-      file: null,
-      maxSize: 2,
-    },
-    {
-      name: "Portfolio",
-      required: false,
-      status: "Pending",
-      file: null,
-      maxSize: 10,
-    },
-    {
-      name: "Work Experience Letter",
-      required: false,
-      status: "Pending",
-      file: null,
-      maxSize: 3,
-    },
-    {
-      name: "Research Proposal (PhD)",
-      required: false,
-      status: "Pending",
-      file: null,
-      maxSize: 5,
-    },
-    {
-      name: "Financial Documents / Bank Statement",
-      required: false,
-      status: "Pending",
-      file: null,
-      maxSize: 5,
-    },
-  ];
-
-  const [documents, setDocuments] = useState(initialDocs);
   const [error, setError] = useState("");
 
   const allowedTypes = ["application/pdf", "image/png", "image/jpeg"];
 
-  const handleUpload = (index, file) => {
+  const handleUpload = async (doc, file) => {
     if (!file) return;
 
     setError("");
 
-    const maxSizeMB = documents[index].maxSize;
-    const maxSizeBytes = maxSizeMB * 1024 * 1024;
-
     if (!allowedTypes.includes(file.type)) {
-      setError("Only PDF, JPG, and PNG files are allowed.");
+      setError("Only PDF, JPG and PNG allowed");
       return;
     }
 
-    if (file.size > maxSizeBytes) {
-      setError(`${documents[index].name} must be smaller than ${maxSizeMB}MB`);
-      return;
+    try {
+      await dispatch(
+        uploadDeadlineDocumentAsync({
+          id: doc._id,
+          file,
+        }),
+      ).unwrap();
+
+      dispatch(fetchMyDeadlines());
+      setError("");
+    } catch (err) {
+      setError(err);
     }
-
-    const updated = [...documents];
-    updated[index].file = file;
-    updated[index].status = "Uploaded";
-
-    setDocuments(updated);
   };
 
-  const removeFile = (index) => {
-    const updated = [...documents];
-    updated[index].file = null;
-    updated[index].status = "Pending";
-    setDocuments(updated);
+  const removeFile = async (docId) => {
+    try {
+      await dispatch(deleteDeadlineDocumentAsync(docId)).unwrap();
+
+      dispatch(fetchMyDeadlines());
+      setError("");
+    } catch (err) {
+      setError(err);
+    }
   };
 
-  const previewFile = (file) => {
-    const url = URL.createObjectURL(file);
-    window.open(url, "_blank");
-  };
-
-  const uploadedCount = documents.filter((d) => d.file).length;
-  const progress = (uploadedCount / documents.length) * 100;
+  const uploadedCount = documents.filter((d) => d.uploadedDocument?.url).length;
+  const progress =
+    documents.length > 0 ? (uploadedCount / documents.length) * 100 : 0;
 
   return (
     <div className="p-6 md:p-10 max-w-7xl mx-auto">
@@ -174,18 +101,18 @@ export default function DocumentsPage() {
 
       {/* Document Grid */}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {documents.map((doc, index) => (
+        {documents.map((doc) => (
           <motion.div
-            key={doc.name}
+            key={doc._id}
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             className="bg-white/5 border border-white/10 rounded-2xl p-6"
           >
             {/* Title */}
             <div className="flex justify-between items-center mb-2">
-              <h3 className="text-white font-semibold text-sm">{doc.name}</h3>
+              <h3 className="text-white font-semibold text-sm">{doc.title}</h3>
 
-              {doc.required && (
+              {doc.requiresDocumentUpload && (
                 <span className="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded">
                   Required
                 </span>
@@ -195,46 +122,53 @@ export default function DocumentsPage() {
             {/* Status */}
             <p
               className={`text-sm mb-4 ${
-                doc.status === "Uploaded" ? "text-green-400" : "text-yellow-400"
+                doc.status === "completed"
+                  ? "text-green-400"
+                  : "text-yellow-400"
               }`}
             >
-              {doc.status}
+              {doc.status.replace("_", " ")}
             </p>
 
             {/* Upload */}
-            {!doc.file ? (
+            {!doc.uploadedDocument?.url ? (
               <>
                 <label className="flex items-center justify-center gap-2 border border-dashed border-white/20 rounded-xl p-4 cursor-pointer hover:bg-white/10 transition">
                   <HiOutlineUpload />
-                  Upload File
+                  {loading ? "Uploading..." : "Upload File"}
                   <input
+                    disabled={loading}
                     type="file"
                     className="hidden"
                     accept=".pdf,.jpg,.jpeg,.png"
-                    onChange={(e) => handleUpload(index, e.target.files[0])}
+                    onChange={(e) => handleUpload(doc, e.target.files[0])}
                   />
                 </label>
 
                 <p className="text-xs text-gray-400 mt-2 text-center">
-                  PDF, JPG, PNG • Max {doc.maxSize}MB
+                  PDF, JPG, PNG • Max 10MB
                 </p>
               </>
             ) : (
               <div className="flex items-center justify-between mt-4">
                 <span className="text-sm text-gray-300 truncate max-w-[150px]">
-                  {doc.file.name}
+                  {doc.uploadedDocument?.fileName}
                 </span>
 
                 <div className="flex gap-3">
                   <button
-                    onClick={() => previewFile(doc.file)}
+                    disabled={loading}
+                    onClick={() =>
+                      window.open(doc.uploadedDocument?.url, "_blank")
+                    }
                     className="text-blue-400 hover:text-blue-300"
                   >
                     <HiOutlineEye size={20} />
                   </button>
 
                   <button
-                    onClick={() => removeFile(index)}
+                    disabled={loading}
+                    onClick={() => removeFile(doc._id)}
                     className="text-red-400 hover:text-red-300"
                   >
                     <HiOutlineTrash size={20} />
@@ -244,13 +178,6 @@ export default function DocumentsPage() {
             )}
           </motion.div>
         ))}
-      </div>
-
-      {/* Submit */}
-      <div className="mt-12 text-center">
-        <button className="bg-[#4169E1] hover:bg-[#3555c8] text-white px-8 py-3 rounded-xl font-semibold transition">
-          Submit Documents
-        </button>
       </div>
     </div>
   );

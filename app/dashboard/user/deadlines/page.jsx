@@ -117,19 +117,23 @@ export default function DeadlinesPage() {
         </div>
 
         <div className="flex flex-col items-start lg:items-end gap-3">
-          {item.status !== "completed" && (
-            <div
-              className={`font-bold text-sm ${getDaysLeftColor(getDaysLeft(item.dueDate))}`}
-            >
-              {getDaysLeft(item.dueDate) < 0
-                ? `${Math.abs(getDaysLeft(item.dueDate))} days overdue`
-                : `${getDaysLeft(item.dueDate)} days left`}
-            </div>
-          )}
+          {item.status !== "completed" &&
+            !(item.requiresDocumentUpload && !item.uploadedDocument?.url) && (
+              <div
+                className={`font-bold text-sm ${getDaysLeftColor(getDaysLeft(item.dueDate))}`}
+              >
+                {getDaysLeft(item.dueDate) < 0
+                  ? `${Math.abs(getDaysLeft(item.dueDate))} days overdue`
+                  : `${getDaysLeft(item.dueDate)} days left`}
+              </div>
+            )}
 
           <div className="flex flex-wrap gap-2">
             {item.category === "document" && (
               <button
+                disabled={
+                  item.requiresDocumentUpload && !item.uploadedDocument?.url
+                }
                 onClick={() => router.push("/dashboard/user/documents")}
                 className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition-all"
               >
@@ -137,15 +141,29 @@ export default function DeadlinesPage() {
                 Upload
               </button>
             )}
-            {item.status !== "completed" && (
-              <button
-                onClick={() => dispatch(markDeadlineCompleteAsync(item._id))}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl border border-green-500/30 bg-green-500/10 hover:bg-green-500/20 text-green-300 text-sm font-medium transition-all"
-              >
-                <CheckCircle2 size={16} />
-                Mark Complete
-              </button>
-            )}
+            {item.status !== "completed" &&
+              !(item.requiresDocumentUpload && !item.uploadedDocument?.url) && (
+                <button
+                  disabled={
+                    item.requiresDocumentUpload && !item.uploadedDocument?.url
+                  }
+                  onClick={async () => {
+                    try {
+                      await dispatch(
+                        markDeadlineCompleteAsync(item._id),
+                      ).unwrap();
+
+                      dispatch(fetchMyDeadlines());
+                    } catch (err) {
+                      alert(err);
+                    }
+                  }}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl border border-green-500/30 bg-green-500/10 hover:bg-green-500/20 text-green-300 text-sm font-medium transition-all"
+                >
+                  <CheckCircle2 size={16} />
+                  Mark Complete
+                </button>
+              )}
           </div>
         </div>
       </div>
