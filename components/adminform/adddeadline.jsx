@@ -1,218 +1,409 @@
-// components/adminform/deadline/DeadlineForm.jsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export default function DeadlineForm({
+  studentId,
   mode = "add",
   initialData = null,
   onSuccess,
   onCancel,
 }) {
   const isView = mode === "view";
-  const isEdit = mode === "edit";
-  const isAdd = mode === "add";
+
+  const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
   const [form, setForm] = useState({
-    studentName: "",
-    type: "",
-    deadlineDate: "",
-    university: "",
-    country: "",
-    counselor: "",
-    status: "Pending",
+    title: "",
+    description: "",
+
+    dueDate: "",
+
+    category: "other",
+
+    priority: "medium",
+
+    requiresDocumentUpload: false,
+
+    requiredDocumentType: "",
+
+    customDocumentType: "",
   });
 
   const [errors, setErrors] = useState({});
 
+  // =========================
+  // CATEGORY OPTIONS
+  // =========================
+
+  const categoryOptions = [
+    "document",
+    "application",
+    "payment",
+    "interview",
+    "visa",
+    "scholarship",
+    "sop",
+    "lor",
+    "test",
+    "financial",
+    "university",
+    "other",
+  ];
+
+  // =========================
+  // PRIORITY OPTIONS
+  // =========================
+
+  const priorityOptions = ["low", "medium", "high", "urgent"];
+
+  // =========================
+  // DOCUMENT OPTIONS
+  // =========================
+
+  const documentTypeOptions = [
+    "passport",
+    "resume",
+    "marksheet",
+    "ielts",
+    "toefl",
+    "pte",
+    "sop",
+    "lor",
+    "financial_statement",
+    "visa_document",
+    "other",
+  ];
+
+  // =========================
+  // LOAD EDIT DATA
+  // =========================
+
   useEffect(() => {
     if (initialData) {
-      setForm((prev) => ({
-        ...prev,
-        studentName: initialData.studentName || "",
-        type: initialData.type || "",
-        deadlineDate: initialData.deadlineDate || "",
-        university: initialData.university || "",
-        country: initialData.country || "",
-        counselor: initialData.counselor || "",
-        status: initialData.status || "Pending",
-      }));
-    } else if (isAdd) {
-      setForm((prev) => ({ ...prev, status: "Pending" }));
+      setForm({
+        title: initialData.title || "",
+
+        description: initialData.description || "",
+
+        dueDate: initialData.dueDate ? initialData.dueDate.split("T")[0] : "",
+
+        category: initialData.category || "other",
+
+        priority: initialData.priority || "medium",
+
+        requiresDocumentUpload: initialData.requiresDocumentUpload || false,
+
+        requiredDocumentType: documentTypeOptions.includes(
+          initialData.requiredDocumentType,
+        )
+          ? initialData.requiredDocumentType
+          : "other",
+
+        customDocumentType:
+          initialData.requiredDocumentType &&
+          !documentTypeOptions.includes(initialData.requiredDocumentType)
+            ? initialData.requiredDocumentType
+            : "",
+      });
     }
-  }, [initialData, mode]);
+  }, [initialData]);
+
+  // =========================
+  // HANDLE CHANGE
+  // =========================
 
   const handleChange = (e) => {
     if (isView) return;
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+
+    const { name, value, type, checked } = e.target;
+
+    setForm((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
   };
+
+  // =========================
+  // VALIDATION
+  // =========================
 
   const validateForm = () => {
     const newErrors = {};
-    if (!form.studentName.trim()) newErrors.studentName = "Required";
-    if (!form.type.trim()) newErrors.type = "Required";
-    if (!form.deadlineDate) newErrors.deadlineDate = "Required";
+
+    if (!form.title.trim()) {
+      newErrors.title = "Title is required";
+    }
+
+    if (!form.dueDate) {
+      newErrors.dueDate = "Due date is required";
+    }
+
+    if (form.requiresDocumentUpload && !form.requiredDocumentType) {
+      newErrors.requiredDocumentType = "Document type is required";
+    }
+
+    if (
+      form.requiredDocumentType === "other" &&
+      !form.customDocumentType.trim()
+    ) {
+      newErrors.customDocumentType = "Custom document type is required";
+    }
+
     setErrors(newErrors);
+
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  // =========================
+  // SUBMIT
+  // =========================
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (isView) return;
+
     if (!validateForm()) return;
 
-    onSuccess(form);
+    try {
+      const payload = {
+        student: studentId,
+
+        title: form.title,
+
+        description: form.description,
+
+        dueDate: form.dueDate,
+
+        category: form.category,
+
+        priority: form.priority,
+
+        requiresDocumentUpload: form.requiresDocumentUpload,
+
+        requiredDocumentType: form.requiresDocumentUpload
+          ? form.requiredDocumentType === "other"
+            ? form.customDocumentType
+            : form.requiredDocumentType
+          : null,
+      };
+
+      const url = initialData
+        ? `${BACKEND_URL}/user/admin/deadline/${initialData._id}`
+        : `${BACKEND_URL}/user/admin/deadlines`;
+
+      const method = initialData ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method,
+
+        headers: {
+          "Content-Type": "application/json",
+        },
+
+        credentials: "include",
+
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || "Something went wrong");
+        return;
+      }
+
+      onSuccess(data.deadline);
+    } catch (err) {
+      console.error(err);
+
+      alert("Failed to submit deadline");
+    }
   };
-
-  // Status options with colors
-  const statusOptions = [
-    { value: "Pending", label: "Pending", color: "bg-yellow-100 text-yellow-800" },
-    { value: "In Progress", label: "In Progress", color: "bg-blue-100 text-blue-800" },
-    { value: "Done", label: "Done", color: "bg-green-100 text-green-800" },
-    { value: "Overdue", label: "Overdue", color: "bg-red-100 text-red-800" },
-    { value: "Cancelled", label: "Cancelled", color: "bg-gray-100 text-gray-800" },
-  ];
-
-  const currentStatusStyle = statusOptions.find(s => s.value === form.status)?.color || "bg-gray-100 text-gray-800";
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
-      {/* Prominent Status Updater */}
-      <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* CORE FIELDS */}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* TITLE */}
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Deadline Title *
+          </label>
+
+          <input
+            type="text"
+            name="title"
+            value={form.title}
+            onChange={handleChange}
+            disabled={isView}
+            placeholder="e.g. Upload Passport"
+            className="w-full px-4 py-3 border rounded-xl"
+          />
+
+          {errors.title && (
+            <p className="text-red-500 text-sm mt-1">{errors.title}</p>
+          )}
+        </div>
+
+        {/* DUE DATE */}
+
+        <div>
+          <label className="block text-sm font-medium mb-1">Due Date *</label>
+
+          <input
+            type="date"
+            name="dueDate"
+            value={form.dueDate}
+            onChange={handleChange}
+            disabled={isView}
+            className="w-full px-4 py-3 border rounded-xl"
+          />
+
+          {errors.dueDate && (
+            <p className="text-red-500 text-sm mt-1">{errors.dueDate}</p>
+          )}
+        </div>
+
+        {/* CATEGORY */}
+
+        <div>
+          <label className="block text-sm font-medium mb-1">Category</label>
+
+          <select
+            name="category"
+            value={form.category}
+            onChange={handleChange}
+            disabled={isView}
+            className="w-full px-4 py-3 border rounded-xl"
+          >
+            {categoryOptions.map((item) => (
+              <option key={item} value={item}>
+                {item}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* PRIORITY */}
+
+        <div>
+          <label className="block text-sm font-medium mb-1">Priority</label>
+
+          <select
+            name="priority"
+            value={form.priority}
+            onChange={handleChange}
+            disabled={isView}
+            className="w-full px-4 py-3 border rounded-xl"
+          >
+            {priorityOptions.map((item) => (
+              <option key={item} value={item}>
+                {item}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* DESCRIPTION */}
+
+      <div>
+        <label className="block text-sm font-medium mb-1">Description</label>
+
+        <textarea
+          name="description"
+          value={form.description}
+          onChange={handleChange}
+          disabled={isView}
+          rows={4}
+          placeholder="Add extra instructions..."
+          className="w-full px-4 py-3 border rounded-xl resize-none"
+        />
+      </div>
+
+      {/* DOCUMENT REQUIREMENT */}
+
+      <div className="space-y-5 border rounded-2xl p-5">
+        <label className="flex items-center gap-3">
+          <input
+            type="checkbox"
+            name="requiresDocumentUpload"
+            checked={form.requiresDocumentUpload}
+            onChange={handleChange}
+            disabled={isView}
+          />
+
+          <span className="font-medium">Requires Document Upload</span>
+        </label>
+
+        {/* DOCUMENT TYPE */}
+
+        {form.requiresDocumentUpload && (
           <div>
-            <h3 className="text-lg font-semibold text-gray-800">
-              {isAdd ? "Initial Status" : isEdit ? "Update Status" : "Current Status"}
-            </h3>
-            <p className="text-sm text-gray-600 mt-1">
-              {isView ? "Status of this deadline" : "Change status if needed"}
-            </p>
+            <label className="block text-sm font-medium mb-1">
+              Required Document Type
+            </label>
+
+            <select
+              name="requiredDocumentType"
+              value={form.requiredDocumentType}
+              onChange={handleChange}
+              disabled={isView}
+              className="w-full px-4 py-3 border rounded-xl"
+            >
+              <option value="">Select Document Type</option>
+
+              {documentTypeOptions.map((doc) => (
+                <option key={doc} value={doc}>
+                  {doc.replaceAll("_", " ")}
+                </option>
+              ))}
+            </select>
+
+            {errors.requiredDocumentType && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.requiredDocumentType}
+              </p>
+            )}
           </div>
+        )}
 
-          {isView ? (
-            <span className={`px-6 py-2.5 rounded-full text-base font-medium ${currentStatusStyle}`}>
-              {form.status}
-            </span>
-          ) : (
-            <div className="w-full sm:w-80">
-              <select
-                name="status"
-                value={form.status}
-                onChange={handleChange}
-                className={`w-full px-4 py-3 border rounded-xl text-base font-medium focus:ring-2 focus:ring-sky-500 bg-white transition-all ${currentStatusStyle}`}
-              >
-                {statusOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-        </div>
+        {/* CUSTOM DOCUMENT TYPE */}
+
+        {form.requiredDocumentType === "other" && (
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Custom Document Type
+            </label>
+
+            <input
+              type="text"
+              name="customDocumentType"
+              value={form.customDocumentType}
+              onChange={handleChange}
+              disabled={isView}
+              placeholder="Enter custom document type"
+              className="w-full px-4 py-3 border rounded-xl"
+            />
+
+            {errors.customDocumentType && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.customDocumentType}
+              </p>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* Core Fields */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Student Name *</label>
-          {isView ? (
-            <p className="font-medium">{form.studentName || "—"}</p>
-          ) : (
-            <input
-              name="studentName"
-              value={form.studentName}
-              onChange={handleChange}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-sky-500"
-              required
-            />
-          )}
-        </div>
+      {/* ACTION BUTTONS */}
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Type *</label>
-          {isView ? (
-            <p className="font-medium">{form.type || "—"}</p>
-          ) : (
-            <input
-              name="type"
-              value={form.type}
-              onChange={handleChange}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-sky-500"
-              required
-              placeholder="e.g. University Application, Visa Biometrics"
-            />
-          )}
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Deadline Date *</label>
-          {isView ? (
-            <p className="font-medium">
-              {form.deadlineDate ? new Date(form.deadlineDate).toLocaleDateString("en-IN") : "—"}
-            </p>
-          ) : (
-            <input
-              type="date"
-              name="deadlineDate"
-              value={form.deadlineDate}
-              onChange={handleChange}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg"
-              required
-            />
-          )}
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">University</label>
-          {isView ? (
-            <p className="font-medium">{form.university || "—"}</p>
-          ) : (
-            <input
-              name="university"
-              value={form.university}
-              onChange={handleChange}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-sky-500"
-            />
-          )}
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Country</label>
-          {isView ? (
-            <p className="font-medium">{form.country || "—"}</p>
-          ) : (
-            <input
-              name="country"
-              value={form.country}
-              onChange={handleChange}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-sky-500"
-            />
-          )}
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Counselor</label>
-          {isView ? (
-            <p className="font-medium">{form.counselor || "Unassigned"}</p>
-          ) : (
-            <input
-              name="counselor"
-              value={form.counselor}
-              onChange={handleChange}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-sky-500"
-            />
-          )}
-        </div>
-      </div>
-
-      {/* Buttons */}
-      <div className="flex justify-end gap-4 pt-8 border-t border-gray-200">
+      <div className="flex justify-end gap-4 pt-6 border-t">
         <button
           type="button"
           onClick={onCancel}
-          className="px-8 py-3 border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50 font-medium transition-colors"
+          className="px-6 py-3 border rounded-xl"
         >
           {isView ? "Close" : "Cancel"}
         </button>
@@ -220,9 +411,9 @@ export default function DeadlineForm({
         {!isView && (
           <button
             type="submit"
-            className="px-8 py-3 bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 text-white rounded-xl font-semibold shadow-md hover:shadow-lg transition-all"
+            className="px-6 py-3 bg-sky-600 text-white rounded-xl"
           >
-            {isAdd ? "Add Reminder" : "Update Deadline"}
+            {initialData ? "Update Deadline" : "Create Deadline"}
           </button>
         )}
       </div>

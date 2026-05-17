@@ -27,53 +27,6 @@ import NotesForm from "@/components/adminform/addnotes";
 import UserProfileSection from "@/components/adminform/addProfile";
 import ConfirmationModal from "@/components/adminform/confirmmsg";
 
-const mockVisas = [
-  {
-    id: "visa1",
-    type: "Study Permit",
-    status: "Applied",
-    appliedDate: "2025-12-10",
-    decisionDate: "Pending",
-  },
-  {
-    id: "visa2",
-    type: "Study Permit Extension",
-    status: "Approved",
-    appliedDate: "2025-10-05",
-    decisionDate: "2025-11-20",
-  },
-];
-
-const mockDeadlines = [
-  {
-    id: "dl1",
-    title: "Application Deadline",
-    date: "2026-01-15",
-    description: "UofT CS program",
-  },
-  {
-    id: "dl2",
-    title: "Visa Biometrics",
-    date: "2026-02-05",
-    description: "VFS Global appointment",
-  },
-];
-
-const mockNotes = [
-  {
-    id: "note1",
-    title: "Follow-up call",
-    date: "2025-12-20",
-    content: "Student needs help with SOP and LOR",
-  },
-  {
-    id: "note2",
-    title: "IELTS score received",
-    date: "2025-11-28",
-    content: "Overall 7.5 – good enough for most programs",
-  },
-];
-
 // ────────────────────────────────────────────────
 
 export default function StudentProfilePage() {
@@ -88,9 +41,7 @@ export default function StudentProfilePage() {
 
   const [applications, setApplications] = useState([]);
   const [userProfile, setUserProfile] = useState(null);
-  const [visas, setVisas] = useState(mockVisas);
-  const [deadlines, setDeadlines] = useState(mockDeadlines);
-  const [notes, setNotes] = useState(mockNotes);
+  const [deadlines, setDeadlines] = useState([]);
   const [documents] = useState([]);
 
   const [scholarships, setScholarships] = useState([]);
@@ -119,47 +70,75 @@ export default function StudentProfilePage() {
   const handleDelete = (type, itemId) => {
     setModal({
       open: true,
-      title: "Delete Application",
-      message: "Are you sure you want to delete this application?",
+      title: `Delete ${type}`,
+      message: `Are you sure you want to delete this ${type}?`,
       confirmText: "Delete",
       confirmVariant: "danger",
+
       onConfirm: async () => {
         try {
-          const res = await fetch(
-            `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/applications/${itemId}`,
-            {
-              method: "DELETE",
-              credentials: "include",
-            },
-          );
+          let url = "";
+
+          // ================= APPLICATIONS =================
+
+          if (type === "applications") {
+            url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/applications/${itemId}`;
+          }
+
+          // ================= DEADLINES =================
+          else if (type === "deadlines") {
+            url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/user/admin/deadline/${itemId}`;
+          }
+
+          // ================= VISA =================
+          else if (type === "visa") {
+            url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/visa/${itemId}`;
+          }
+
+          // ================= NOTES =================
+          else if (type === "notes") {
+            url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/notes/${itemId}`;
+          }
+
+          const res = await fetch(url, {
+            method: "DELETE",
+            credentials: "include",
+          });
 
           const data = await res.json();
 
           if (!res.ok) {
-            setModal({
-              open: true,
-              title: "Error",
-              message: data.message || "Failed to delete application",
-              confirmText: "OK",
-              confirmVariant: "danger",
-            });
-            return;
+            throw new Error(data.message || "Delete failed");
           }
 
-          setApplications((prev) => prev.filter((item) => item._id !== itemId));
+          // ================= UPDATE FRONTEND STATE =================
+
+          if (type === "applications") {
+            setApplications((prev) =>
+              prev.filter((item) => item._id !== itemId),
+            );
+          } else if (type === "deadlines") {
+            setDeadlines((prev) => prev.filter((item) => item._id !== itemId));
+          } else if (type === "visa") {
+            setVisas((prev) => prev.filter((item) => item._id !== itemId));
+          } else if (type === "notes") {
+            setNotes((prev) => prev.filter((item) => item._id !== itemId));
+          }
+
+          // ================= SUCCESS MODAL =================
 
           setModal({
             open: true,
             title: "Deleted",
-            message: "Application deleted successfully",
+            message: `${type} deleted successfully`,
             confirmText: "OK",
             confirmVariant: "success",
           });
-        } catch (error) {
+        } catch (err) {
           setModal({
             open: true,
-            title: "Server Error",
-            message: "Something went wrong",
+            title: "Error",
+            message: err.message || "Something went wrong",
             confirmText: "OK",
             confirmVariant: "danger",
           });
@@ -246,6 +225,30 @@ export default function StudentProfilePage() {
     };
 
     if (id) fetchApplications();
+  }, [id]);
+  useEffect(() => {
+    const fetchDeadlines = async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/user/admin/deadlines/${id}`,
+          {
+            credentials: "include",
+          },
+        );
+
+        const data = await res.json();
+
+        if (data.success) {
+          setDeadlines(data.deadlines);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    if (id) {
+      fetchDeadlines();
+    }
   }, [id]);
 
   const startEdit = (type, item = null) => {
@@ -731,7 +734,7 @@ export default function StudentProfilePage() {
                     <div className="space-y-4">
                       {deadlines.map((dl) => (
                         <div
-                          key={dl.id}
+                          key={dl._id}
                           className="bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-xl p-5 transition"
                         >
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -743,7 +746,7 @@ export default function StudentProfilePage() {
                                 {dl.description}
                               </p>
                               <p className="mt-2 text-sm text-red-600 font-medium">
-                                Due: {dl.date}
+                                Due: {new Date(dl.dueDate).toLocaleDateString()}
                               </p>
                             </div>
                             <div className="flex gap-2">
@@ -754,7 +757,9 @@ export default function StudentProfilePage() {
                                 <Edit2 size={16} />
                               </button>
                               <button
-                                onClick={() => handleDelete("deadlines", dl.id)}
+                                onClick={() =>
+                                  handleDelete("deadlines", dl._id)
+                                }
                                 className="p-2.5 text-red-600 hover:bg-red-50 rounded-lg transition"
                               >
                                 <Trash2 size={16} />
@@ -772,6 +777,7 @@ export default function StudentProfilePage() {
                         {editing.item ? "Edit Deadline" : "Add New Deadline"}
                       </h3>
                       <DeadlineForm
+                        studentId={id}
                         initialData={editing.item}
                         onSuccess={(data) =>
                           handleFormSuccess("deadlines", data)
