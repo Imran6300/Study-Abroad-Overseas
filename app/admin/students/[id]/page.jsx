@@ -518,18 +518,6 @@ export default function StudentProfilePage() {
                                   {new Date(app.updatedAt).toLocaleDateString()}
                                 </span>
                               </div>
-
-                              {app.payment?.status === "paid" && (
-                                <span className="text-green-600 font-medium ml-2">
-                                  Paid
-                                </span>
-                              )}
-
-                              {app.payment?.status === "pending" && (
-                                <span className="text-orange-500 font-medium ml-2">
-                                  Payment Pending
-                                </span>
-                              )}
                             </div>
                             <div className="flex gap-2">
                               <button

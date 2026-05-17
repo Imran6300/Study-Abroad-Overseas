@@ -27,14 +27,14 @@ export default function ApplicationsPage() {
 
         if (data.success) {
           const formatted = data.applications.map((app) => ({
-            id: app._id,
-            slug: app.universitySlug,
-            university: app.universityName,
-            course: app.field,
+            _id: app._id,
+            slug: app.slug,
+            university: app.university,
+            course: app.course,
             country: app.country,
-            logo: app.logo?.url,
-            status: app.stage,
-            date: new Date(app.createdAt).toLocaleDateString(),
+            logo: app.logo,
+            status: app.status,
+            date: app.date,
           }));
 
           setApplications(formatted);

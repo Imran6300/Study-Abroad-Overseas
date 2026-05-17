@@ -9,7 +9,7 @@ import DashboardHeader from "@/components/userdashboard/DashboardHeader";
 import ProfileCompletionCard from "@/components/userdashboard/ProfileCompletionCard";
 import QuickStats from "@/components/userdashboard/QuickStats";
 import DeadlinesCard from "@/components/userdashboard/DeadlinesCard";
-import ApplicationsCard from "@/components/userdashboard/ApplicationsCard";
+import OverviewApplicationsCard from "@/components/userdashboard/OverviewApplicationsCard";
 import RecommendedUniversities from "@/components/userdashboard/RecommendedUniversities";
 import StudentProCard from "@/components/upgrade/StudentProCard";
 
@@ -182,11 +182,9 @@ space-y-6 lg:space-y-8"
           <DeadlinesCard upcomingDeadlines={upcomingDeadlines} />
 
           {/* Recent Applications */}
-          <ApplicationsCard
+          <OverviewApplicationsCard
             applications={applications.slice(0, 3)}
-            handleWithdraw={handleWithdraw}
             router={router}
-            getStatusColor={getStatusColor}
           />
         </div>
 

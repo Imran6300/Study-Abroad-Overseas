@@ -131,9 +131,6 @@ export default function DeadlinesPage() {
           <div className="flex flex-wrap gap-2">
             {item.category === "document" && (
               <button
-                disabled={
-                  item.requiresDocumentUpload && !item.uploadedDocument?.url
-                }
                 onClick={() => router.push("/dashboard/user/documents")}
                 className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition-all"
               >
