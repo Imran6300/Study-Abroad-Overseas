@@ -10,12 +10,9 @@ export const fetchMyDeadlines = createAsyncThunk(
 
   async (_, thunkAPI) => {
     try {
-      const response = await axios.get(
-        `${BACKEND_URL}/user/user-deadlines/my-deadlines`,
-        {
-          withCredentials: true,
-        },
-      );
+      const response = await axios.get(`${BACKEND_URL}/user/my-deadlines`, {
+        withCredentials: true,
+      });
 
       return response.data;
     } catch (error) {
@@ -34,7 +31,7 @@ export const markDeadlineCompleteAsync = createAsyncThunk(
   async (id, thunkAPI) => {
     try {
       const response = await axios.patch(
-        `${BACKEND_URL}/user/user-deadlines/my-deadline/${id}/mark-complete`,
+        `${BACKEND_URL}/user/my-deadline/${id}/mark-complete`,
         {},
         {
           withCredentials: true,
@@ -81,7 +78,12 @@ const deadlineSlice = createSlice({
       .addCase(fetchMyDeadlines.fulfilled, (state, action) => {
         state.loading = false;
 
-        state.deadlines = action.payload?.deadlines || [];
+        state.deadlines = action.payload?.deadlines || {
+          upcoming: [],
+          overdue: [],
+          completed: [],
+          counts: {},
+        };
       })
 
       .addCase(fetchMyDeadlines.rejected, (state, action) => {
