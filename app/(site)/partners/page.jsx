@@ -358,9 +358,9 @@ function FormField({ label, children, hint }) {
 }
 
 const inputCls =
-  "w-full bg-[#111827] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-gray-400 outline-none focus:border-[#4169E1] focus:ring-2 focus:ring-[#4169E1]/30 transition-all";
+  "input-dark w-full bg-[#111827] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-gray-400 outline-none focus:border-[#4169E1] focus:ring-2 focus:ring-[#4169E1]/30 transition-all";
 const selectCls =
-  "w-full bg-[#111827] border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-[#4169E1] focus:ring-2 focus:ring-[#4169E1]/30 transition-all";
+  "select-mobile-dark w-full bg-[#111827] border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-[#4169E1] focus:ring-2 focus:ring-[#4169E1]/30 transition-all";
 
 function OptionPill({ label, selected, color = BLUE, onClick }) {
   return (

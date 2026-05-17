@@ -146,7 +146,7 @@ export default function FinalCTASection() {
                   placeholder="Full Name"
                   value={form.name}
                   onChange={handleChange}
-                  className="w-full pl-12 pr-4 py-4 bg-white/5 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:border-[#4169E1] focus:ring-2 focus:ring-[#4169E1]/30 outline-none transition text-base"
+                  className="input-dark w-full pl-12 pr-4 py-4 bg-white/5 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:border-[#4169E1] focus:ring-2 focus:ring-[#4169E1]/30 outline-none transition text-base"
                 />
               </div>
 
@@ -160,7 +160,7 @@ export default function FinalCTASection() {
                   placeholder="Email Address"
                   value={form.email}
                   onChange={handleChange}
-                  className="w-full pl-12 pr-4 py-4 bg-white/5 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:border-[#4169E1] focus:ring-2 focus:ring-[#4169E1]/30 outline-none transition text-base"
+                  className="input-dark w-full pl-12 pr-4 py-4 bg-white/5 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:border-[#4169E1] focus:ring-2 focus:ring-[#4169E1]/30 outline-none transition text-base"
                 />
               </div>
 
@@ -175,7 +175,7 @@ export default function FinalCTASection() {
                   placeholder="Phone Number"
                   value={form.phone}
                   onChange={handleChange}
-                  className="w-full pl-12 pr-4 py-4 bg-white/5 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:border-[#32CD32] focus:ring-2 focus:ring-[#32CD32]/30 outline-none transition text-base"
+                  className="input-dark w-full pl-12 pr-4 py-4 bg-white/5 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:border-[#32CD32] focus:ring-2 focus:ring-[#32CD32]/30 outline-none transition text-base"
                 />
               </div>
 
@@ -188,7 +188,7 @@ export default function FinalCTASection() {
                   placeholder="Preferred Country (USA, UK, Canada...)"
                   value={form.country}
                   onChange={handleChange}
-                  className="w-full pl-12 pr-4 py-4 bg-white/5 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:border-[#32CD32] focus:ring-2 focus:ring-[#32CD32]/30 outline-none transition text-base"
+                  className="input-dark w-full pl-12 pr-4 py-4 bg-white/5 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:border-[#32CD32] focus:ring-2 focus:ring-[#32CD32]/30 outline-none transition text-base"
                 />
               </div>
 

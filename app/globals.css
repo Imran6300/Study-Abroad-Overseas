@@ -4,27 +4,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ===========================
-   Disable Chrome Autofill BG
-   =========================== */
 
-input:-webkit-autofill,
-input:-webkit-autofill:hover,
-input:-webkit-autofill:focus,
-textarea:-webkit-autofill,
-textarea:-webkit-autofill:hover,
-textarea:-webkit-autofill:focus,
-select:-webkit-autofill,
-select:-webkit-autofill:hover,
-select:-webkit-autofill:focus {
-  -webkit-box-shadow: 0 0 0 1000px rgba(255, 255, 255, 0.05) inset !important;
-
-  -webkit-text-fill-color: #ffffff !important;
-
-  caret-color: #ffffff !important;
-
-  transition: background-color 9999s ease-in-out 0s;
-}
 
 /* ===========================
    Global base styles
@@ -37,6 +17,47 @@ html {
 html,
 body {
   overflow-x: hidden;
+}
+
+/* =====================================================
+   LIGHT INPUT AUTOFILL FIX
+   ===================================================== */
+
+.input:-webkit-autofill,
+.input:-webkit-autofill:hover,
+.input:-webkit-autofill:focus,
+textarea.input:-webkit-autofill,
+select.input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+
+  -webkit-text-fill-color: #111827 !important;
+
+  caret-color: #111827 !important;
+
+  border: 1px solid #d1d5db !important;
+
+  transition: background-color 9999s ease-in-out 0s;
+}
+
+
+/* =====================================================
+   DARK INPUT AUTOFILL FIX
+   ===================================================== */
+
+.input-dark:-webkit-autofill,
+.input-dark:-webkit-autofill:hover,
+.input-dark:-webkit-autofill:focus,
+textarea.input-dark:-webkit-autofill,
+select.input-dark:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 1000px #0B0F1A inset !important;
+
+  -webkit-text-fill-color: #ffffff !important;
+
+  caret-color: #ffffff !important;
+
+  border: 1px solid #374151 !important;
+
+  transition: background-color 9999s ease-in-out 0s;
 }
 
 * {
