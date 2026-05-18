@@ -38,6 +38,22 @@ function buildUniDescription(uni) {
   return parts.join(" ");
 }
 
+export async function generateStaticParams() {
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/universities`,
+    );
+
+    const data = await res.json();
+
+    return (data.universities || []).map((uni) => ({
+      slug: uni.slug,
+    }));
+  } catch {
+    return [];
+  }
+}
+
 export async function generateMetadata({ params }) {
   try {
     const { slug } = await params;

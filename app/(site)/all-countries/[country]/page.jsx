@@ -72,6 +72,22 @@ function buildCountryTitle(country) {
   return `Study in ${name} 2026 | Top Universities, Fees & Visa Guide for Indians`;
 }
 
+export async function generateStaticParams() {
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/countries`,
+    );
+
+    const data = await res.json();
+
+    return (data.data || []).map((country) => ({
+      country: country.slug,
+    }));
+  } catch {
+    return [];
+  }
+}
+
 export async function generateMetadata({ params }) {
   const { country: slug } = await params;
   const country = await getCountry(slug);
