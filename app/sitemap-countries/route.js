@@ -10,7 +10,6 @@ export async function GET() {
     let page = 1;
     let hasMore = true;
 
-    // Paginate through all countries
     while (hasMore) {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/countries?page=${page}&limit=100`,
@@ -41,19 +40,34 @@ export async function GET() {
 
     const urls = unique
       .filter((c) => c?.slug && c?.name)
-      .map(
-        (c) => `
+      .map((c) => {
+        const lastmod = new Date(
+          c.updatedAt || c.createdAt || Date.now(),
+        ).toISOString();
+
+        // Image sitemap entry improves indexing & can trigger image previews
+        const imageTag = c.heroImage?.url
+          ? `
+  <image:image>
+    <image:loc>${escapeXml(c.heroImage.url)}</image:loc>
+    <image:title>Study in ${escapeXml(c.name)} 2026 for Indian Students</image:title>
+  </image:image>`
+          : "";
+
+        return `
 <url>
   <loc>${baseUrl}/all-countries/${c.slug}</loc>
-  <lastmod>${new Date(c.updatedAt || c.createdAt || Date.now()).toISOString()}</lastmod>
+  <lastmod>${lastmod}</lastmod>
   <changefreq>weekly</changefreq>
-  <priority>0.9</priority>
-</url>`,
-      )
+  <priority>0.9</priority>${imageTag}
+</url>`;
+      })
       .join("");
 
     const body = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset
+  xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+  xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
 ${urls}
 </urlset>`;
 
@@ -67,8 +81,18 @@ ${urls}
   } catch (error) {
     console.error("COUNTRIES SITEMAP ERROR:", error);
     return new Response(
-      `<?xml version="1.0" encoding="UTF-8"?><error><message>Failed to generate sitemap</message></error>`,
-      { status: 500, headers: { "Content-Type": "application/xml" } },
+      `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>`,
+      { status: 200, headers: { "Content-Type": "application/xml" } },
     );
   }
+}
+
+function escapeXml(str) {
+  if (!str) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
 }

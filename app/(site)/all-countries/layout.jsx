@@ -1,31 +1,43 @@
 export const metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_FRONTEND_URL),
 
-  title: "Best Countries to Study Abroad in 2026 | Top Study Destinations",
+  title: "Study Abroad Countries 2026 | Visa Success Rates for Indian Students",
   description:
-    "Explore the best countries to study abroad including USA, Canada, UK, Australia and more.",
+    "Compare visa success rates, tuition fees & scholarships for 100+ study abroad destinations. Expert guidance from Hyderabad. Free counseling — get your profile assessed today.",
   keywords: [
-    "study abroad countries",
-    "best countries to study abroad",
-    "study abroad destinations",
-    "study in USA",
-    "study in Canada",
-    "study in UK",
-    "study abroad opportunities",
+    "study abroad countries 2026",
+    "best countries to study abroad for indian students",
+    "study abroad visa success rate",
+    "study in usa for indian students",
+    "study in canada for indian students",
+    "study in uk for indian students",
+    "study abroad from hyderabad",
+    "study abroad consultants india",
+    "student visa success rate by country",
   ],
 
   openGraph: {
-    title: "Best Countries to Study Abroad",
+    title:
+      "Study Abroad Countries 2026 | Visa Success Rates for Indian Students",
     description:
-      "Discover top countries for international students including visa success rate, universities and scholarships.",
+      "Compare 100+ countries: visa success rates, fees, scholarships & top universities. Free profile evaluation from Khizar Overseas, Hyderabad.",
     type: "website",
     url: `${process.env.NEXT_PUBLIC_FRONTEND_URL}/all-countries`,
+    siteName: "Khizar Overseas",
+  },
+
+  twitter: {
+    card: "summary_large_image",
+    title: "Study Abroad Countries 2026 | Visa Success Rates",
+    description:
+      "Compare visa success rates, fees & scholarships for 100+ countries. Free counseling from Khizar Overseas.",
   },
 
   alternates: {
     canonical: "/all-countries",
   },
 };
+
 export default function AllCountriesLayout({ children }) {
   return children;
 }

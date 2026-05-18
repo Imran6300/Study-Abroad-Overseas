@@ -1,19 +1,7 @@
-/**
- * app/sitemap.xml/route.js  (or app/sitemap/route.js depending on your structure)
- *
- * FIX: The old version declared 10 university sitemaps unconditionally.
- * Google fetches all 10, finds most empty, and may penalise the domain.
- *
- * New approach: ask the API how many universities exist, calculate the
- * real number of sitemaps needed, and only declare those.
- * Falls back to a safe default (3) if the API is unreachable.
- */
-
 export const runtime = "nodejs";
 export const revalidate = 3600;
 
 const BASE_URL = "https://www.khizaroverseas.in";
-// Must match the limit used in sitemap-universities/[page]/route.js
 const UNIS_PER_SITEMAP = 1000;
 
 async function getTotalUniversityCount() {
@@ -24,7 +12,6 @@ async function getTotalUniversityCount() {
     );
     if (!res.ok) return null;
     const data = await res.json();
-    // Your API should return total in pagination; adjust the field name if needed
     return data?.pagination?.total ?? data?.total ?? null;
   } catch {
     return null;
@@ -34,16 +21,18 @@ async function getTotalUniversityCount() {
 export async function GET() {
   try {
     const total = await getTotalUniversityCount();
-    // If API fails, assume 3 sitemaps (safe floor for ~3000 universities)
     const totalSitemaps = total
       ? Math.max(1, Math.ceil(total / UNIS_PER_SITEMAP))
-      : 3;
+      : 10; // safe default for ~9,379 discovered URLs
+
+    const now = new Date().toISOString();
 
     const universitySitemaps = Array.from(
       { length: totalSitemaps },
       (_, i) => `
   <sitemap>
     <loc>${BASE_URL}/sitemap-universities/${i + 1}</loc>
+    <lastmod>${now}</lastmod>
   </sitemap>`,
     ).join("");
 
@@ -53,10 +42,12 @@ ${universitySitemaps}
 
   <sitemap>
     <loc>${BASE_URL}/sitemap-countries</loc>
+    <lastmod>${now}</lastmod>
   </sitemap>
 
   <sitemap>
     <loc>${BASE_URL}/sitemap-static</loc>
+    <lastmod>${now}</lastmod>
   </sitemap>
 
 </sitemapindex>`;

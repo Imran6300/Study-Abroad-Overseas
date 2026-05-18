@@ -3,16 +3,24 @@ export const revalidate = 86400;
 
 export async function GET() {
   const baseUrl = "https://www.khizaroverseas.in";
+  const now = new Date().toISOString();
 
   const staticPages = [
-    { url: "/", priority: "1.0", changefreq: "weekly" },
+    { url: "/", priority: "1.0", changefreq: "daily" },
     { url: "/all-countries", priority: "0.95", changefreq: "daily" },
     { url: "/programs/universities", priority: "0.95", changefreq: "daily" },
-    { url: "/partners", priority: "0.8", changefreq: "monthly" },
     { url: "/assessment", priority: "0.9", changefreq: "monthly" },
+    { url: "/partners", priority: "0.8", changefreq: "monthly" },
+    { url: "/contact", priority: "0.85", changefreq: "monthly" },
+    { url: "/services", priority: "0.85", changefreq: "monthly" },
+    { url: "/services/sop-lor", priority: "0.8", changefreq: "monthly" },
+    {
+      url: "/services/profile-evaluation",
+      priority: "0.8",
+      changefreq: "monthly",
+    },
+    { url: "/programs", priority: "0.85", changefreq: "weekly" },
   ];
-
-  const now = new Date().toISOString();
 
   const urls = staticPages
     .map(
