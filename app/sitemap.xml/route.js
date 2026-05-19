@@ -2,36 +2,52 @@ export const runtime = "nodejs";
 export const revalidate = 3600;
 
 const BASE_URL = "https://www.khizaroverseas.in";
-const MAX_SITEMAPS_TO_CHECK = 15; // check up to 15, list only ones with data
+const BACKEND_URL =
+  process.env.BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || "";
 
-async function getValidSitemapPages() {
-  const checks = Array.from({ length: MAX_SITEMAPS_TO_CHECK }, (_, i) =>
-    fetch(`${BASE_URL}/sitemap-universities/${i + 1}`, {
-      signal: AbortSignal.timeout(10000),
+// Must match PAGES_PER_SITEMAP in sitemap-universities/[page]/route.js
+const PAGES_PER_SITEMAP = 10;
+
+async function getTotalSitemapCount() {
+  try {
+    if (!BACKEND_URL) return 6; // safe fallback
+
+    const res = await fetch(`${BACKEND_URL}/api/universities?page=1&limit=20`, {
       next: { revalidate: 3600 },
-    })
-      .then((res) => ({ page: i + 1, ok: res.ok && res.status === 200 }))
-      .catch(() => ({ page: i + 1, ok: false })),
-  );
+      signal: AbortSignal.timeout(8000),
+    });
 
-  const results = await Promise.all(checks);
-  return results.filter((r) => r.ok).map((r) => r.page);
+    if (!res.ok) return 6;
+
+    const data = await res.json();
+
+    // Your API returns totalPages: 450 directly
+    const totalApiPages = data?.totalPages;
+
+    if (!totalApiPages) return 6;
+
+    // 450 API pages / 10 pages per sitemap = 45 sitemaps
+    return Math.ceil(totalApiPages / PAGES_PER_SITEMAP);
+  } catch (err) {
+    console.error("Failed to get sitemap count:", err.message);
+    return 6; // safe fallback: covers 60 API pages = ~1200 unis
+  }
 }
 
 export async function GET() {
   try {
-    const validPages = await getValidSitemapPages();
+    const totalSitemaps = await getTotalSitemapCount();
     const now = new Date().toISOString();
 
-    // If discovery fails entirely, fallback to page 1 only
-    const pagesToList = validPages.length > 0 ? validPages : [1];
+    console.log(
+      `[sitemap.xml] generating ${totalSitemaps} university sitemaps`,
+    );
 
-    const universitySitemaps = pagesToList
-      .map(
-        (page) =>
-          `  <sitemap>\n    <loc>${BASE_URL}/sitemap-universities/${page}</loc>\n    <lastmod>${now}</lastmod>\n  </sitemap>`,
-      )
-      .join("\n");
+    const universitySitemaps = Array.from(
+      { length: totalSitemaps },
+      (_, i) =>
+        `  <sitemap>\n    <loc>${BASE_URL}/sitemap-universities/${i + 1}</loc>\n    <lastmod>${now}</lastmod>\n  </sitemap>`,
+    ).join("\n");
 
     const body = `<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${universitySitemaps}\n  <sitemap>\n    <loc>${BASE_URL}/sitemap-countries</loc>\n    <lastmod>${now}</lastmod>\n  </sitemap>\n  <sitemap>\n    <loc>${BASE_URL}/sitemap-static</loc>\n    <lastmod>${now}</lastmod>\n  </sitemap>\n</sitemapindex>`;
 
