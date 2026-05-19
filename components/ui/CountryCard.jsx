@@ -6,15 +6,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight } from "lucide-react";
 
-const fadeUp = {
-  hidden: { opacity: 0, y: 24 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.45, ease: "easeOut" },
-  },
-};
-
 const CountryCard = memo(function CountryCard({
   title,
   slug,
@@ -28,61 +19,109 @@ const CountryCard = memo(function CountryCard({
   priority = false,
   variant = "default",
 }) {
-  const backgroundStyles =
+  const base =
     variant === "light"
-      ? "bg-white/5 backdrop-blur-sm border border-white/10"
-      : "bg-gradient-to-b from-[#0B0F19] to-[#0a0f1f] border border-white/10";
+      ? "bg-white/5 border-white/10"
+      : "bg-[#0B0F1A] border-white/[0.08]";
 
   return (
     <Link href={`${hrefPrefix}/${slug}`} className="group block">
       <motion.div
-        initial={{ opacity: 0, y: 24 }}
+        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.45, ease: "easeOut" }}
-        whileHover={{ y: -12, scale: 1.03 }}
-        className={`${backgroundStyles} rounded-3xl overflow-hidden shadow-lg hover:shadow-cyan-500/20 transition-shadow flex flex-col`}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+        whileHover={{ y: -8 }}
+        className={`
+          relative flex flex-col h-[340px] rounded-[20px] overflow-hidden border
+          ${base}
+          transition-shadow duration-300
+          hover:shadow-[0_20px_48px_rgba(34,211,238,0.12)]
+        `}
       >
-        <div className="relative h-52 overflow-hidden">
+        {/* Top accent line — appears on hover */}
+        <div
+          className="
+          absolute top-0 left-0 right-0 h-[2px] z-10
+          bg-gradient-to-r from-transparent via-cyan-400 to-transparent
+          opacity-0 group-hover:opacity-100 transition-opacity duration-300
+        "
+        />
+
+        {/* Hero image — fixed height, never grows */}
+        <div className="relative w-full h-40 flex-shrink-0 overflow-hidden">
           <Image
             src={image || "/country-placeholder.jpg"}
             alt={title}
             fill
-            className="object-cover transition-transform duration-700 group-hover:scale-110"
+            className="object-cover transition-transform duration-500 group-hover:scale-[1.07]"
             priority={priority}
             loading={priority ? undefined : "lazy"}
           />
 
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+          {/* Fade to card bg at bottom so text reads cleanly */}
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0B0F1A]/80" />
 
+          {/* Flag — bottom-left of image, inset with a soft ring */}
           {flag && (
-            <div className="absolute top-4 left-4">
+            <div className="absolute bottom-2.5 left-3 z-50 bg-white rounded overflow-hidden">
               <img
                 src={flag}
                 alt={`${title} flag`}
-                className="w-10 h-6 object-cover rounded shadow-md"
+                className="w-8 h-[22px] object-cover"
               />
             </div>
           )}
         </div>
 
-        <div className="p-6 flex flex-col flex-1">
-          <h3 className="text-2xl font-bold">{title}</h3>
+        {/* Card body — flex-1 so it always fills the remaining space */}
+        <div className="flex flex-col flex-1 px-4 pt-3.5 pb-4 gap-1.5">
+          {/* Country name */}
+          <h3 className="text-[17px] font-bold text-white leading-tight truncate m-0">
+            {title}
+          </h3>
 
+          {/* Capital */}
           {capital && (
-            <p className="mt-2 text-gray-400 text-base">Capital: {capital}</p>
+            <p className="text-[12px] text-white/40 m-0">Capital: {capital}</p>
           )}
 
+          {/* Divider */}
+          <div className="h-px bg-white/[0.06] my-1" />
+
+          {/* Visa badge pill */}
           {typeof visaSuccessRate === "number" && (
-            <p className="mt-1 text-sm text-cyan-400 font-medium">
-              Visa Success Rate: {visaSuccessRate}%
-              {visaSuccessRateEstimated ? " est." : ""}
-            </p>
+            <div
+              className="
+              inline-flex items-center gap-1.5 w-fit
+              bg-cyan-400/[0.08] border border-cyan-400/20
+              rounded-full px-2.5 py-[3px]
+            "
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 flex-shrink-0" />
+              <span className="text-[11px] font-semibold text-cyan-400 tracking-wide">
+                {visaSuccessRate}% Visa Success Rate
+                {visaSuccessRateEstimated ? " est." : ""}
+              </span>
+            </div>
           )}
 
-          <div className="mt-auto pt-6">
-            <span className="inline-flex items-center gap-2 text-[#38BDF8] font-semibold group-hover:text-cyan-300 transition">
-              {buttonText} <ArrowRight size={18} />
+          {/* Footer — pushed to bottom with mt-auto */}
+          <div className="mt-auto flex items-center justify-between">
+            <span className="text-[13px] font-semibold text-sky-400 group-hover:text-cyan-300 transition-colors">
+              {buttonText}
             </span>
+
+            {/* Circular arrow button */}
+            <div
+              className="
+              w-[26px] h-[26px] rounded-full flex items-center justify-center flex-shrink-0
+              border border-sky-400/30
+              group-hover:bg-sky-400/10 group-hover:border-sky-400/60
+              transition-all duration-200
+            "
+            >
+              <ArrowRight size={12} className="text-sky-400" />
+            </div>
           </div>
         </div>
       </motion.div>
