@@ -14,18 +14,7 @@ export default function DashboardHeader({ user }) {
   const notificationRef = useRef(null);
   const profileRef = useRef(null);
 
-  const notifications = [
-    {
-      id: 1,
-      message: "Application to Toronto under review",
-      time: "2h ago",
-    },
-    {
-      id: 2,
-      message: "Scholarship opportunity available",
-      time: "1 day ago",
-    },
-  ];
+  const notifications = [];
 
   const unreadCount = notifications.length;
 

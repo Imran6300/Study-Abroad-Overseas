@@ -16,26 +16,34 @@ export default function DeadlinesCard({ upcomingDeadlines }) {
       <h2 className="text-xl sm:text-2xl font-bold text-white mb-5 flex items-center gap-3">
         <span className="text-red-400 text-2xl">⏰</span> Urgent Deadlines
       </h2>
-      <div className="space-y-4">
-        {upcomingDeadlines.map((item) => (
-          <div
-            key={item.id}
-            className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 transition-all"
-          >
-            <div>
-              <h4 className="font-semibold text-white text-base sm:text-lg">
-                {item.title}
-              </h4>
-              <p className="text-xs sm:text-sm text-gray-400">{item.date}</p>
-            </div>
-            <span
-              className={`font-bold text-base sm:text-lg ${getDaysLeftColor(item.daysLeft)}`}
+      {!upcomingDeadlines.length ? (
+        <div className="text-center py-8 text-gray-400">
+          No urgent deadlines 🎉
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {upcomingDeadlines.map((item) => (
+            <div
+              key={item._id}
+              className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 transition-all"
             >
-              {item.daysLeft} days left
-            </span>
-          </div>
-        ))}
-      </div>
+              <div>
+                <h4 className="font-semibold text-white text-base sm:text-lg">
+                  {item.title}
+                </h4>
+                <p className="text-xs sm:text-sm text-gray-400">
+                  {new Date(item.dueDate).toLocaleDateString()}
+                </p>
+              </div>
+              <span
+                className={`font-bold text-base sm:text-lg ${getDaysLeftColor(item.daysLeft)}`}
+              >
+                {item.daysLeft} days left
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
     </motion.div>
   );
 }

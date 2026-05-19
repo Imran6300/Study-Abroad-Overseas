@@ -99,9 +99,9 @@ export default function OverviewApplicationsCard({ applications, router }) {
               <div className="flex items-start gap-3">
                 {/* LOGO */}
                 <div className="w-12 h-12 rounded-xl overflow-hidden bg-white/10 flex items-center justify-center shrink-0">
-                  {app.logo?.url ? (
+                  {app.logo ? (
                     <img
-                      src={app.logo.url}
+                      src={app.logo}
                       alt={app.university}
                       className="w-full h-full object-contain"
                     />
@@ -125,7 +125,9 @@ export default function OverviewApplicationsCard({ applications, router }) {
                   <div className="flex flex-wrap items-center gap-3 mt-3 text-[11px] text-gray-500">
                     <div className="flex items-center gap-1">
                       <Globe size={12} />
-                      <span>{app.country}</span>
+                      <span>
+                        {app.city ? `${app.city}, ${app.country}` : app.country}
+                      </span>
                     </div>
 
                     <div className="flex items-center gap-1">

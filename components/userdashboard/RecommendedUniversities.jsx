@@ -18,17 +18,24 @@ export default function RecommendedUniversities({ universities }) {
         <div className="flex gap-5 sm:grid sm:grid-cols-3 sm:gap-6 min-w-max sm:min-w-0">
           {universities.map((uni) => (
             <motion.div
-              key={uni.name}
+              key={uni.id}
               whileHover={{ y: -8 }}
               className="bg-gradient-to-br from-indigo-950/50 to-[#0A192F] p-5 rounded-2xl border border-indigo-500/20 snap-start min-w-[280px] sm:min-w-0 flex-1 sm:flex-none text-center"
             >
+              {uni.logo?.url && (
+                <img
+                  src={uni.logo.url}
+                  alt={uni.name}
+                  className="w-14 h-14 object-contain mx-auto mb-4"
+                />
+              )}
               <h4 className="text-lg sm:text-xl font-bold text-white mb-2">
                 {uni.name}
               </h4>
-              <p className="text-sm text-gray-400 mb-3">{uni.program}</p>
-              <div className="text-[#32CD32] font-bold text-lg">
-                {uni.match} Match
-              </div>
+              <p className="text-sm text-gray-400 mb-3">
+                Recommended University
+              </p>
+              <div className="text-[#32CD32] font-bold text-lg">Explore →</div>
             </motion.div>
           ))}
         </div>

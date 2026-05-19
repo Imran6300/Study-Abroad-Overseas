@@ -4,6 +4,7 @@ export default function QuickStats({
   applications,
   shortlistedCount,
   upcomingDeadlines,
+  visaStatus,
 }) {
   return (
     <motion.div
@@ -13,14 +14,18 @@ export default function QuickStats({
       className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 mb-10 sm:mb-12"
     >
       {[
-        { title: "Applications", value: applications.length, emoji: "🎓" },
+        { title: "Applications", value: applications || 0, emoji: "🎓" },
         { title: "Shortlisted", value: shortlistedCount, emoji: "⭐" },
         {
           title: "Deadlines",
           value: upcomingDeadlines.length,
           emoji: "⏰",
         },
-        { title: "Visa", value: "In Progress", emoji: "🛂" },
+        {
+          title: "Visa",
+          value: visaStatus || "Not Started",
+          emoji: "🛂",
+        },
       ].map((stat, i) => (
         <motion.div
           key={stat.title}

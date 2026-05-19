@@ -40,9 +40,8 @@ export default function DashboardPage() {
 
   const [showNotifications, setShowNotifications] = useState(false);
 
-  const [profileCompletion, setProfileCompletion] = useState(0);
-  const [applications, setApplications] = useState([]);
-  const [progress, setProgress] = useState(0);
+  const [dashboard, setDashboard] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -60,52 +59,33 @@ export default function DashboardPage() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Mock data (replace with real API later)
-  const shortlistedCount = lead?.shortlisted?.length || 3;
-  const upcomingDeadlines = [
-    {
-      id: 1,
-      title: "University of Toronto - Fall Intake",
-      date: "Mar 15, 2026",
-      daysLeft: 11,
-    },
-    {
-      id: 2,
-      title: "Visa Document Submission",
-      date: "Mar 10, 2026",
-      daysLeft: 6,
-    },
-    { id: 3, title: "SOP Review Deadline", date: "Mar 8, 2026", daysLeft: 4 },
-  ];
-  const recommendedUnis = [
-    {
-      name: "University of Melbourne",
-      match: "92%",
-      program: "MS Computer Science",
-    },
-    { name: "University of Toronto", match: "88%", program: "MBA" },
-    { name: "Imperial College London", match: "85%", program: "Data Science" },
-  ];
-
   useEffect(() => {
     if (!user) return;
 
-    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/profile/me`, {
-      credentials: "include",
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success)
-          setProfileCompletion(data.data.profileCompletion || 0);
-      })
-      .catch(console.error);
+    const fetchDashboard = async () => {
+      try {
+        setLoading(true);
 
-    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/applications`, {
-      credentials: "include",
-    })
-      .then((res) => res.json())
-      .then((data) => setApplications(data.applications || []))
-      .catch(console.error);
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/user/overview`,
+          {
+            credentials: "include",
+          },
+        );
+
+        const data = await res.json();
+
+        if (data.success) {
+          setDashboard(data);
+        }
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboard();
   }, [user]);
 
   useEffect(() => {
@@ -115,8 +95,6 @@ export default function DashboardPage() {
   useEffect(() => {
     if (authChecked && !user) router.replace("/login");
   }, [authChecked, user, router]);
-
-  useEffect(() => setProgress(profileCompletion), [profileCompletion]);
 
   const handleWithdraw = async (id) => {
     if (!confirm("Withdraw this application?")) return;
@@ -145,6 +123,22 @@ export default function DashboardPage() {
     );
   if (!user) return null;
 
+  if (loading || !dashboard) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#0A192F] text-white">
+        Loading dashboard...
+      </div>
+    );
+  }
+
+  const profile = dashboard.profile;
+  const applications = dashboard.applications;
+  const deadlines = dashboard.deadlines;
+  const visa = dashboard.visa;
+  const savedUniversities = dashboard.savedUniversities;
+  const quickStats = dashboard.quickStats;
+  const recentActivity = dashboard.recentActivity;
+
   return (
     <div className="min-h-screen space-y-6 lg:space-y-[-15px] bg-[#0A192F] relative overflow-x-hidden ">
       {/* Background blobs */}
@@ -165,31 +159,35 @@ space-y-6 lg:space-y-8"
         <DashboardHeader user={user} />
 
         {/* Profile Completion */}
-        <ProfileCompletionCard progress={progress} router={router} />
+        <ProfileCompletionCard
+          progress={profile.profileCompletion}
+          router={router}
+        />
 
         <StudentProCard variant="dark" compact />
 
         {/* Quick Stats */}
         <QuickStats
-          applications={applications}
-          shortlistedCount={shortlistedCount}
-          upcomingDeadlines={upcomingDeadlines}
+          applications={applications.total}
+          shortlistedCount={savedUniversities.total}
+          upcomingDeadlines={deadlines.urgent}
+          visaStatus={visa.overallStatus}
         />
 
         {/* Main Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
           {/* Deadlines */}
-          <DeadlinesCard upcomingDeadlines={upcomingDeadlines} />
+          <DeadlinesCard upcomingDeadlines={deadlines.urgent} />
 
           {/* Recent Applications */}
           <OverviewApplicationsCard
-            applications={applications.slice(0, 3)}
+            applications={applications.recent}
             router={router}
           />
         </div>
 
         {/* Recommended Universities */}
-        <RecommendedUniversities universities={recommendedUnis} />
+        <RecommendedUniversities universities={savedUniversities.recent} />
       </div>
     </div>
   );
