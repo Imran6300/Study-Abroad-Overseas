@@ -50,7 +50,7 @@ export default function SavedUniversitiesPage() {
       );
 
       if (res.ok) {
-        setUniversities((prev) => prev.filter((u) => u.id !== id));
+        setUniversities((prev) => prev.filter((u) => u._id !== id));
       }
     } catch (err) {
       console.error(err);
