@@ -109,47 +109,78 @@ export default function SavedUniversitiesPage() {
         <AnimatePresence>
           {universities.map((uni) => (
             <motion.div
-              key={uni.id}
+              key={uni._id}
               layout
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
               whileHover={{ scale: 1.02 }}
               transition={{ duration: 0.2 }}
-              className="bg-white/6 backdrop-blur-xl border border-white/10 rounded-2xl p-6 space-y-4"
+              className="
+        bg-white/6
+        backdrop-blur-xl
+        border border-white/10
+        rounded-2xl
+        p-6
+        space-y-4
+      "
             >
               {/* LOGO + TITLE */}
               <div className="flex items-center gap-4">
                 <img
-                  src={uni.logo?.url}
-                  alt={uni.name}
-                  className="w-12 h-12 rounded-lg object-contain bg-white"
+                  src={uni.logo}
+                  alt={uni.university}
+                  className="
+            w-12 h-12
+            rounded-lg
+            object-contain
+            bg-white
+            p-1
+          "
                 />
 
                 <div>
-                  <h3 className="text-white font-semibold">{uni.name}</h3>
+                  <h3 className="text-white font-semibold">{uni.university}</h3>
 
                   <p className="text-xs text-gray-400">
-                    QS Ranking: {uni.ranking}
+                    QS Ranking: {uni.qsRanking || "N/A"}
+                  </p>
+
+                  <p className="text-xs text-gray-500">
+                    {uni.city}
+                    {uni.country ? `, ${uni.country}` : ""}
                   </p>
                 </div>
               </div>
 
               {/* INFO */}
               <div className="text-sm text-gray-300 space-y-2">
-                <p>💰 Tuition: {uni.tuition}</p>
+                <p>💰 Tuition: {uni.tuitionFee || "Not Available"}</p>
 
                 <div>
                   🎓 Degrees:
                   <div className="flex flex-wrap gap-2 mt-1">
-                    {uni.degree?.map((d) => (
-                      <span
-                        key={d}
-                        className="bg-white/10 px-2 py-1 rounded text-xs"
-                      >
-                        {d}
+                    {uni.programs?.length ? (
+                      uni.programs.slice(0, 3).map((program, index) => (
+                        <span
+                          key={index}
+                          className="
+                      bg-white/10
+                      px-2 py-1
+                      rounded
+                      text-xs
+                    "
+                        >
+                          {typeof program === "string"
+                            ? program
+                            : program?.name || "Program"}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-gray-500 text-xs">
+                        No programs available
                       </span>
-                    ))}
+                    )}
                   </div>
                 </div>
               </div>
@@ -160,18 +191,37 @@ export default function SavedUniversitiesPage() {
                   onClick={() =>
                     router.push(`/programs/universities/${uni.slug}`)
                   }
-                  className="flex-1 bg-[#4169E1] hover:bg-[#365ad3] text-white text-sm py-2 rounded-lg flex items-center justify-center gap-2"
+                  className="
+            flex-1
+            bg-[#4169E1]
+            hover:bg-[#365ad3]
+            text-white
+            text-sm
+            py-2
+            rounded-lg
+            flex items-center justify-center gap-2
+          "
                 >
                   <ExternalLink size={16} />
                   View
                 </button>
 
                 <button
-                  disabled={removingId === uni.id}
-                  onClick={() => handleRemove(uni.id)}
-                  className="flex-1 bg-red-500/20 hover:bg-red-500/30 text-red-400 text-sm py-2 rounded-lg flex items-center justify-center gap-2 disabled:opacity-50"
+                  disabled={removingId === uni._id}
+                  onClick={() => handleRemove(uni._id)}
+                  className="
+            flex-1
+            bg-red-500/20
+            hover:bg-red-500/30
+            text-red-400
+            text-sm
+            py-2
+            rounded-lg
+            flex items-center justify-center gap-2
+            disabled:opacity-50
+          "
                 >
-                  {removingId === uni.id ? (
+                  {removingId === uni._id ? (
                     <>
                       <Loader2 size={16} className="animate-spin" />
                       Removing...
