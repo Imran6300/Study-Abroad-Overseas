@@ -2,37 +2,36 @@ export const runtime = "nodejs";
 export const revalidate = 3600;
 
 const BASE_URL = "https://www.khizaroverseas.in";
+const MAX_SITEMAPS_TO_CHECK = 15; // check up to 15, list only ones with data
 
-async function getValidSitemapCount() {
-  try {
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/universities?page=1&limit=1`,
-      {
-        next: { revalidate: 3600 },
-        signal: AbortSignal.timeout(8000),
-      },
-    );
-    if (!res.ok) return 2;
-    const data = await res.json();
-    const total = data?.pagination?.total ?? data?.total ?? 0;
-    if (!total) return 2;
-    // 50 API pages per sitemap, ~20 unis per API page = ~1000 unis per sitemap
-    return Math.max(1, Math.ceil(total / 1000));
-  } catch {
-    return 2;
-  }
+async function getValidSitemapPages() {
+  const checks = Array.from({ length: MAX_SITEMAPS_TO_CHECK }, (_, i) =>
+    fetch(`${BASE_URL}/sitemap-universities/${i + 1}`, {
+      signal: AbortSignal.timeout(10000),
+      next: { revalidate: 3600 },
+    })
+      .then((res) => ({ page: i + 1, ok: res.ok && res.status === 200 }))
+      .catch(() => ({ page: i + 1, ok: false })),
+  );
+
+  const results = await Promise.all(checks);
+  return results.filter((r) => r.ok).map((r) => r.page);
 }
 
 export async function GET() {
   try {
-    const totalSitemaps = await getValidSitemapCount();
+    const validPages = await getValidSitemapPages();
     const now = new Date().toISOString();
 
-    const universitySitemaps = Array.from(
-      { length: totalSitemaps },
-      (_, i) =>
-        `  <sitemap>\n    <loc>${BASE_URL}/sitemap-universities/${i + 1}</loc>\n    <lastmod>${now}</lastmod>\n  </sitemap>`,
-    ).join("\n");
+    // If discovery fails entirely, fallback to page 1 only
+    const pagesToList = validPages.length > 0 ? validPages : [1];
+
+    const universitySitemaps = pagesToList
+      .map(
+        (page) =>
+          `  <sitemap>\n    <loc>${BASE_URL}/sitemap-universities/${page}</loc>\n    <lastmod>${now}</lastmod>\n  </sitemap>`,
+      )
+      .join("\n");
 
     const body = `<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${universitySitemaps}\n  <sitemap>\n    <loc>${BASE_URL}/sitemap-countries</loc>\n    <lastmod>${now}</lastmod>\n  </sitemap>\n  <sitemap>\n    <loc>${BASE_URL}/sitemap-static</loc>\n    <lastmod>${now}</lastmod>\n  </sitemap>\n</sitemapindex>`;
 
