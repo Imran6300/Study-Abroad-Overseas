@@ -9,7 +9,10 @@ export default function GoogleAnalytics() {
     const searchParams = useSearchParams();
 
     useEffect(() => {
-        const url = pathname + searchParams.toString();
+        if (typeof window === "undefined") return;
+
+        const query = searchParams.toString();
+        const url = query ? `${pathname}?${query}` : pathname;
 
         gtag.pageview(url);
     }, [pathname, searchParams]);
