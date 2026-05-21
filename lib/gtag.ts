@@ -1,11 +1,5 @@
 export const GA_MEASUREMENT_ID = "G-1W7JC83PF0";
 
-declare global {
-  interface Window {
-    gtag: (...args: any[]) => void;
-  }
-}
-
 /* PAGE VIEW */
 export const pageview = (url: string) => {
   window.gtag("config", GA_MEASUREMENT_ID, {
