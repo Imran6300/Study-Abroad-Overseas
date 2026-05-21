@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 // ─── HELPER: build a punchy title ──────────────────────────────────────────
 // The pattern "University Name in Country | Fees, Courses & Admission 2026"
 // matches exactly how users search: "korean bible university", "aichi bunkyo university"
+
 function buildUniTitle(uni) {
   const name = uni.name;
   const country = uni.country?.name;

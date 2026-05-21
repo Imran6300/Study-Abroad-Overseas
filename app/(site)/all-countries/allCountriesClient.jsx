@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { LazyMotion, m, AnimatePresence } from "framer-motion";
+import { LazyMotion, m } from "framer-motion";
 import {
   Search,
   ArrowRight,
@@ -11,6 +11,7 @@ import {
   CheckCircle2,
   PhoneCall,
 } from "lucide-react";
+import * as gtag from "@/lib/gtag";
 import CountryCard from "@/components/ui/CountryCard";
 import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 import axios from "axios";
@@ -100,6 +101,11 @@ function LeadModal({ onClose, setMessage, setMessageStatus }) {
       );
 
       if (response.data.success) {
+        gtag.event({
+          action: "lead_submit",
+          category: "conversion",
+          label: "countries_lead_form",
+        });
         setMessageStatus("success");
         setMessage("We'll call you within 24 hours!");
         e.target.reset();
@@ -118,100 +124,98 @@ function LeadModal({ onClose, setMessage, setMessageStatus }) {
   };
 
   return (
-    <AnimatePresence>
+    <m.div
+      variants={modalBackdrop}
+      initial="hidden"
+      animate="visible"
+      exit="exit"
+      className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+      onClick={onClose}
+    >
       <m.div
-        variants={modalBackdrop}
+        variants={modalPanel}
         initial="hidden"
         animate="visible"
         exit="exit"
-        className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
-        onClick={onClose}
+        className="relative w-full max-w-md bg-[#0B0F19] border border-cyan-500/30 rounded-3xl p-8 shadow-2xl shadow-cyan-500/10"
+        onClick={(e) => e.stopPropagation()}
       >
-        <m.div
-          variants={modalPanel}
-          initial="hidden"
-          animate="visible"
-          exit="exit"
-          className="relative w-full max-w-md bg-[#0B0F19] border border-cyan-500/30 rounded-3xl p-8 shadow-2xl shadow-cyan-500/10"
-          onClick={(e) => e.stopPropagation()}
+        <button
+          onClick={onClose}
+          aria-label="Close modal"
+          className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
         >
-          <button
-            onClick={onClose}
-            aria-label="Close modal"
-            className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
-          >
-            <X size={20} />
-          </button>
+          <X size={20} />
+        </button>
 
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center">
-              <GraduationCap className="text-cyan-400" size={24} />
-            </div>
-            <div>
-              <h3 className="text-xl font-bold text-white">Free Counseling</h3>
-              <p className="text-sm text-gray-400">Study Abroad — 100% Free</p>
-            </div>
+        <div className="flex items-center gap-3 mb-2">
+          <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center">
+            <GraduationCap className="text-cyan-400" size={24} />
           </div>
+          <div>
+            <h3 className="text-xl font-bold text-white">Free Counseling</h3>
+            <p className="text-sm text-gray-400">Study Abroad — 100% Free</p>
+          </div>
+        </div>
 
-          <p className="text-sm text-gray-400 mb-5 leading-relaxed">
-            Not sure which country fits you? Our Hyderabad counselors will
-            evaluate your profile and shortlist the best options — for free.
-          </p>
+        <p className="text-sm text-gray-400 mb-5 leading-relaxed">
+          Not sure which country fits you? Our Hyderabad counselors will
+          evaluate your profile and shortlist the best options — for free.
+        </p>
 
-          <form className="space-y-4" onSubmit={handleSubmit}>
-            <input
-              type="text"
-              name="fullName"
-              placeholder="Your Full Name"
-              required
-              autoComplete="name"
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition-colors text-sm"
-            />
-            <input
-              type="tel"
-              name="phone"
-              placeholder="WhatsApp Number"
-              required
-              autoComplete="tel"
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition-colors text-sm"
-            />
-            <input
-              type="email"
-              name="email"
-              placeholder="Email Address"
-              required
-              autoComplete="email"
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition-colors text-sm"
-            />
-            <select
-              name="intake"
-              required
-              defaultValue=""
-              className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-4 py-3 text-gray-300 focus:outline-none focus:border-cyan-400 transition-colors text-sm"
-            >
-              <option value="" disabled>
-                Preferred Intake
-              </option>
-              <option value="Sep">September</option>
-              <option value="Jan">January</option>
-              <option value="May">May</option>
-              <option value="Others">Others</option>
-            </select>
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-gradient-to-r from-cyan-400 to-blue-500 text-[#020617] py-4 rounded-xl font-bold text-base hover:scale-[1.02] transition-transform shadow-lg shadow-cyan-500/20 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
-            >
-              {loading ? "Submitting..." : "Book My Free Session →"}
-            </button>
-          </form>
+        <form className="space-y-4" onSubmit={handleSubmit}>
+          <input
+            type="text"
+            name="fullName"
+            placeholder="Your Full Name"
+            required
+            autoComplete="name"
+            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition-colors text-sm"
+          />
+          <input
+            type="tel"
+            name="phone"
+            placeholder="WhatsApp Number"
+            required
+            autoComplete="tel"
+            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition-colors text-sm"
+          />
+          <input
+            type="email"
+            name="email"
+            placeholder="Email Address"
+            required
+            autoComplete="email"
+            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition-colors text-sm"
+          />
+          <select
+            name="intake"
+            required
+            defaultValue=""
+            className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-4 py-3 text-gray-300 focus:outline-none focus:border-cyan-400 transition-colors text-sm"
+          >
+            <option value="" disabled>
+              Preferred Intake
+            </option>
+            <option value="Sep">September</option>
+            <option value="Jan">January</option>
+            <option value="May">May</option>
+            <option value="Others">Others</option>
+          </select>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-gradient-to-r from-cyan-400 to-blue-500 text-[#020617] py-4 rounded-xl font-bold text-base hover:scale-[1.02] transition-transform shadow-lg shadow-cyan-500/20 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
+          >
+            {loading ? "Submitting..." : "Book My Free Session →"}
+          </button>
+        </form>
 
-          <p className="text-center text-xs text-gray-500 mt-4">
-            🔒 100% Free & Confidential · No spam, ever
-          </p>
-        </m.div>
+        <p className="text-center text-xs text-gray-500 mt-4">
+          🔒 100% Free & Confidential · No spam, ever
+        </p>
       </m.div>
-    </AnimatePresence>
+    </m.div>
   );
 }
 
@@ -228,6 +232,13 @@ function FloatingCTA({ onOpen }) {
         </button>
         <a
           href={WA_NUMBER}
+          onClick={() => {
+            gtag.event({
+              action: "whatsapp_click",
+              category: "contact",
+              label: "countries_whatsapp",
+            });
+          }}
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center justify-center w-12 h-12 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 hover:bg-green-500/20 transition-colors"
@@ -287,6 +298,13 @@ function InlineCTABanner({ onOpen }) {
           </button>
           <a
             href={WA_NUMBER}
+            onClick={() => {
+              gtag.event({
+                action: "whatsapp_click",
+                category: "contact",
+                label: "countries_whatsapp",
+              });
+            }}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center justify-center gap-2 border border-green-500/30 text-green-400 px-7 py-3 rounded-xl font-semibold text-sm hover:bg-green-500/10 transition-colors"
@@ -314,6 +332,25 @@ export default function CountriesClient({
   const [modalOpen, setModalOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [messageStatus, setMessageStatus] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!searchTerm.trim()) return;
+
+      setDebouncedSearch(searchTerm);
+    }, 800);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+  useEffect(() => {
+    if (!debouncedSearch) return;
+
+    gtag.event({
+      action: "search_used",
+      category: "search",
+      label: debouncedSearch,
+    });
+  }, [debouncedSearch]);
 
   // Ref so the exit-intent handler closure always sees the latest value
   // without needing to be re-attached every render
@@ -421,7 +458,8 @@ export default function CountriesClient({
 
   return (
     <LazyMotion features={loadFeatures}>
-      {/* Modal only mounted when open */}
+      <FloatingCTA onOpen={openModal} />
+
       {modalOpen && (
         <LeadModal
           onClose={closeModal}
@@ -429,8 +467,6 @@ export default function CountriesClient({
           setMessageStatus={setMessageStatus}
         />
       )}
-
-      <FloatingCTA onOpen={openModal} />
 
       {/* Toast */}
       {message && (
@@ -473,13 +509,28 @@ export default function CountriesClient({
               className="mt-10 flex flex-col sm:flex-row gap-4 justify-center"
             >
               <button
-                onClick={openModal}
+                onClick={() => {
+                  gtag.event({
+                    action: "cta_click",
+                    category: "engagement",
+                    label: "countries_free_counseling",
+                  });
+
+                  openModal();
+                }}
                 className="inline-flex items-center gap-3 bg-gradient-to-r from-[#38BDF8] to-cyan-500 text-[#020617] px-8 py-4 rounded-full font-bold text-lg shadow-lg hover:shadow-cyan-500/30 transform hover:scale-105 transition-all"
               >
                 Get Free Counseling <ArrowRight size={20} />
               </button>
               <a
                 href={WA_NUMBER}
+                onClick={() => {
+                  gtag.event({
+                    action: "whatsapp_click",
+                    category: "contact",
+                    label: "countries_whatsapp",
+                  });
+                }}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-3 border border-green-500/40 text-green-400 px-8 py-4 rounded-full font-bold text-lg hover:bg-green-500/10 transition-all"
@@ -543,7 +594,15 @@ export default function CountriesClient({
                   ))}
                 </select>
                 <button
-                  onClick={openModal}
+                  onClick={() => {
+                    gtag.event({
+                      action: "cta_click",
+                      category: "engagement",
+                      label: "countries_free_counseling",
+                    });
+
+                    openModal();
+                  }}
                   className="hidden md:flex items-center gap-2 bg-gradient-to-r from-cyan-400 to-blue-500 text-[#020617] px-6 py-4 rounded-2xl font-bold text-sm whitespace-nowrap hover:scale-[1.02] transition-transform"
                 >
                   Free Counseling <ArrowRight size={16} />
@@ -623,7 +682,15 @@ export default function CountriesClient({
               </p>
               <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
                 <button
-                  onClick={openModal}
+                  onClick={() => {
+                    gtag.event({
+                      action: "cta_click",
+                      category: "engagement",
+                      label: "countries_free_counseling",
+                    });
+
+                    openModal();
+                  }}
                   className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-400 to-blue-500 text-[#020617] px-8 py-4 rounded-2xl font-bold text-base shadow-xl shadow-cyan-500/25 hover:scale-[1.03] transition-transform"
                 >
                   Book Free Counseling <ArrowRight size={18} />

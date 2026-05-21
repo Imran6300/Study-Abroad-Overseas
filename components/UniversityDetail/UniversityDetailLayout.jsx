@@ -12,6 +12,9 @@ import Image from "next/image";
 
 import { Navigation, Pagination, Autoplay } from "swiper/modules";
 
+import { useEffect } from "react";
+import * as gtag from "@/lib/gtag";
+
 const getOptimizedUrl = (url, width) => {
   if (!url) return "";
   return url.replace("/upload/", `/upload/f_auto,q_auto,w_${width}/`);
@@ -43,6 +46,14 @@ export default function UniversityDetailLayout({ uni, similarUniversities }) {
 
   const similar = similarUniversities;
 
+  useEffect(() => {
+    gtag.event({
+      action: "university_view",
+      category: "university",
+      label: uni.name,
+    });
+  }, [uni.name]);
+
   /* ================= NORMALIZED VALUES ================= */
   const location = `${uni.city || ""}`.trim();
   const rank = uni.qsRanking ?? "—";
@@ -65,8 +76,13 @@ export default function UniversityDetailLayout({ uni, similarUniversities }) {
 
   const router = useRouter();
 
-  const handleApply = async () => {
+  const handleApply = async (university) => {
     try {
+      gtag.event({
+        action: "apply_now_click",
+        category: "conversion",
+        label: university,
+      });
       setLoading(true);
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/applications/check-access`,
@@ -262,7 +278,7 @@ export default function UniversityDetailLayout({ uni, similarUniversities }) {
                 Get expert guidance on admissions, visas & scholarships.
               </p>
               <button
-                onClick={handleApply}
+                onClick={() => handleApply(uni.name)}
                 disabled={loading}
                 className="mt-6 w-full bg-[#32CD32] hover:bg-[#28b428] 
                   disabled:opacity-60 disabled:cursor-not-allowed

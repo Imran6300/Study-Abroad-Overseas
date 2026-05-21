@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import * as gtag from "@/lib/gtag";
 import UniversityCard from "@/components/ui/UniversityCard";
 import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 import axios from "axios";
@@ -84,6 +85,11 @@ function LeadModal({ onClose, setMessage, setMessageStatus }) {
       );
 
       if (response.data.success) {
+        gtag.event({
+          action: "lead_submit",
+          category: "conversion",
+          label: "universities_lead_form",
+        });
         setMessageStatus("success");
         setMessage("We'll call you within 24 hours!");
         e.target.reset();
@@ -102,104 +108,102 @@ function LeadModal({ onClose, setMessage, setMessageStatus }) {
   };
 
   return (
-    <AnimatePresence>
+    <m.div
+      variants={modalBackdrop}
+      initial="hidden"
+      animate="visible"
+      exit="exit"
+      className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+      onClick={onClose}
+    >
       <m.div
-        variants={modalBackdrop}
+        variants={modalPanel}
         initial="hidden"
         animate="visible"
         exit="exit"
-        className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
-        onClick={onClose}
+        className="relative w-full max-w-md bg-gray-900 border border-blue-500/30 rounded-3xl p-8 shadow-2xl shadow-blue-500/10"
+        onClick={(e) => e.stopPropagation()}
       >
-        <m.div
-          variants={modalPanel}
-          initial="hidden"
-          animate="visible"
-          exit="exit"
-          className="relative w-full max-w-md bg-gray-900 border border-blue-500/30 rounded-3xl p-8 shadow-2xl shadow-blue-500/10"
-          onClick={(e) => e.stopPropagation()}
+        <button
+          onClick={onClose}
+          aria-label="Close"
+          className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
         >
-          <button
-            onClick={onClose}
-            aria-label="Close"
-            className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
-          >
-            <X size={20} />
-          </button>
+          <X size={20} />
+        </button>
 
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
-              <GraduationCap className="text-blue-400" size={24} />
-            </div>
-            <div>
-              <h3 className="text-xl font-bold text-white">
-                Free University Guidance
-              </h3>
-              <p className="text-sm text-gray-400">
-                We'll shortlist the best for you
-              </p>
-            </div>
+        <div className="flex items-center gap-3 mb-2">
+          <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
+            <GraduationCap className="text-blue-400" size={24} />
           </div>
+          <div>
+            <h3 className="text-xl font-bold text-white">
+              Free University Guidance
+            </h3>
+            <p className="text-sm text-gray-400">
+              We'll shortlist the best for you
+            </p>
+          </div>
+        </div>
 
-          <p className="text-sm text-gray-400 mb-5 leading-relaxed">
-            Not sure which university fits your profile and budget? Our
-            counselors will match you with the top options — completely free.
-          </p>
+        <p className="text-sm text-gray-400 mb-5 leading-relaxed">
+          Not sure which university fits your profile and budget? Our counselors
+          will match you with the top options — completely free.
+        </p>
 
-          <form className="space-y-4" onSubmit={handleSubmit}>
-            <input
-              type="text"
-              name="fullName"
-              placeholder="Your Full Name"
-              required
-              autoComplete="name"
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-400 transition-colors text-sm"
-            />
-            <input
-              type="tel"
-              name="phone"
-              placeholder="WhatsApp Number"
-              required
-              autoComplete="tel"
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-400 transition-colors text-sm"
-            />
-            <input
-              type="email"
-              name="email"
-              placeholder="Email Address"
-              required
-              autoComplete="email"
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-400 transition-colors text-sm"
-            />
-            <select
-              name="intake"
-              required
-              defaultValue=""
-              className="w-full bg-gray-900 border border-white/10 rounded-xl px-4 py-3 text-gray-300 focus:outline-none focus:border-blue-400 transition-colors text-sm"
-            >
-              <option value="" disabled>
-                Preferred Intake
-              </option>
-              <option value="Sep">September</option>
-              <option value="Jan">January</option>
-              <option value="May">May</option>
-              <option value="Others">Others</option>
-            </select>
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white py-4 rounded-xl font-bold text-base hover:scale-[1.02] transition-transform shadow-lg shadow-blue-500/20 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
-            >
-              {loading ? "Submitting..." : "Get Free Shortlist →"}
-            </button>
-          </form>
+        <form className="space-y-4" onSubmit={handleSubmit}>
+          <input
+            type="text"
+            name="fullName"
+            placeholder="Your Full Name"
+            required
+            autoComplete="name"
+            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-400 transition-colors text-sm"
+          />
+          <input
+            type="tel"
+            name="phone"
+            placeholder="WhatsApp Number"
+            required
+            autoComplete="tel"
+            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-400 transition-colors text-sm"
+          />
+          <input
+            type="email"
+            name="email"
+            placeholder="Email Address"
+            required
+            autoComplete="email"
+            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-400 transition-colors text-sm"
+          />
+          <select
+            name="intake"
+            required
+            defaultValue=""
+            className="w-full bg-gray-900 border border-white/10 rounded-xl px-4 py-3 text-gray-300 focus:outline-none focus:border-blue-400 transition-colors text-sm"
+          >
+            <option value="" disabled>
+              Preferred Intake
+            </option>
+            <option value="Sep">September</option>
+            <option value="Jan">January</option>
+            <option value="May">May</option>
+            <option value="Others">Others</option>
+          </select>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white py-4 rounded-xl font-bold text-base hover:scale-[1.02] transition-transform shadow-lg shadow-blue-500/20 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
+          >
+            {loading ? "Submitting..." : "Get Free Shortlist →"}
+          </button>
+        </form>
 
-          <p className="text-center text-xs text-gray-500 mt-4">
-            🔒 100% Free & Confidential · No spam, ever
-          </p>
-        </m.div>
+        <p className="text-center text-xs text-gray-500 mt-4">
+          🔒 100% Free & Confidential · No spam, ever
+        </p>
       </m.div>
-    </AnimatePresence>
+    </m.div>
   );
 }
 
@@ -216,6 +220,13 @@ function FloatingCTA({ onOpen }) {
         </button>
         <a
           href={WA_NUMBER}
+          onClick={() => {
+            gtag.event({
+              action: "whatsapp_click",
+              category: "contact",
+              label: "floating_cta_whatsapp",
+            });
+          }}
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center justify-center w-12 h-12 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 hover:bg-green-500/20 transition-colors"
@@ -275,6 +286,13 @@ function InlineCTABanner({ onOpen }) {
           </button>
           <a
             href={WA_NUMBER}
+            onClick={() => {
+              gtag.event({
+                action: "whatsapp_click",
+                category: "contact",
+                label: "floating_cta_whatsapp",
+              });
+            }}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center justify-center gap-2 border border-green-500/30 text-green-400 px-7 py-3 rounded-xl font-semibold text-sm hover:bg-green-500/10 transition-colors"
@@ -293,6 +311,8 @@ export default function UniversitiesClient({
   initialSearch = "",
 }) {
   const [searchTerm, setSearchTerm] = useState(initialSearch);
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
   const [results, setResults] = useState(universities ?? []);
   const [page, setPage] = useState(1);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -313,6 +333,26 @@ export default function UniversitiesClient({
       localStorage.setItem(MODAL_SEEN_KEY, "1");
     } catch (_) {}
   }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!searchTerm.trim()) return;
+
+      setDebouncedSearch(searchTerm);
+    }, 800);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  useEffect(() => {
+    if (!debouncedSearch) return;
+
+    gtag.event({
+      action: "search_used",
+      category: "search",
+      label: debouncedSearch,
+    });
+  }, [debouncedSearch]);
 
   // ── Auto-open: only once per user ──
   const tryAutoOpen = useCallback(() => {
@@ -434,13 +474,28 @@ export default function UniversitiesClient({
               </p>
               <div className="mt-8 flex flex-col sm:flex-row gap-4">
                 <button
-                  onClick={openModal}
+                  onClick={() => {
+                    gtag.event({
+                      action: "cta_click",
+                      category: "engagement",
+                      label: "free_shortlist_button",
+                    });
+
+                    openModal();
+                  }}
                   className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-8 py-4 rounded-2xl font-bold text-base shadow-lg hover:scale-[1.03] transition-transform"
                 >
                   Get Free University Shortlist <ArrowRight size={18} />
                 </button>
                 <a
                   href={WA_NUMBER}
+                  onClick={() => {
+                    gtag.event({
+                      action: "whatsapp_click",
+                      category: "contact",
+                      label: "floating_cta_whatsapp",
+                    });
+                  }}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center justify-center gap-2 border border-green-500/40 text-green-400 px-8 py-4 rounded-2xl font-bold text-base hover:bg-green-500/10 transition-all"
@@ -488,7 +543,9 @@ export default function UniversitiesClient({
               type="search"
               placeholder="Search university name, country, city..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+              }}
               className="w-full pl-14 pr-6 py-5 rounded-2xl bg-gray-800/60 border border-gray-700 text-gray-100 placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 focus:bg-gray-800/90 transition-all outline-none text-lg shadow-lg shadow-black/20"
             />
           </div>
@@ -541,7 +598,15 @@ export default function UniversitiesClient({
             </p>
             <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
               <button
-                onClick={openModal}
+                onClick={() => {
+                  gtag.event({
+                    action: "cta_click",
+                    category: "engagement",
+                    label: "free_shortlist_button",
+                  });
+
+                  openModal();
+                }}
                 className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-8 py-4 rounded-2xl font-bold text-base shadow-xl hover:scale-[1.03] transition-transform"
               >
                 Book Free Counseling <ArrowRight size={18} />
