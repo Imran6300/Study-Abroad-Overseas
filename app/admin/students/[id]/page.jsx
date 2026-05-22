@@ -40,8 +40,15 @@ export default function StudentProfilePage() {
   const [editing, setEditing] = useState(null);
 
   const [applications, setApplications] = useState([]);
+
   const [userProfile, setUserProfile] = useState(null);
+
   const [deadlines, setDeadlines] = useState([]);
+
+  const [notes, setNotes] = useState([]);
+
+  const [visas, setVisas] = useState([]);
+
   const [documents] = useState([]);
 
   const [scholarships, setScholarships] = useState([]);

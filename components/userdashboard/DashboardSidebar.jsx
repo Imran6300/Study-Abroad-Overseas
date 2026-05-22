@@ -20,7 +20,7 @@ export default function DashboardSidebar() {
     { href: "/dashboard/user/documents", label: "Documents", icon: "📄" },
     { href: "/dashboard/user/visa", label: "Visa Progress", icon: "🛂" },
 
-    { href: "/dashboard/user/scholarships", label: "Scholarships", icon: "💰" },
+    // { href: "/dashboard/user/scholarships", label: "Scholarships", icon: "💰" },
     { href: "/dashboard/user/settings", label: "Settings", icon: "⚙️" },
   ];
 
