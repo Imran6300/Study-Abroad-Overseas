@@ -1,36 +1,36 @@
 import { User, Mail, Phone, Globe, Shield, MapPin } from "lucide-react";
 import InfoRow from "../shared/InfoRow";
 
-export default function StudentDetailsCard({ student }) {
+export default function StudentDetailsCard({ profile }) {
   const studentDetails = [
     {
       label: "Full Name",
-      value: student.name,
+      value: profile?.fullName || "N/A",
       icon: User,
     },
     {
       label: "Email",
-      value: student.email,
+      value: profile?.email || "N/A",
       icon: Mail,
     },
     {
       label: "Phone",
-      value: student.phone,
+      value: profile?.phone || "N/A",
       icon: Phone,
     },
     {
       label: "Nationality",
-      value: student.nationality,
+      value: profile?.nationality || "N/A",
       icon: Globe,
     },
     {
       label: "Passport No.",
-      value: student.passportNo,
+      value: profile?.passportNumber || "N/A",
       icon: Shield,
     },
     {
       label: "Location",
-      value: student.currentCity,
+      value: profile?.preferredCountry || "N/A",
       icon: MapPin,
     },
   ];

@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Mail, Phone, MapPin, Lock, User } from "lucide-react";
 
-export default function PageHeader({ application, isKhizarManaged }) {
+export default function PageHeader({ application, profile, isKhizarManaged }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
@@ -10,15 +10,25 @@ export default function PageHeader({ application, isKhizarManaged }) {
     >
       <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
         <div className="flex items-start gap-5">
-          <div
-            className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${application.avatarColor} flex items-center justify-center text-white font-bold text-xl shadow-sm shrink-0`}
-          >
-            {application.avatar}
+          <div className="w-16 h-16 rounded-2xl overflow-hidden border border-slate-200 shrink-0">
+            {profile?.profilePicture?.secure_url ? (
+              <img
+                src={profile.profilePicture.secure_url}
+                alt={profile.fullName}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div
+                className={`w-full h-full bg-gradient-to-br ${application.avatarColor} flex items-center justify-center text-white font-bold text-xl`}
+              >
+                {application.avatar}
+              </div>
+            )}
           </div>
           <div>
             <div className="flex flex-wrap items-center gap-2 mb-1">
               <h1 className="text-2xl font-extrabold text-slate-900">
-                {application.student.name}
+                {profile?.fullName || "Student"}
               </h1>
               <span className="font-mono text-xs bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg">
                 {application.appId}
@@ -27,15 +37,15 @@ export default function PageHeader({ application, isKhizarManaged }) {
             <div className="flex flex-wrap items-center gap-3 text-sm text-slate-500">
               <span className="flex items-center gap-1">
                 <Mail size={13} />
-                {application.student.email}
+                {profile?.email || "N/A"}
               </span>
               <span className="flex items-center gap-1">
                 <Phone size={13} />
-                {application.student.phone}
+                {profile?.phone || "N/A"}
               </span>
               <span className="flex items-center gap-1">
                 <MapPin size={13} />
-                {application.student.currentCity}
+                {profile?.preferredCountry || "N/A"}
               </span>
             </div>
             <div className="flex flex-wrap items-center gap-2 mt-3">
@@ -60,25 +70,25 @@ export default function PageHeader({ application, isKhizarManaged }) {
           <p>
             Created:{" "}
             <span className="font-semibold text-slate-700">
-              {application.createdAt}
+              {profile?.createdAt}
             </span>
           </p>
           <p className="mt-1">
             Updated:{" "}
             <span className="font-semibold text-slate-700">
-              {application.updatedAt}
+              {profile?.updatedAt}
             </span>
           </p>
           <p className="mt-1">
-            University:{" "}
+            Preferred Country:{" "}
             <span className="font-semibold text-slate-700">
-              {application.university}
+              {profile?.preferredCountry}
             </span>
           </p>
           <p className="mt-1">
-            Intake:{" "}
+            Preferred Intake:{" "}
             <span className="font-semibold text-slate-700">
-              {application.intake}
+              {profile?.intendedIntake}
             </span>
           </p>
         </div>

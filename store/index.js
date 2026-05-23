@@ -4,8 +4,11 @@ import authReducer from "./authSlice";
 import universityReducer from "./universitySlice";
 import courseReducer from "./courseSlice";
 import leadReducer from "./leadSlice";
-import deadlineReducer from "./deadlineSlice";
 
+//dashboard
+import applicationReducer from "./applicationSlice";
+import profileReducer from "./profileSlice";
+import deadlineReducer from "./deadlineSlice";
 import visaReducer from "./visaSlice";
 
 export const store = configureStore({
@@ -17,5 +20,8 @@ export const store = configureStore({
     deadline: deadlineReducer,
 
     visa: visaReducer,
+
+    profile: profileReducer,
+    applications: applicationReducer,
   },
 });

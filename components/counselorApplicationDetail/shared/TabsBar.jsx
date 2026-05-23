@@ -12,6 +12,8 @@ export default function TabsBar({
   activeTab,
   setActiveTab,
   application,
+  profile,
+  overviewApplication,
 
   notes,
   noteTitle,
@@ -65,7 +67,13 @@ export default function TabsBar({
 
       <div className="p-6 sm:p-8">
         {/* ── OVERVIEW ── */}
-        {activeTab === "overview" && <OverviewTab application={application} />}
+        {activeTab === "overview" && (
+          <OverviewTab
+            application={application}
+            profile={profile}
+            overviewApplication={overviewApplication}
+          />
+        )}
         {/* ── DOCUMENTS ── */}
         {activeTab === "documents" && (
           <DocumentsTab

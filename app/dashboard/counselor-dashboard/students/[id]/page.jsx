@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import OverviewTab from "@/components/counselorApplicationDetail/overview/OverviewTab";
 import DocumentsTab from "@/components/counselorApplicationDetail/documents/DocumentsTab";
 import NotesTab from "@/components/counselorApplicationDetail/notes/NotesTab";
 import DeadlinesTab from "@/components/counselorApplicationDetail/deadlines/DeadlinesTab";
@@ -13,6 +12,12 @@ import ActivityTab from "@/components/counselorApplicationDetail/activity/Activi
 import StatusTimeline from "@/components/counselorApplicationDetail/shared/StatusTimeline";
 import PageHeader from "@/components/counselorApplicationDetail/shared/PageHeader";
 import TabsBar from "@/components/counselorApplicationDetail/shared/TabsBar";
+
+//redux
+
+import { useDispatch, useSelector } from "react-redux";
+import { fetchStudentProfile } from "@/store/profileSlice";
+import { fetchStudentApplications } from "@/store/applicationSlice";
 
 import {
   ArrowLeft,
@@ -39,6 +44,7 @@ const mockApplicationDetail = {
   appId: "KHZ-2026-0001",
   student: {
     _id: "mock-student-id",
+    userId: "69b5b944b6d9180a3aad9cf9",
     name: "Rahul Sharma",
     email: "rahul@example.com",
     phone: "+91 98765 43210",
@@ -138,6 +144,15 @@ const mockApplicationDetail = {
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function KhizarApplicationDetailPage() {
+  const dispatch = useDispatch();
+
+  const { profile, loading: profileLoading } = useSelector(
+    (state) => state.profile,
+  );
+  const { applications, loading: applicationsLoading } = useSelector(
+    (state) => state.applications,
+  );
+  console.log("applications", applications);
   const params = useParams();
   const router = useRouter();
   const id = params.id;
@@ -204,12 +219,18 @@ export default function KhizarApplicationDetailPage() {
   };
 
   useEffect(() => {
-    setTimeout(() => {
+    setTimeout(async () => {
       setApplication(mockApplicationDetail);
+
+      // FETCH PROFILE
+      dispatch(fetchStudentProfile(mockApplicationDetail.student.userId));
+      dispatch(fetchStudentApplications(mockApplicationDetail.student.userId));
+
       fetchNotes();
+
       setLoading(false);
     }, 600);
-  }, [id]);
+  }, [id, dispatch]);
 
   if (loading) {
     return (
@@ -251,6 +272,23 @@ export default function KhizarApplicationDetailPage() {
     { key: "activity", label: "Activity", icon: Activity },
   ];
 
+  const overviewApplication =
+    applications?.length > 0
+      ? {
+          appId: applications[0]?._id || "N/A",
+
+          university: applications[0]?.university?.name || "N/A",
+
+          country: applications[0]?.university?.country || "N/A",
+
+          course: applications[0]?.programPreference?.field || "N/A",
+
+          intake: applications[0]?.programPreference?.intake || "N/A",
+
+          processor: "Not Assigned",
+        }
+      : null;
+
   return (
     <div className="min-h-screen bg-[#f4f6fb]">
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
@@ -269,6 +307,7 @@ export default function KhizarApplicationDetailPage() {
         {/* ── Header Card ── */}
         <PageHeader
           application={application}
+          profile={profile}
           isKhizarManaged={isKhizarManaged}
         />
 
@@ -297,6 +336,8 @@ export default function KhizarApplicationDetailPage() {
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           application={application}
+          profile={profile}
+          overviewApplication={overviewApplication}
           notes={notes}
           noteTitle={noteTitle}
           setNoteTitle={setNoteTitle}

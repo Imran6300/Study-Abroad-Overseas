@@ -11,32 +11,32 @@ export default function ApplicationDetailCard({ application }) {
   const applicationDetails = [
     {
       label: "Application ID",
-      value: application.appId,
+      value: application?.appId || "N/A",
       icon: Hash,
     },
     {
       label: "University",
-      value: application.university,
+      value: application?.university || "N/A",
       icon: Building2,
     },
     {
       label: "Country",
-      value: application.country,
+      value: application?.country || "N/A",
       icon: MapPin,
     },
     {
       label: "Course",
-      value: application.course,
+      value: application?.course || "N/A",
       icon: GraduationCap,
     },
     {
       label: "Intake",
-      value: application.intake,
+      value: application?.intake || "N/A",
       icon: Calendar,
     },
     {
       label: "Processor",
-      value: application.processor,
+      value: application?.processor || "N/A",
       icon: Briefcase,
     },
   ];
