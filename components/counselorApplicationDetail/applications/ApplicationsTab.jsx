@@ -4,35 +4,17 @@ import ApplicationsHeader from "./ApplicationsHeader";
 import ApplicationForm from "./ApplicationForm";
 import ApplicationCard from "./ApplicationCard";
 
-export default function ApplicationsTab({ application }) {
-  const [apps, setApps] = useState([
-    {
-      id: "app1",
-      university: "University of Toronto",
-      country: "Canada",
-      course: "Computer Science (MSc)",
-      intake: "Fall 2026",
-      status: "under_review",
-      appliedDate: "2026-05-12",
-      portalId: "UOT-2026-MSC-0342",
-      notes: "Strong profile, awaiting decision.",
-    },
-  ]);
-
+export default function ApplicationsTab({
+  applications,
+  savingApplication,
+  handleCreateApplication,
+  handleDeleteApplication,
+  handleUpdateApplicationStatus,
+  handleUpdateApplication,
+}) {
   const [showForm, setShowForm] = useState(false);
 
-  const [saving, setSaving] = useState(false);
-
-  const [form, setForm] = useState({
-    university: "",
-    country: "",
-    course: "",
-    intake: "",
-    status: "pending",
-    appliedDate: "",
-    portalId: "",
-    notes: "",
-  });
+  const [editingApplication, setEditingApplication] = useState(null);
 
   const appSubStatusConfig = {
     pending: {
@@ -61,72 +43,50 @@ export default function ApplicationsTab({ application }) {
     },
   };
 
-  const handleAdd = async () => {
-    if (!form.university.trim() || !form.course.trim()) return;
-
-    setSaving(true);
-
-    await new Promise((r) => setTimeout(r, 500));
-
-    setApps((prev) => [
-      ...prev,
-      {
-        id: `app${Date.now()}`,
-        ...form,
-      },
-    ]);
-
-    setForm({
-      university: "",
-      country: "",
-      course: "",
-      intake: "",
-      status: "pending",
-      appliedDate: "",
-      portalId: "",
-      notes: "",
-    });
-
-    setShowForm(false);
-
-    setSaving(false);
-  };
-
-  const updateStatus = (id, status) => {
-    setApps((prev) => prev.map((a) => (a.id === id ? { ...a, status } : a)));
-  };
-
-  const removeApp = (id) => {
-    setApps((prev) => prev.filter((a) => a.id !== id));
-  };
-
   return (
     <div className="space-y-6">
-      <ApplicationsHeader apps={apps} setShowForm={setShowForm} />
+      <ApplicationsHeader apps={applications} setShowForm={setShowForm} />
 
-      <ApplicationForm
-        showForm={showForm}
-        form={form}
-        setForm={setForm}
-        handleAdd={handleAdd}
-        saving={saving}
-        setShowForm={setShowForm}
-        appSubStatusConfig={appSubStatusConfig}
-      />
+      {showForm && (
+        <ApplicationForm
+          saving={savingApplication}
+          initialData={editingApplication || {}}
+          onCancel={() => {
+            setEditingApplication(null);
+            setShowForm(false);
+          }}
+          onSubmit={async (payload) => {
+            if (editingApplication) {
+              await handleUpdateApplication(editingApplication._id, payload);
+            } else {
+              await handleCreateApplication(payload);
+            }
 
-      {apps.length === 0 ? (
+            setEditingApplication(null);
+
+            setShowForm(false);
+          }}
+        />
+      )}
+
+      {applications.length === 0 ? (
         <div className="py-12 text-center text-slate-400 text-sm border-2 border-dashed border-slate-200 rounded-xl">
           No university applications tracked yet.
         </div>
       ) : (
         <div className="space-y-4">
-          {apps.map((app) => (
+          {applications.map((app) => (
             <ApplicationCard
-              key={app.id}
+              key={app._id}
               app={app}
-              updateStatus={updateStatus}
-              removeApp={removeApp}
+              updateStatus={handleUpdateApplicationStatus}
+              removeApp={handleDeleteApplication}
               appSubStatusConfig={appSubStatusConfig}
+              onView={(app) => {
+                setEditingApplication(app);
+
+                setShowForm(true);
+              }}
             />
           ))}
         </div>

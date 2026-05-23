@@ -17,7 +17,12 @@ import TabsBar from "@/components/counselorApplicationDetail/shared/TabsBar";
 
 import { useDispatch, useSelector } from "react-redux";
 import { fetchStudentProfile } from "@/store/profileSlice";
-import { fetchStudentApplications } from "@/store/applicationSlice";
+import {
+  fetchStudentApplications,
+  createStudentApplication,
+  deleteStudentApplication,
+  updateApplicationStatus,
+} from "@/store/applicationSlice";
 import { fetchStudentDeadlines } from "@/store/deadlineSlice";
 
 import {
@@ -117,9 +122,13 @@ export default function KhizarApplicationDetailPage() {
   const { profile, loading: profileLoading } = useSelector(
     (state) => state.profile,
   );
-  const { applications, loading: applicationsLoading } = useSelector(
-    (state) => state.applications,
-  );
+
+  const {
+    applications,
+    loading: applicationsLoading,
+    saving: savingApplication,
+    updateStudentApplication,
+  } = useSelector((state) => state.applications);
 
   const { studentDeadlines } = useSelector((state) => state.deadline);
   console.log("studentDeadlines", studentDeadlines);
@@ -227,6 +236,36 @@ export default function KhizarApplicationDetailPage() {
     } finally {
       setSavingDeadline(false);
     }
+  };
+  const handleCreateApplication = async (payload) => {
+    await dispatch(
+      createStudentApplication({
+        studentId: application.student.userId,
+        payload,
+      }),
+    );
+  };
+
+  const handleDeleteApplication = async (applicationId) => {
+    await dispatch(deleteStudentApplication(applicationId));
+  };
+
+  const handleUpdateApplicationStatus = async (applicationId, status) => {
+    await dispatch(
+      updateApplicationStatus({
+        applicationId,
+        status,
+      }),
+    );
+  };
+
+  const handleUpdateApplication = async (applicationId, payload) => {
+    await dispatch(
+      updateStudentApplication({
+        applicationId,
+        payload,
+      }),
+    );
   };
 
   const handleToggleDeadline = async (deadlineId) => {
@@ -464,6 +503,12 @@ export default function KhizarApplicationDetailPage() {
           handleCreateDeadline={handleCreateDeadline}
           handleToggleDeadline={handleToggleDeadline}
           handleDeleteDeadline={handleDeleteDeadline}
+          applications={applications}
+          savingApplication={savingApplication}
+          handleCreateApplication={handleCreateApplication}
+          handleDeleteApplication={handleDeleteApplication}
+          handleUpdateApplicationStatus={handleUpdateApplicationStatus}
+          handleUpdateApplication={handleUpdateApplication}
         />
       </main>
     </div>

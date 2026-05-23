@@ -1,12 +1,13 @@
 import { motion } from "framer-motion";
 
-import { Building2, Hash, Calendar, Trash2 } from "lucide-react";
+import { Building2, Hash, Calendar, Trash2, Eye } from "lucide-react";
 
 export default function ApplicationCard({
   app,
   updateStatus,
   removeApp,
   appSubStatusConfig,
+  onView,
 }) {
   const sc = appSubStatusConfig[app.status] || appSubStatusConfig.pending;
 
@@ -24,7 +25,7 @@ export default function ApplicationCard({
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               <p className="text-sm font-bold text-slate-800">
-                {app.university}
+                {app.university?.name || "N/A"}
               </p>
 
               <span
@@ -35,9 +36,12 @@ export default function ApplicationCard({
             </div>
 
             <p className="text-xs text-slate-500 mt-0.5">
-              {app.course}
-              {app.country ? ` · ${app.country}` : ""}
-              {app.intake ? ` · ${app.intake}` : ""}
+              {app.programPreference?.field || "N/A"}
+              {app.university?.country ? ` · ${app.university.country}` : ""}
+
+              {app.programPreference?.intake
+                ? ` · ${app.programPreference.intake}`
+                : ""}
             </p>
 
             <div className="flex flex-wrap gap-3 mt-2">
@@ -70,7 +74,7 @@ export default function ApplicationCard({
         <div className="flex items-center gap-2 shrink-0">
           <select
             value={app.status}
-            onChange={(e) => updateStatus(app.id, e.target.value)}
+            onChange={(e) => updateStatus(app._id, e.target.value)}
             className="text-xs border border-slate-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white"
           >
             {Object.entries(appSubStatusConfig).map(([k, v]) => (
@@ -81,7 +85,14 @@ export default function ApplicationCard({
           </select>
 
           <button
-            onClick={() => removeApp(app.id)}
+            onClick={() => onView(app)}
+            className="w-8 h-8 rounded-lg hover:bg-indigo-50 flex items-center justify-center transition-all"
+          >
+            <Eye size={13} className="text-slate-400 hover:text-indigo-500" />
+          </button>
+
+          <button
+            onClick={() => removeApp(app._id)}
             className="w-8 h-8 rounded-lg hover:bg-red-50 flex items-center justify-center transition-all"
           >
             <Trash2 size={13} className="text-slate-400 hover:text-red-500" />

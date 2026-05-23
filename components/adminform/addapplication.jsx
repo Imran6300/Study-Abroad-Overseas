@@ -9,7 +9,6 @@ import TestsSection from "./addapplication/TestsSection";
 import ProgramSection from "./addapplication/ProgramSection";
 import ExperienceSection from "./addapplication/ExperienceSection";
 import FinanceSection from "./addapplication/FinanceSection";
-import DocumentsSection from "./addapplication/DocumentsSection";
 import FinalSection from "./addapplication/FinalSection";
 import ConfirmationModal from "@/components/adminform/confirmmsg";
 
@@ -188,11 +187,6 @@ export default function AdminApplicationForm({
         <FinanceSection
           data={form.finance}
           updateSection={(fields) => updateSection("finance", fields)}
-        />
-
-        <DocumentsSection
-          data={form.documents}
-          updateSection={(fields) => updateSection("documents", fields)}
         />
 
         <FinalSection

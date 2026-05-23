@@ -1,200 +1,190 @@
-import { AnimatePresence, motion } from "framer-motion";
+"use client";
+
+import { useState, useEffect } from "react";
+
+import StageSection from "@/components/adminform/addapplication/StageSection";
+import PersonalSection from "@/components/adminform/addapplication/PersonalSection";
+import EducationSection from "@/components/adminform/addapplication/EducationSection";
+import TestsSection from "@/components/adminform/addapplication/TestsSection";
+import ProgramSection from "@/components/adminform/addapplication/ProgramSection";
+import ExperienceSection from "@/components/adminform/addapplication/ExperienceSection";
+import FinanceSection from "@/components/adminform/addapplication/FinanceSection";
+import FinalSection from "@/components/adminform/addapplication/FinalSection";
+import ConfirmationModal from "@/components/adminform/confirmmsg";
 
 export default function ApplicationForm({
-  showForm,
-  form,
-  setForm,
-  handleAdd,
+  initialData = {},
+  onSubmit,
+  onCancel,
   saving,
-  setShowForm,
-  appSubStatusConfig,
 }) {
+  const isEdit = Boolean(initialData?._id);
+
+  const [form, setForm] = useState({
+    stage: "",
+    personalInfo: {},
+    education: {},
+    tests: {},
+    programPreference: {},
+    experience: {},
+    finance: {},
+    documents: {},
+    source: "",
+    comments: "",
+    agreed: false,
+  });
+  const [modal, setModal] = useState({
+    open: false,
+    title: "",
+    message: "",
+    confirmText: "OK",
+    confirmVariant: "success",
+    onConfirm: null,
+  });
+
+  const showModal = ({
+    title,
+    message,
+    confirmText = "OK",
+    confirmVariant = "success",
+    onConfirm = null,
+  }) => {
+    setModal({
+      open: true,
+      title,
+      message,
+      confirmText,
+      confirmVariant,
+      onConfirm,
+    });
+  };
+
+  useEffect(() => {
+    if (initialData && initialData._id) {
+      setForm({
+        stage: initialData.stage || "",
+        personalInfo: initialData.personalInfo || {},
+        education: initialData.education || {},
+        tests: initialData.tests || {},
+        programPreference: initialData.programPreference || {},
+        experience: initialData.experience || {},
+        finance: initialData.finance || {},
+        documents: initialData.documents || {},
+        source: initialData.source || "",
+        comments: initialData.comments || "",
+        agreed: initialData.agreed || false,
+      });
+    }
+  }, [initialData]);
+
+  const updateSection = (section, fields) => {
+    setForm((prev) => ({
+      ...prev,
+      [section]: {
+        ...prev[section],
+        ...fields,
+      },
+    }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    onSubmit(form);
+  };
+
   return (
-    <AnimatePresence>
-      {showForm && (
-        <motion.div
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
-          className="bg-indigo-50 border border-indigo-200 rounded-2xl p-5 space-y-4"
-        >
-          <h4 className="text-sm font-bold text-indigo-800">New Application</h4>
+    <div className="bg-gray-200 p-8 rounded-2xl">
+      <form onSubmit={handleSubmit} className="space-y-8">
+        <StageSection
+          value={form.stage}
+          onChange={(value) =>
+            setForm((prev) => ({
+              ...prev,
+              stage: value,
+            }))
+          }
+        />
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-1">
-                University <span className="text-red-400">*</span>
-              </label>
+        <PersonalSection
+          data={form.personalInfo}
+          updateSection={(fields) => updateSection("personalInfo", fields)}
+        />
 
-              <input
-                type="text"
-                value={form.university}
-                onChange={(e) =>
-                  setForm((f) => ({
-                    ...f,
-                    university: e.target.value,
-                  }))
-                }
-                placeholder="e.g. University of Toronto"
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white"
-              />
-            </div>
+        <EducationSection
+          data={form.education}
+          updateSection={(fields) => updateSection("education", fields)}
+        />
 
-            <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-1">
-                Country
-              </label>
+        <TestsSection
+          data={form.tests}
+          updateSection={(fields) => updateSection("tests", fields)}
+        />
 
-              <input
-                type="text"
-                value={form.country}
-                onChange={(e) =>
-                  setForm((f) => ({
-                    ...f,
-                    country: e.target.value,
-                  }))
-                }
-                placeholder="e.g. Canada"
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white"
-              />
-            </div>
+        <ProgramSection
+          data={form.programPreference}
+          updateSection={(fields) => updateSection("programPreference", fields)}
+        />
 
-            <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-1">
-                Course <span className="text-red-400">*</span>
-              </label>
+        <ExperienceSection
+          data={form.experience}
+          updateSection={(fields) => updateSection("experience", fields)}
+        />
 
-              <input
-                type="text"
-                value={form.course}
-                onChange={(e) =>
-                  setForm((f) => ({
-                    ...f,
-                    course: e.target.value,
-                  }))
-                }
-                placeholder="e.g. Computer Science (MSc)"
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white"
-              />
-            </div>
+        <FinanceSection
+          data={form.finance}
+          updateSection={(fields) => updateSection("finance", fields)}
+        />
 
-            <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-1">
-                Intake
-              </label>
+        <FinalSection
+          data={{
+            comments: form.comments,
+            source: form.source,
+            agreed: form.agreed,
+          }}
+          updateSection={(fields) =>
+            setForm((prev) => ({
+              ...prev,
+              ...fields,
+            }))
+          }
+        />
 
-              <input
-                type="text"
-                value={form.intake}
-                onChange={(e) =>
-                  setForm((f) => ({
-                    ...f,
-                    intake: e.target.value,
-                  }))
-                }
-                placeholder="e.g. Fall 2026"
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white"
-              />
-            </div>
+        <div className="flex justify-end gap-4 pt-6 border-t border-gray-400">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="px-6 py-3 rounded-xl border border-gray-400 bg-gray-100"
+          >
+            Cancel
+          </button>
 
-            <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-1">
-                Application Status
-              </label>
-
-              <select
-                value={form.status}
-                onChange={(e) =>
-                  setForm((f) => ({
-                    ...f,
-                    status: e.target.value,
-                  }))
-                }
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white"
-              >
-                {Object.entries(appSubStatusConfig).map(([k, v]) => (
-                  <option key={k} value={k}>
-                    {v.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-1">
-                Applied Date
-              </label>
-
-              <input
-                type="date"
-                value={form.appliedDate}
-                onChange={(e) =>
-                  setForm((f) => ({
-                    ...f,
-                    appliedDate: e.target.value,
-                  }))
-                }
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-1">
-                Portal / Application ID
-              </label>
-
-              <input
-                type="text"
-                value={form.portalId}
-                onChange={(e) =>
-                  setForm((f) => ({
-                    ...f,
-                    portalId: e.target.value,
-                  }))
-                }
-                placeholder="e.g. UOT-2026-0342"
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-1">
-                Internal Notes
-              </label>
-
-              <input
-                type="text"
-                value={form.notes}
-                onChange={(e) =>
-                  setForm((f) => ({
-                    ...f,
-                    notes: e.target.value,
-                  }))
-                }
-                placeholder="Any remarks..."
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white"
-              />
-            </div>
-          </div>
-
-          <div className="flex items-center justify-end gap-2">
-            <button
-              onClick={() => setShowForm(false)}
-              className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 text-xs font-semibold hover:bg-slate-100 transition-all"
-            >
-              Cancel
-            </button>
-
-            <button
-              onClick={handleAdd}
-              disabled={saving}
-              className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition-all disabled:opacity-60"
-            >
-              {saving ? "Saving..." : "Add Application"}
-            </button>
-          </div>
-        </motion.div>
+          <button
+            type="submit"
+            disabled={saving}
+            className="px-6 py-3 rounded-xl bg-indigo-600 text-white font-semibold"
+          >
+            {saving
+              ? "Saving..."
+              : isEdit
+                ? "Update Application"
+                : "Save Application"}
+          </button>
+        </div>
+      </form>
+      {modal.open && (
+        <ConfirmationModal
+          title={modal.title}
+          message={modal.message}
+          confirmText={modal.confirmText}
+          confirmVariant={modal.confirmVariant}
+          onConfirm={
+            modal.onConfirm ||
+            (() => setModal((prev) => ({ ...prev, open: false })))
+          }
+          onCancel={() => setModal((prev) => ({ ...prev, open: false }))}
+        />
       )}
-    </AnimatePresence>
+    </div>
   );
 }

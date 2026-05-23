@@ -34,6 +34,13 @@ export default function TabsBar({
   handleCreateDeadline,
   handleToggleDeadline,
   handleDeleteDeadline,
+
+  applications,
+  savingApplication,
+  handleCreateApplication,
+  handleDeleteApplication,
+  handleUpdateApplicationStatus,
+  handleUpdateApplication,
 }) {
   return (
     <motion.div
@@ -105,7 +112,14 @@ export default function TabsBar({
         )}
         {/* ── APPLICATIONS ── */}
         {activeTab === "applications" && (
-          <ApplicationsTab application={application} />
+          <ApplicationsTab
+            applications={applications}
+            savingApplication={savingApplication}
+            handleCreateApplication={handleCreateApplication}
+            handleDeleteApplication={handleDeleteApplication}
+            handleUpdateApplicationStatus={handleUpdateApplicationStatus}
+            handleUpdateApplication={handleUpdateApplication}
+          />
         )}
         {/* ── VISA ── */}
         {activeTab === "visa" && <VisaTab application={application} />}
