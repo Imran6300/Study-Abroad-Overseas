@@ -10,21 +10,18 @@ const PAGES_PER_SITEMAP = 10;
 
 async function getTotalSitemapCount() {
   try {
-    if (!BACKEND_URL) return 6; // safe fallback
-
-    const res = await fetch(`${BACKEND_URL}/api/universities?page=1&limit=20`, {
-      next: { revalidate: 3600 },
-      signal: AbortSignal.timeout(8000),
-    });
-
-    if (!res.ok) return 6;
+    const res = await fetch(
+      `${BACKEND_URL}/api/public/sitemap-universities?page=1&limit=20`,
+      {
+        next: { revalidate: 3600 },
+        signal: AbortSignal.timeout(8000),
+      },
+    );
 
     const data = await res.json();
 
     // Your API returns totalPages: 450 directly
     const totalApiPages = data?.totalPages;
-
-    if (!totalApiPages) return 6;
 
     // 450 API pages / 10 pages per sitemap = 45 sitemaps
     return Math.ceil(totalApiPages / PAGES_PER_SITEMAP);

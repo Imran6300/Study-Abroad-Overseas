@@ -40,11 +40,11 @@ export async function GET(req, { params }) {
       const requests = [];
 
       for (let i = batchStart; i <= batchEnd; i++) {
-        const url = `${BACKEND_URL}/api/universities?page=${i}&limit=20`;
+        const url = `${BACKEND_URL}/api/public/sitemap-universities?page=${i}&limit=20`;
         requests.push(
           fetch(url, {
             next: { revalidate: 3600 },
-            cache: "force-cache",
+            cache: "no-store",
             signal: AbortSignal.timeout(20000),
           })
             .then(async (res) => {
@@ -92,9 +92,17 @@ export async function GET(req, { params }) {
     console.log(
       `[sitemap-universities/${sitemapPage}] raw=${uniqueUniversities.length} valid=${validUniversities.length}`,
     );
-
     if (validUniversities.length === 0) {
-      return new Response("Not Found", { status: 404 });
+      return new Response(
+        `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>`,
+        {
+          status: 200,
+          headers: {
+            "Content-Type": "application/xml",
+          },
+        },
+      );
     }
 
     const urls = validUniversities
