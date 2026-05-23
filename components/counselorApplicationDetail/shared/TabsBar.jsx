@@ -14,6 +14,9 @@ export default function TabsBar({
   application,
   profile,
   overviewApplication,
+  applicationDocuments,
+  visaDocuments,
+  financialDocuments,
 
   notes,
   noteTitle,
@@ -77,9 +80,10 @@ export default function TabsBar({
         {/* ── DOCUMENTS ── */}
         {activeTab === "documents" && (
           <DocumentsTab
-            documents={application.documents}
+            applicationDocuments={applicationDocuments}
+            visaDocuments={visaDocuments}
+            financialDocuments={financialDocuments}
             offerLetters={application.offerLetters}
-            visaFiles={application.visaFiles}
           />
         )}
         {/* ── DEADLINES ── */}

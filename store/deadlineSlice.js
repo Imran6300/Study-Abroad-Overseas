@@ -99,6 +99,27 @@ export const deleteDeadlineDocumentAsync = createAsyncThunk(
   },
 );
 
+export const fetchStudentDeadlines = createAsyncThunk(
+  "deadline/fetchStudentDeadlines",
+
+  async (studentId, thunkAPI) => {
+    try {
+      const response = await axios.get(
+        `${BACKEND_URL}/user/admin/deadlines/${studentId}`,
+        {
+          withCredentials: true,
+        },
+      );
+
+      return response.data.deadlines;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(
+        error.response?.data?.message || "Failed to fetch student deadlines",
+      );
+    }
+  },
+);
+
 const initialState = {
   deadlines: {
     upcoming: [],
@@ -106,6 +127,7 @@ const initialState = {
     completed: [],
     counts: {},
   },
+  studentDeadlines: [],
   loading: false,
   error: null,
 };
@@ -135,6 +157,22 @@ const deadlineSlice = createSlice({
 
       .addCase(markDeadlineCompleteAsync.rejected, (state, action) => {
         state.loading = false;
+        state.error = action.payload;
+      })
+
+      .addCase(fetchStudentDeadlines.pending, (state) => {
+        state.loading = true;
+      })
+
+      .addCase(fetchStudentDeadlines.fulfilled, (state, action) => {
+        state.loading = false;
+
+        state.studentDeadlines = action.payload;
+      })
+
+      .addCase(fetchStudentDeadlines.rejected, (state, action) => {
+        state.loading = false;
+
         state.error = action.payload;
       })
 

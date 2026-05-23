@@ -25,13 +25,24 @@ export default function DocumentCard({ doc }) {
 
       {/* Right Side */}
       <div className="flex items-center gap-2">
-        <button className="w-9 h-9 rounded-lg border border-slate-200 bg-white flex items-center justify-center hover:bg-slate-100 transition">
+        <a
+          href={doc.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-9 h-9 rounded-lg border border-slate-200 bg-white flex items-center justify-center hover:bg-slate-100 transition"
+        >
           <Eye size={16} className="text-slate-500" />
-        </button>
+        </a>
 
-        <button className="w-9 h-9 rounded-lg border border-slate-200 bg-white flex items-center justify-center hover:bg-slate-100 transition">
+        <a
+          href={doc.url}
+          download
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-9 h-9 rounded-lg border border-slate-200 bg-white flex items-center justify-center hover:bg-slate-100 transition"
+        >
           <Download size={16} className="text-slate-500" />
-        </button>
+        </a>
       </div>
     </div>
   );

@@ -18,6 +18,7 @@ import TabsBar from "@/components/counselorApplicationDetail/shared/TabsBar";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchStudentProfile } from "@/store/profileSlice";
 import { fetchStudentApplications } from "@/store/applicationSlice";
+import { fetchStudentDeadlines } from "@/store/deadlineSlice";
 
 import {
   ArrowLeft,
@@ -63,40 +64,7 @@ const mockApplicationDetail = {
   updatedAt: "2026-05-12",
   avatar: "RS",
   avatarColor: "from-violet-500 to-purple-600",
-  documents: [
-    {
-      id: "doc1",
-      name: "Passport Copy",
-      type: "passport",
-      uploadedAt: "2026-05-10",
-      size: "1.2 MB",
-      status: "verified",
-    },
-    {
-      id: "doc2",
-      name: "Academic Transcripts",
-      type: "transcripts",
-      uploadedAt: "2026-05-10",
-      size: "3.4 MB",
-      status: "verified",
-    },
-    {
-      id: "doc3",
-      name: "IELTS Score Report",
-      type: "englishReport",
-      uploadedAt: "2026-05-11",
-      size: "0.8 MB",
-      status: "pending",
-    },
-    {
-      id: "doc4",
-      name: "Statement of Purpose",
-      type: "sop",
-      uploadedAt: "2026-05-11",
-      size: "0.5 MB",
-      status: "reviewing",
-    },
-  ],
+  documents: [],
   offerLetters: [],
   visaFiles: [],
   counselorNotes:
@@ -152,7 +120,9 @@ export default function KhizarApplicationDetailPage() {
   const { applications, loading: applicationsLoading } = useSelector(
     (state) => state.applications,
   );
-  console.log("applications", applications);
+
+  const { studentDeadlines } = useSelector((state) => state.deadline);
+  console.log("studentDeadlines", studentDeadlines);
   const params = useParams();
   const router = useRouter();
   const id = params.id;
@@ -226,6 +196,8 @@ export default function KhizarApplicationDetailPage() {
       dispatch(fetchStudentProfile(mockApplicationDetail.student.userId));
       dispatch(fetchStudentApplications(mockApplicationDetail.student.userId));
 
+      dispatch(fetchStudentDeadlines(mockApplicationDetail.student.userId));
+
       fetchNotes();
 
       setLoading(false);
@@ -289,6 +261,49 @@ export default function KhizarApplicationDetailPage() {
         }
       : null;
 
+  const transformDeadlineDocs = (deadlines = []) => {
+    return deadlines.map((deadline) => ({
+      id: deadline._id,
+
+      name: deadline.uploadedDocument?.fileName || deadline.title,
+
+      size: deadline.uploadedDocument?.size
+        ? `${(deadline.uploadedDocument.size / 1024 / 1024).toFixed(1)} MB`
+        : "N/A",
+
+      uploadedAt: new Date(
+        deadline.uploadedDocument?.uploadedAt,
+      ).toLocaleDateString(),
+
+      url: deadline.uploadedDocument?.url,
+
+      type: deadline.requiredDocumentType,
+
+      deadlineTitle: deadline.title,
+
+      category: deadline.category,
+    }));
+  };
+
+  const applicationDocuments = transformDeadlineDocs(
+    studentDeadlines?.filter(
+      (deadline) =>
+        deadline.category === "document" && deadline.uploadedDocument?.url,
+    ),
+  );
+  const visaDocuments = transformDeadlineDocs(
+    studentDeadlines?.filter(
+      (deadline) =>
+        deadline.category === "visa" && deadline.uploadedDocument?.url,
+    ),
+  );
+  const financialDocuments = transformDeadlineDocs(
+    studentDeadlines?.filter(
+      (deadline) =>
+        deadline.category === "financial" && deadline.uploadedDocument?.url,
+    ),
+  );
+
   return (
     <div className="min-h-screen bg-[#f4f6fb]">
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
@@ -338,6 +353,9 @@ export default function KhizarApplicationDetailPage() {
           application={application}
           profile={profile}
           overviewApplication={overviewApplication}
+          applicationDocuments={applicationDocuments}
+          visaDocuments={visaDocuments}
+          financialDocuments={financialDocuments}
           notes={notes}
           noteTitle={noteTitle}
           setNoteTitle={setNoteTitle}
