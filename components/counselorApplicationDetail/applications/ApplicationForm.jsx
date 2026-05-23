@@ -42,6 +42,10 @@ export default function ApplicationForm({
     onConfirm: null,
   });
 
+  const [searchUniversity, setSearchUniversity] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
   const showModal = ({
     title,
     message,
@@ -74,6 +78,7 @@ export default function ApplicationForm({
         comments: initialData.comments || "",
         agreed: initialData.agreed || false,
       });
+      setSearchUniversity(initialData?.university?.name || "");
     }
   }, [initialData]);
 
@@ -87,6 +92,35 @@ export default function ApplicationForm({
     }));
   };
 
+  useEffect(() => {
+    const delayDebounce = setTimeout(async () => {
+      if (!searchUniversity.trim()) {
+        setSearchResults([]);
+        return;
+      }
+
+      try {
+        setSearchLoading(true);
+
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/universities/search?q=${encodeURIComponent(searchUniversity)}`,
+        );
+
+        const data = await res.json();
+
+        if (data.success) {
+          setSearchResults(data.universities || []);
+        }
+      } catch (err) {
+        console.error("University search failed", err);
+      } finally {
+        setSearchLoading(false);
+      }
+    }, 400);
+
+    return () => clearTimeout(delayDebounce);
+  }, [searchUniversity]);
+
   const handleSubmit = (e) => {
     e.preventDefault();
 
@@ -96,6 +130,55 @@ export default function ApplicationForm({
   return (
     <div className="bg-gray-200 p-8 rounded-2xl">
       <form onSubmit={handleSubmit} className="space-y-8">
+        <div className="bg-gray-100 p-6 rounded-xl border border-gray-300">
+          <h3 className="text-lg font-semibold mb-4 text-gray-800">
+            University Selection
+          </h3>
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search university..."
+              value={searchUniversity}
+              onChange={(e) => {
+                setSearchUniversity(e.target.value);
+                setShowDropdown(true);
+              }}
+              onFocus={() => setShowDropdown(true)}
+              className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-300"
+            />
+
+            {showDropdown && (
+              <div className="absolute z-50 mt-2 w-full bg-white border border-gray-300 rounded-xl shadow-xl max-h-72 overflow-y-auto">
+                {searchLoading ? (
+                  <div className="p-4 text-gray-500">Searching...</div>
+                ) : searchResults.length > 0 ? (
+                  searchResults.map((uni) => (
+                    <button
+                      key={uni._id}
+                      type="button"
+                      onClick={() => {
+                        updateSection("programPreference", {
+                          universitySlug: uni.slug,
+                        });
+
+                        setSearchUniversity(uni.name);
+
+                        setShowDropdown(false);
+                      }}
+                      className="w-full text-left px-4 py-3 hover:bg-gray-100 border-b border-gray-100"
+                    >
+                      <div className="font-medium">{uni.name}</div>
+
+                      <div className="text-sm text-gray-500">{uni.city}</div>
+                    </button>
+                  ))
+                ) : (
+                  <div className="p-4 text-gray-500">No universities found</div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
         <StageSection
           value={form.stage}
           onChange={(value) =>
@@ -108,32 +191,32 @@ export default function ApplicationForm({
 
         <PersonalSection
           data={form.personalInfo}
-          updateSection={(fields) => updateSection("personalInfo", fields)}
+          updateForm={(fields) => updateSection("personalInfo", fields)}
         />
 
         <EducationSection
           data={form.education}
-          updateSection={(fields) => updateSection("education", fields)}
+          updateForm={(fields) => updateSection("education", fields)}
         />
 
         <TestsSection
           data={form.tests}
-          updateSection={(fields) => updateSection("tests", fields)}
+          updateForm={(fields) => updateSection("tests", fields)}
         />
 
         <ProgramSection
           data={form.programPreference}
-          updateSection={(fields) => updateSection("programPreference", fields)}
+          updateForm={(fields) => updateSection("programPreference", fields)}
         />
 
         <ExperienceSection
           data={form.experience}
-          updateSection={(fields) => updateSection("experience", fields)}
+          updateForm={(fields) => updateSection("experience", fields)}
         />
 
         <FinanceSection
           data={form.finance}
-          updateSection={(fields) => updateSection("finance", fields)}
+          updateForm={(fields) => updateSection("finance", fields)}
         />
 
         <FinalSection
@@ -142,7 +225,7 @@ export default function ApplicationForm({
             source: form.source,
             agreed: form.agreed,
           }}
-          updateSection={(fields) =>
+          updateForm={(fields) =>
             setForm((prev) => ({
               ...prev,
               ...fields,

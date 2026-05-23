@@ -332,27 +332,22 @@ export default function ApplicationForm() {
 
   const submitApplication = async () => {
     try {
-      const payload = new FormData();
-
-      // Append all non-file, non-null fields
-      Object.entries(formData).forEach(([key, value]) => {
-        if (
-          value !== null &&
-          value !== undefined &&
-          typeof value !== "object"
-        ) {
-          payload.append(key, value);
-        }
-      });
-
-      payload.append("universitySlug", universitySlug || "");
+      const payload = {
+        ...formData,
+        universitySlug: universitySlug || "",
+      };
 
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/applications`,
         {
           method: "POST",
           credentials: "include",
-          body: payload,
+
+          headers: {
+            "Content-Type": "application/json",
+          },
+
+          body: JSON.stringify(payload),
         },
       );
 
