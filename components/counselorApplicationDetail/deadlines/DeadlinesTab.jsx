@@ -5,81 +5,15 @@ import DeadlineForm from "./DeadlineForm";
 import PendingDocuments from "./PendingDeadlines";
 import CompletedDeadlines from "./CompletedDeadlines";
 
-export default function DeadlinesTab({ applicationId }) {
-  const [deadlines, setDeadlines] = useState([
-    {
-      id: "d1",
-      title: "SOP Final Submission",
-      description: "Submit revised Statement of Purpose to processor",
-      dueDate: "2026-05-28",
-      priority: "high",
-      completed: false,
-    },
-    {
-      id: "d2",
-      title: "University Application Portal Deadline",
-      description: "University of Toronto Fall 2026 application closes",
-      dueDate: "2026-06-15",
-      priority: "high",
-      completed: false,
-    },
-    {
-      id: "d3",
-      title: "Financial Proof Documents",
-      description: "Bank statements and sponsorship letter",
-      dueDate: "2026-06-30",
-      priority: "medium",
-      completed: false,
-    },
-  ]);
-
+export default function DeadlinesTab({
+  applicationId,
+  deadlines,
+  savingDeadline,
+  handleCreateDeadline,
+  handleToggleDeadline,
+  handleDeleteDeadline,
+}) {
   const [showForm, setShowForm] = useState(false);
-
-  const [saving, setSaving] = useState(false);
-
-  const [form, setForm] = useState({
-    title: "",
-    description: "",
-    dueDate: "",
-    priority: "medium",
-  });
-
-  const handleAdd = async () => {
-    if (!form.title.trim() || !form.dueDate) return;
-
-    setSaving(true);
-
-    await new Promise((r) => setTimeout(r, 500));
-
-    const newDeadline = {
-      id: `d${Date.now()}`,
-      ...form,
-      completed: false,
-    };
-
-    setDeadlines((prev) => [...prev, newDeadline]);
-
-    setForm({
-      title: "",
-      description: "",
-      dueDate: "",
-      priority: "medium",
-    });
-
-    setShowForm(false);
-
-    setSaving(false);
-  };
-
-  const toggleComplete = (id) => {
-    setDeadlines((prev) =>
-      prev.map((d) => (d.id === id ? { ...d, completed: !d.completed } : d)),
-    );
-  };
-
-  const removeDeadline = (id) => {
-    setDeadlines((prev) => prev.filter((d) => d.id !== id));
-  };
 
   const pending = deadlines.filter((d) => !d.completed);
 
@@ -112,25 +46,29 @@ export default function DeadlinesTab({ applicationId }) {
         </button>
       </div>
 
-      <DeadlineForm
-        showForm={showForm}
-        form={form}
-        setForm={setForm}
-        handleAdd={handleAdd}
-        saving={saving}
-        setShowForm={setShowForm}
-      />
+      {showForm && (
+        <DeadlineForm
+          mode="add"
+          initialData={null}
+          saving={savingDeadline}
+          onCancel={() => setShowForm(false)}
+          onSubmit={(payload) => {
+            handleCreateDeadline(payload);
+            setShowForm(false);
+          }}
+        />
+      )}
 
       <PendingDocuments
         deadlines={pending}
-        toggleComplete={toggleComplete}
-        removeDeadline={removeDeadline}
+        toggleComplete={handleToggleDeadline}
+        removeDeadline={handleDeleteDeadline}
       />
 
       <CompletedDeadlines
         deadlines={completed}
-        toggleComplete={toggleComplete}
-        removeDeadline={removeDeadline}
+        toggleComplete={handleToggleDeadline}
+        removeDeadline={handleDeleteDeadline}
       />
 
       {deadlines.length === 0 && (

@@ -2,6 +2,12 @@ import { motion } from "framer-motion";
 import { Calendar, Trash2 } from "lucide-react";
 
 const deadlinePriorityConfig = {
+  urgent: {
+    label: "Urgent",
+    bg: "bg-purple-50",
+    text: "text-purple-600",
+    border: "border-purple-200",
+  },
   high: {
     label: "High",
     bg: "bg-red-50",
@@ -28,7 +34,7 @@ export default function DeadlineCard({
   removeDeadline,
 }) {
   const getDaysLeft = (dueDate) => {
-    const today = new Date("2026-05-22");
+    const today = new Date();
 
     const due = new Date(dueDate);
 
@@ -47,7 +53,7 @@ export default function DeadlineCard({
       className="flex items-start gap-3 p-4 bg-white border border-slate-200 rounded-xl hover:border-slate-300 transition-all"
     >
       <button
-        onClick={() => toggleComplete(deadline.id)}
+        onClick={() => toggleComplete(deadline._id)}
         className="mt-0.5 w-5 h-5 rounded-md border-2 border-slate-300 hover:border-indigo-400 flex items-center justify-center transition-all shrink-0"
       />
 
@@ -100,7 +106,7 @@ export default function DeadlineCard({
       </div>
 
       <button
-        onClick={() => removeDeadline(deadline.id)}
+        onClick={() => removeDeadline(deadline._id)}
         className="w-7 h-7 rounded-lg hover:bg-red-50 flex items-center justify-center"
       >
         <Trash2 size={13} className="text-slate-400 hover:text-red-500" />

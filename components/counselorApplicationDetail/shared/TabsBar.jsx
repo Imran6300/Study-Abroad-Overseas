@@ -28,6 +28,12 @@ export default function TabsBar({
   handleCreateNote,
   loadingNotes,
   savingNote,
+
+  deadlines,
+  savingDeadline,
+  handleCreateDeadline,
+  handleToggleDeadline,
+  handleDeleteDeadline,
 }) {
   return (
     <motion.div
@@ -88,7 +94,14 @@ export default function TabsBar({
         )}
         {/* ── DEADLINES ── */}
         {activeTab === "deadlines" && (
-          <DeadlinesTab applicationId={application._id} />
+          <DeadlinesTab
+            applicationId={application._id}
+            deadlines={deadlines}
+            savingDeadline={savingDeadline}
+            handleCreateDeadline={handleCreateDeadline}
+            handleToggleDeadline={handleToggleDeadline}
+            handleDeleteDeadline={handleDeleteDeadline}
+          />
         )}
         {/* ── APPLICATIONS ── */}
         {activeTab === "applications" && (

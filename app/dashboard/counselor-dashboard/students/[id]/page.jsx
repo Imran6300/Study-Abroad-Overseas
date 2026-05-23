@@ -44,7 +44,7 @@ const mockApplicationDetail = {
   _id: "mock-application-id",
   appId: "KHZ-2026-0001",
   student: {
-    _id: "mock-student-id",
+    _id: "69b5b944b6d9180a3aad9cf9",
     userId: "69b5b944b6d9180a3aad9cf9",
     name: "Rahul Sharma",
     email: "rahul@example.com",
@@ -138,6 +138,10 @@ export default function KhizarApplicationDetailPage() {
   const [loadingNotes, setLoadingNotes] = useState(false);
   const [savingNote, setSavingNote] = useState(false);
 
+  const [deadlines, setDeadlines] = useState([]);
+  const [loadingDeadlines, setLoadingDeadlines] = useState(false);
+  const [savingDeadline, setSavingDeadline] = useState(false);
+
   const fetchNotes = async () => {
     try {
       setLoadingNotes(true);
@@ -187,6 +191,95 @@ export default function KhizarApplicationDetailPage() {
       setSavingNote(false);
     }
   };
+
+  const handleCreateDeadline = async (payload) => {
+    try {
+      setSavingDeadline(true);
+
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/user/admin/deadlines`,
+        {
+          method: "POST",
+
+          credentials: "include",
+
+          headers: {
+            "Content-Type": "application/json",
+          },
+
+          body: JSON.stringify({
+            student: application.student._id,
+            ...payload,
+          }),
+        },
+      );
+
+      const data = await res.json();
+
+      if (!data.success) {
+        alert(data.message || "Failed to create deadline");
+        return;
+      }
+
+      setDeadlines((prev) => [...prev, data.deadline]);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSavingDeadline(false);
+    }
+  };
+
+  const handleToggleDeadline = async (deadlineId) => {
+    try {
+      const updated = deadlines.map((d) =>
+        d._id === deadlineId ? { ...d, completed: !d.completed } : d,
+      );
+
+      setDeadlines(updated);
+
+      await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/user/admin/deadline/${deadlineId}`,
+        {
+          method: "PUT",
+
+          credentials: "include",
+
+          headers: {
+            "Content-Type": "application/json",
+          },
+
+          body: JSON.stringify({
+            completed: !deadlines.find((d) => d._id === deadlineId)?.completed,
+          }),
+        },
+      );
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleDeleteDeadline = async (deadlineId) => {
+    try {
+      await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/user/admin/deadline/${deadlineId}`,
+        {
+          method: "DELETE",
+
+          credentials: "include",
+        },
+      );
+
+      setDeadlines((prev) => prev.filter((d) => d._id !== deadlineId));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    if (studentDeadlines) {
+      setDeadlines(studentDeadlines);
+    }
+  }, [studentDeadlines]);
 
   useEffect(() => {
     setTimeout(async () => {
@@ -366,6 +459,11 @@ export default function KhizarApplicationDetailPage() {
           handleCreateNote={handleCreateNote}
           loadingNotes={loadingNotes}
           savingNote={savingNote}
+          deadlines={deadlines}
+          savingDeadline={savingDeadline}
+          handleCreateDeadline={handleCreateDeadline}
+          handleToggleDeadline={handleToggleDeadline}
+          handleDeleteDeadline={handleDeleteDeadline}
         />
       </main>
     </div>

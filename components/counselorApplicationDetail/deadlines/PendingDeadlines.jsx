@@ -11,7 +11,7 @@ export default function PendingDocuments({
     <div className="space-y-2.5">
       {deadlines.map((deadline) => (
         <DeadlineCard
-          key={deadline.id}
+          key={deadline._id}
           deadline={deadline}
           toggleComplete={toggleComplete}
           removeDeadline={removeDeadline}
