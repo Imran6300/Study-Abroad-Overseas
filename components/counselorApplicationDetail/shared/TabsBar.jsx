@@ -102,7 +102,7 @@ export default function TabsBar({
             applicationDocuments={applicationDocuments}
             visaDocuments={visaDocuments}
             financialDocuments={financialDocuments}
-            offerLetters={application.offerLetters}
+            offerLetters={application?.offerLetters || []}
           />
         )}
         {/* ── DEADLINES ── */}
@@ -150,7 +150,9 @@ export default function TabsBar({
           />
         )}
         {/* ── ACTIVITY ── */}
-        {activeTab === "activity" && <ActivityTab application={application} />}
+        {activeTab === "activity" && (
+          <ActivityTab application={application?.activityLog || []} />
+        )}
       </div>
     </motion.div>
   );

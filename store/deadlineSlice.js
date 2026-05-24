@@ -137,7 +137,13 @@ const deadlineSlice = createSlice({
 
   initialState,
 
-  reducers: {},
+  reducers: {
+    resetDeadlines: (state) => {
+      state.studentDeadlines = [];
+      state.loading = false;
+      state.error = null;
+    },
+  },
 
   extraReducers: (builder) => {
     builder
@@ -215,5 +221,7 @@ const deadlineSlice = createSlice({
       });
   },
 });
+
+export const { resetDeadlines } = deadlineSlice.actions;
 
 export default deadlineSlice.reducer;

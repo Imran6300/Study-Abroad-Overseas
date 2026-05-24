@@ -16,14 +16,15 @@ import TabsBar from "@/components/counselorApplicationDetail/shared/TabsBar";
 //redux
 
 import { useDispatch, useSelector } from "react-redux";
-import { fetchStudentProfile } from "@/store/profileSlice";
+import { fetchStudentProfile, resetProfile } from "@/store/profileSlice";
 import {
   fetchStudentApplications,
   createStudentApplication,
   deleteStudentApplication,
   updateApplicationStatus,
+  resetApplications,
 } from "@/store/applicationSlice";
-import { fetchStudentDeadlines } from "@/store/deadlineSlice";
+import { fetchStudentDeadlines, resetDeadlines } from "@/store/deadlineSlice";
 
 import {
   ArrowLeft,
@@ -42,78 +43,6 @@ import {
   ClipboardList,
   CalendarClock,
 } from "lucide-react";
-
-// ─── Mock data ────────────────────────────────────────────────────────────────
-const mockApplicationDetail = {
-  id: 1,
-  _id: "69b5b944b6d9180a3aad9cf9",
-  appId: "KHZ-2026-0001",
-  student: {
-    _id: "69b5b944b6d9180a3aad9cf9",
-    userId: "69b5b944b6d9180a3aad9cf9",
-    name: "Rahul Sharma",
-    email: "rahul@example.com",
-    phone: "+91 98765 43210",
-    nationality: "Indian",
-    passportNo: "A1234567",
-    currentCity: "Hyderabad, India",
-  },
-  university: "University of Toronto",
-  country: "Canada",
-  course: "Computer Science (MSc)",
-  intake: "Fall 2026",
-  status: "Documents Reviewing",
-  managedBy: "khizar",
-  processor: "Khizar Processing Team",
-  createdAt: "2026-05-10",
-  updatedAt: "2026-05-12",
-  avatar: "RS",
-  avatarColor: "from-violet-500 to-purple-600",
-  documents: [],
-  offerLetters: [],
-  visaFiles: [],
-  counselorNotes:
-    "Student has a strong academic background. Education gap of 6 months due to family reasons. IELTS score of 7.0. Needs strong SOP to compensate for education gap.",
-  processorNotes:
-    "Initial documents reviewed. SOP needs revision. Will contact counselor for updated version.",
-  activityLog: [
-    {
-      id: "act1",
-      type: "submitted",
-      message: "Application submitted to Khizar Overseas",
-      by: "Counselor",
-      timestamp: "2026-05-10 10:30 AM",
-    },
-    {
-      id: "act2",
-      type: "assigned",
-      message: "Processor assigned: Khizar Processing Team",
-      by: "System",
-      timestamp: "2026-05-10 10:35 AM",
-    },
-    {
-      id: "act3",
-      type: "documents",
-      message: "Passport and Transcripts uploaded",
-      by: "Counselor",
-      timestamp: "2026-05-10 11:00 AM",
-    },
-    {
-      id: "act4",
-      type: "status",
-      message: "Status updated to Documents Reviewing",
-      by: "Processor",
-      timestamp: "2026-05-12 09:00 AM",
-    },
-    {
-      id: "act5",
-      type: "documents",
-      message: "IELTS Report and SOP uploaded",
-      by: "Counselor",
-      timestamp: "2026-05-11 02:00 PM",
-    },
-  ],
-};
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function KhizarApplicationDetailPage() {
@@ -171,6 +100,7 @@ export default function KhizarApplicationDetailPage() {
   const handleCreateNote = async () => {
     try {
       if (!noteTitle.trim() || !noteMessage.trim()) return;
+      if (!application?.student?._id) return;
       setSavingNote(true);
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/user/admin/notes`,
@@ -214,6 +144,7 @@ export default function KhizarApplicationDetailPage() {
 
   const handleCreateDeadline = async (payload) => {
     try {
+      if (!application?.student?._id) return;
       setSavingDeadline(true);
 
       const res = await fetch(
@@ -393,20 +324,76 @@ export default function KhizarApplicationDetailPage() {
     }
   }, [studentDeadlines]);
 
+  // AFTER (real API)
   useEffect(() => {
-    setTimeout(async () => {
-      setApplication(mockApplicationDetail);
+    const loadApplication = async () => {
+      try {
+        setLoading(true);
 
-      // FETCH PROFILE
-      dispatch(fetchStudentProfile(mockApplicationDetail.student.userId));
-      dispatch(fetchStudentApplications(mockApplicationDetail.student.userId));
+        setApplication(null); // clear page state
+        dispatch(resetProfile()); // clear old student profile
+        dispatch(resetApplications()); // clear old applications list
+        dispatch(resetDeadlines());
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/applications/${id}`,
+          { credentials: "include" },
+        );
+        const data = await res.json();
 
-      dispatch(fetchStudentDeadlines(mockApplicationDetail.student.userId));
+        console.log("API response:", data);
 
-      fetchNotes();
+        if (data.success) {
+          // API returns { success: true, applications: [...] }
+          // Use the first application for page-level data, or a fallback object
+          const firstApp = data.applications?.[0] || null;
 
-      setLoading(false);
-    }, 600);
+          // Build a safe application object whether or not array is empty
+          const appData = firstApp
+            ? {
+                _id: firstApp._id,
+                appId: firstApp.appId || firstApp._id,
+                student: firstApp.student,
+                status: firstApp.status || "Submitted",
+                managedBy: firstApp.managedBy || "",
+                processor: firstApp.processor || "Not Assigned",
+                offerLetters: firstApp.offerLetters || [],
+                activityLog: firstApp.activityLog || [],
+                documents: firstApp.documents || [],
+              }
+            : {
+                // Safe empty shell — page renders, nothing crashes
+                _id: id,
+                appId: "N/A",
+                student: { _id: id, userId: id },
+                status: "Submitted",
+                managedBy: "",
+                processor: "Not Assigned",
+                offerLetters: [],
+                activityLog: [],
+                documents: [],
+              };
+
+          setApplication(appData);
+
+          const userId =
+            firstApp?.student?.userId || firstApp?.student?._id || id; // fallback to url id
+
+          dispatch(fetchStudentProfile(userId));
+          dispatch(fetchStudentApplications(userId));
+          dispatch(fetchStudentDeadlines(userId));
+          fetchNotes();
+        } else {
+          setApplication(null);
+        }
+      } catch (err) {
+        console.error("Failed to load application:", err);
+        setApplication(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadApplication();
   }, [id, dispatch]);
 
   if (loading) {

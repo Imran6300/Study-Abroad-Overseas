@@ -21,7 +21,9 @@ export default function PageHeader({ application, profile, isKhizarManaged }) {
               <div
                 className={`w-full h-full bg-gradient-to-br ${application.avatarColor} flex items-center justify-center text-white font-bold text-xl`}
               >
-                {application.avatar}
+                {application?.avatar ||
+                  profile?.fullName?.slice(0, 2)?.toUpperCase() ||
+                  "??"}
               </div>
             )}
           </div>
@@ -31,7 +33,7 @@ export default function PageHeader({ application, profile, isKhizarManaged }) {
                 {profile?.fullName || "Student"}
               </h1>
               <span className="font-mono text-xs bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg">
-                {application.appId}
+                {application?.appId || "N/A"}
               </span>
             </div>
             <div className="flex flex-wrap items-center gap-3 text-sm text-slate-500">
@@ -51,7 +53,7 @@ export default function PageHeader({ application, profile, isKhizarManaged }) {
             <div className="flex flex-wrap items-center gap-2 mt-3">
               <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
                 <span className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
-                {application.status}
+                {application?.status || "Pending"}
               </span>
               {isKhizarManaged && (
                 <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
@@ -61,7 +63,7 @@ export default function PageHeader({ application, profile, isKhizarManaged }) {
               )}
               <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600">
                 <User size={10} />
-                Processor: {application.processor}
+                Processor: {application?.processor || "Not Assigned"}
               </span>
             </div>
           </div>

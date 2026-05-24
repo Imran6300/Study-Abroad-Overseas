@@ -33,7 +33,13 @@ const profileSlice = createSlice({
   name: "profile",
   initialState,
 
-  reducers: {},
+  reducers: {
+    resetProfile: (state) => {
+      state.profile = null;
+      state.loading = false;
+      state.error = null;
+    },
+  },
 
   extraReducers: (builder) => {
     builder
@@ -57,5 +63,7 @@ const profileSlice = createSlice({
       });
   },
 });
+
+export const { resetProfile } = profileSlice.actions;
 
 export default profileSlice.reducer;

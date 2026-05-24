@@ -124,7 +124,14 @@ const applicationSlice = createSlice({
   name: "applications",
   initialState,
 
-  reducers: {},
+  reducers: {
+    resetApplications: (state) => {
+      state.applications = [];
+      state.loading = false;
+      state.saving = false;
+      state.error = null;
+    },
+  },
 
   extraReducers: (builder) => {
     builder
@@ -194,5 +201,7 @@ const applicationSlice = createSlice({
       });
   },
 });
+
+export const { resetApplications } = applicationSlice.actions;
 
 export default applicationSlice.reducer;
