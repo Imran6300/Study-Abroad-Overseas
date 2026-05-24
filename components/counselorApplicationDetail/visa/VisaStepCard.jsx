@@ -1,21 +1,14 @@
 import { motion } from "framer-motion";
 
-import { Check, X, Pencil } from "lucide-react";
-
-import VisaStepNoteEditor from "./VisaStepNoteEditor";
+import { Check, X } from "lucide-react";
 
 export default function VisaStepCard({
   step,
   index,
-  editingStep,
-  setEditingStep,
-  stepNote,
-  setStepNote,
   updateStepStatus,
-  saveStepNote,
   visaStepConfig,
 }) {
-  const sc = visaStepConfig[step.status] || visaStepConfig.not_started;
+  const sc = visaStepConfig[step.status] || visaStepConfig.pending;
 
   return (
     <motion.div
@@ -44,28 +37,13 @@ export default function VisaStepCard({
         </div>
 
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-slate-800">{step.step}</p>
-
-          {step.notes && (
-            <p className="text-xs text-slate-400 mt-0.5">{step.notes}</p>
-          )}
+          <p className="text-sm font-semibold text-slate-800">{step.title}</p>
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
-          <button
-            onClick={() => {
-              setEditingStep(editingStep === step.id ? null : step.id);
-
-              setStepNote(step.notes);
-            }}
-            className="w-7 h-7 rounded-lg hover:bg-slate-100 flex items-center justify-center transition-all"
-          >
-            <Pencil size={11} className="text-slate-400" />
-          </button>
-
           <select
             value={step.status}
-            onChange={(e) => updateStepStatus(step.id, e.target.value)}
+            onChange={(e) => updateStepStatus(step._id, e.target.value)}
             className={`text-[11px] font-semibold border rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-teal-400 ${sc.bg} ${sc.text} ${sc.border}`}
           >
             {Object.entries(visaStepConfig).map(([k, v]) => (
@@ -76,15 +54,6 @@ export default function VisaStepCard({
           </select>
         </div>
       </div>
-
-      <VisaStepNoteEditor
-        step={step}
-        editingStep={editingStep}
-        stepNote={stepNote}
-        setStepNote={setStepNote}
-        saveStepNote={saveStepNote}
-        setEditingStep={setEditingStep}
-      />
     </motion.div>
   );
 }

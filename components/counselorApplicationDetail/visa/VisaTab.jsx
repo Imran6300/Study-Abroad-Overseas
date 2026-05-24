@@ -1,51 +1,41 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import VisaProgress from "./VisaProgress";
-import VisaInfoForm from "./VisaInfoForm";
 import VisaChecklist from "./VisaChecklist";
 
 export default function VisaTab({ application }) {
-  const defaultSteps = [
-    {
-      id: "vs1",
-      step: "Offer Letter Received",
-      status: "not_started",
-      notes: "",
-    },
-    {
-      id: "vs2",
-      step: "GIC / Financial Proof",
-      status: "not_started",
-      notes: "",
-    },
-    {
-      id: "vs3",
-      step: "Biometrics Enrollment",
-      status: "not_started",
-      notes: "",
-    },
-    {
-      id: "vs4",
-      step: "Visa Application Filed",
-      status: "not_started",
-      notes: "",
-    },
-    {
-      id: "vs5",
-      step: "Medical Examination",
-      status: "not_started",
-      notes: "",
-    },
-    {
-      id: "vs6",
-      step: "Visa Decision",
-      status: "not_started",
-      notes: "",
-    },
-  ];
+  const [visa, setVisa] = useState(null);
+  const [loadingVisa, setLoadingVisa] = useState(true);
+
+  useEffect(() => {
+    fetchVisa();
+  }, []);
+
+  const fetchVisa = async () => {
+    try {
+      setLoadingVisa(true);
+
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/user/student/${application.student._id}`,
+        {
+          credentials: "include",
+        },
+      );
+
+      const data = await res.json();
+
+      if (data.success) {
+        setVisa(data.visa);
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoadingVisa(false);
+    }
+  };
 
   const visaStepConfig = {
-    not_started: {
+    pending: {
       label: "Not Started",
       bg: "bg-slate-50",
       text: "text-slate-600",
@@ -63,6 +53,12 @@ export default function VisaTab({ application }) {
       text: "text-emerald-600",
       border: "border-emerald-200",
     },
+    on_hold: {
+      label: "On Hold",
+      bg: "bg-yellow-50",
+      text: "text-yellow-600",
+      border: "border-yellow-200",
+    },
     rejected: {
       label: "Rejected",
       bg: "bg-red-50",
@@ -71,79 +67,59 @@ export default function VisaTab({ application }) {
     },
   };
 
-  const [steps, setSteps] = useState(defaultSteps);
+  const completedCount =
+    visa?.steps?.filter((s) => s.status === "completed").length || 0;
 
-  const [visaInfo, setVisaInfo] = useState({
-    visaType: "Student Visa (Study Permit)",
-    fileNo: "",
-    submissionDate: "",
-    decisionDate: "",
-    outcome: "",
-    remarks: "",
-  });
+  const progressPct = visa?.progressPercentage || 0;
 
-  const [saving, setSaving] = useState(false);
+  const updateStepStatus = async (stepId, status) => {
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/user/${visa._id}/step/${stepId}`,
+        {
+          method: "PATCH",
 
-  const [saved, setSaved] = useState(false);
+          credentials: "include",
 
-  const [editingStep, setEditingStep] = useState(null);
+          headers: {
+            "Content-Type": "application/json",
+          },
 
-  const [stepNote, setStepNote] = useState("");
+          body: JSON.stringify({
+            status,
+            updatedBy: application.student._id,
+            updatedByRole: "Counselor",
+          }),
+        },
+      );
 
-  const updateStepStatus = (id, status) => {
-    setSteps((prev) => prev.map((s) => (s.id === id ? { ...s, status } : s)));
+      const data = await res.json();
+
+      if (data.success) {
+        setVisa(data.visa);
+      }
+    } catch (error) {
+      console.log(error);
+    }
   };
 
-  const saveStepNote = (id) => {
-    setSteps((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, notes: stepNote } : s)),
+  if (loadingVisa) {
+    return (
+      <div className="text-sm text-slate-400">Loading visa progress...</div>
     );
-
-    setEditingStep(null);
-
-    setStepNote("");
-  };
-
-  const handleSaveVisaInfo = async () => {
-    setSaving(true);
-
-    await new Promise((r) => setTimeout(r, 600));
-
-    setSaving(false);
-
-    setSaved(true);
-
-    setTimeout(() => setSaved(false), 2500);
-  };
-
-  const completedCount = steps.filter((s) => s.status === "completed").length;
-
-  const progressPct = Math.round((completedCount / steps.length) * 100);
+  }
 
   return (
     <div className="space-y-6">
       <VisaProgress
         completedCount={completedCount}
-        totalSteps={steps.length}
+        totalSteps={visa?.steps?.length || 0}
         progressPct={progressPct}
       />
 
-      <VisaInfoForm
-        visaInfo={visaInfo}
-        setVisaInfo={setVisaInfo}
-        handleSaveVisaInfo={handleSaveVisaInfo}
-        saving={saving}
-        saved={saved}
-      />
-
       <VisaChecklist
-        steps={steps}
-        editingStep={editingStep}
-        setEditingStep={setEditingStep}
-        stepNote={stepNote}
-        setStepNote={setStepNote}
+        steps={visa?.steps || []}
         updateStepStatus={updateStepStatus}
-        saveStepNote={saveStepNote}
         visaStepConfig={visaStepConfig}
       />
     </div>

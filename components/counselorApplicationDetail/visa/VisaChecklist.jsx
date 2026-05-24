@@ -6,10 +6,7 @@ export default function VisaChecklist({
   steps,
   editingStep,
   setEditingStep,
-  stepNote,
-  setStepNote,
   updateStepStatus,
-  saveStepNote,
   visaStepConfig,
 }) {
   return (
@@ -22,15 +19,10 @@ export default function VisaChecklist({
       <div className="space-y-2.5">
         {steps.map((s, i) => (
           <VisaStepCard
-            key={s.id}
+            key={s._id}
             step={s}
             index={i}
-            editingStep={editingStep}
-            setEditingStep={setEditingStep}
-            stepNote={stepNote}
-            setStepNote={setStepNote}
             updateStepStatus={updateStepStatus}
-            saveStepNote={saveStepNote}
             visaStepConfig={visaStepConfig}
           />
         ))}
