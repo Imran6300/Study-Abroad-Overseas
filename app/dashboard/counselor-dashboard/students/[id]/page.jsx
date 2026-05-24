@@ -46,7 +46,7 @@ import {
 // ─── Mock data ────────────────────────────────────────────────────────────────
 const mockApplicationDetail = {
   id: 1,
-  _id: "mock-application-id",
+  _id: "69b5b944b6d9180a3aad9cf9",
   appId: "KHZ-2026-0001",
   student: {
     _id: "69b5b944b6d9180a3aad9cf9",
@@ -146,6 +146,7 @@ export default function KhizarApplicationDetailPage() {
   const [visibleToStudent, setVisibleToStudent] = useState(false);
   const [loadingNotes, setLoadingNotes] = useState(false);
   const [savingNote, setSavingNote] = useState(false);
+  const [editingNote, setEditingNote] = useState(null);
 
   const [deadlines, setDeadlines] = useState([]);
   const [loadingDeadlines, setLoadingDeadlines] = useState(false);
@@ -201,6 +202,16 @@ export default function KhizarApplicationDetailPage() {
     }
   };
 
+  const handleEditNote = (note) => {
+    setEditingNote(note);
+
+    setNoteTitle(note.title);
+
+    setNoteMessage(note.message);
+
+    setVisibleToStudent(note.isVisibleToStudent);
+  };
+
   const handleCreateDeadline = async (payload) => {
     try {
       setSavingDeadline(true);
@@ -235,6 +246,68 @@ export default function KhizarApplicationDetailPage() {
       console.error(err);
     } finally {
       setSavingDeadline(false);
+    }
+  };
+
+  const handleUpdateNote = async () => {
+    try {
+      setSavingNote(true);
+
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/user/admin/notes/${editingNote._id}`,
+        {
+          method: "PUT",
+
+          credentials: "include",
+
+          headers: {
+            "Content-Type": "application/json",
+          },
+
+          body: JSON.stringify({
+            title: noteTitle,
+
+            message: noteMessage,
+
+            isVisibleToStudent: visibleToStudent,
+          }),
+        },
+      );
+
+      const data = await res.json();
+
+      if (data.success) {
+        setEditingNote(null);
+
+        setNoteTitle("");
+
+        setNoteMessage("");
+
+        setVisibleToStudent(false);
+
+        fetchNotes();
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSavingNote(false);
+    }
+  };
+
+  const handleDeleteNote = async (noteId) => {
+    try {
+      await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/user/admin/notes/${noteId}`,
+        {
+          method: "DELETE",
+
+          credentials: "include",
+        },
+      );
+
+      fetchNotes();
+    } catch (err) {
+      console.error(err);
     }
   };
   const handleCreateApplication = async (payload) => {
@@ -509,6 +582,10 @@ export default function KhizarApplicationDetailPage() {
           handleDeleteApplication={handleDeleteApplication}
           handleUpdateApplicationStatus={handleUpdateApplicationStatus}
           handleUpdateApplication={handleUpdateApplication}
+          editingNote={editingNote}
+          handleUpdateNote={handleUpdateNote}
+          handleEditNote={handleEditNote}
+          handleDeleteNote={handleDeleteNote}
         />
       </main>
     </div>

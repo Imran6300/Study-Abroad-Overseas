@@ -1,4 +1,6 @@
-export default function NoteCard({ note }) {
+import { Pencil, Trash2 } from "lucide-react";
+
+export default function NoteCard({ note, onEdit, onDelete }) {
   return (
     <div className="border border-slate-200 rounded-2xl p-5 bg-white">
       <div className="flex items-start justify-between gap-4">
@@ -27,6 +29,21 @@ export default function NoteCard({ note }) {
         </div>
 
         <div className="text-right text-xs text-slate-400">
+          <div className="flex items-center justify-end gap-2 mb-2">
+            <button
+              onClick={() => onEdit(note)}
+              className="w-7 h-7 rounded-lg hover:bg-slate-100 flex items-center justify-center"
+            >
+              <Pencil size={14} className="text-slate-500" />
+            </button>
+
+            <button
+              onClick={() => onDelete(note._id)}
+              className="w-7 h-7 rounded-lg hover:bg-red-50 flex items-center justify-center"
+            >
+              <Trash2 size={14} className="text-red-500" />
+            </button>
+          </div>
           <p>{note.counselor?.name}</p>
 
           <p>{new Date(note.createdAt).toLocaleDateString()}</p>

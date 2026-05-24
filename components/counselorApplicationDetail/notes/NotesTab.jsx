@@ -2,6 +2,10 @@ import CreateNoteForm from "./CreateNoteForm";
 import NotesList from "./NotesList";
 
 export default function NotesTab({
+  editingNote,
+  handleUpdateNote,
+  onEdit,
+  onDelete,
   notes,
   noteTitle,
   setNoteTitle,
@@ -24,9 +28,16 @@ export default function NotesTab({
         setVisibleToStudent={setVisibleToStudent}
         handleCreateNote={handleCreateNote}
         savingNote={savingNote}
+        editingNote={editingNote}
+        handleUpdateNote={handleUpdateNote}
       />
 
-      <NotesList notes={notes} loadingNotes={loadingNotes} />
+      <NotesList
+        notes={notes}
+        onEdit={onEdit}
+        onDelete={onDelete}
+        loadingNotes={loadingNotes}
+      />
     </div>
   );
 }

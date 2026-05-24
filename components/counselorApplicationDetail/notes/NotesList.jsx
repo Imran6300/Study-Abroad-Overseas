@@ -1,6 +1,6 @@
 import NoteCard from "./NoteCard";
 
-export default function NotesList({ notes, loadingNotes }) {
+export default function NotesList({ notes, loadingNotes, onEdit, onDelete }) {
   if (loadingNotes) {
     return <div className="text-sm text-slate-400">Loading notes...</div>;
   }
@@ -12,7 +12,12 @@ export default function NotesList({ notes, loadingNotes }) {
   return (
     <div className="space-y-4">
       {notes.map((note) => (
-        <NoteCard key={note._id} note={note} />
+        <NoteCard
+          key={note._id}
+          note={note}
+          onEdit={onEdit}
+          onDelete={onDelete}
+        />
       ))}
     </div>
   );

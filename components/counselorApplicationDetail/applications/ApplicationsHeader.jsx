@@ -14,8 +14,8 @@ export default function ApplicationsHeader({ apps, setShowForm }) {
           </h3>
 
           <p className="text-xs text-slate-400">
-            {apps.length} application
-            {apps.length !== 1 ? "s" : ""} tracked
+            {apps?.length || 0} application
+            {(apps?.length || 0) !== 1 ? "s" : ""} tracked
           </p>
         </div>
       </div>

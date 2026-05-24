@@ -7,6 +7,9 @@ export default function CreateNoteForm({
   setVisibleToStudent,
   handleCreateNote,
   savingNote,
+  editingNote,
+  handleUpdateNote,
+  setEditingNote,
 }) {
   return (
     <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5">
@@ -37,15 +40,37 @@ export default function CreateNoteForm({
           />
           Visible to student
         </label>
-
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-3">
           <button
-            onClick={handleCreateNote}
+            onClick={editingNote ? handleUpdateNote : handleCreateNote}
             disabled={savingNote}
             className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold"
           >
-            {savingNote ? "Creating..." : "Create Note"}
+            {savingNote
+              ? editingNote
+                ? "Updating..."
+                : "Creating..."
+              : editingNote
+                ? "Update Note"
+                : "Create Note"}
           </button>
+
+          {editingNote && (
+            <button
+              onClick={() => {
+                setEditingNote(null);
+
+                setNoteTitle("");
+
+                setNoteMessage("");
+
+                setVisibleToStudent(false);
+              }}
+              className="px-5 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold"
+            >
+              Cancel Edit
+            </button>
+          )}
         </div>
       </div>
     </div>

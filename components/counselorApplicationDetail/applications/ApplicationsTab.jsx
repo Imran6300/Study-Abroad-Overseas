@@ -69,13 +69,13 @@ export default function ApplicationsTab({
         />
       )}
 
-      {applications.length === 0 ? (
+      {(applications?.length || 0) === 0 ? (
         <div className="py-12 text-center text-slate-400 text-sm border-2 border-dashed border-slate-200 rounded-xl">
           No university applications tracked yet.
         </div>
       ) : (
         <div className="space-y-4">
-          {applications.map((app) => (
+          {applications?.map((app) => (
             <ApplicationCard
               key={app._id}
               app={app}

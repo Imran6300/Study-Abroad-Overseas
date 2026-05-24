@@ -41,6 +41,12 @@ export default function TabsBar({
   handleDeleteApplication,
   handleUpdateApplicationStatus,
   handleUpdateApplication,
+
+  editingNote,
+  handleUpdateNote,
+  setEditingNote,
+  handleEditNote,
+  handleDeleteNote,
 }) {
   return (
     <motion.div
@@ -136,6 +142,11 @@ export default function TabsBar({
             handleCreateNote={handleCreateNote}
             loadingNotes={loadingNotes}
             savingNote={savingNote}
+            editingNote={editingNote}
+            handleUpdateNote={handleUpdateNote}
+            setEditingNote={setEditingNote}
+            onDelete={handleDeleteNote}
+            onEdit={handleEditNote}
           />
         )}
         {/* ── ACTIVITY ── */}
