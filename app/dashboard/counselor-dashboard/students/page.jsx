@@ -16,9 +16,14 @@ import {
   formVariants,
 } from "@/components/Animations/formanimations/animate";
 
-const STATUS_OPTIONS = ["Lead", "Applied", "Enrolled", "Closed"];
-const CONTACTED_STAGES = ["contacted", "qualified", "applied", "enrolled"];
-
+const STATUS_OPTIONS = [
+  "application_started",
+  "application_submitted",
+  "offer_received",
+  "visa_process",
+  "enrolled",
+  "lost",
+];
 export default function StudentsAdminPage() {
   const router = useRouter();
   const { user } = useSelector((state) => state.auth);
@@ -112,9 +117,6 @@ export default function StudentsAdminPage() {
     }
   };
 
-  const capitalize = (str) =>
-    str ? str.charAt(0).toUpperCase() + str.slice(1) : "";
-
   const filteredStudents = students.filter((s) => {
     const term = search.toLowerCase().trim();
     if (!term) return true;
@@ -126,32 +128,6 @@ export default function StudentsAdminPage() {
       (s.status || "").toLowerCase().includes(term)
     );
   });
-
-  const updateStatus = async (id, newStatus) => {
-    try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/lead/${id}`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ counselorStage: newStatus }),
-        },
-      );
-
-      if (!res.ok) {
-        const data = await res.json();
-        alert(data.message || "Failed to update status");
-        return;
-      }
-
-      setStudents((prev) =>
-        prev.map((s) => (s.leadId === id ? { ...s, status: newStatus } : s)),
-      );
-    } catch (error) {
-      console.error("Status update error:", error);
-    }
-  };
 
   const handleFormSuccess = (formData) => {
     if (mode === "add") {
@@ -307,9 +283,6 @@ export default function StudentsAdminPage() {
                         <th className="px-4 py-3 sm:px-6 sm:py-4 text-left text-xs sm:text-sm font-semibold text-gray-700 whitespace-nowrap">
                           Actions
                         </th>
-                        <th className="px-4 py-3 sm:px-6 sm:py-4 text-center text-xs sm:text-sm font-semibold text-gray-700 whitespace-nowrap">
-                          Contacted
-                        </th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200 bg-white">
@@ -335,18 +308,24 @@ export default function StudentsAdminPage() {
                               className={`inline-block px-2.5 py-1 text-xs font-semibold rounded-full ${
                                 student.status === "enrolled"
                                   ? "bg-green-100 text-green-700"
-                                  : student.status === "applied"
-                                    ? "bg-blue-100 text-blue-700"
-                                    : student.status === "qualified"
-                                      ? "bg-purple-100 text-purple-700"
-                                      : student.status === "contacted"
-                                        ? "bg-yellow-100 text-yellow-700"
-                                        : student.status === "lost"
-                                          ? "bg-red-100 text-red-700"
-                                          : "bg-gray-100 text-gray-700"
+                                  : student.status === "visa_process"
+                                    ? "bg-violet-100 text-violet-700"
+                                    : student.status === "offer_received"
+                                      ? "bg-blue-100 text-blue-700"
+                                      : student.status ===
+                                          "application_submitted"
+                                        ? "bg-amber-100 text-amber-700"
+                                        : student.status ===
+                                            "application_started"
+                                          ? "bg-indigo-100 text-indigo-700"
+                                          : student.status === "lost"
+                                            ? "bg-red-100 text-red-700"
+                                            : "bg-gray-100 text-gray-700"
                               }`}
                             >
-                              {capitalize(student.status)}
+                              {student.status
+                                ?.replace(/_/g, " ")
+                                ?.replace(/\b\w/g, (c) => c.toUpperCase())}
                             </span>
                           </td>
                           <td className="px-4 py-3 sm:px-6 sm:py-4 text-sm font-medium whitespace-nowrap">
@@ -373,47 +352,6 @@ export default function StudentsAdminPage() {
                                 Delete
                               </button>
                             </div>
-                          </td>
-                          <td className="px-4 py-3 sm:px-6 sm:py-4 text-center">
-                            <label className="inline-flex items-center cursor-pointer group">
-                              <input
-                                type="checkbox"
-                                className="sr-only peer"
-                                checked={CONTACTED_STAGES.includes(
-                                  student.status,
-                                )}
-                                disabled={[
-                                  "qualified",
-                                  "applied",
-                                  "enrolled",
-                                  "lost",
-                                ].includes(student.status)}
-                                onChange={() => {
-                                  if (student.status === "lead") {
-                                    updateStatus(student.leadId, "contacted");
-                                    return;
-                                  }
-
-                                  if (student.status === "contacted") {
-                                    updateStatus(student.leadId, "lead");
-                                    return;
-                                  }
-                                }}
-                              />
-                              <div
-                                className={`
-                                  relative w-10 h-5 sm:w-11 sm:h-6 bg-gray-200 
-                                  peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-sky-100 
-                                  rounded-full peer transition-colors
-                                  peer-checked:after:translate-x-full peer-checked:after:border-white 
-                                  after:content-[''] after:absolute after:top-[2px] after:left-[2px] 
-                                  after:bg-white after:border-gray-300 after:border after:rounded-full 
-                                  after:h-4 after:w-4 sm:after:h-5 sm:after:w-5 after:transition-all 
-                                  peer-checked:bg-emerald-500
-                                  group-hover:bg-gray-300 peer-checked:group-hover:bg-emerald-600
-                                `}
-                              />
-                            </label>
                           </td>
                         </motion.tr>
                       ))}

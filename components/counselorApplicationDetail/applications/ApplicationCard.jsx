@@ -9,21 +9,19 @@ export default function ApplicationCard({
   appSubStatusConfig,
   onView,
 }) {
-  const statusMap = {
-    "Application Started": "application_started",
-
-    "Application Submitted": "application_submitted",
-
-    "Offer Received": "offer_received",
-
-    "Visa Process": "visa_process",
-
-    Enrolled: "enrolled",
-
-    Lost: "lost",
-  };
+  const normalizedStatus = app.isRejected
+    ? "lost"
+    : app.workflow?.visaApproved
+      ? "enrolled"
+      : app.workflow?.visaApplied
+        ? "visa_process"
+        : app.workflow?.offerReceived
+          ? "offer_received"
+          : app.workflow?.universityApplied
+            ? "application_submitted"
+            : "application_started";
   const sc =
-    appSubStatusConfig[statusMap[app.status]] ||
+    appSubStatusConfig[normalizedStatus] ||
     appSubStatusConfig.application_started;
 
   return (
@@ -88,7 +86,7 @@ export default function ApplicationCard({
 
         <div className="flex items-center gap-2 shrink-0">
           <select
-            value={statusMap[app.status] || ""}
+            value={normalizedStatus}
             onChange={(e) => updateStatus(app._id, e.target.value)}
             className="text-xs border border-slate-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white"
           >

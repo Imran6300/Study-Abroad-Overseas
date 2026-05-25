@@ -142,7 +142,12 @@ const applicationSlice = createSlice({
         state.saving = false;
 
         state.applications = state.applications.map((app) =>
-          app._id === action.payload._id ? action.payload : app,
+          app._id === action.payload._id
+            ? {
+                ...app,
+                ...action.payload,
+              }
+            : app,
         );
       })
 
@@ -176,7 +181,12 @@ const applicationSlice = createSlice({
 
       .addCase(updateApplicationStatus.fulfilled, (state, action) => {
         state.applications = state.applications.map((app) =>
-          app._id === action.payload._id ? action.payload : app,
+          app._id === action.payload._id
+            ? {
+                ...app,
+                ...action.payload,
+              }
+            : app,
         );
       })
 
