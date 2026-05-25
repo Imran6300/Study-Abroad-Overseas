@@ -128,7 +128,9 @@ export default function TabsBar({
           />
         )}
         {/* ── VISA ── */}
-        {activeTab === "visa" && <VisaTab application={application} />}
+        {activeTab === "visa" && application && (
+          <VisaTab application={application} />
+        )}
         {/* ── NOTES ── */}
         {activeTab === "notes" && (
           <NotesTab

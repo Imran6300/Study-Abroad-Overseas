@@ -6,13 +6,25 @@ import VisaChecklist from "./VisaChecklist";
 export default function VisaTab({ application }) {
   const [visa, setVisa] = useState(null);
   const [loadingVisa, setLoadingVisa] = useState(true);
+  console.log("application", application);
+
+  console.log("visa", visa);
+  console.log("steps", visa?.steps);
+  console.log("steps length", visa?.steps?.length);
 
   useEffect(() => {
-    fetchVisa();
-  }, []);
+    if (application?.student?._id) {
+      fetchVisa();
+    }
+  }, [application?.student?._id]);
 
   const fetchVisa = async () => {
     try {
+      if (!application?.student?._id) {
+        setLoadingVisa(false);
+        return;
+      }
+
       setLoadingVisa(true);
 
       const res = await fetch(
@@ -23,6 +35,8 @@ export default function VisaTab({ application }) {
       );
 
       const data = await res.json();
+
+      console.log("Visa API:", data);
 
       if (data.success) {
         setVisa(data.visa);

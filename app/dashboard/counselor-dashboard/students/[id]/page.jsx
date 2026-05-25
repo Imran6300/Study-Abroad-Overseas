@@ -352,7 +352,15 @@ export default function KhizarApplicationDetailPage() {
             ? {
                 _id: firstApp._id,
                 appId: firstApp.appId || firstApp._id,
-                student: firstApp.student,
+
+                student:
+                  typeof firstApp.student === "object"
+                    ? firstApp.student
+                    : {
+                        _id: firstApp.student || id,
+                        userId: firstApp.student || id,
+                      },
+
                 status: firstApp.status || "Submitted",
                 managedBy: firstApp.managedBy || "",
                 processor: firstApp.processor || "Not Assigned",
