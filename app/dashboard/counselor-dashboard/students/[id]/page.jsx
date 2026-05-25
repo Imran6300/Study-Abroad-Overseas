@@ -310,13 +310,14 @@ export default function KhizarApplicationDetailPage() {
 
   const handleToggleDeadline = async (deadlineId) => {
     try {
-      const updated = deadlines.map((d) =>
-        d._id === deadlineId ? { ...d, completed: !d.completed } : d,
-      );
+      const currentDeadline = deadlines.find((d) => d._id === deadlineId);
 
-      setDeadlines(updated);
+      if (!currentDeadline) return;
 
-      await fetch(
+      const newStatus =
+        currentDeadline.status === "completed" ? "pending" : "completed";
+
+      const res = await fetch(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/user/admin/deadline/${deadlineId}`,
         {
           method: "PUT",
@@ -328,9 +329,29 @@ export default function KhizarApplicationDetailPage() {
           },
 
           body: JSON.stringify({
-            completed: !deadlines.find((d) => d._id === deadlineId)?.completed,
+            status: newStatus,
+            completedAt: newStatus === "completed" ? new Date() : null,
           }),
         },
+      );
+
+      const data = await res.json();
+
+      if (!data.success) {
+        alert(data.message || "Failed to update deadline");
+        return;
+      }
+
+      setDeadlines((prev) =>
+        prev.map((d) =>
+          d._id === deadlineId
+            ? {
+                ...d,
+                status: newStatus,
+                completedAt: newStatus === "completed" ? new Date() : null,
+              }
+            : d,
+        ),
       );
     } catch (err) {
       console.error(err);

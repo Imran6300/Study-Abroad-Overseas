@@ -2,6 +2,19 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Mail, Phone, MapPin, Lock, User } from "lucide-react";
 
 export default function PageHeader({ application, profile, isKhizarManaged }) {
+  const formatDateTime = (dateString) => {
+    if (!dateString) return "N/A";
+
+    return new Date(dateString).toLocaleString("en-IN", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: true,
+    });
+  };
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
@@ -72,13 +85,13 @@ export default function PageHeader({ application, profile, isKhizarManaged }) {
           <p>
             Created:{" "}
             <span className="font-semibold text-slate-700">
-              {profile?.createdAt}
+              {formatDateTime(profile?.createdAt)}
             </span>
           </p>
           <p className="mt-1">
             Updated:{" "}
             <span className="font-semibold text-slate-700">
-              {profile?.updatedAt}
+              {formatDateTime(profile?.updatedAt)}
             </span>
           </p>
           <p className="mt-1">

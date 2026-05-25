@@ -15,9 +15,9 @@ export default function DeadlinesTab({
 }) {
   const [showForm, setShowForm] = useState(false);
 
-  const pending = deadlines.filter((d) => !d.completed);
+  const pending = deadlines.filter((d) => d.status !== "completed");
 
-  const completed = deadlines.filter((d) => d.completed);
+  const completed = deadlines.filter((d) => d.status === "completed");
 
   return (
     <div className="space-y-6">
