@@ -17,26 +17,43 @@ export default function ApplicationsTab({
   const [editingApplication, setEditingApplication] = useState(null);
 
   const appSubStatusConfig = {
-    pending: {
-      label: "Pending",
-      bg: "bg-slate-50",
-      text: "text-slate-600",
-      border: "border-slate-200",
+    application_started: {
+      label: "Application Started",
+      bg: "bg-indigo-50",
+      text: "text-indigo-600",
+      border: "border-indigo-200",
     },
-    under_review: {
-      label: "Under Review",
+
+    application_submitted: {
+      label: "Application Submitted",
       bg: "bg-amber-50",
       text: "text-amber-600",
       border: "border-amber-200",
     },
-    accepted: {
-      label: "Accepted",
+
+    offer_received: {
+      label: "Offer Received",
+      bg: "bg-blue-50",
+      text: "text-blue-600",
+      border: "border-blue-200",
+    },
+
+    visa_process: {
+      label: "Visa Process",
+      bg: "bg-violet-50",
+      text: "text-violet-600",
+      border: "border-violet-200",
+    },
+
+    enrolled: {
+      label: "Enrolled",
       bg: "bg-emerald-50",
       text: "text-emerald-600",
       border: "border-emerald-200",
     },
-    rejected: {
-      label: "Rejected",
+
+    lost: {
+      label: "Lost",
       bg: "bg-red-50",
       text: "text-red-600",
       border: "border-red-200",

@@ -20,6 +20,7 @@ import { fetchStudentProfile, resetProfile } from "@/store/profileSlice";
 import {
   fetchStudentApplications,
   createStudentApplication,
+  updateStudentApplication,
   deleteStudentApplication,
   updateApplicationStatus,
   resetApplications,
@@ -56,7 +57,6 @@ export default function KhizarApplicationDetailPage() {
     applications,
     loading: applicationsLoading,
     saving: savingApplication,
-    updateStudentApplication,
   } = useSelector((state) => state.applications);
 
   const { studentDeadlines } = useSelector((state) => state.deadline);
@@ -82,10 +82,12 @@ export default function KhizarApplicationDetailPage() {
   const [savingDeadline, setSavingDeadline] = useState(false);
 
   const fetchNotes = async () => {
+    // Wait until application is loaded
+    if (!application?._id) return;
     try {
       setLoadingNotes(true);
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/user/admin/notes/${id}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/user/admin/notes/${application._id}`, // ← use application._id, not id
         { credentials: "include" },
       );
       const data = await res.json();
@@ -123,7 +125,7 @@ export default function KhizarApplicationDetailPage() {
         setNoteTitle("");
         setNoteMessage("");
         setVisibleToStudent(false);
-        fetchNotes();
+        await fetchNotes();
       }
     } catch (err) {
       console.error(err);
@@ -216,7 +218,7 @@ export default function KhizarApplicationDetailPage() {
 
         setVisibleToStudent(false);
 
-        fetchNotes();
+        await fetchNotes();
       }
     } catch (err) {
       console.error(err);
@@ -236,29 +238,63 @@ export default function KhizarApplicationDetailPage() {
         },
       );
 
-      fetchNotes();
+      await fetchNotes();
     } catch (err) {
       console.error(err);
     }
   };
   const handleCreateApplication = async (payload) => {
-    await dispatch(
-      createStudentApplication({
-        studentId: application.student.userId,
-        payload,
-      }),
-    );
+    const studentId =
+      application.student._id || application.student.userId || id; // ← safe fallback
+    await dispatch(createStudentApplication({ studentId, payload }));
   };
 
   const handleDeleteApplication = async (applicationId) => {
     await dispatch(deleteStudentApplication(applicationId));
   };
 
-  const handleUpdateApplicationStatus = async (applicationId, status) => {
-    await dispatch(
+  const handleUpdateApplicationStatus = (applicationId, status) => {
+    let payload = {};
+
+    switch (status) {
+      case "offer_received":
+        payload = {
+          workflow: {
+            offerReceived: true,
+          },
+        };
+        break;
+
+      case "visa_process":
+        payload = {
+          workflow: {
+            visaApplied: true,
+          },
+        };
+        break;
+
+      case "enrolled":
+        payload = {
+          workflow: {
+            visaApproved: true,
+          },
+        };
+        break;
+
+      case "lost":
+        payload = {
+          isRejected: true,
+        };
+        break;
+
+      default:
+        return;
+    }
+
+    dispatch(
       updateApplicationStatus({
         applicationId,
-        status,
+        payload,
       }),
     );
   };
@@ -317,6 +353,12 @@ export default function KhizarApplicationDetailPage() {
       console.error(err);
     }
   };
+
+  useEffect(() => {
+    if (application?._id) {
+      fetchNotes();
+    }
+  }, [application?._id]);
 
   useEffect(() => {
     if (studentDeadlines) {
@@ -389,7 +431,6 @@ export default function KhizarApplicationDetailPage() {
           dispatch(fetchStudentProfile(userId));
           dispatch(fetchStudentApplications(userId));
           dispatch(fetchStudentDeadlines(userId));
-          fetchNotes();
         } else {
           setApplication(null);
         }

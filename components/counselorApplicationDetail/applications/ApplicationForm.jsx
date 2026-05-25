@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 
-import StageSection from "@/components/adminform/addapplication/StageSection";
 import PersonalSection from "@/components/adminform/addapplication/PersonalSection";
 import EducationSection from "@/components/adminform/addapplication/EducationSection";
 import TestsSection from "@/components/adminform/addapplication/TestsSection";
@@ -21,7 +20,6 @@ export default function ApplicationForm({
   const isEdit = Boolean(initialData?._id);
 
   const [form, setForm] = useState({
-    stage: "",
     personalInfo: {},
     education: {},
     tests: {},
@@ -66,7 +64,6 @@ export default function ApplicationForm({
   useEffect(() => {
     if (initialData && initialData._id) {
       setForm({
-        stage: initialData.stage || "",
         personalInfo: initialData.personalInfo || {},
         education: initialData.education || {},
         tests: initialData.tests || {},
@@ -179,15 +176,6 @@ export default function ApplicationForm({
             )}
           </div>
         </div>
-        <StageSection
-          value={form.stage}
-          onChange={(value) =>
-            setForm((prev) => ({
-              ...prev,
-              stage: value,
-            }))
-          }
-        />
 
         <PersonalSection
           data={form.personalInfo}

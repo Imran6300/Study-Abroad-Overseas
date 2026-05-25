@@ -122,10 +122,13 @@ export default function ApplicationsPage() {
 
   const total = applications.length;
 
-  const accepted = applications.filter((a) => a.status === "Accepted").length;
-
+  const accepted = applications.filter(
+    (a) => a.status === "Enrolled" || a.status === "Offer Received",
+  ).length;
   const review = applications.filter(
-    (a) => a.status === "Under Review" || a.status === "Documents Pending",
+    (a) =>
+      a.status === "Application Started" ||
+      a.status === "Application Submitted",
   ).length;
 
   if (loading) {

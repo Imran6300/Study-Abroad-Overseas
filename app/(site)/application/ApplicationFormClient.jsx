@@ -395,8 +395,6 @@ export default function ApplicationForm() {
     { num: 7, title: "Review" },
   ];
 
-  console.log(formData);
-
   return (
     <>
       <MessageBox

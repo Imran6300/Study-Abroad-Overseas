@@ -12,13 +12,11 @@ import { motion } from "framer-motion";
 
 // ─── Timeline Steps ─────────────────────────────────────────────
 const TIMELINE_STEPS = [
-  { key: "Submitted to Khizar", label: "Submitted", icon: Send },
-  { key: "Documents Reviewing", label: "Doc Reviewing", icon: FileText },
-  { key: "University Applied", label: "Uni Applied", icon: Building2 },
+  { key: "Application Started", label: "App Started", icon: Send },
+  { key: "Application Submitted", label: "Submitted", icon: FileText },
   { key: "Offer Received", label: "Offer Received", icon: Star },
-  { key: "Visa Processing", label: "Visa Processing", icon: Shield },
-  { key: "Visa Approved", label: "Visa Approved", icon: CheckCircle2 },
-  { key: "Completed", label: "Completed", icon: Check },
+  { key: "Visa Process", label: "Visa Process", icon: Shield },
+  { key: "Enrolled", label: "Enrolled", icon: CheckCircle2 },
 ];
 
 // ─── Status Timeline ────────────────────────────────────────────

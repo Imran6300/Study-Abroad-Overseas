@@ -9,7 +9,22 @@ export default function ApplicationCard({
   appSubStatusConfig,
   onView,
 }) {
-  const sc = appSubStatusConfig[app.status] || appSubStatusConfig.pending;
+  const statusMap = {
+    "Application Started": "application_started",
+
+    "Application Submitted": "application_submitted",
+
+    "Offer Received": "offer_received",
+
+    "Visa Process": "visa_process",
+
+    Enrolled: "enrolled",
+
+    Lost: "lost",
+  };
+  const sc =
+    appSubStatusConfig[statusMap[app.status]] ||
+    appSubStatusConfig.application_started;
 
   return (
     <motion.div
@@ -73,7 +88,7 @@ export default function ApplicationCard({
 
         <div className="flex items-center gap-2 shrink-0">
           <select
-            value={app.status}
+            value={statusMap[app.status] || ""}
             onChange={(e) => updateStatus(app._id, e.target.value)}
             className="text-xs border border-slate-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white"
           >

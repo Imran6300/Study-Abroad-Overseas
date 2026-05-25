@@ -100,17 +100,15 @@ export const deleteStudentApplication = createAsyncThunk(
 
 export const updateApplicationStatus = createAsyncThunk(
   "applications/updateApplicationStatus",
-
-  async ({ applicationId, status }, thunkAPI) => {
+  async ({ applicationId, payload }, thunkAPI) => {
+    // ← change { applicationId, status } to { applicationId, payload }
     try {
-      const response = await axios.patch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/applications/${applicationId}/status`,
-        { status },
-        {
-          withCredentials: true,
-        },
+      const response = await axios.put(
+        // ← PATCH → PUT
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/applications/${applicationId}`,
+        payload, // ← send full payload like putAdminApplication expects
+        { withCredentials: true },
       );
-
       return response.data.application;
     } catch (error) {
       return thunkAPI.rejectWithValue(
