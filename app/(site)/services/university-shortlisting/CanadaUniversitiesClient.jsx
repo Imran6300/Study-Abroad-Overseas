@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import StudentProCard from "@/components/upgrade/StudentProCard";
 import {
   HiOutlineHeart,
   HiHeart,
@@ -379,12 +378,6 @@ export default function CanadaUniversitiesClient() {
                       );
                       return (
                         <div key={uni._id} className="contents">
-                          {i === 3 && (
-                            <div className="sm:col-span-2 lg:col-span-3">
-                              <StudentProCard variant="light" compact />
-                            </div>
-                          )}
-
                           <motion.div
                             key={uni._id}
                             custom={i}

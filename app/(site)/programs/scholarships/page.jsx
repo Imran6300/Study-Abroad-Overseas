@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { motion, useScroll, useSpring, useInView } from "framer-motion";
-import StudentProCard from "@/components/upgrade/StudentProCard";
 import MessageBox from "@/components/ui/MessageBox"; // adjust path
 
 import {
@@ -571,14 +570,6 @@ export default function Scholarships() {
 
       {/* RESULTS / STATS + TESTIMONIAL CARD */}
       <section className="py-20 sm:py-28">
-        <div className="max-w-5xl mx-auto px-5 sm:px-6 mb-10 sm:mb-16">
-          <StudentProCard
-            variant="dark"
-            title="Increase Your Chances of Getting a Scholarship"
-            description="Student Pro uses AI to identify scholarships you’re eligible for, track deadlines, and guide you through winning applications."
-          />
-        </div>
-
         <div className="max-w-7xl mx-auto px-5 sm:px-6">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-10 sm:mb-14">
             <div>

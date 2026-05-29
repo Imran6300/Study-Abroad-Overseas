@@ -6,7 +6,6 @@ import { debounce } from "lodash";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import CourseCard from "@/components/ui/CourseCard";
-import StudentProCard from "@/components/upgrade/StudentProCard";
 import React from "react";
 
 /* ================= DATA ================= */
@@ -209,16 +208,6 @@ export default function Courses() {
           >
             {filteredCourses.map((course, i) => (
               <React.Fragment key={course._id}>
-                {i === 3 && (
-                  <div className="col-span-full">
-                    <StudentProCard
-                      variant="dark"
-                      title="Get AI Course Recommendations"
-                      description="Student Pro analyzes your academic background and recommends the best courses and universities for your career goals."
-                    />
-                  </div>
-                )}
-
                 <CourseCard course={course} />
               </React.Fragment>
             ))}

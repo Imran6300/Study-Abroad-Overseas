@@ -4,7 +4,6 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
-import StudentProCard from "@/components/upgrade/StudentProCard";
 
 const Palette = {
   royalBlue: "#3B82F6",
@@ -197,17 +196,6 @@ export default function SopLorPage() {
               </motion.div>
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* Student Pro Upgrade */}
-      <section className="py-20 px-5 sm:px-8 lg:px-16">
-        <div className="max-w-4xl mx-auto">
-          <StudentProCard
-            variant="dark"
-            title="Strengthen Your SOP & LOR with AI Insights"
-            description="Student Pro analyzes your academic profile and helps you craft stronger SOPs, choose the right universities, and discover scholarships that increase your admission chances."
-          />
         </div>
       </section>
 
