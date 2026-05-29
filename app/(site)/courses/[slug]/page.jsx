@@ -34,7 +34,9 @@ export async function generateMetadata({ params }) {
 
   // ── SEO Title ── long-tail, high-intent, under ~60–65 chars when possible
   const mainCountry =
-    program.topCountry || program.topUniversities?.[0]?.country || "Abroad";
+    program.topCountry ||
+    program.topUniversities?.[0]?.country?.name ||
+    "Abroad";
 
   const level = program.level || "Masters / Bachelors";
   const title = `${program.title} in ${mainCountry} ${level} 2026 – Fees, Scholarships & Top Universities`;
@@ -184,7 +186,7 @@ export default async function ProgramPage({ params }) {
         },
         location: {
           "@type": "Country",
-          name: uni.country,
+          name: uni.country?.name,
         },
         courseMode: "full-time",
       })),
