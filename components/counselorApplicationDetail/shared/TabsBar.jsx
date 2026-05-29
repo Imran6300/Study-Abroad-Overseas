@@ -47,6 +47,9 @@ export default function TabsBar({
   setEditingNote,
   handleEditNote,
   handleDeleteNote,
+
+  activities,
+  loadingActivities,
 }) {
   return (
     <motion.div
@@ -153,7 +156,7 @@ export default function TabsBar({
         )}
         {/* ── ACTIVITY ── */}
         {activeTab === "activity" && (
-          <ActivityTab application={application?.activityLog || []} />
+          <ActivityTab activities={activities} loading={loadingActivities} />
         )}
       </div>
     </motion.div>

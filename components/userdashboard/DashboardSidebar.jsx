@@ -104,16 +104,6 @@ export default function DashboardSidebar() {
             </Link>
           ))}
         </nav>
-
-        {/* Upgrade CTA */}
-        <div className="p-4 border-t border-white/10">
-          <Link
-            href="/pricing"
-            className="block text-center bg-[#32CD32]/20 text-[#32CD32] py-3 rounded-xl font-semibold hover:bg-[#32CD32]/30 transition"
-          >
-            Upgrade Plan 🚀
-          </Link>
-        </div>
       </aside>
     </>
   );

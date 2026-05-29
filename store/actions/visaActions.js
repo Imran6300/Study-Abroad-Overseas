@@ -12,7 +12,7 @@ const API = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 /*
 |--------------------------------------------------------------------------
-| GET MY VISA
+| GET MY VISA  →  GET /user/visa/my/visa
 |--------------------------------------------------------------------------
 */
 
@@ -20,14 +20,13 @@ export const fetchMyVisa = () => async (dispatch) => {
   try {
     dispatch(visaStart());
 
-    const response = await axios.get(`${API}/user/my/visa`, {
+    const response = await axios.get(`${API}/user/visa/my/visa`, {
       withCredentials: true,
     });
 
     dispatch(visaSuccess(response.data.visa));
   } catch (error) {
-    console.log(error.response.data);
-
+    // FIX: guard against undefined error.response (network failures)
     dispatch(
       visaFailure(error.response?.data?.message || "Failed to fetch visa"),
     );
@@ -36,7 +35,12 @@ export const fetchMyVisa = () => async (dispatch) => {
 
 /*
 |--------------------------------------------------------------------------
-| UPDATE VISA STEP
+| UPDATE VISA STEP  →  PATCH /user/visa/:visaId/step/:stepId
+|
+| BUG FIXED: was calling `${API}/visa/${visaId}/step/${stepId}`
+|            which hits a non-existent route (missing /user prefix).
+|            The backend mounts visaprogressRouter at /user/visa,
+|            so the correct path is /user/visa/:visaId/step/:stepId.
 |--------------------------------------------------------------------------
 */
 
@@ -45,7 +49,7 @@ export const updateVisaStepAction =
   async (dispatch) => {
     try {
       const response = await axios.patch(
-        `${API}/user/${visaId}/step/${stepId}`,
+        `${API}/user/visa/${visaId}/step/${stepId}`, // ← FIXED: was /visa/...
         data,
         {
           withCredentials: true,
@@ -54,8 +58,6 @@ export const updateVisaStepAction =
 
       dispatch(updateVisaInStore(response.data.visa));
     } catch (error) {
-      console.log(error);
-
       dispatch(
         visaFailure(
           error.response?.data?.message || "Failed to update visa step",
@@ -66,20 +68,18 @@ export const updateVisaStepAction =
 
 /*
 |--------------------------------------------------------------------------
-| GET VISA LOGS
+| GET VISA LOGS  →  GET /user/visa/:visaId/logs
 |--------------------------------------------------------------------------
 */
 
 export const fetchVisaLogs = (visaId) => async (dispatch) => {
   try {
-    const response = await axios.get(`${API}/user/${visaId}/logs`, {
+    const response = await axios.get(`${API}/user/visa/${visaId}/logs`, {
       withCredentials: true,
     });
 
     dispatch(logsSuccess(response.data.logs));
   } catch (error) {
-    console.log(error);
-
     dispatch(
       visaFailure(error.response?.data?.message || "Failed to fetch visa logs"),
     );

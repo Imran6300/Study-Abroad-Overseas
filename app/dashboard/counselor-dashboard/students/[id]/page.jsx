@@ -78,6 +78,10 @@ export default function KhizarApplicationDetailPage() {
   const [editingNote, setEditingNote] = useState(null);
 
   const [deadlines, setDeadlines] = useState([]);
+
+  const [activities, setActivities] = useState([]);
+
+  const [loadingActivities, setLoadingActivities] = useState(false);
   const [loadingDeadlines, setLoadingDeadlines] = useState(false);
   const [savingDeadline, setSavingDeadline] = useState(false);
 
@@ -96,6 +100,29 @@ export default function KhizarApplicationDetailPage() {
       console.error(err);
     } finally {
       setLoadingNotes(false);
+    }
+  };
+
+  const fetchActivities = async (applicationId) => {
+    try {
+      setLoadingActivities(true);
+
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/user/activity/application/${applicationId}`,
+        {
+          credentials: "include",
+        },
+      );
+
+      const data = await res.json();
+
+      if (data.success) {
+        setActivities(data.logs || []);
+      }
+    } catch (err) {
+      console.error("Failed to fetch activities:", err);
+    } finally {
+      setLoadingActivities(false);
     }
   };
 
@@ -428,7 +455,6 @@ export default function KhizarApplicationDetailPage() {
                 managedBy: firstApp.managedBy || "",
                 processor: firstApp.processor || "Not Assigned",
                 offerLetters: firstApp.offerLetters || [],
-                activityLog: firstApp.activityLog || [],
                 documents: firstApp.documents || [],
               }
             : {
@@ -445,6 +471,10 @@ export default function KhizarApplicationDetailPage() {
               };
 
           setApplication(appData);
+
+          if (appData?._id) {
+            fetchActivities(appData._id);
+          }
 
           const userId =
             firstApp?.student?.userId || firstApp?.student?._id || id; // fallback to url id
@@ -643,6 +673,8 @@ export default function KhizarApplicationDetailPage() {
           handleUpdateNote={handleUpdateNote}
           handleEditNote={handleEditNote}
           handleDeleteNote={handleDeleteNote}
+          activities={activities}
+          loadingActivities={loadingActivities}
         />
       </main>
     </div>

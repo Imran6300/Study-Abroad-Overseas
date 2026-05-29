@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect } from "react";
 
 import VisaProgress from "./VisaProgress";
@@ -6,11 +8,8 @@ import VisaChecklist from "./VisaChecklist";
 export default function VisaTab({ application }) {
   const [visa, setVisa] = useState(null);
   const [loadingVisa, setLoadingVisa] = useState(true);
-  console.log("application", application);
 
-  console.log("visa", visa);
-  console.log("steps", visa?.steps);
-  console.log("steps length", visa?.steps?.length);
+  // FIX: removed production console.log statements (debug noise)
 
   useEffect(() => {
     if (application?.student?._id) {
@@ -28,7 +27,7 @@ export default function VisaTab({ application }) {
       setLoadingVisa(true);
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/user/student/${application.student._id}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/user/visa/student/${application.student._id}`,
         {
           credentials: "include",
         },
@@ -36,13 +35,11 @@ export default function VisaTab({ application }) {
 
       const data = await res.json();
 
-      console.log("Visa API:", data);
-
       if (data.success) {
         setVisa(data.visa);
       }
     } catch (error) {
-      console.log(error);
+      console.error("VisaTab fetchVisa error:", error);
     } finally {
       setLoadingVisa(false);
     }
@@ -88,17 +85,23 @@ export default function VisaTab({ application }) {
 
   const updateStepStatus = async (stepId, status) => {
     try {
+      // ─────────────────────────────────────────────────────────────────
+      // BUG FIXED: was `/user/${visa._id}/step/${stepId}`
+      //            Missing the /visa/ segment — hit a non-existent route
+      //            (Express would try to match it against /:userId or 404).
+      //
+      // Backend mounts visaprogressRouter at app.use('/user/visa', ...),
+      // with the step-update handler at PATCH /:visaId/step/:stepId,
+      // so the full URL must be: /user/visa/:visaId/step/:stepId
+      // ─────────────────────────────────────────────────────────────────
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/user/${visa._id}/step/${stepId}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/user/visa/${visa._id}/step/${stepId}`,
         {
           method: "PATCH",
-
           credentials: "include",
-
           headers: {
             "Content-Type": "application/json",
           },
-
           body: JSON.stringify({
             status,
             updatedBy: application.student._id,
@@ -111,9 +114,11 @@ export default function VisaTab({ application }) {
 
       if (data.success) {
         setVisa(data.visa);
+      } else {
+        console.error("updateStepStatus failed:", data.message);
       }
     } catch (error) {
-      console.log(error);
+      console.error("updateStepStatus error:", error);
     }
   };
 

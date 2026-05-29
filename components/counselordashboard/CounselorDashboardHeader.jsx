@@ -3,16 +3,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  Bell,
-  Check,
-  Info,
-  AlertTriangle,
-  X,
-  Search,
-  Moon,
-  Sun,
-} from "lucide-react";
+import { Bell, Check, Info, AlertTriangle, X, Moon, Sun } from "lucide-react";
 
 export default function DashboardHeader({
   title = "Counselor Dashboard",
@@ -29,11 +20,8 @@ export default function DashboardHeader({
       .toUpperCase() || "AD";
 
   const [showNotifications, setShowNotifications] = useState(false);
-  const [showSearch, setShowSearch] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
   const [darkHeader, setDarkHeader] = useState(false);
   const notificationRef = useRef(null);
-  const searchRef = useRef(null);
 
   useEffect(() => {
     const handler = (e) => {
@@ -42,8 +30,6 @@ export default function DashboardHeader({
         !notificationRef.current.contains(e.target)
       )
         setShowNotifications(false);
-      if (searchRef.current && !searchRef.current.contains(e.target))
-        setShowSearch(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -118,38 +104,6 @@ export default function DashboardHeader({
 
           {/* RIGHT */}
           <div className="flex items-center gap-1.5 sm:gap-3">
-            {/* Search */}
-            <div ref={searchRef} className="relative">
-              <AnimatePresence>
-                {showSearch ? (
-                  <motion.div
-                    initial={{ width: 0, opacity: 0 }}
-                    animate={{ width: 220, opacity: 1 }}
-                    exit={{ width: 0, opacity: 0 }}
-                    transition={{ duration: 0.25 }}
-                    className="overflow-hidden"
-                  >
-                    <input
-                      autoFocus
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Search students, tasks…"
-                      className="w-full bg-slate-100 rounded-xl px-4 py-2 text-sm text-slate-700 placeholder-slate-400 outline-none border border-slate-200 focus:border-sky-400 focus:ring-2 focus:ring-sky-100 transition-all"
-                    />
-                  </motion.div>
-                ) : (
-                  <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.92 }}
-                    onClick={() => setShowSearch(true)}
-                    className="p-2.5 text-slate-500 hover:text-sky-600 rounded-full hover:bg-sky-50 transition-all"
-                  >
-                    <Search size={19} strokeWidth={1.8} />
-                  </motion.button>
-                )}
-              </AnimatePresence>
-            </div>
-
             {/* Notification bell */}
             <div className="relative" ref={notificationRef}>
               <motion.button

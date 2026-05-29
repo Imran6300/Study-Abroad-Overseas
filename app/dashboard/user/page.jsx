@@ -11,7 +11,7 @@ import QuickStats from "@/components/userdashboard/QuickStats";
 import DeadlinesCard from "@/components/userdashboard/DeadlinesCard";
 import OverviewApplicationsCard from "@/components/userdashboard/OverviewApplicationsCard";
 import RecommendedUniversities from "@/components/userdashboard/RecommendedUniversities";
-import StudentProCard from "@/components/upgrade/StudentProCard";
+import ApplicationActivityFeed from "@/components/userdashboard/Applicationactivityfeed";
 
 const getStatusColor = (status) => {
   switch (status) {
@@ -99,19 +99,44 @@ export default function DashboardPage() {
   const handleWithdraw = async (id) => {
     if (!confirm("Withdraw this application?")) return;
     try {
-      const res = await fetch(`/api/applications/${id}/withdraw`, {
-        credentials: "include",
-        method: "PATCH",
-      });
+      // ─────────────────────────────────────────────────────────────────
+      // BUG FIXED (two problems):
+      //
+      // 1. Wrong base path: was a relative `/api/...` URL which goes to
+      //    the Next.js server instead of the Express backend.
+      //    Fix: use NEXT_PUBLIC_BACKEND_URL.
+      //
+      // 2. Wrong HTTP method: was PATCH, but the backend handler is
+      //    registered as DELETE /api/applications/:studentId/withdraw
+      //    Fix: use DELETE.
+      // ─────────────────────────────────────────────────────────────────
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/applications/${id}/withdraw`,
+        {
+          credentials: "include",
+          method: "DELETE", // ← was PATCH
+        },
+      );
+
       if (res.ok) {
-        setApplications((prev) =>
-          prev.map((app) =>
-            app._id === id ? { ...app, status: "Withdrawn" } : app,
-          ),
-        );
+        // Optimistically remove from the local dashboard state
+        setDashboard((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            applications: {
+              ...prev.applications,
+              recent: prev.applications.recent.filter((app) => app._id !== id),
+              total: Math.max(0, prev.applications.total - 1),
+            },
+          };
+        });
+      } else {
+        const data = await res.json();
+        console.error("Withdraw failed:", data.message);
       }
     } catch (err) {
-      console.error(err);
+      console.error("handleWithdraw error:", err);
     }
   };
 
@@ -140,7 +165,7 @@ export default function DashboardPage() {
   const recentActivity = dashboard.recentActivity;
 
   return (
-    <div className="min-h-screen space-y-6 lg:space-y-[-15px] bg-[#0A192F] relative overflow-x-hidden ">
+    <div className="min-h-screen space-y-6 lg:space-y-[-15px] bg-[#0A192F] relative overflow-x-hidden">
       {/* Background blobs */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute -top-40 -right-40 w-96 h-96 bg-[#4169E1] rounded-full blur-3xl opacity-10"></div>
@@ -164,8 +189,6 @@ space-y-6 lg:space-y-8"
           router={router}
         />
 
-        <StudentProCard variant="dark" compact />
-
         {/* Quick Stats */}
         <QuickStats
           applications={applications.total}
@@ -185,6 +208,8 @@ space-y-6 lg:space-y-8"
             router={router}
           />
         </div>
+
+        <ApplicationActivityFeed />
 
         {/* Recommended Universities */}
         <RecommendedUniversities universities={savedUniversities.recent} />
