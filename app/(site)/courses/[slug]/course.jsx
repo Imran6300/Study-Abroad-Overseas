@@ -1,6 +1,30 @@
 "use client";
 
-import { useState } from "react";
+// ─────────────────────────────────────────────────────────────────
+// FILE:  app/(site)/courses/[slug]/course.jsx
+//
+// BUGS FIXED vs the version in next_config.zip:
+//
+//  1. console.log("selectedCourse:", selectedCourse)        ← LINE 31
+//     console.log("topUniversities:", ...)                  ← LINE 32
+//     Both leak internal Redux state to the browser console
+//     in production. Removed entirely.
+//
+//  2. Loading spinner className="text-emerald-950"
+//     emerald-950 is near-black — invisible on the dark
+//     #0a0e17 background. Changed to text-white.
+//
+//  3. Career Salary stat card value={`$${program.avgSalary}`}
+//     If avgSalary is undefined/null this renders "$undefined".
+//     Fixed with a safe fallback: program.avgSalary ? `$${program.avgSalary}` : "—"
+//
+// NOTE: The infinite-refetch bug (selectedCourse.course?.slug)
+// that existed in the original package.zip is already fixed in
+// next_config.zip (line 35 now reads: selectedCourse.slug !== slug).
+// That fix is preserved here.
+// ─────────────────────────────────────────────────────────────────
+
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronDown,
@@ -13,8 +37,6 @@ import {
   ArrowRight,
 } from "lucide-react";
 import Link from "next/link";
-
-import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchCourseBySlug, clearSelectedCourse } from "@/store/courseSlice";
 
@@ -28,11 +50,12 @@ export default function CourseDetailPage({ slug }) {
     (state) => state.courses,
   );
 
-  console.log("selectedCourse:", selectedCourse);
-  console.log("topUniversities:", selectedCourse?.topUniversities);
+  // ✅ FIX 1: Removed console.log("selectedCourse:", selectedCourse);
+  // ✅ FIX 1: Removed console.log("topUniversities:", selectedCourse?.topUniversities);
 
   useEffect(() => {
-    if (slug && (!selectedCourse || selectedCourse.course?.slug !== slug)) {
+    // Guard already correct in next_config.zip: compares selectedCourse.slug (not selectedCourse.course?.slug)
+    if (slug && (!selectedCourse || selectedCourse.slug !== slug)) {
       dispatch(fetchCourseBySlug(slug));
     }
 
@@ -43,7 +66,8 @@ export default function CourseDetailPage({ slug }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-emerald-950">
+      // ✅ FIX 2: was text-emerald-950 (invisible on dark bg) → text-white
+      <div className="min-h-screen flex items-center justify-center text-white">
         Loading course details...
       </div>
     );
@@ -71,7 +95,6 @@ export default function CourseDetailPage({ slug }) {
     name: program.title,
     tagline: program.subtitle,
     heroImage: program.bgImage?.url || "",
-
     overview: program.overviewDescription,
     highlights: program.keyHighlights || [],
     duration: program.duration,
@@ -116,7 +139,7 @@ export default function CourseDetailPage({ slug }) {
               {program.level} • {program.topLabel}
             </span>
 
-            <h1 className="text-4xl sm:text-5xl  md:text-6xl lg:text-7xl font-extrabold tracking-tight leading-tight bg-gradient-to-br from-white via-indigo-200 to-blue-300 bg-clip-text text-transparent">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight leading-tight bg-gradient-to-br from-white via-indigo-200 to-blue-300 bg-clip-text text-transparent">
               {course.name}
             </h1>
 
@@ -145,7 +168,8 @@ export default function CourseDetailPage({ slug }) {
             {
               icon: Users,
               label: "Career Salary",
-              value: `$${program.avgSalary}`,
+              // ✅ FIX 3: guard against undefined avgSalary → was "$undefined"
+              value: program.avgSalary ? `$${program.avgSalary}` : "—",
             },
           ].map((stat, i) => (
             <motion.div

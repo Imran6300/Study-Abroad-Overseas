@@ -3,15 +3,34 @@
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { FaGraduationCap, FaEye, FaEyeSlash } from "react-icons/fa";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { authStart, authSuccess, authFail } from "@/store/authSlice";
 import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import MessageBox from "@/components/ui/MessageBox";
 
 export default function LoginPage() {
   const dispatch = useDispatch();
   const router = useRouter();
   const { loading } = useSelector((state) => state.auth);
+
+  const searchParams = useSearchParams();
+  const activated = searchParams.get("activated") === "true";
+
+  const [messageStatus, setMessageStatus] = useState(
+    activated ? "success" : "",
+  );
+
+  const [message, setMessage] = useState(
+    activated ? "Account activated successfully. Please login." : "",
+  );
+
+  useEffect(() => {
+    if (activated) {
+      router.replace("/login");
+    }
+  }, [activated, router]);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -69,6 +88,14 @@ export default function LoginPage() {
 
   return (
     <div className="relative overflow-x-hidden min-h-screen pt-[76px] w-full px-4 sm:px-6 flex items-center justify-center bg-[#F7F9FC]">
+      <MessageBox
+        status={messageStatus}
+        message={message}
+        onClose={() => {
+          setMessageStatus("");
+          setMessage("");
+        }}
+      />
       {/* BACKGROUND BLOBS */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute w-56 h-56 bg-[#4A6BFF]/20 blur-3xl rounded-full top-0 left-0 -translate-x-1/3 -translate-y-1/3" />
