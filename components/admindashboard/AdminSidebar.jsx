@@ -54,6 +54,13 @@ export default function AdminSidebar() {
       roles: ["admin", "super_admin"],
     },
 
+    {
+      icon: "📂",
+      label: "Khizar Applications",
+      href: "/admin/khizar-applications",
+      roles: ["admin", "super_admin"],
+    },
+
     // Content / Master Data (editor role)
     {
       icon: "🏫",
