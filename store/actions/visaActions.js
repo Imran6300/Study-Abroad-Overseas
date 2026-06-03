@@ -1,5 +1,4 @@
 import axios from "axios";
-
 import {
   visaStart,
   visaSuccess,
@@ -8,25 +7,24 @@ import {
   logsSuccess,
 } from "../visaSlice";
 
-const API = process.env.NEXT_PUBLIC_BACKEND_URL;
+// ─── Route base — must match the Express mount point in app.js ────────────────
+// Backend: app.use("/user/visa", visaprogressRouter)
+// If the mount point changes, update VISA_BASE here.
+const VISA_BASE = `${process.env.NEXT_PUBLIC_BACKEND_URL}/user/visa`;
 
 /*
 |--------------------------------------------------------------------------
 | GET MY VISA  →  GET /user/visa/my/visa
 |--------------------------------------------------------------------------
 */
-
 export const fetchMyVisa = () => async (dispatch) => {
   try {
     dispatch(visaStart());
-
-    const response = await axios.get(`${API}/user/visa/my/visa`, {
+    const response = await axios.get(`${VISA_BASE}/my/visa`, {
       withCredentials: true,
     });
-
-    dispatch(visaSuccess(response.data.visa));
+    dispatch(visaSuccess(response.data.visa ?? null));
   } catch (error) {
-    // FIX: guard against undefined error.response (network failures)
     dispatch(
       visaFailure(error.response?.data?.message || "Failed to fetch visa"),
     );
@@ -36,26 +34,17 @@ export const fetchMyVisa = () => async (dispatch) => {
 /*
 |--------------------------------------------------------------------------
 | UPDATE VISA STEP  →  PATCH /user/visa/:visaId/step/:stepId
-|
-| BUG FIXED: was calling `${API}/visa/${visaId}/step/${stepId}`
-|            which hits a non-existent route (missing /user prefix).
-|            The backend mounts visaprogressRouter at /user/visa,
-|            so the correct path is /user/visa/:visaId/step/:stepId.
 |--------------------------------------------------------------------------
 */
-
 export const updateVisaStepAction =
   ({ visaId, stepId, data }) =>
   async (dispatch) => {
     try {
       const response = await axios.patch(
-        `${API}/user/visa/${visaId}/step/${stepId}`, // ← FIXED: was /visa/...
+        `${VISA_BASE}/${visaId}/step/${stepId}`,
         data,
-        {
-          withCredentials: true,
-        },
+        { withCredentials: true },
       );
-
       dispatch(updateVisaInStore(response.data.visa));
     } catch (error) {
       dispatch(
@@ -71,14 +60,12 @@ export const updateVisaStepAction =
 | GET VISA LOGS  →  GET /user/visa/:visaId/logs
 |--------------------------------------------------------------------------
 */
-
 export const fetchVisaLogs = (visaId) => async (dispatch) => {
   try {
-    const response = await axios.get(`${API}/user/visa/${visaId}/logs`, {
+    const response = await axios.get(`${VISA_BASE}/${visaId}/logs`, {
       withCredentials: true,
     });
-
-    dispatch(logsSuccess(response.data.logs));
+    dispatch(logsSuccess(response.data.logs ?? []));
   } catch (error) {
     dispatch(
       visaFailure(error.response?.data?.message || "Failed to fetch visa logs"),

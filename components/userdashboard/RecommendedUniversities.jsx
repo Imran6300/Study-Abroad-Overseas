@@ -10,7 +10,12 @@ export default function RecommendedUniversities({ universities }) {
       transition={{ delay: 0.3 }}
       className="mb-10 sm:mb-12"
     >
-      <h2 className="text-2xl sm:text-3xl font-bold text-white mb-5 flex items-center gap-3 px-1">
+      <h2
+        style={{
+          color: "var(--brand-accent)",
+        }}
+        className="text-2xl sm:text-3xl font-bold mb-5 flex items-center gap-3 px-1"
+      >
         <span className="text-[#32CD32]">🔍</span> Recommended for You
       </h2>
 
@@ -35,7 +40,12 @@ export default function RecommendedUniversities({ universities }) {
               <p className="text-sm text-gray-400 mb-3">
                 Recommended University
               </p>
-              <div className="text-[#32CD32] font-bold text-lg">Explore →</div>
+              <div
+                style={{ color: "var(--brand-primary)" }}
+                className=" font-bold text-lg"
+              >
+                Explore →
+              </div>
             </motion.div>
           ))}
         </div>
@@ -44,7 +54,8 @@ export default function RecommendedUniversities({ universities }) {
       <div className="text-center mt-6">
         <MotionLink
           href="/programs/universities"
-          className="text-[#32CD32] font-bold hover:underline text-base sm:text-lg"
+          style={{ color: "var(--brand-primary)" }}
+          className=" font-bold hover:underline text-base sm:text-lg"
         >
           See All Recommendations →
         </MotionLink>

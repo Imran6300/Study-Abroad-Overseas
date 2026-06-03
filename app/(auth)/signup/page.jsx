@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { authStart, authSuccess, authFail } from "../../../store/authSlice";
 import OtpForm from "@/components/auth/OtpForm";
+import { useRouter } from "next/navigation";
 
 // ────────────────────────────────────────────────
 //  Signup Form Component
@@ -146,6 +147,8 @@ export default function SignupPage() {
   const [error, setError] = useState("");
   const [timeLeft, setTimeLeft] = useState(0); // seconds
 
+  const router = useRouter();
+
   const dispatch = useDispatch();
 
   // Start 10-minute countdown when entering OTP step
@@ -263,7 +266,7 @@ export default function SignupPage() {
       }
 
       dispatch(authSuccess(data.user));
-      window.location.href = "/";
+      router.replace("/dashboard/user");
     } catch (err) {
       setError("Server error. Please try again.");
       dispatch(authFail("Server error"));

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSelector, useDispatch } from "react-redux";
 import { logout } from "@/store/authSlice";
+import { disconnectSocket } from "@/lib/socket";
 import {
   LayoutDashboard,
   GraduationCap,
@@ -32,6 +33,8 @@ export default function CounselorSidebar() {
       method: "POST",
       credentials: "include",
     });
+    disconnectSocket();
+
     dispatch(logout());
     router.replace("/login");
   };

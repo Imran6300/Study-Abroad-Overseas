@@ -16,9 +16,16 @@ export default function VisaPage() {
   useEffect(() => {
     dispatch(fetchMyVisa());
   }, [dispatch]);
-
   if (loading) {
-    return <div className="text-white">Loading visa progress...</div>;
+    return (
+      <div
+        style={{
+          color: "var(--brand-accent)",
+        }}
+      >
+        Loading visa progress...
+      </div>
+    );
   }
 
   if (error) {
@@ -26,12 +33,27 @@ export default function VisaPage() {
   }
 
   if (!visa) {
-    return <div className="text-gray-400">No visa progress found</div>;
+    return (
+      <div
+        style={{
+          color: "var(--brand-text-secondary)",
+        }}
+      >
+        No visa progress found
+      </div>
+    );
   }
 
   return (
     <div className="space-y-10 pt-16 sm:pt-5">
-      <h1 className="text-3xl font-bold text-white mb-6">Visa Progress</h1>
+      <h1
+        className="text-3xl font-bold mb-6"
+        style={{
+          color: "var(--brand-accent)",
+        }}
+      >
+        Visa Progress
+      </h1>
 
       <VisaProgress visa={visa} />
     </div>

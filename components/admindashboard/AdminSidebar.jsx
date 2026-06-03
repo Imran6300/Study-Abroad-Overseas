@@ -6,6 +6,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { useSelector, useDispatch } from "react-redux";
 import { logout } from "@/store/authSlice";
+import { disconnectSocket } from "@/lib/socket";
 
 export default function AdminSidebar() {
   const user = useSelector((state) => state.auth.user);
@@ -21,6 +22,8 @@ export default function AdminSidebar() {
       method: "POST",
       credentials: "include",
     });
+
+    disconnectSocket();
 
     dispatch(logout());
     router.replace("/login");

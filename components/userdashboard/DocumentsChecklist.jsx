@@ -67,8 +67,20 @@ export default function DocumentChecklist({ documents, loading }) {
     <div className="p-6 md:p-10 max-w-7xl mx-auto">
       {/* Header */}
       <div className="mb-10">
-        <h1 className="text-3xl font-bold text-white">Application Documents</h1>
-        <p className="text-gray-400 mt-2">
+        <h1
+          className="text-3xl font-bold"
+          style={{
+            color: "var(--brand-accent)",
+          }}
+        >
+          Application Documents
+        </h1>
+        <p
+          className="mt-2"
+          style={{
+            color: "var(--brand-text-secondary)",
+          }}
+        >
           Upload all required documents for your overseas university
           application.
         </p>
@@ -83,7 +95,13 @@ export default function DocumentChecklist({ documents, loading }) {
       )}
 
       {/* Progress */}
-      <div className="bg-white/5 border border-white/10 rounded-xl p-6 mb-10">
+      <div
+        className="rounded-xl p-6 mb-10 border"
+        style={{
+          backgroundColor: "var(--brand-card-bg)",
+          borderColor: "var(--brand-primary)",
+        }}
+      >
         <div className="flex justify-between mb-3 text-sm text-gray-300">
           <span>Application Progress</span>
           <span>
@@ -93,8 +111,11 @@ export default function DocumentChecklist({ documents, loading }) {
 
         <div className="w-full bg-gray-800 rounded-full h-3">
           <div
-            className="bg-[#4169E1] h-3 rounded-full transition-all"
-            style={{ width: `${progress}%` }}
+            className="h-3 rounded-full transition-all"
+            style={{
+              width: `${progress}%`,
+              backgroundColor: "var(--brand-primary)",
+            }}
           />
         </div>
       </div>
@@ -106,11 +127,22 @@ export default function DocumentChecklist({ documents, loading }) {
             key={doc._id}
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white/5 border border-white/10 rounded-2xl p-6"
+            className="border rounded-2xl p-6"
+            style={{
+              backgroundColor: "var(--brand-card-bg)",
+              borderColor: "var(--brand-primary)",
+            }}
           >
             {/* Title */}
             <div className="flex justify-between items-center mb-2">
-              <h3 className="text-white font-semibold text-sm">{doc.title}</h3>
+              <h3
+                className="font-semibold text-sm"
+                style={{
+                  color: "var(--brand-accent)",
+                }}
+              >
+                {doc.title}
+              </h3>
 
               {doc.requiresDocumentUpload && (
                 <span className="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded">

@@ -26,16 +26,37 @@ export default function ApplicationsCard({
       <div className="space-y-4">
         {applications.map((app) => (
           <motion.div
-            key={app._id || app.id}
+            key={app.universityEntryId || app._id || app.id}
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            whileHover={{ scale: 1.01 }}
+            whileHover={{
+              scale: 1.02,
+              y: -2,
+            }}
             transition={{ duration: 0.25 }}
+            style={{
+              background: `
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--brand-primary) 18%, var(--brand-bg)),
+      var(--brand-bg)
+    )
+  `,
+              border: "1px solid rgba(255,255,255,0.08)",
+              boxShadow: `
+    0 8px 32px rgba(0,0,0,0.2),
+    0 0 20px color-mix(
+      in srgb,
+      var(--brand-primary) 12%,
+      transparent
+    )
+  `,
+            }}
             className={`
-          bg-white/6 backdrop-blur-xl border border-white/10
+            
           rounded-2xl
-          hover:border-[#32CD32]/40
-          hover:shadow-lg hover:shadow-[#32CD32]/10
+          
+          hover:shadow-lg 
           transition overflow-hidden
           ${compact ? "p-4" : "p-5 lg:p-6"}
         `}
@@ -53,14 +74,22 @@ export default function ApplicationsCard({
                         className="w-full h-full object-contain"
                       />
                     ) : (
-                      <span className="text-[#32CD32] font-bold text-lg">
+                      <span
+                        style={{
+                          color: "var(--brand-primary)",
+                        }}
+                        className=" font-bold text-lg"
+                      >
                         {app.university?.charAt(0)}
                       </span>
                     )}
                   </div>
 
                   <div className="min-w-0 flex-1">
-                    <h3 className="text-white font-semibold text-sm leading-tight line-clamp-2">
+                    <h3
+                      style={{ color: "var(--brand-accent)" }}
+                      className=" font-semibold text-sm leading-tight line-clamp-2"
+                    >
                       {app.university}
                     </h3>
 
@@ -102,14 +131,17 @@ export default function ApplicationsCard({
                       onClick={() =>
                         router.push(`/programs/universities/${app.slug}`)
                       }
-                      className="flex items-center gap-1.5 border border-white/20 text-white px-3 py-1.5 rounded-lg hover:bg-white/10 transition text-xs"
+                      style={{ color: "var(--brand-accent)" }}
+                      className="flex items-center gap-1.5 border border-white/20  px-3 py-1.5 rounded-lg hover:bg-white/10 transition text-xs"
                     >
                       <Eye size={13} />
                       View
                     </button>
 
                     <button
-                      onClick={() => handleWithdraw(app._id)}
+                      onClick={() =>
+                        handleWithdraw(app.applicationId, app.universityEntryId)
+                      }
                       className="flex items-center gap-1.5 border border-red-500/30 text-red-400 px-3 py-1.5 rounded-lg hover:bg-red-500/10 transition text-xs"
                     >
                       <XCircle size={13} />
@@ -131,14 +163,22 @@ export default function ApplicationsCard({
                         className="w-full h-full object-contain"
                       />
                     ) : (
-                      <span className="text-[#32CD32] font-bold text-lg">
+                      <span
+                        style={{
+                          color: "var(--brand-primary)",
+                        }}
+                        className=" font-bold text-lg"
+                      >
                         {app.university?.charAt(0)}
                       </span>
                     )}
                   </div>
 
                   <div className="min-w-0 flex-1">
-                    <h3 className="text-white text-base sm:text-lg font-semibold break-words">
+                    <h3
+                      style={{ color: "var(--brand-accent)" }}
+                      className=" text-base sm:text-lg font-semibold break-words"
+                    >
                       {app.university}
                     </h3>
 
@@ -179,14 +219,17 @@ export default function ApplicationsCard({
                     onClick={() =>
                       router.push(`/programs/universities/${app.slug}`)
                     }
-                    className="flex items-center justify-center gap-2 border border-white/20 text-white px-4 py-2 rounded-lg hover:bg-white/10 transition w-full sm:w-auto"
+                    style={{ color: "var(--brand-accent)" }}
+                    className="flex items-center justify-center gap-2 border border-white/20  px-4 py-2 rounded-lg hover:bg-white/10 transition w-full sm:w-auto"
                   >
                     <Eye size={16} />
                     View
                   </button>
 
                   <button
-                    onClick={() => handleWithdraw(app._id)}
+                    onClick={() =>
+                      handleWithdraw(app.applicationId, app.universityEntryId)
+                    }
                     className="flex items-center justify-center gap-2 border border-red-500/30 text-red-400 px-4 py-2 rounded-lg hover:bg-red-500/10 transition w-full sm:w-auto"
                   >
                     <XCircle size={16} />
@@ -224,7 +267,7 @@ export default function ApplicationsCard({
         return "bg-emerald-500/20 text-emerald-400";
 
       case "Enrolled":
-        return "bg-[#32CD32]/20 text-[#32CD32]";
+        return "";
 
       case "Application Closed":
         return "bg-red-500/20 text-red-400";
@@ -238,18 +281,37 @@ export default function ApplicationsCard({
     <div className="space-y-5">
       {applications.map((app) => (
         <motion.div
-          key={app._id || app.id}
+          key={app.universityEntryId || app._id || app.id}
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          whileHover={{ scale: 1.01 }}
+          whileHover={{
+            scale: 1.02,
+            y: -2,
+          }}
           transition={{ duration: 0.25 }}
+          style={{
+            background: `
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--brand-primary) 18%, var(--brand-bg)),
+      var(--brand-bg)
+    )
+  `,
+            border: "1px solid rgba(255,255,255,0.08)",
+            boxShadow: `
+    0 8px 32px rgba(0,0,0,0.2),
+    0 0 20px color-mix(
+      in srgb,
+      var(--brand-primary) 12%,
+      transparent
+    )
+  `,
+          }}
           className={`
-  bg-white/6 backdrop-blur-xl border border-white/10
   rounded-2xl p-4 sm:p-5
   flex flex-col
   ${compact ? "gap-3" : "xl:flex-row xl:items-center xl:justify-between gap-5"}
-  hover:border-[#32CD32]/40
-  hover:shadow-lg hover:shadow-[#32CD32]/10
+  hover:shadow-lg 
   transition
   overflow-hidden
 `}
@@ -265,14 +327,22 @@ export default function ApplicationsCard({
                   className="w-full h-full object-contain"
                 />
               ) : (
-                <span className="text-[#32CD32] font-bold text-lg">
-                  {app.university.charAt(0)}
+                <span
+                  style={{
+                    color: "var(--brand-primary)",
+                  }}
+                  className=" font-bold text-lg"
+                >
+                  {app.university?.charAt(0) || "U"}
                 </span>
               )}
             </div>
 
             <div className="min-w-0 flex-1">
-              <h3 className="text-white text-base sm:text-lg font-semibold break-words">
+              <h3
+                style={{ color: "var(--brand-accent)" }}
+                className=" text-base sm:text-lg font-semibold break-words"
+              >
                 {app.university}
               </h3>
 
@@ -320,20 +390,26 @@ export default function ApplicationsCard({
           >
             <button
               onClick={() => router.push(`/programs/universities/${app.slug}`)}
+              style={{
+                backgroundColor: "var(--brand-primary)",
+                color: "var(--brand-accent)",
+              }}
               className="
-        flex items-center justify-center gap-2
-        border border-white/20 text-white
-        px-4 py-2 rounded-lg
-        hover:bg-white/10 transition
-        w-full sm:w-auto
-      "
+flex items-center justify-center gap-2
+px-4 py-2
+rounded-lg
+font-medium
+transition-all
+"
             >
               <Eye size={16} />
               View
             </button>
 
             <button
-              onClick={() => handleWithdraw(app._id)}
+              onClick={() =>
+                handleWithdraw(app.applicationId, app.universityEntryId)
+              }
               className="
         flex items-center justify-center gap-2
         border border-red-500/30 text-red-400

@@ -38,6 +38,8 @@ export default function ApplicationsPage() {
         if (data.success) {
           const formatted = data.applications.map((app) => ({
             _id: app._id,
+            applicationId: app.applicationId,
+            universityEntryId: app.universityEntryId,
             slug: app.slug,
             university: app.university,
             course: app.course,
@@ -59,7 +61,7 @@ export default function ApplicationsPage() {
     fetchApplications();
   }, []);
 
-  const handleWithdraw = (id) => {
+  const handleWithdraw = (applicationId, universityEntryId) => {
     setModal({
       open: true,
       title: "Withdraw Application",
@@ -71,10 +73,18 @@ export default function ApplicationsPage() {
       onConfirm: async () => {
         try {
           const res = await fetch(
-            `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/applications/${id}/withdraw`,
+            `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/applications/${applicationId}/withdraw`,
             {
               method: "DELETE",
               credentials: "include",
+
+              headers: {
+                "Content-Type": "application/json",
+              },
+
+              body: JSON.stringify({
+                universityEntryId,
+              }),
             },
           );
 
@@ -85,7 +95,9 @@ export default function ApplicationsPage() {
           }
 
           // remove instantly from UI
-          setApplications((prev) => prev.filter((app) => app._id !== id));
+          setApplications((prev) =>
+            prev.filter((app) => app.universityEntryId !== universityEntryId),
+          );
 
           // success modal
           setModal({
@@ -145,7 +157,25 @@ export default function ApplicationsPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <motion.div
           whileHover={{ scale: 1.03 }}
-          className="bg-white/6 backdrop-blur-xl border border-white/10 rounded-2xl p-6 flex items-center justify-between"
+          style={{
+            background: `
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--brand-primary) 14%, var(--brand-bg)),
+      var(--brand-bg)
+    )
+  `,
+            border: "1px solid rgba(255,255,255,0.08)",
+            boxShadow: `
+    0 8px 32px rgba(0,0,0,0.25),
+    0 0 24px color-mix(
+      in srgb,
+      var(--brand-primary) 20%,
+      transparent
+    )
+  `,
+          }}
+          className="backdrop-blur-xl rounded-2xl p-6 flex items-center justify-between"
         >
           <div>
             <h3 className="text-gray-400 text-sm">Total Applications</h3>
@@ -173,10 +203,22 @@ export default function ApplicationsPage() {
         >
           <div>
             <h3 className="text-gray-400 text-sm">Accepted</h3>
-            <p className="text-3xl font-bold text-[#32CD32] mt-1">{accepted}</p>
+            <p
+              style={{
+                color: "var(--brand-primary)",
+              }}
+              className="text-3xl font-bold  mt-1"
+            >
+              {accepted}
+            </p>
           </div>
 
-          <CheckCircle className="text-[#32CD32]" size={26} />
+          <CheckCircle
+            style={{
+              color: "var(--brand-primary)",
+            }}
+            size={26}
+          />
         </motion.div>
       </div>
 

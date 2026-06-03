@@ -1,6 +1,7 @@
+// components/counselordashboard/CounselorStudentsTable.jsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
@@ -8,84 +9,35 @@ import {
   ChevronUp,
   ChevronDown,
   ExternalLink,
-  MoreHorizontal,
+  ChevronLeft,
+  ChevronRight as ChevronRightIcon,
 } from "lucide-react";
+import { counselorApi } from "@/lib/counselorApi";
+import { useRouter } from "next/navigation";
 
 const STATUS_STYLES = {
-  Leads: "bg-slate-100 text-slate-600",
-  Contacted: "bg-blue-50 text-blue-600",
-  Counseled: "bg-violet-50 text-violet-600",
-  Applied: "bg-sky-50 text-sky-600",
-  Offer: "bg-amber-50 text-amber-600",
-  Visa: "bg-fuchsia-50 text-fuchsia-600",
-  Enrolled: "bg-emerald-50 text-emerald-600",
+  lead: "bg-slate-100 text-slate-600",
+  contacted: "bg-blue-50 text-blue-600",
+  qualified: "bg-violet-50 text-violet-600",
+  application_started: "bg-sky-50 text-sky-600",
+  application_submitted: "bg-sky-50 text-sky-600",
+  offer_received: "bg-amber-50 text-amber-600",
+  visa_process: "bg-fuchsia-50 text-fuchsia-600",
+  enrolled: "bg-emerald-50 text-emerald-600",
+  lost: "bg-red-50 text-red-500",
 };
 
-const FLAG = {
-  Canada: "🇨🇦",
-  UK: "🇬🇧",
-  USA: "🇺🇸",
-  Australia: "🇦🇺",
-  Germany: "🇩🇪",
-  NZ: "🇳🇿",
+const STAGE_LABEL = {
+  lead: "Lead",
+  contacted: "Contacted",
+  qualified: "Counseled",
+  application_started: "App Started",
+  application_submitted: "Applied",
+  offer_received: "Offer",
+  visa_process: "Visa",
+  enrolled: "Enrolled",
+  lost: "Lost",
 };
-
-const STUDENTS = [
-  {
-    id: 1,
-    name: "Ahmed Khan",
-    avatar: "AK",
-    country: "Canada",
-    status: "Applied",
-    intake: "Fall 2026",
-    program: "Computer Science",
-  },
-  {
-    id: 2,
-    name: "Priya Sharma",
-    avatar: "PS",
-    country: "UK",
-    status: "Offer",
-    intake: "Spring 2026",
-    program: "MBA",
-  },
-  {
-    id: 3,
-    name: "Ali Hassan",
-    avatar: "AH",
-    country: "Australia",
-    status: "Visa",
-    intake: "Summer 2026",
-    program: "Engineering",
-  },
-  {
-    id: 4,
-    name: "Fatima Noor",
-    avatar: "FN",
-    country: "USA",
-    status: "Counseled",
-    intake: "Winter 2026",
-    program: "Medicine",
-  },
-  {
-    id: 5,
-    name: "Riya Patel",
-    avatar: "RP",
-    country: "Canada",
-    status: "Enrolled",
-    intake: "Fall 2025",
-    program: "Data Science",
-  },
-  {
-    id: 6,
-    name: "Omar Sheikh",
-    avatar: "OS",
-    country: "Germany",
-    status: "Applied",
-    intake: "Fall 2026",
-    program: "Automotive Eng.",
-  },
-];
 
 const AVATAR_COLORS = [
   "from-sky-500 to-cyan-400",
@@ -96,10 +48,80 @@ const AVATAR_COLORS = [
   "from-blue-500 to-indigo-400",
 ];
 
+function getInitials(name = "") {
+  return (
+    name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase() || "??"
+  );
+}
+
+const COUNTRY_FLAGS = {
+  canada: "🇨🇦",
+  uk: "🇬🇧",
+  usa: "🇺🇸",
+  australia: "🇦🇺",
+  germany: "🇩🇪",
+  "new zealand": "🇳🇿",
+  france: "🇫🇷",
+  ireland: "🇮🇪",
+  singapore: "🇸🇬",
+  india: "🇮🇳",
+};
+
 export default function CounselorStudentsTable() {
+  const router = useRouter();
+  const [students, setStudents] = useState([]);
+  const [pagination, setPagination] = useState({
+    total: 0,
+    page: 1,
+    totalPages: 1,
+  });
   const [search, setSearch] = useState("");
-  const [sortField, setSortField] = useState(null);
-  const [sortDir, setSortDir] = useState("asc");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [stageFilter, setStageFilter] = useState("");
+  const [sortField, setSortField] = useState("createdAt");
+  const [sortDir, setSortDir] = useState("desc");
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const debounceRef = useRef(null);
+
+  // Debounce search input
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 350);
+    return () => clearTimeout(debounceRef.current);
+  }, [search]);
+
+  const loadStudents = useCallback(async () => {
+    try {
+      setLoading(true);
+      const data = await counselorApi.getStudents({
+        page,
+        limit: 10,
+        search: debouncedSearch,
+        stage: stageFilter,
+        sortBy: sortField,
+        order: sortDir,
+      });
+      setStudents(data.data || []);
+      setPagination(data.pagination || { total: 0, page: 1, totalPages: 1 });
+    } catch (err) {
+      console.error("Students load error:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [page, debouncedSearch, stageFilter, sortField, sortDir]);
+
+  useEffect(() => {
+    loadStudents();
+  }, [loadStudents]);
 
   const handleSort = (field) => {
     if (sortField === field) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
@@ -107,19 +129,8 @@ export default function CounselorStudentsTable() {
       setSortField(field);
       setSortDir("asc");
     }
+    setPage(1);
   };
-
-  const filtered = STUDENTS.filter(
-    (s) =>
-      s.name.toLowerCase().includes(search.toLowerCase()) ||
-      s.country.toLowerCase().includes(search.toLowerCase()) ||
-      s.status.toLowerCase().includes(search.toLowerCase()),
-  ).sort((a, b) => {
-    if (!sortField) return 0;
-    const va = a[sortField],
-      vb = b[sortField];
-    return sortDir === "asc" ? va.localeCompare(vb) : vb.localeCompare(va);
-  });
 
   const SortIcon = ({ field }) => (
     <span className="inline-flex flex-col ml-1 opacity-40">
@@ -150,10 +161,11 @@ export default function CounselorStudentsTable() {
         <div>
           <h2 className="text-xl font-bold text-slate-800">My Students</h2>
           <p className="text-xs text-slate-500 mt-0.5">
-            {filtered.length} students assigned
+            {loading ? "Loading..." : `${pagination.total} students assigned`}
           </p>
         </div>
-        <div className="flex items-center gap-2 w-full sm:w-auto">
+        <div className="flex items-center gap-2 w-full sm:w-auto flex-wrap">
+          {/* Search */}
           <div className="relative flex-1 sm:w-56">
             <Search
               size={14}
@@ -166,11 +178,28 @@ export default function CounselorStudentsTable() {
               className="w-full pl-8 pr-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl text-slate-700 placeholder-slate-400 outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 transition-all"
             />
           </div>
-          <button className="flex items-center gap-1.5 px-3 py-2 text-sm font-semibold text-slate-600 bg-slate-50 border border-slate-200 rounded-xl hover:bg-slate-100 transition-colors">
-            <Filter size={14} />
-            <span className="hidden sm:inline">Filter</span>
-          </button>
-          <button className="px-4 py-2 bg-gradient-to-r from-sky-500 to-indigo-600 text-white text-sm font-semibold rounded-xl hover:shadow-lg hover:shadow-sky-200 transition-all duration-200 shrink-0">
+          {/* Stage filter */}
+          <select
+            value={stageFilter}
+            onChange={(e) => {
+              setStageFilter(e.target.value);
+              setPage(1);
+            }}
+            className="px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl text-slate-600 outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+          >
+            <option value="">All Stages</option>
+            {Object.entries(STAGE_LABEL).map(([key, label]) => (
+              <option key={key} value={key}>
+                {label}
+              </option>
+            ))}
+          </select>
+          <button
+            onClick={() =>
+              router.push("/dashboard/counselor-dashboard/students")
+            }
+            className="px-4 py-2 bg-gradient-to-r from-sky-500 to-indigo-600 text-white text-sm font-semibold rounded-xl hover:shadow-lg hover:shadow-sky-200 transition-all duration-200 shrink-0"
+          >
             View All
           </button>
         </div>
@@ -183,14 +212,14 @@ export default function CounselorStudentsTable() {
             <tr className="bg-slate-50/70 border-b border-slate-100">
               {[
                 { key: "name", label: "Student" },
-                { key: "country", label: "Country" },
-                { key: "program", label: "Program" },
-                { key: "status", label: "Status" },
-                { key: "intake", label: "Intake" },
+                { key: "preferredCountry", label: "Country" },
+                { key: null, label: "Program" },
+                { key: "counselorStage", label: "Status" },
+                { key: "createdAt", label: "Joined" },
                 { key: null, label: "" },
               ].map((col) => (
                 <th
-                  key={col.label}
+                  key={col.label || "actions"}
                   onClick={() => col.key && handleSort(col.key)}
                   className={`text-left px-5 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider ${col.key ? "cursor-pointer hover:text-sky-600 transition-colors select-none" : ""}`}
                 >
@@ -201,70 +230,147 @@ export default function CounselorStudentsTable() {
             </tr>
           </thead>
           <tbody>
-            <AnimatePresence>
-              {filtered.map((student, i) => (
-                <motion.tr
-                  key={student.id}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ delay: i * 0.04 }}
-                  className="border-b border-slate-50 hover:bg-sky-50/30 transition-colors group"
-                >
-                  <td className="px-5 py-4">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`w-9 h-9 rounded-full bg-gradient-to-br ${AVATAR_COLORS[i % AVATAR_COLORS.length]} flex items-center justify-center text-white text-xs font-bold shadow-sm shrink-0`}
-                      >
-                        {student.avatar}
-                      </div>
-                      <div>
-                        <p className="text-sm font-bold text-slate-800">
-                          {student.name}
-                        </p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-5 py-4">
-                    <span className="text-sm text-slate-600 flex items-center gap-1.5">
-                      <span className="text-base">
-                        {FLAG[student.country] || "🌍"}
-                      </span>
-                      {student.country}
-                    </span>
-                  </td>
-                  <td className="px-5 py-4">
-                    <span className="text-sm text-slate-600">
-                      {student.program}
-                    </span>
-                  </td>
-                  <td className="px-5 py-4">
-                    <span
-                      className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold ${STATUS_STYLES[student.status] || "bg-slate-100 text-slate-600"}`}
+            {loading ? (
+              [0, 1, 2, 3, 4].map((i) => (
+                <tr key={i} className="border-b border-slate-50">
+                  {[0, 1, 2, 3, 4, 5].map((j) => (
+                    <td key={j} className="px-5 py-4">
+                      <div className="h-4 bg-slate-100 rounded animate-pulse" />
+                    </td>
+                  ))}
+                </tr>
+              ))
+            ) : (
+              <AnimatePresence>
+                {students.map((student, i) => {
+                  const flag =
+                    COUNTRY_FLAGS[
+                      (student.preferredCountry || "").toLowerCase()
+                    ] || "🌍";
+                  const stageLabel =
+                    STAGE_LABEL[student.counselorStage] ||
+                    student.counselorStage ||
+                    "—";
+                  const stageStyle =
+                    STATUS_STYLES[student.counselorStage] ||
+                    "bg-slate-100 text-slate-600";
+                  return (
+                    <motion.tr
+                      key={student._id}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ delay: i * 0.04 }}
+                      className="border-b border-slate-50 hover:bg-sky-50/30 transition-colors group cursor-pointer"
+                      onClick={() =>
+                        router.push(
+                          `/dashboard/counselor-dashboard/students/${student._id}`,
+                        )
+                      }
                     >
-                      {student.status}
-                    </span>
-                  </td>
-                  <td className="px-5 py-4">
-                    <span className="text-sm text-slate-500 font-medium">
-                      {student.intake}
-                    </span>
-                  </td>
-                  <td className="px-5 py-4">
-                    <button className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg hover:bg-sky-100 text-slate-400 hover:text-sky-600">
-                      <ExternalLink size={14} />
-                    </button>
-                  </td>
-                </motion.tr>
-              ))}
-            </AnimatePresence>
+                      <td className="px-5 py-4">
+                        <div className="flex items-center gap-3">
+                          <div
+                            className={`w-9 h-9 rounded-full bg-gradient-to-br ${AVATAR_COLORS[i % AVATAR_COLORS.length]} flex items-center justify-center text-white text-xs font-bold shadow-sm shrink-0`}
+                          >
+                            {getInitials(student.name)}
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-slate-800">
+                              {student.name}
+                            </p>
+                            <p className="text-xs text-slate-400">
+                              {student.email}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-5 py-4">
+                        <span className="text-sm text-slate-600 flex items-center gap-1.5">
+                          <span className="text-base">{flag}</span>
+                          {student.preferredCountry || "—"}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4">
+                        <span className="text-sm text-slate-600">
+                          {student.application?.isDraft === false
+                            ? "Applied"
+                            : student.preferredIntake || "Not specified"}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4">
+                        <span
+                          className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold ${stageStyle}`}
+                        >
+                          {stageLabel}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4">
+                        <span className="text-sm text-slate-500 font-medium">
+                          {new Date(student.createdAt).toLocaleDateString(
+                            "en-US",
+                            {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            },
+                          )}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4">
+                        <button
+                          className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg hover:bg-sky-100 text-slate-400 hover:text-sky-600"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            router.push(
+                              `/dashboard/counselor-dashboard/students/${student._id}`,
+                            );
+                          }}
+                        >
+                          <ExternalLink size={14} />
+                        </button>
+                      </td>
+                    </motion.tr>
+                  );
+                })}
+              </AnimatePresence>
+            )}
           </tbody>
         </table>
       </div>
 
-      {filtered.length === 0 && (
+      {/* Empty state */}
+      {!loading && students.length === 0 && (
         <div className="py-12 text-center text-slate-400 text-sm">
           No students match your search.
+        </div>
+      )}
+
+      {/* Pagination */}
+      {pagination.totalPages > 1 && (
+        <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100">
+          <span className="text-xs text-slate-500">
+            Page {pagination.page} of {pagination.totalPages} (
+            {pagination.total} total)
+          </span>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page <= 1}
+              className="p-2 rounded-xl hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronLeft size={16} className="text-slate-600" />
+            </button>
+            <button
+              onClick={() =>
+                setPage((p) => Math.min(pagination.totalPages, p + 1))
+              }
+              disabled={page >= pagination.totalPages}
+              className="p-2 rounded-xl hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronRightIcon size={16} className="text-slate-600" />
+            </button>
+          </div>
         </div>
       )}
     </div>

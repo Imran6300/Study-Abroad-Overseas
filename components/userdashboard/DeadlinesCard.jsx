@@ -11,13 +11,44 @@ export default function DeadlinesCard({ upcomingDeadlines }) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2 }}
-      className="bg-gradient-to-br from-red-950/30 to-amber-950/20 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-5 sm:p-8 mb-10 sm:mb-12 border border-red-500/20 shadow-xl"
+      style={{
+        backgroundColor: "var(--brand-bg)",
+        borderColor: "var(--brand-primary)",
+      }}
+      className="
+backdrop-blur-xl
+rounded-2xl
+sm:rounded-3xl
+p-5
+sm:p-8
+mb-10
+sm:mb-12
+border
+shadow-xl
+"
     >
-      <h2 className="text-xl sm:text-2xl font-bold text-white mb-5 flex items-center gap-3">
-        <span className="text-red-400 text-2xl">⏰</span> Urgent Deadlines
+      <h2
+        style={{ color: "var(--brand-accent)" }}
+        className="text-xl sm:text-2xl font-bold  mb-5 flex items-center gap-3"
+      >
+        <span
+          style={{
+            color: "var(--brand-primary)",
+          }}
+          className=" text-2xl"
+        >
+          ⏰
+        </span>{" "}
+        Urgent Deadlines
       </h2>
       {!upcomingDeadlines.length ? (
-        <div className="text-center py-8 text-gray-400">
+        <div
+          className="text-center py-8"
+          style={{
+            color: "var(--brand-accent)",
+            opacity: 0.7,
+          }}
+        >
           No urgent deadlines 🎉
         </div>
       ) : (
@@ -25,10 +56,22 @@ export default function DeadlinesCard({ upcomingDeadlines }) {
           {upcomingDeadlines.map((item) => (
             <div
               key={item._id}
-              className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 transition-all"
+              style={{
+                backgroundColor: "rgba(255,255,255,0.03)",
+                borderColor: "var(--brand-primary)",
+              }}
+              className="
+flex flex-col sm:flex-row sm:items-center justify-between
+gap-3 p-4 rounded-xl border transition-all
+"
             >
               <div>
-                <h4 className="font-semibold text-white text-base sm:text-lg">
+                <h4
+                  style={{
+                    color: "var(--brand-accent)",
+                  }}
+                  className="font-semibold text-base sm:text-lg"
+                >
                   {item.title}
                 </h4>
                 <p className="text-xs sm:text-sm text-gray-400">

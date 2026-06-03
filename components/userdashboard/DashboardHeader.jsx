@@ -1,25 +1,64 @@
 "use client";
 
+// ─────────────────────────────────────────────────────────────────────────────
+// FILE: components/userdashboard/BrandedDashboardHeader.jsx
+//
+// Drop-in replacement for DashboardHeader.
+// Takes branding prop (from Redux selectActiveBranding) and applies
+// brand primary color to active indicator, avatar background etc.
+// ─────────────────────────────────────────────────────────────────────────────
+
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { disconnectSocket } from "@/lib/socket";
 
-export default function DashboardHeader({ user }) {
+import { useDispatch } from "react-redux";
+import { logout } from "@/store/authSlice";
+import { clearLead } from "@/store/leadSlice";
+import { useRouter } from "next/navigation";
+
+export default function BrandedDashboardHeader({ user, branding }) {
   const pathname = usePathname();
-
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
-
   const notificationRef = useRef(null);
   const profileRef = useRef(null);
 
-  const notifications = [];
+  const primary = branding?.primaryColor || "#22c55e";
+  const bgColor = branding?.secondaryColor || "#0A192F";
+  const accent = branding?.accentColor || "#ffffff";
 
+  const dispatch = useDispatch();
+  const router = useRouter();
+
+  const notifications = [];
   const unreadCount = notifications.length;
 
-  const markAllAsRead = () => {
-    setShowNotifications(false);
+  const handleLogout = async () => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/logout`,
+        {
+          method: "POST",
+          credentials: "include",
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("Logout failed");
+      }
+
+      disconnectSocket();
+
+      dispatch(logout());
+      dispatch(clearLead());
+
+      router.replace("/login");
+    } catch (error) {
+      console.error("Logout Error:", error);
+    }
   };
 
   useEffect(() => {
@@ -27,15 +66,11 @@ export default function DashboardHeader({ user }) {
       if (
         notificationRef.current &&
         !notificationRef.current.contains(e.target)
-      ) {
+      )
         setShowNotifications(false);
-      }
-
-      if (profileRef.current && !profileRef.current.contains(e.target)) {
+      if (profileRef.current && !profileRef.current.contains(e.target))
         setShowProfile(false);
-      }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
@@ -43,24 +78,37 @@ export default function DashboardHeader({ user }) {
   const pageTitle = pathname
     .replace("/dashboard/user", "")
     .replace("/", "")
+    .replace(/-/g, " ")
     .toUpperCase();
 
   return (
-    <div className="sticky top-0 z-50 bg-[#0A192F]/90 backdrop-blur-xl border-b border-white/10">
+    <div
+      className="sticky top-0 z-50 backdrop-blur-xl"
+      style={{
+        background: `${bgColor}e8`,
+        borderBottom: `1px solid ${primary}20`,
+      }}
+    >
       <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-4">
-        {/* Left Section */}
+        {/* Left */}
         <div className="flex items-center gap-4 sm:gap-6 min-w-0">
           <div className="min-w-0">
-            <h1 className="text-lg sm:text-xl font-bold text-white capitalize truncate">
+            <h1
+              className="text-lg sm:text-xl font-bold capitalize truncate"
+              style={{ color: accent }}
+            >
               {pageTitle || "Dashboard"}
             </h1>
-            <p className="text-xs sm:text-sm text-gray-400 truncate">
+            <p
+              className="text-xs sm:text-sm truncate"
+              style={{ color: `${accent}66` }}
+            >
               Welcome back, {user?.name || "Student"}
             </p>
           </div>
         </div>
 
-        {/* Right Section */}
+        {/* Right */}
         <div className="flex items-center gap-3 sm:gap-5">
           {/* Notifications */}
           <div className="relative" ref={notificationRef}>
@@ -70,7 +118,10 @@ export default function DashboardHeader({ user }) {
             >
               🔔
               {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-xs text-white px-1 rounded-full">
+                <span
+                  className="absolute -top-1 -right-1 text-xs text-white px-1 rounded-full"
+                  style={{ background: "#ef4444" }}
+                >
                   {unreadCount}
                 </span>
               )}
@@ -82,37 +133,47 @@ export default function DashboardHeader({ user }) {
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
-                  className="absolute right-0 mt-4 w-[90vw] sm:w-80 bg-[#0F1C3A] border border-white/10 rounded-2xl shadow-xl overflow-hidden"
+                  className="absolute right-0 mt-4 w-[90vw] sm:w-80 rounded-2xl shadow-xl overflow-hidden"
+                  style={{
+                    background: `color-mix(in srgb, ${bgColor} 90%, white 10%)`,
+                    border: `1px solid ${primary}25`,
+                  }}
                 >
-                  <div className="p-4 border-b border-white/10 flex justify-between">
-                    <h3 className="text-white font-semibold">Notifications</h3>
-
+                  <div
+                    className="p-4 flex justify-between"
+                    style={{ borderBottom: `1px solid ${primary}20` }}
+                  >
+                    <h3 className="font-semibold" style={{ color: accent }}>
+                      Notifications
+                    </h3>
                     <button
-                      onClick={markAllAsRead}
-                      className="text-[#32CD32] text-sm"
+                      onClick={() => setShowNotifications(false)}
+                      className="text-sm font-semibold"
+                      style={{ color: primary }}
                     >
                       Mark all read
                     </button>
                   </div>
-
                   <div className="max-h-[300px] overflow-y-auto">
-                    {notifications.map((n) => (
-                      <div
-                        key={n.id}
-                        className="p-4 border-b border-white/5 hover:bg-white/5"
+                    {notifications.length === 0 && (
+                      <p
+                        className="p-6 text-center text-sm"
+                        style={{ color: `${accent}44` }}
                       >
-                        <p className="text-sm text-white">{n.message}</p>
-                        <p className="text-xs text-gray-400">{n.time}</p>
+                        No new notifications
+                      </p>
+                    )}
+                    {notifications.map((n) => (
+                      <div key={n.id} className="p-4 border-b hover:opacity-80">
+                        <p className="text-sm" style={{ color: accent }}>
+                          {n.message}
+                        </p>
+                        <p className="text-xs" style={{ color: `${accent}44` }}>
+                          {n.time}
+                        </p>
                       </div>
                     ))}
                   </div>
-
-                  <Link
-                    href="/dashboard/user/notifications"
-                    className="block text-center text-sm text-[#32CD32] py-3 hover:bg-white/5"
-                  >
-                    View all
-                  </Link>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -124,8 +185,11 @@ export default function DashboardHeader({ user }) {
               onClick={() => setShowProfile(!showProfile)}
               className="flex items-center gap-2"
             >
-              <div className="w-9 h-9 bg-[#32CD32] rounded-full flex items-center justify-center font-bold text-black">
-                {user?.name?.charAt(0) || "U"}
+              <div
+                className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-black text-sm"
+                style={{ background: primary }}
+              >
+                {user?.name?.charAt(0)?.toUpperCase() || "U"}
               </div>
             </button>
 
@@ -135,37 +199,36 @@ export default function DashboardHeader({ user }) {
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
-                  className="absolute right-0 mt-4 w-48 bg-[#0F1C3A] border border-white/10 rounded-xl shadow-xl"
+                  className="absolute right-0 mt-4 w-48 rounded-xl shadow-xl overflow-hidden"
+                  style={{
+                    background: `color-mix(in srgb, ${bgColor} 90%, white 10%)`,
+                    border: `1px solid ${primary}25`,
+                  }}
                 >
-                  <Link
-                    href="/dashboard/user/profile"
-                    className="block px-4 py-3 text-sm text-white hover:bg-white/5"
-                  >
-                    Profile
-                  </Link>
-
-                  <Link
-                    href="/dashboard/user/settings"
-                    className="block px-4 py-3 text-sm text-white hover:bg-white/5"
-                  >
-                    Settings
-                  </Link>
-
-                  <Link
-                    href="/dashboard/user/applications"
-                    className="block px-4 py-3 text-sm text-white hover:bg-white/5"
-                  >
-                    Applications
-                  </Link>
-
-                  <div className="border-t border-white/10"></div>
-
-                  <Link
-                    href="/logout"
-                    className="block px-4 py-3 text-sm text-red-400 hover:bg-white/5"
+                  {[
+                    { href: "/dashboard/user/profile", label: "Profile" },
+                    { href: "/dashboard/user/settings", label: "Settings" },
+                    {
+                      href: "/dashboard/user/applications",
+                      label: "Applications",
+                    },
+                  ].map(({ href, label }) => (
+                    <Link
+                      key={href}
+                      href={href}
+                      className="block px-4 py-3 text-sm hover:opacity-80 transition-opacity"
+                      style={{ color: accent }}
+                    >
+                      {label}
+                    </Link>
+                  ))}
+                  <div style={{ borderTop: `1px solid ${primary}20` }} />
+                  <button
+                    onClick={handleLogout}
+                    className="block w-full text-left px-4 py-3 text-sm text-red-400 hover:opacity-80"
                   >
                     Logout
-                  </Link>
+                  </button>
                 </motion.div>
               )}
             </AnimatePresence>

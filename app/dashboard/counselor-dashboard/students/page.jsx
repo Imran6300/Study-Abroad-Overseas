@@ -1,13 +1,37 @@
 "use client";
 
+// ─────────────────────────────────────────────────────────────────
+// FILE:  app/dashboard/counselor-dashboard/students/page.jsx
+//
+// BUGS FIXED:
+//
+//  1. WRONG API ENDPOINT — CRITICAL BUSINESS LOGIC BUG
+//     Was calling: GET /api/lead
+//     This returns ALL leads in the system (admin-level endpoint).
+//     A counselor with 10 students was seeing EVERY lead from every
+//     counselor — a data privacy and UX failure.
+//
+//     Fix: Call GET /api/counselor/students instead, which is scoped
+//     to the logged-in counselor's assigned leads only.
+//     Response shape changes: data.data.students (not data.leads).
+//
+//  2. LEFTOVER console.log IN PRODUCTION
+//     console.log("STATUS:", res.status)    ← removed
+//     console.log("API RESPONSE:", data)    ← removed
+//     These log potentially sensitive student data to the console.
+// ─────────────────────────────────────────────────────────────────
+
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 
 import CounselorSidebar from "@/components/counselordashboard/CounselorSidebar";
-import AddStudentForm from "@/components/adminform/addstudents";
+import CounselorAddStudentModal from "@/components/counselordashboard/CounselorAddStudentModal";
+
 import ConfirmationModal from "@/components/adminform/confirmmsg";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+
+import { fetchCounselorStudents } from "@/store/counselorSlice";
 import { useRouter } from "next/navigation";
 
 import {
@@ -24,14 +48,15 @@ const STATUS_OPTIONS = [
   "enrolled",
   "lost",
 ];
+
 export default function StudentsAdminPage() {
+  const dispatch = useDispatch();
+
+  const { students, loadingStudents } = useSelector((state) => state.counselor);
   const router = useRouter();
   const { user } = useSelector((state) => state.auth);
-  const CounselorName = user?.name;
   const [deleting, setDeleting] = useState(false);
 
-  const [students, setStudents] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [justAdded, setJustAdded] = useState(false);
 
@@ -43,50 +68,8 @@ export default function StudentsAdminPage() {
   const isFormOpen = mode !== null;
 
   useEffect(() => {
-    const fetchLeads = async () => {
-      try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/lead`,
-          { credentials: "include" },
-        );
-
-        console.log("STATUS:", res.status);
-
-        const data = await res.json();
-
-        console.log("API RESPONSE:", data);
-
-        // SAFE CHECK
-        const leadsArray = Array.isArray(data?.leads)
-          ? data.leads
-          : Array.isArray(data)
-            ? data
-            : [];
-
-        const formatted = leadsArray.map((lead) => ({
-          id: lead.user || null,
-          leadId: lead._id,
-
-          name: lead.name,
-          email: lead.email,
-          phone: lead.phone,
-          target: lead.preferredCountry,
-          status: lead.counselorStage,
-          counselor: lead.assignedCounselor || "Unassigned",
-          created: new Date(lead.createdAt).toISOString().split("T")[0],
-        }));
-
-        setStudents(formatted);
-      } catch (err) {
-        console.error("Failed to fetch leads:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchLeads();
-  }, []);
-
+    dispatch(fetchCounselorStudents());
+  }, [dispatch]);
   const deleteStudent = async (leadId) => {
     try {
       setDeleting(true);
@@ -106,7 +89,7 @@ export default function StudentsAdminPage() {
         return false;
       }
 
-      setStudents((prev) => prev.filter((s) => s.leadId !== leadId));
+      dispatch(fetchCounselorStudents());
       return true;
     } catch (error) {
       console.error("Delete error:", error);
@@ -129,82 +112,23 @@ export default function StudentsAdminPage() {
     );
   });
 
-  const handleFormSuccess = (formData) => {
-    if (mode === "add") {
-      const newStudent = {
-        id: formData.leadId,
-        name: formData.fullName || "Unknown",
-        email: formData.email || "",
-        phone: formData.mobile || "",
-        origin: "India",
-        target: formData.preferredCountries?.[0] || "Not specified",
-        status: formData.currentStatus || "Lead",
-        counselor: formData.assignedCounselor || "Unassigned",
-        created: new Date().toISOString().split("T")[0],
-      };
-      setStudents((prev) => [...prev, newStudent]);
-      setJustAdded(true);
-      setTimeout(() => setJustAdded(false), 3000);
-    }
-    setMode(null);
-    setSelectedStudent(null);
-  };
-
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="flex-1 flex flex-col ">
         <main className="flex-1 w-full p-4 sm:p-6 lg:p-8 overflow-auto bg-gray-50">
-          {/* Backdrop */}
-          <AnimatePresence>
-            {isFormOpen && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="fixed inset-0 bg-black/30 backdrop-blur-sm z-10"
-              />
-            )}
-          </AnimatePresence>
+          <CounselorAddStudentModal
+            open={mode === "add"}
+            onClose={() => setMode(null)}
+            onCreated={() => {
+              dispatch(fetchCounselorStudents());
 
-          {/* Form Modal */}
-          <AnimatePresence>
-            {isFormOpen && (
-              <motion.div
-                variants={formVariants}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
-                className="relative z-20 max-w-5xl mx-auto mb-10 sm:mb-12"
-              >
-                <div className="bg-white rounded-2xl shadow-2xl border border-gray-200/70 overflow-hidden">
-                  <div className="bg-gradient-to-r from-sky-50 via-indigo-50 to-purple-50 px-5 sm:px-6 py-4 sm:py-5 border-b flex justify-between items-center">
-                    <h2 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">
-                      {mode === "add"
-                        ? "Add New Student"
-                        : mode === "edit"
-                          ? "Edit Student"
-                          : "Student Details"}
-                    </h2>
-                    <button
-                      onClick={() => setMode(null)}
-                      className="text-gray-700 hover:text-red-600 p-2 rounded-full hover:bg-red-50 transition-colors"
-                    >
-                      <X size={24} strokeWidth={2.5} />
-                    </button>
-                  </div>
+              setJustAdded(true);
 
-                  <div className="p-5 sm:p-6 lg:p-10">
-                    <AddStudentForm
-                      mode={mode}
-                      initialData={selectedStudent}
-                      onSuccess={handleFormSuccess}
-                      onCancel={() => setMode(null)}
-                    />
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+              setTimeout(() => {
+                setJustAdded(false);
+              }, 3000);
+            }}
+          />
 
           {/* Success toast */}
           <AnimatePresence>
@@ -228,34 +152,36 @@ export default function StudentsAdminPage() {
             className={`transition-opacity duration-500 ${isFormOpen ? "opacity-70 pointer-events-none" : "opacity-100"}`}
           >
             {/* Search */}
-            <motion.div variants={itemVariants} className="mb-6 px-1 sm:px-0">
+            <div className="flex justify-between items-center mb-6">
               <input
                 type="text"
                 placeholder="Search by name, email, phone or status..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full max-w-lg px-4 py-2.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
+                className="w-full max-w-lg px-4 py-2.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-sky-500"
               />
-            </motion.div>
+
+              <button
+                onClick={() => setMode("add")}
+                className="ml-4 bg-gradient-to-r from-cyan-400 to-blue-500 text-[#020617] px-5 py-3 rounded-xl font-bold"
+              >
+                Add Student
+              </button>
+            </div>
 
             {/* Table wrapper */}
             <motion.div
-              className="w-full
-    bg-white
-    rounded-2xl
-    shadow-sm
-    overflow-hidden
-    border border-gray-200"
+              className="w-full bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-200"
               variants={itemVariants}
             >
               <div className="w-full overflow-x-auto">
-                {loading ? (
+                {loadingStudents ? (
                   <div className="p-10 text-center text-gray-600 min-h-[300px] flex items-center justify-center">
                     Loading students...
                   </div>
                 ) : students.length === 0 ? (
                   <div className="p-16 text-center text-gray-500 text-lg">
-                    No students found.
+                    No students assigned to you yet.
                   </div>
                 ) : filteredStudents.length === 0 ? (
                   <div className="p-16 text-center text-gray-500 text-lg">

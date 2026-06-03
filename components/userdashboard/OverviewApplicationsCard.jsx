@@ -51,7 +51,12 @@ export default function OverviewApplicationsCard({ applications, router }) {
       {/* HEADER */}
       <div className="flex items-center justify-between mb-5">
         <div>
-          <h2 className="text-white text-lg font-bold">Recent Applications</h2>
+          <h2
+            style={{ color: "var(--brand-accent)" }}
+            className=" text-lg font-bold"
+          >
+            Recent Applications
+          </h2>
 
           <p className="text-gray-400 text-sm mt-1">
             Track your latest university applications
@@ -60,7 +65,10 @@ export default function OverviewApplicationsCard({ applications, router }) {
 
         <button
           onClick={() => router.push("/dashboard/user/applications")}
-          className="flex items-center gap-1 text-[#32CD32] text-sm hover:opacity-80 transition"
+          style={{
+            color: "var(--brand-primary)",
+          }}
+          className="flex items-center gap-1  text-sm hover:opacity-80 transition"
         >
           View All
           <ArrowRight size={16} />
@@ -74,7 +82,11 @@ export default function OverviewApplicationsCard({ applications, router }) {
 
           <button
             onClick={() => router.push("/programs/universities")}
-            className="mt-4 bg-[#32CD32] text-black px-5 py-2 rounded-xl font-semibold hover:bg-[#28b428] transition"
+            style={{
+              backgroundColor: "var(--brand-primary)",
+              color: "var(--brand-accent)",
+            }}
+            className="mt-4  text-black px-5 py-2 rounded-xl font-semibold hover:bg-[#28b428] transition"
           >
             Explore Universities
           </button>
@@ -106,7 +118,12 @@ export default function OverviewApplicationsCard({ applications, router }) {
                       className="w-full h-full object-contain"
                     />
                   ) : (
-                    <span className="text-[#32CD32] font-bold text-lg">
+                    <span
+                      style={{
+                        color: "var(--brand-primary)",
+                      }}
+                      className=" font-bold text-lg"
+                    >
                       {app.university?.charAt(0)}
                     </span>
                   )}

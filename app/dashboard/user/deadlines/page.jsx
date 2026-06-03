@@ -84,12 +84,21 @@ export default function DeadlinesPage() {
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ y: -2 }}
-      className="bg-white/5 border border-white/10 rounded-2xl p-5 backdrop-blur-xl hover:bg-white/[0.07] transition-all duration-300"
+      style={{
+        backgroundColor: "var(--brand-bg)",
+        borderColor: "var(--brand-primary)",
+      }}
+      className="border  rounded-2xl p-5 backdrop-blur-xl hover:bg-white/[0.07] transition-all duration-300"
     >
       <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-5">
         <div className="space-y-3 flex-1">
           <div className="flex flex-wrap items-center gap-3">
-            <h3 className="text-lg font-semibold text-white">{item.title}</h3>
+            <h3
+              style={{ color: "var(--brand-accent)" }}
+              className="text-lg font-semibold "
+            >
+              {item.title}
+            </h3>
 
             <span
               className={`px-3 py-1 rounded-full text-xs border font-medium ${getPriorityStyles(item.priority)}`}
@@ -132,7 +141,8 @@ export default function DeadlinesPage() {
             {item.category === "document" && (
               <button
                 onClick={() => router.push("/dashboard/user/documents")}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition-all"
+                style={{ color: "var(--brand-accent)" }}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700  text-sm font-medium transition-all"
               >
                 <Upload size={16} />
                 Upload
@@ -169,7 +179,12 @@ export default function DeadlinesPage() {
 
   if (loading) {
     return (
-      <div className="text-white text-center py-20">Loading deadlines...</div>
+      <div
+        style={{ color: "var(--brand-accent)" }}
+        className=" text-center py-20"
+      >
+        Loading deadlines...
+      </div>
     );
   }
 
@@ -181,7 +196,10 @@ export default function DeadlinesPage() {
     <div className="min-h-screen space-y-8 pt-16 sm:pt-5">
       {/* Header */}
       <div>
-        <h1 className="text-3xl sm:text-4xl font-bold text-white">
+        <h1
+          style={{ color: "var(--brand-accent)" }}
+          className="text-3xl sm:text-4xl font-bold "
+        >
           Deadlines & Tasks
         </h1>
 
@@ -199,7 +217,10 @@ export default function DeadlinesPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-400 text-sm">Pending Tasks</p>
-              <h3 className="text-3xl font-bold text-white mt-1">
+              <h3
+                style={{ color: "var(--brand-accent)" }}
+                className="text-3xl font-bold  mt-1"
+              >
                 {counts.pendingTasks || 0}
               </h3>
             </div>
@@ -216,7 +237,10 @@ export default function DeadlinesPage() {
             <div>
               <p className="text-gray-400 text-sm">Upcoming This Week</p>
 
-              <h3 className="text-3xl font-bold text-white mt-1">
+              <h3
+                style={{ color: "var(--brand-accent)" }}
+                className="text-3xl font-bold  mt-1"
+              >
                 {counts.upcomingThisWeek || 0}
               </h3>
             </div>
@@ -233,7 +257,10 @@ export default function DeadlinesPage() {
             <div>
               <p className="text-gray-400 text-sm">Overdue</p>
 
-              <h3 className="text-3xl font-bold text-white mt-1">
+              <h3
+                style={{ color: "var(--brand-accent)" }}
+                className="text-3xl font-bold  mt-1"
+              >
                 {counts.overdue || 0}
               </h3>
             </div>
@@ -250,7 +277,10 @@ export default function DeadlinesPage() {
             <div>
               <p className="text-gray-400 text-sm">Completed</p>
 
-              <h3 className="text-3xl font-bold text-white mt-1">
+              <h3
+                style={{ color: "var(--brand-accent)" }}
+                className="text-3xl font-bold  mt-1"
+              >
                 {counts.completed || 0}
               </h3>
             </div>
@@ -264,7 +294,12 @@ export default function DeadlinesPage() {
       <section className="space-y-5">
         <div className="flex items-center gap-3">
           <Clock3 className="text-blue-400" />
-          <h2 className="text-2xl font-bold text-white">Upcoming Tasks</h2>
+          <h2
+            style={{ color: "var(--brand-accent)" }}
+            className="text-2xl font-bold "
+          >
+            Upcoming Tasks
+          </h2>
         </div>
 
         <div className="space-y-4">{pending.map(renderDeadlineCard)}</div>
@@ -275,7 +310,12 @@ export default function DeadlinesPage() {
         <section className="space-y-5">
           <div className="flex items-center gap-3">
             <AlertTriangle className="text-red-400" />
-            <h2 className="text-2xl font-bold text-white">Overdue Tasks</h2>
+            <h2
+              style={{ color: "var(--brand-accent)" }}
+              className="text-2xl font-bold "
+            >
+              Overdue Tasks
+            </h2>
           </div>
 
           <div className="space-y-4">{overdue.map(renderDeadlineCard)}</div>
@@ -286,7 +326,12 @@ export default function DeadlinesPage() {
       <section className="space-y-5 pb-10">
         <div className="flex items-center gap-3">
           <CheckCircle2 className="text-green-400" />
-          <h2 className="text-2xl font-bold text-white">Completed Tasks</h2>
+          <h2
+            style={{ color: "var(--brand-accent)" }}
+            className="text-2xl font-bold "
+          >
+            Completed Tasks
+          </h2>
         </div>
 
         <div className="space-y-4">{completed.map(renderDeadlineCard)}</div>

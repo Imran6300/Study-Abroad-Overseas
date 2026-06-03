@@ -1,5 +1,4 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { env } from "process";
 
 /* ===============================
    1️⃣ FETCH ALL COURSES

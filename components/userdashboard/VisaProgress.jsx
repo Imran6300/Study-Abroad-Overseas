@@ -40,17 +40,40 @@ export default function VisaProgress({ visa }) {
       {/* HEADER */}
 
       <div className="mb-10">
-        <h1 className="text-3xl font-bold text-white">Visa Application</h1>
+        <h1
+          className="text-3xl font-bold"
+          style={{
+            color: "var(--brand-accent)",
+          }}
+        >
+          Visa Application
+        </h1>
 
-        <p className="text-gray-400 mt-2">
+        <p
+          className="mt-2"
+          style={{
+            color: "var(--brand-text-secondary)",
+          }}
+        >
           Track your visa process and complete required steps.
         </p>
       </div>
 
       {/* PROGRESS */}
 
-      <div className="bg-white/5 border border-white/10 rounded-xl p-6 mb-10">
-        <div className="flex justify-between mb-3 text-sm text-gray-300">
+      <div
+        className="border rounded-xl p-6 mb-10"
+        style={{
+          backgroundColor: "var(--brand-card-bg)",
+          borderColor: "var(--brand-primary)",
+        }}
+      >
+        <div
+          className="flex justify-between mb-3 text-sm"
+          style={{
+            color: "var(--brand-text-secondary)",
+          }}
+        >
           <span>Visa Progress</span>
 
           <span>
@@ -61,9 +84,10 @@ export default function VisaProgress({ visa }) {
 
         <div className="w-full bg-gray-800 rounded-full h-3">
           <div
-            className="bg-[#4169E1] h-3 rounded-full transition-all duration-500"
+            className="h-3 rounded-full transition-all duration-500"
             style={{
               width: `${progress}%`,
+              backgroundColor: "var(--brand-primary)",
             }}
           ></div>
         </div>
@@ -83,7 +107,18 @@ export default function VisaProgress({ visa }) {
               opacity: 1,
               y: 0,
             }}
-            className="bg-white/5 border border-white/10 rounded-xl p-5 flex items-center justify-between"
+            className="
+border
+rounded-xl
+p-5
+flex
+items-center
+justify-between
+"
+            style={{
+              backgroundColor: "var(--brand-card-bg)",
+              borderColor: "var(--brand-primary)",
+            }}
           >
             <div className="flex items-center gap-4">
               <div
@@ -97,9 +132,21 @@ export default function VisaProgress({ visa }) {
               </div>
 
               <div>
-                <p className="text-white font-semibold">{step.title}</p>
+                <p
+                  className="font-semibold"
+                  style={{
+                    color: "var(--brand-accent)",
+                  }}
+                >
+                  {step.title}
+                </p>
 
-                <p className="text-sm text-gray-400 capitalize">
+                <p
+                  className="text-sm capitalize"
+                  style={{
+                    color: "var(--brand-text-secondary)",
+                  }}
+                >
                   {step.status}
                 </p>
               </div>
@@ -107,32 +154,21 @@ export default function VisaProgress({ visa }) {
 
             <button
               onClick={() => handleToggleStage(step)}
-              className="text-sm bg-[#4169E1] px-4 py-2 rounded-lg text-white hover:bg-[#3555c8]"
+              style={{
+                backgroundColor: "var(--brand-primary)",
+                color: "var(--brand-accent)",
+              }}
+              className="
+text-sm
+px-4
+py-2
+rounded-lg
+"
             >
               {step.status === "completed" ? "Undo" : "Mark Done"}
             </button>
           </motion.div>
         ))}
-      </div>
-
-      {/* EMBASSY */}
-
-      <div className="mt-12 bg-white/5 border border-white/10 rounded-xl p-6">
-        <h2 className="text-xl font-semibold text-white mb-3">
-          Embassy Information
-        </h2>
-
-        <p className="text-gray-400 text-sm mb-2">
-          Check embassy website for visa instructions.
-        </p>
-
-        <a
-          href={visa.embassyWebsite}
-          target="_blank"
-          className="text-[#4169E1] font-semibold hover:underline"
-        >
-          Visit Embassy Website →
-        </a>
       </div>
     </div>
   );

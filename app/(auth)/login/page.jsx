@@ -78,7 +78,7 @@ export default function LoginPage() {
       } else if (role === "editor") {
         router.replace("/admin/universities");
       } else {
-        router.replace("/");
+        router.replace("/dashboard/user");
       }
     } catch (error) {
       dispatch(authFail("Server error"));

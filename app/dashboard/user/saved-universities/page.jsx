@@ -78,12 +78,15 @@ export default function SavedUniversitiesPage() {
         >
           <div>
             <h3 className="text-gray-400 text-sm">Saved Universities</h3>
-            <p className="text-3xl font-bold text-white mt-1">
+            <p
+              style={{ color: "var(--brand-accent)" }}
+              className="text-3xl font-bold  mt-1"
+            >
               {universities.length}
             </p>
           </div>
 
-          <Heart className="text-pink-400" size={26} />
+          <Heart color="var(--brand-primary)" size={26} />
         </motion.div>
       </div>
 
@@ -95,9 +98,10 @@ export default function SavedUniversitiesPage() {
 
             <a
               href="https://www.khizaroverseas.in/services/university-shortlisting"
+              style={{ color: "var(--brand-primary)" }}
               className="
         inline-flex items-center gap-2
-        text-emerald-400 hover:text-emerald-300
+       
         font-medium transition-colors duration-200
       "
             >
@@ -191,10 +195,10 @@ export default function SavedUniversitiesPage() {
                   onClick={() =>
                     router.push(`/programs/universities/${uni.slug}`)
                   }
+                  style={{ backgroundColor: "var(--brand-primary)" }}
                   className="
             flex-1
-            bg-[#4169E1]
-            hover:bg-[#365ad3]
+            
             text-white
             text-sm
             py-2

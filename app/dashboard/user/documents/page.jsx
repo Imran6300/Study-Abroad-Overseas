@@ -25,7 +25,14 @@ export default function DocumentsPage() {
 
   return (
     <div className="space-y-10 pt-16 sm:pt-5">
-      <h1 className="text-3xl font-bold text-white mb-6">Documents</h1>
+      <h1
+        className="text-3xl font-bold mb-6"
+        style={{
+          color: "var(--brand-accent)",
+        }}
+      >
+        Documents
+      </h1>
 
       <DocumentChecklist documents={documents} loading={loading} />
     </div>

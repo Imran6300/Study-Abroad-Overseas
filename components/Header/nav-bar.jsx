@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState, useCallback, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
+import { disconnectSocket } from "@/lib/socket";
 import {
   FaAngleDown,
   FaBars,
@@ -38,6 +39,8 @@ export default function NavBar() {
       method: "POST",
       credentials: "include",
     });
+
+    disconnectSocket();
 
     dispatch(logout());
     dispatch(clearLead());

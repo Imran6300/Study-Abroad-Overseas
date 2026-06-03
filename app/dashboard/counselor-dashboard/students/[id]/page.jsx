@@ -12,6 +12,10 @@ import ActivityTab from "@/components/counselorApplicationDetail/activity/Activi
 import StatusTimeline from "@/components/counselorApplicationDetail/shared/StatusTimeline";
 import PageHeader from "@/components/counselorApplicationDetail/shared/PageHeader";
 import TabsBar from "@/components/counselorApplicationDetail/shared/TabsBar";
+import {
+  fetchApplicationById,
+  clearSelectedApplication,
+} from "@/store/counselorSlice";
 
 //redux
 
@@ -49,6 +53,10 @@ import {
 export default function KhizarApplicationDetailPage() {
   const dispatch = useDispatch();
 
+  const { selectedApplication, loadingApplication } = useSelector(
+    (state) => state.counselor,
+  );
+
   const { profile, loading: profileLoading } = useSelector(
     (state) => state.profile,
   );
@@ -60,13 +68,11 @@ export default function KhizarApplicationDetailPage() {
   } = useSelector((state) => state.applications);
 
   const { studentDeadlines } = useSelector((state) => state.deadline);
-  console.log("studentDeadlines", studentDeadlines);
   const params = useParams();
   const router = useRouter();
   const id = params.id;
 
   const [application, setApplication] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
 
   const [notes, setNotes] = useState([]);
@@ -271,9 +277,17 @@ export default function KhizarApplicationDetailPage() {
     }
   };
   const handleCreateApplication = async (payload) => {
+    console.log("BEFORE DISPATCH", JSON.stringify(payload, null, 2));
+
     const studentId =
-      application.student._id || application.student.userId || id; // ← safe fallback
-    await dispatch(createStudentApplication({ studentId, payload }));
+      application.student._id || application.student.userId || id;
+
+    await dispatch(
+      createStudentApplication({
+        studentId,
+        payload,
+      }),
+    );
   };
 
   const handleDeleteApplication = async (applicationId) => {
@@ -416,87 +430,77 @@ export default function KhizarApplicationDetailPage() {
 
   // AFTER (real API)
   useEffect(() => {
-    const loadApplication = async () => {
-      try {
-        setLoading(true);
+    dispatch(resetProfile());
+    dispatch(resetApplications());
+    dispatch(resetDeadlines());
+    dispatch(clearSelectedApplication());
 
-        setApplication(null); // clear page state
-        dispatch(resetProfile()); // clear old student profile
-        dispatch(resetApplications()); // clear old applications list
-        dispatch(resetDeadlines());
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/applications/${id}`,
-          { credentials: "include" },
-        );
-        const data = await res.json();
-
-        console.log("API response:", data);
-
-        if (data.success) {
-          // API returns { success: true, applications: [...] }
-          // Use the first application for page-level data, or a fallback object
-          const firstApp = data.applications?.[0] || null;
-
-          // Build a safe application object whether or not array is empty
-          const appData = firstApp
-            ? {
-                _id: firstApp._id,
-                appId: firstApp.appId || firstApp._id,
-
-                student:
-                  typeof firstApp.student === "object"
-                    ? firstApp.student
-                    : {
-                        _id: firstApp.student || id,
-                        userId: firstApp.student || id,
-                      },
-
-                status: firstApp.status || "Submitted",
-                managedBy: firstApp.managedBy || "",
-                processor: firstApp.processor || "Not Assigned",
-                offerLetters: firstApp.offerLetters || [],
-                documents: firstApp.documents || [],
-              }
-            : {
-                // Safe empty shell — page renders, nothing crashes
-                _id: id,
-                appId: "N/A",
-                student: { _id: id, userId: id },
-                status: "Submitted",
-                managedBy: "",
-                processor: "Not Assigned",
-                offerLetters: [],
-                activityLog: [],
-                documents: [],
-              };
-
-          setApplication(appData);
-
-          if (appData?._id) {
-            fetchActivities(appData._id);
-          }
-
-          const userId =
-            firstApp?.student?.userId || firstApp?.student?._id || id; // fallback to url id
-
-          dispatch(fetchStudentProfile(userId));
-          dispatch(fetchStudentApplications(userId));
-          dispatch(fetchStudentDeadlines(userId));
-        } else {
-          setApplication(null);
-        }
-      } catch (err) {
-        console.error("Failed to load application:", err);
-        setApplication(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadApplication();
+    dispatch(fetchApplicationById(id));
   }, [id, dispatch]);
 
-  if (loading) {
+  useEffect(() => {
+    if (!selectedApplication) return;
+
+    const firstApp = selectedApplication.applications?.[0] || null;
+
+    const appData = firstApp
+      ? {
+          _id: firstApp._id,
+          appId: firstApp.appId || firstApp._id,
+
+          student: {
+            _id: firstApp.user?._id || id,
+            userId: firstApp.user?._id || id,
+            name: firstApp.personalInfo?.fullName || firstApp.user?.name || "",
+            email: firstApp.personalInfo?.email || firstApp.user?.email || "",
+          },
+
+          status: firstApp.status || "Submitted",
+
+          managedBy: firstApp.managedBy || "",
+
+          processor: firstApp.processor || "Not Assigned",
+
+          offerLetters: firstApp.offerLetters || [],
+
+          documents: firstApp.documents || [],
+        }
+      : {
+          _id: id,
+          appId: "N/A",
+
+          student: {
+            _id: id,
+            userId: id,
+          },
+
+          status: "Submitted",
+
+          managedBy: "",
+
+          processor: "Not Assigned",
+
+          offerLetters: [],
+
+          activityLog: [],
+
+          documents: [],
+        };
+
+    setApplication(appData);
+
+    const userId = firstApp?.user?._id || id;
+
+    dispatch(fetchStudentProfile(userId));
+    dispatch(fetchStudentApplications(userId));
+    dispatch(fetchStudentDeadlines(userId));
+
+    if (appData?._id) {
+      fetchActivities(appData._id);
+    }
+  }, [selectedApplication, dispatch, id]);
+
+  if (loadingApplication) {
     return (
       <div className="min-h-screen bg-[#f4f6fb] flex items-center justify-center">
         <div className="flex items-center gap-3 text-slate-500">
@@ -507,7 +511,7 @@ export default function KhizarApplicationDetailPage() {
     );
   }
 
-  if (!application) {
+  if (!loadingApplication && !application) {
     return (
       <div className="min-h-screen bg-[#f4f6fb] flex items-center justify-center">
         <div className="text-center">
