@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useEffect, useCallback } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { counselorApi } from "@/lib/counselorApi";
 
 const cls = (...args) => args.filter(Boolean).join(" ");
@@ -632,6 +633,33 @@ export default function CounselorSettingsPage() {
       "Hi {studentName},\n\nGreat news! You have received an offer from {universityName}.\n\nLog in to your dashboard to view the details.\n\n{counselorName}\n{brandName}",
   });
 
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  // ── Handle Stripe return URL (?payment=success / ?payment=cancelled) ─────
+  useEffect(() => {
+    const payment = searchParams.get("payment");
+    if (payment === "success") {
+      // Stripe redirected back — re-fetch branding to pick up premium status
+      // set by webhook. Give webhook 2s to process first.
+      setTimeout(async () => {
+        try {
+          const { branding: b } = await counselorApi.getMyBranding();
+          setBranding((prev) => ({
+            ...prev,
+            plan: b.plan || prev.plan,
+            premiumExpiresAt: b.premiumExpiresAt || prev.premiumExpiresAt,
+            features: b.features || prev.features,
+          }));
+        } catch (_) {}
+      }, 2000);
+      // Remove query param without full reload
+      router.replace("/dashboard/counselor-dashboard/settings", {
+        scroll: false,
+      });
+    }
+  }, [searchParams, router]);
+
   // ── Load branding from backend on mount ──────────────────────────────────
   useEffect(() => {
     (async () => {
@@ -716,27 +744,33 @@ export default function CounselorSettingsPage() {
     setUpgradeModal(true);
   };
 
-  // ── Simulated payment → in production replace with Razorpay/Stripe ───────
-  const handlePay = () => {
+  // ── Real Stripe Checkout — redirects to Stripe-hosted payment page ────────
+  const handlePay = async () => {
     setPaying(true);
-    setTimeout(() => {
-      // Optimistically update UI; real activation comes from the backend
-      // after payment webhook sets plan = "premium" on CounselorBranding doc
-      setBranding((prev) => ({
-        ...prev,
-        plan: "premium",
-        premiumExpiresAt: new Date(
-          Date.now() + 30 * 24 * 60 * 60 * 1000,
-        ).toISOString(),
-        features: {
-          customColors: true,
-          removeKhizarBranding: true,
-          customEmailBranding: true,
-        },
-      }));
+    try {
+      const data = await counselorApi.createCheckoutSession();
+      if (data?.url) {
+        window.location.href = data.url; // Stripe-hosted checkout
+      } else {
+        throw new Error("No checkout URL returned");
+      }
+    } catch (err) {
+      console.error("[handlePay]", err);
+      alert("Payment setup failed. Please try again.");
       setPaying(false);
-      setUpgradeModal(false);
-    }, 1800);
+    }
+    // Note: setPaying(false) not called on success — page redirects away
+  };
+
+  // ── Stripe Customer Portal — manage billing / cancel ─────────────────────
+  const handleManageBilling = async () => {
+    try {
+      const data = await counselorApi.createPortalSession();
+      if (data?.url) window.location.href = data.url;
+    } catch (err) {
+      console.error("[handleManageBilling]", err);
+      alert("Billing portal unavailable. Please contact support.");
+    }
   };
 
   const updateProfile = (field, value) =>
@@ -2223,9 +2257,9 @@ export default function CounselorSettingsPage() {
                   <button
                     className={isPremium ? "btn-g" : "btn-gold"}
                     style={{ marginTop: 12, width: "100%", padding: "10px" }}
-                    onClick={handleUpgrade}
+                    onClick={isPremium ? handleManageBilling : handleUpgrade}
                   >
-                    {isPremium ? "Manage Plan" : "Upgrade Now →"}
+                    {isPremium ? "Manage Billing →" : "Upgrade Now →"}
                   </button>
                 </div>
               </div>
