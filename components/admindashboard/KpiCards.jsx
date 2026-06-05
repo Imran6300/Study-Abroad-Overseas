@@ -9,20 +9,9 @@ export default function KpiCards() {
 
   useEffect(() => {
     const API = process.env.NEXT_PUBLIC_BACKEND_URL;
-    Promise.all([
-      fetch(`${API}/api/lead?page=1&limit=1`, { credentials: "include" }),
-      fetch(`${API}/api/applications?page=1&limit=1`, {
-        credentials: "include",
-      }),
-    ])
-      .then(async ([leadsRes, appsRes]) => {
-        const leads = await leadsRes.json().catch(() => ({}));
-        const apps = await appsRes.json().catch(() => ({}));
-        setStats({
-          totalLeads: leads.total ?? 0,
-          totalApplications: apps.total ?? 0,
-        });
-      })
+    fetch(`${API}/api/admin/stats/overview`, { credentials: "include" })
+      .then((r) => r.json())
+      .then((d) => setStats(d.data || null))
       .catch(() => setStats(null))
       .finally(() => setLoading(false));
   }, []);
@@ -40,6 +29,11 @@ export default function KpiCards() {
     );
   }
 
+  const convRate =
+    stats?.totalLeads > 0
+      ? `${Math.round((stats.enrolled / stats.totalLeads) * 100)}%`
+      : "0%";
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
       <AdminCard
@@ -54,8 +48,18 @@ export default function KpiCards() {
         icon="📄"
         trend=""
       />
-      <AdminCard title="Conversion Rate" value="—" icon="📈" trend="" />
-      <AdminCard title="Enrollments" value="—" icon="🎓" trend="" />
+      <AdminCard
+        title="Conversion Rate"
+        value={stats?.totalLeads != null ? convRate : "—"}
+        icon="📈"
+        trend=""
+      />
+      <AdminCard
+        title="Enrollments"
+        value={stats?.enrolled ?? "—"}
+        icon="🎓"
+        trend=""
+      />
     </div>
   );
 }
