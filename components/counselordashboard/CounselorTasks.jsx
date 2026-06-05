@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Trash2, GripVertical, Clock } from "lucide-react";
+import { Plus, Trash2, Clock, Loader2 } from "lucide-react";
 
 const PRIORITY = {
   high: { label: "High", style: "bg-red-50 text-red-600 border-red-100" },
@@ -16,71 +16,83 @@ const PRIORITY = {
   },
 };
 
-const initialTasks = [
-  {
-    id: 1,
-    text: "Call Ahmed regarding visa documents",
-    done: false,
-    priority: "high",
-    due: "Today",
-  },
-  {
-    id: 2,
-    text: "Review Priya's Statement of Purpose",
-    done: false,
-    priority: "high",
-    due: "Today",
-  },
-  {
-    id: 3,
-    text: "Upload Hassan documents to portal",
-    done: true,
-    priority: "medium",
-    due: "Yesterday",
-  },
-  {
-    id: 4,
-    text: "Check Fatima IELTS result status",
-    done: false,
-    priority: "medium",
-    due: "Tomorrow",
-  },
-  {
-    id: 5,
-    text: "Submit Ali's university application",
-    done: false,
-    priority: "low",
-    due: "This week",
-  },
-];
+const BASE = process.env.NEXT_PUBLIC_BACKEND_URL;
+
+async function apiFetch(method, path, body) {
+  const res = await fetch(`${BASE}/api/counselor/tasks${path}`, {
+    method,
+    credentials: "include",
+    headers: body ? { "Content-Type": "application/json" } : {},
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || `HTTP ${res.status}`);
+  }
+  return res.json();
+}
 
 export default function CounselorTasks() {
-  const [tasks, setTasks] = useState(initialTasks);
+  const [tasks, setTasks] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [newTask, setNewTask] = useState("");
+  const [newPriority, setNewPriority] = useState("medium");
   const [showInput, setShowInput] = useState(false);
   const [filter, setFilter] = useState("all");
+  const [saving, setSaving] = useState(false);
+  const inputRef = useRef(null);
 
-  const toggle = (id) =>
+  // Load tasks from backend
+  useEffect(() => {
+    apiFetch("GET", "")
+      .then((data) => setTasks(data.data || []))
+      .catch((err) => console.error("Tasks load error:", err))
+      .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    if (showInput) inputRef.current?.focus();
+  }, [showInput]);
+
+  const toggle = async (id, done) => {
+    // Optimistic update
     setTasks((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, done: !t.done } : t)),
+      prev.map((t) => (t._id === id ? { ...t, done: !done } : t)),
     );
+    try {
+      await apiFetch("PATCH", `/${id}`, { done: !done });
+    } catch {
+      // revert
+      setTasks((prev) => prev.map((t) => (t._id === id ? { ...t, done } : t)));
+    }
+  };
 
-  const remove = (id) => setTasks((prev) => prev.filter((t) => t.id !== id));
+  const remove = async (id) => {
+    setTasks((prev) => prev.filter((t) => t._id !== id));
+    try {
+      await apiFetch("DELETE", `/${id}`);
+    } catch (err) {
+      console.error("Delete failed:", err);
+    }
+  };
 
-  const addTask = () => {
-    if (!newTask.trim()) return;
-    setTasks((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
+  const addTask = async () => {
+    if (!newTask.trim() || saving) return;
+    setSaving(true);
+    try {
+      const res = await apiFetch("POST", "", {
         text: newTask.trim(),
-        done: false,
-        priority: "low",
-        due: "No date",
-      },
-    ]);
-    setNewTask("");
-    setShowInput(false);
+        priority: newPriority,
+      });
+      setTasks((prev) => [res.data, ...prev]);
+      setNewTask("");
+      setNewPriority("medium");
+      setShowInput(false);
+    } catch (err) {
+      console.error("Add task failed:", err);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const visible = tasks.filter((t) => {
@@ -92,6 +104,19 @@ export default function CounselorTasks() {
   const doneCount = tasks.filter((t) => t.done).length;
   const pct = tasks.length ? Math.round((doneCount / tasks.length) * 100) : 0;
 
+  function dueDateLabel(dueDate) {
+    if (!dueDate) return "No date";
+    const d = new Date(dueDate);
+    const now = new Date();
+    const diff = Math.ceil((d - now) / 86400000);
+    if (diff === 0) return "Today";
+    if (diff === 1) return "Tomorrow";
+    if (diff === -1) return "Yesterday";
+    if (diff < 0) return `${Math.abs(diff)}d overdue`;
+    if (diff < 7) return `${diff}d left`;
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  }
+
   return (
     <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm h-full flex flex-col">
       {/* Header */}
@@ -99,7 +124,7 @@ export default function CounselorTasks() {
         <div>
           <h2 className="text-xl font-bold text-slate-800">Tasks</h2>
           <p className="text-xs text-slate-500 mt-0.5">
-            {doneCount}/{tasks.length} completed
+            {loading ? "Loading..." : `${doneCount}/${tasks.length} completed`}
           </p>
         </div>
         <motion.button
@@ -113,20 +138,24 @@ export default function CounselorTasks() {
       </div>
 
       {/* Progress */}
-      <div className="mb-4">
-        <div className="flex items-center justify-between mb-1.5">
-          <span className="text-xs font-semibold text-slate-500">Progress</span>
-          <span className="text-xs font-bold text-sky-600">{pct}%</span>
+      {!loading && tasks.length > 0 && (
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-xs font-semibold text-slate-500">
+              Progress
+            </span>
+            <span className="text-xs font-bold text-sky-600">{pct}%</span>
+          </div>
+          <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${pct}%` }}
+              transition={{ duration: 0.6, ease: "easeOut" }}
+              className="h-full bg-gradient-to-r from-sky-500 to-indigo-500 rounded-full"
+            />
+          </div>
         </div>
-        <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-          <motion.div
-            initial={{ width: 0 }}
-            animate={{ width: `${pct}%` }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
-            className="h-full bg-gradient-to-r from-sky-500 to-indigo-500 rounded-full"
-          />
-        </div>
-      </div>
+      )}
 
       {/* Filters */}
       <div className="flex gap-1.5 mb-4">
@@ -134,7 +163,11 @@ export default function CounselorTasks() {
           <button
             key={f}
             onClick={() => setFilter(f)}
-            className={`px-3 py-1 rounded-lg text-xs font-bold capitalize transition-all ${filter === f ? "bg-sky-500 text-white shadow-sm" : "bg-slate-100 text-slate-500 hover:bg-slate-200"}`}
+            className={`px-3 py-1 rounded-lg text-xs font-bold capitalize transition-all ${
+              filter === f
+                ? "bg-sky-500 text-white shadow-sm"
+                : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+            }`}
           >
             {f}
           </button>
@@ -150,9 +183,9 @@ export default function CounselorTasks() {
             exit={{ opacity: 0, height: 0 }}
             className="mb-3 overflow-hidden"
           >
-            <div className="flex gap-2">
+            <div className="flex gap-2 mb-2">
               <input
-                autoFocus
+                ref={inputRef}
                 value={newTask}
                 onChange={(e) => setNewTask(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && addTask()}
@@ -161,10 +194,26 @@ export default function CounselorTasks() {
               />
               <button
                 onClick={addTask}
-                className="px-3 py-2 bg-sky-500 text-white text-xs font-bold rounded-xl hover:bg-sky-600 transition-colors"
+                disabled={saving || !newTask.trim()}
+                className="px-3 py-2 bg-sky-500 text-white text-xs font-bold rounded-xl hover:bg-sky-600 transition-colors disabled:opacity-50"
               >
-                Add
+                {saving ? "..." : "Add"}
               </button>
+            </div>
+            <div className="flex gap-1.5">
+              {["high", "medium", "low"].map((p) => (
+                <button
+                  key={p}
+                  onClick={() => setNewPriority(p)}
+                  className={`px-2.5 py-1 rounded-lg text-[10px] font-bold capitalize border transition-all ${
+                    newPriority === p
+                      ? PRIORITY[p].style + " ring-1 ring-current"
+                      : "bg-slate-50 text-slate-400 border-slate-200"
+                  }`}
+                >
+                  {p}
+                </button>
+              ))}
             </div>
           </motion.div>
         )}
@@ -175,58 +224,87 @@ export default function CounselorTasks() {
         className="flex-1 space-y-2 overflow-y-auto"
         style={{ scrollbarWidth: "none" }}
       >
-        <AnimatePresence>
-          {visible.map((task) => (
-            <motion.div
-              key={task.id}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, x: -20, height: 0 }}
-              layout
-              className={`group flex items-start gap-3 p-3.5 rounded-2xl border transition-all duration-200 ${task.done ? "bg-slate-50 border-slate-100 opacity-60" : "bg-white border-slate-100 hover:border-sky-200 hover:bg-sky-50/30"}`}
-            >
-              <button
-                onClick={() => toggle(task.id)}
-                className={`w-5 h-5 rounded-md border-2 shrink-0 mt-0.5 flex items-center justify-center transition-all duration-200 ${task.done ? "bg-sky-500 border-sky-500" : "border-slate-300 hover:border-sky-400"}`}
+        {loading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 size={20} className="animate-spin text-slate-400" />
+          </div>
+        ) : visible.length === 0 ? (
+          <div className="py-8 text-center text-slate-400 text-sm">
+            {filter === "done"
+              ? "No completed tasks yet"
+              : filter === "pending"
+                ? "All tasks done!"
+                : "No tasks yet — add one above"}
+          </div>
+        ) : (
+          <AnimatePresence>
+            {visible.map((task) => (
+              <motion.div
+                key={task._id}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, x: -20, height: 0 }}
+                layout
+                className={`group flex items-start gap-3 p-3.5 rounded-2xl border transition-all duration-200 ${
+                  task.done
+                    ? "bg-slate-50 border-slate-100 opacity-60"
+                    : "bg-white border-slate-100 hover:border-sky-200 hover:bg-sky-50/30"
+                }`}
               >
-                {task.done && (
-                  <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-                    <path
-                      d="M1 4l3 3 5-6"
-                      stroke="white"
-                      strokeWidth="1.8"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                )}
-              </button>
-              <div className="flex-1 min-w-0">
-                <p
-                  className={`text-sm font-medium leading-snug ${task.done ? "line-through text-slate-400" : "text-slate-700"}`}
+                <button
+                  onClick={() => toggle(task._id, task.done)}
+                  className={`w-5 h-5 rounded-md border-2 shrink-0 mt-0.5 flex items-center justify-center transition-all duration-200 ${
+                    task.done
+                      ? "bg-sky-500 border-sky-500"
+                      : "border-slate-300 hover:border-sky-400"
+                  }`}
                 >
-                  {task.text}
-                </p>
-                <div className="flex items-center gap-2 mt-1.5">
-                  <span
-                    className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${PRIORITY[task.priority]?.style}`}
+                  {task.done && (
+                    <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                      <path
+                        d="M1 4l3 3 5-6"
+                        stroke="white"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  )}
+                </button>
+                <div className="flex-1 min-w-0">
+                  <p
+                    className={`text-sm font-medium leading-snug ${
+                      task.done
+                        ? "line-through text-slate-400"
+                        : "text-slate-700"
+                    }`}
                   >
-                    {PRIORITY[task.priority]?.label}
-                  </span>
-                  <span className="flex items-center gap-1 text-[10px] text-slate-400">
-                    <Clock size={9} /> {task.due}
-                  </span>
+                    {task.text}
+                  </p>
+                  <div className="flex items-center gap-2 mt-1.5">
+                    <span
+                      className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${
+                        PRIORITY[task.priority]?.style
+                      }`}
+                    >
+                      {PRIORITY[task.priority]?.label}
+                    </span>
+                    <span className="flex items-center gap-1 text-[10px] text-slate-400">
+                      <Clock size={9} />
+                      {dueDateLabel(task.dueDate)}
+                    </span>
+                  </div>
                 </div>
-              </div>
-              <button
-                onClick={() => remove(task.id)}
-                className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-lg hover:bg-red-50 text-slate-300 hover:text-red-400 shrink-0"
-              >
-                <Trash2 size={13} />
-              </button>
-            </motion.div>
-          ))}
-        </AnimatePresence>
+                <button
+                  onClick={() => remove(task._id)}
+                  className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-lg hover:bg-red-50 text-slate-300 hover:text-red-400 shrink-0"
+                >
+                  <Trash2 size={13} />
+                </button>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        )}
       </div>
     </div>
   );

@@ -50,7 +50,7 @@ export default function BrandedSidebar({ isCounselorStudent }) {
       {!open && (
         <button
           onClick={() => setOpen(true)}
-          className="lg:hidden absolute top-20 left-4 z-[100] w-10 h-10 flex items-center justify-center rounded-lg text-black text-lg shadow-md"
+          className="lg:hidden absolute top-4 left-4 z-[100] w-10 h-10 flex items-center justify-center rounded-lg text-black text-lg shadow-md"
           style={{ background: primary }}
         >
           ➜
