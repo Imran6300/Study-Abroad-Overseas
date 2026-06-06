@@ -1,5 +1,24 @@
 "use client";
 
+/**
+ * app/dashboard/counselor-dashboard/layout.jsx
+ *
+ * CHANGES vs original:
+ *
+ * 1. Content left-offset corrected:
+ *    - Original: `pl-[68px]` — wrong, sidebar collapses to 82px not 68px.
+ *    - Fixed:    `lg:pl-[82px]` — matches the collapsed sidebar width exactly.
+ *
+ * 2. Mobile top-bar spacing added:
+ *    - On mobile (<lg) the sidebar is hidden and a 56px top bar is shown.
+ *    - Content needs `pt-14` on mobile to clear that top bar.
+ *    - On desktop the top bar is hidden so no top padding needed.
+ *    - Combined class: `pt-14 lg:pt-0 lg:pl-[82px]`
+ *
+ * Everything else — auth guard, socket join, header visibility logic,
+ * page title logic — is identical to the original.
+ */
+
 import { useSelector } from "react-redux";
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect } from "react";
@@ -14,6 +33,7 @@ export default function CounselorLayout({ children }) {
   const router = useRouter();
   const pathname = usePathname();
 
+  // ── Auth guard ──────────────────────────────────────────────────────────
   useEffect(() => {
     if (!authChecked) return;
 
@@ -24,13 +44,14 @@ export default function CounselorLayout({ children }) {
     }
   }, [authChecked, user, router]);
 
-  // Join socket room for real-time counselor notifications
+  // ── Socket room join ────────────────────────────────────────────────────
   useEffect(() => {
     if (!user?._id) return;
     const socket = getSocket();
     socket.emit("join-dashboard", user._id);
   }, [user?._id]);
 
+  // ── Loading state ───────────────────────────────────────────────────────
   if (!authChecked) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#0A192F] text-white">
@@ -43,10 +64,13 @@ export default function CounselorLayout({ children }) {
     return null;
   }
 
-  // ROUTES WHERE HEADER SHOULD BE HIDDEN
+  // ── Header visibility ───────────────────────────────────────────────────
+  // Settings page has its own full-page layout (sticky nav + live preview),
+  // so we suppress the global dashboard header there.
   const hideHeaderRoutes = ["/dashboard/counselor-dashboard/settings"];
   const shouldHideHeader = hideHeaderRoutes.includes(pathname);
 
+  // ── Page title (for global header) ─────────────────────────────────────
   const getPageTitle = () => {
     if (pathname === "/dashboard/counselor-dashboard") return "Dashboard";
     if (pathname === "/dashboard/counselor-dashboard/students")
@@ -66,12 +90,17 @@ export default function CounselorLayout({ children }) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* SIDEBAR */}
+      {/* Sidebar — renders its own desktop sidebar + mobile top bar + mobile drawer */}
       <CounselorSidebar />
 
-      {/* CONTENT */}
-      <div className="pl-[68px] min-h-screen flex flex-col">
-        {/* GLOBAL HEADER */}
+      {/*
+        Content wrapper offsets:
+          mobile  → pt-14        (clear the 56px mobile top bar; no left offset — sidebar is hidden)
+          desktop → lg:pt-0      (no top bar on desktop)
+                    lg:pl-[82px] (clear the collapsed 82px sidebar)
+      */}
+      <div className="pt-14 lg:pt-0 lg:pl-[82px] min-h-screen flex flex-col">
+        {/* Global dashboard header (hidden on settings page) */}
         {!shouldHideHeader && (
           <CounselorDashboardHeader
             title={getPageTitle()}
@@ -79,7 +108,7 @@ export default function CounselorLayout({ children }) {
           />
         )}
 
-        {/* PAGE CONTENT */}
+        {/* Page content */}
         <main className="flex-1">{children}</main>
       </div>
     </div>

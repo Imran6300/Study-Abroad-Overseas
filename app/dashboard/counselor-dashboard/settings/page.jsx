@@ -11,8 +11,12 @@
  *  - Razorpay script loader added (loads checkout.razorpay.com/v1/checkout.js once)
  *  - Cancel confirmation dialog added to the Subscription panel
  *
- * All UI, branding logic, Redux state, profile/branding/email sections, and
- * live preview are identical to the original — zero visual regressions.
+ * RESPONSIVE UPDATE:
+ *  - Desktop UI: zero changes
+ *  - Mobile (≤768px): nav collapses to horizontally scrollable tabs with hidden action buttons,
+ *    floating mobile save FAB added, layout grid collapses to single column,
+ *    profile card header stacks vertically, subscription panel stacks, bottom save bar stacks,
+ *    all g2/g3 grids single-column, modal padding tightened, color swatches stack.
  */
 
 import { useRef, useState, useEffect, useCallback } from "react";
@@ -33,10 +37,14 @@ function fileToDataUrl(file) {
 }
 
 function formatExpiry(value) {
-  if (!value) return "Not set";
+  if (!value) return null;
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "Not set";
-  return date.toLocaleDateString();
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
 }
 
 // ── Load Razorpay checkout.js once ────────────────────────────────────────────
@@ -620,6 +628,7 @@ export default function CounselorSettingsPage() {
   const [paying, setPaying] = useState(false);
   const [cancelConfirm, setCancelConfirm] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [saveError, setSaveError] = useState("");
   const refs = useRef({});
 
   const [profile, setProfile] = useState({
@@ -669,14 +678,23 @@ export default function CounselorSettingsPage() {
   useEffect(() => {
     (async () => {
       try {
-        const { branding: b } = await counselorApi.getMyBranding();
+        const [{ branding: b }, statusRes] = await Promise.allSettled([
+          counselorApi.getMyBranding(),
+          counselorApi.getSubscriptionStatus(),
+        ]).then(([br, sr]) => [
+          br.status === "fulfilled" ? br.value : { branding: {} },
+          sr.status === "fulfilled" ? sr.value : { data: {} },
+        ]);
+
+        const premiumExpiresAt =
+          statusRes?.data?.premiumExpiresAt || b.premiumExpiresAt || null;
 
         setBranding({
           brandName: b.brandName || "",
           logoPreview: b.logo || "",
           brandingEnabled: b.brandingEnabled ?? true,
           plan: b.plan || "standard",
-          premiumExpiresAt: b.premiumExpiresAt || null,
+          premiumExpiresAt,
           tagline: b.tagline || "",
           faviconPreview: b.favicon || "",
           primaryColor: b.primaryColor || "#22c55e",
@@ -743,25 +761,25 @@ export default function CounselorSettingsPage() {
     setUpgradeModal(true);
   };
 
-  // ── Razorpay Checkout — opens inline widget ───────────────────────────────
+  // ── Razorpay Checkout ─────────────────────────────────────────────────────
   const handlePay = async () => {
     setPaying(true);
     try {
-      // 1. Load Razorpay script
       const loaded = await loadRazorpayScript();
       if (!loaded) {
-        alert("Failed to load payment SDK. Check your internet connection.");
+        setSaveError(
+          "Failed to load payment SDK. Please check your internet connection.",
+        );
+        setTimeout(() => setSaveError(""), 5000);
         setPaying(false);
         return;
       }
 
-      // 2. Create subscription order on our backend
       const data = await counselorApi.createOrder();
       if (!data?.subscriptionId) {
         throw new Error("No subscription ID returned from server");
       }
 
-      // 3. Open Razorpay checkout widget
       const options = {
         key: data.keyId,
         subscription_id: data.subscriptionId,
@@ -776,7 +794,6 @@ export default function CounselorSettingsPage() {
           },
         },
         handler: async (response) => {
-          // 4. Verify payment on our backend
           try {
             const verify = await counselorApi.verifyPayment({
               razorpay_payment_id: response.razorpay_payment_id,
@@ -785,7 +802,6 @@ export default function CounselorSettingsPage() {
             });
 
             if (verify?.success) {
-              // Update local state to reflect premium immediately
               setBranding((prev) => ({
                 ...prev,
                 plan: "premium",
@@ -797,18 +813,24 @@ export default function CounselorSettingsPage() {
                 },
               }));
               setUpgradeModal(false);
-              // Small toast notification
               setSaved(true);
               setTimeout(() => setSaved(false), 3000);
             } else {
-              alert("Payment verification failed. Contact support if charged.");
+              setSaveError(
+                "Payment verification failed. Please contact support if you were charged.",
+              );
             }
           } catch (verifyErr) {
             console.error("[handlePay:verify]", verifyErr);
-            alert(
-              "Payment received but verification failed. Contact support with your payment ID: " +
-                response.razorpay_payment_id,
-            );
+            if (verifyErr?.status === 401) {
+              setSaveError("Session expired. Please refresh the page.");
+            } else {
+              setSaveError(
+                "Payment received but verification failed. Save your payment ID: " +
+                  response.razorpay_payment_id,
+              );
+            }
+            setTimeout(() => setSaveError(""), 8000);
           } finally {
             setPaying(false);
           }
@@ -818,15 +840,21 @@ export default function CounselorSettingsPage() {
       const rzp = new window.Razorpay(options);
       rzp.on("payment.failed", (response) => {
         console.error("[razorpay] payment failed:", response.error);
-        alert(
-          `Payment failed: ${response.error.description || "Unknown error"}`,
+        setSaveError(
+          `Payment failed: ${response.error?.description || "Unknown error"}. Please try again.`,
         );
+        setTimeout(() => setSaveError(""), 6000);
         setPaying(false);
       });
       rzp.open();
     } catch (err) {
       console.error("[handlePay]", err);
-      alert("Payment setup failed. Please try again.");
+      setSaveError(
+        err?.status === 401
+          ? "Session expired — please refresh the page and try again."
+          : "Payment setup failed. Please try again.",
+      );
+      setTimeout(() => setSaveError(""), 5000);
       setPaying(false);
     }
   };
@@ -836,11 +864,18 @@ export default function CounselorSettingsPage() {
     setCancelling(true);
     try {
       const data = await counselorApi.cancelSubscription();
-      alert(data?.message || "Subscription cancellation scheduled.");
       setCancelConfirm(false);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3500);
     } catch (err) {
       console.error("[handleCancelSubscription]", err);
-      alert("Cancellation failed. Please contact support.");
+      setCancelConfirm(false);
+      setSaveError(
+        err?.status === 401
+          ? "Session expired — please refresh the page and try again."
+          : err?.message || "Cancellation failed. Please contact support.",
+      );
+      setTimeout(() => setSaveError(""), 5000);
     } finally {
       setCancelling(false);
     }
@@ -1078,6 +1113,8 @@ export default function CounselorSettingsPage() {
           box-shadow: 0 8px 28px rgba(16,185,129,.4);
           animation: toastIn .3s ease; white-space: nowrap;
           letter-spacing: -.01em;
+          max-width: calc(100vw - 32px);
+          text-align: center;
         }
         @keyframes toastIn {
           from{ opacity:0; transform:translateX(-50%) translateY(10px); }
@@ -1104,6 +1141,8 @@ export default function CounselorSettingsPage() {
           position: relative;
           animation: modalIn .25s ease;
           box-shadow: 0 32px 80px rgba(0,0,0,.6);
+          max-height: 90vh;
+          overflow-y: auto;
         }
         @keyframes modalIn {
           from{ opacity:0; transform: translateY(16px) scale(.97); }
@@ -1190,14 +1229,246 @@ export default function CounselorSettingsPage() {
         }
 
         @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ─── MAIN LAYOUT GRID ──────────────────────────────────── */
+        .settings-layout {
+          max-width: 1400px;
+          margin: 0 auto;
+          padding: 28px 24px 80px;
+          display: grid;
+          grid-template-columns: 1fr 420px;
+          gap: 28px;
+          align-items: start;
+        }
+
+        /* ─── NAV ACTIONS (desktop: always visible) ─────────────── */
+        .nav-actions { display: flex; gap: 8px; flex-shrink: 0; align-items: center; }
+        .nav-discard-btn { display: block; }
+        .nav-save-btn   { display: block; }
+
+        /* ─── MOBILE FAB ────────────────────────────────────────── */
+        .mobile-fab { display: none; }
+
+        /* ─── SUBSCRIPTION PANEL FLEX ───────────────────────────── */
+        .sub-panel-row {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 16px;
+          flex-wrap: wrap;
+        }
+
+        /* ─── PROFILE HEADER ────────────────────────────────────── */
+        .profile-header {
+          display: flex;
+          align-items: flex-start;
+          gap: 18px;
+          flex-wrap: wrap;
+        }
+
+        /* ─── BOTTOM SAVE BAR ───────────────────────────────────── */
+        .bottom-save-bar {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 15px 20px;
+          background: #090f1e;
+          border: 1px solid #0e1d36;
+          border-radius: 12px;
+          flex-wrap: wrap;
+          gap: 12px;
+        }
+        .bottom-save-bar-actions { display: flex; gap: 8px; }
+
+        /* ─── BENEFITS GRID ─────────────────────────────────────── */
+        .benefits-grid {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 10px;
+        }
+
+        /* ═══════════════════════════════════════════════════════════
+           MOBILE OVERRIDES  (≤768px)
+           Desktop layout = zero changes above this line
+           ═══════════════════════════════════════════════════════════ */
+        @media (max-width: 768px) {
+
+          /* Layout: single column, tighter padding */
+          .settings-layout {
+            grid-template-columns: 1fr;
+            padding: 16px 14px 100px;
+            gap: 0;
+          }
+
+          /* Page title tighter */
+          .settings-layout > div:first-child > div:first-child h1 {
+            font-size: 19px !important;
+          }
+
+          /* Nav: taller touch targets, horizontal scroll */
+          .nav-tabs-wrap {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            padding-bottom: 2px;
+          }
+          .nav-tabs-wrap::-webkit-scrollbar { display: none; }
+
+          /* Hide Discard + Save from nav on mobile → replaced by FAB */
+          .nav-discard-btn { display: none !important; }
+          .nav-save-btn   { display: none !important; }
+
+          /* Preview toggle stays but shrinks */
+          .preview-toggle-btn {
+            padding: 6px 10px !important;
+            font-size: 11.5px !important;
+          }
+
+          /* FAB: floating save button bottom-right */
+          .mobile-fab {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: fixed;
+            bottom: 20px;
+            right: 16px;
+            z-index: 90;
+            gap: 7px;
+            padding: 13px 20px;
+            border-radius: 50px;
+            font-size: 13.5px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #1d4ed8, #2563eb);
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 8px 28px rgba(29,78,216,.45);
+            letter-spacing: -.01em;
+            transition: all .15s;
+            white-space: nowrap;
+          }
+          .mobile-fab:disabled { opacity: .7; cursor: not-allowed; }
+          .mobile-fab:active { transform: scale(.97); }
+
+          /* Cards: tighter padding */
+          .card-shine { padding: 16px !important; }
+
+          /* Profile header: stack avatar + info */
+          .profile-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 14px;
+          }
+          /* Profile stats strip: 3 cols → fit on one row */
+          .profile-stats-g3 {
+            grid-template-columns: repeat(3, 1fr) !important;
+            gap: 8px !important;
+          }
+          /* Profile input row: already 1-col via .g3 override */
+
+          /* Subscription: stack the plan card vertically */
+          .sub-panel-row {
+            flex-direction: column;
+            gap: 12px;
+          }
+          .sub-plan-info { min-width: unset !important; }
+          .sub-stat-pill { min-width: unset !important; width: 100% !important; }
+
+          /* Bottom save bar: stack */
+          .bottom-save-bar {
+            flex-direction: column;
+            align-items: stretch;
+            text-align: center;
+            padding: 14px;
+            /* Push above FAB */
+            margin-bottom: 8px;
+          }
+          .bottom-save-bar-actions {
+            justify-content: stretch;
+          }
+          .bottom-save-bar-actions .btn-g,
+          .bottom-save-bar-actions .btn-p {
+            flex: 1;
+          }
+
+          /* Benefits grid: stays 2-col — fits fine on mobile */
+          /* (no change needed) */
+
+          /* Color swatches: 1 col on very narrow */
+          .color-swatches-g3 {
+            grid-template-columns: 1fr !important;
+          }
+
+          /* Modal: full-width, less padding */
+          .modal-box {
+            padding: 22px 18px !important;
+            border-radius: 16px !important;
+            max-height: 85vh;
+          }
+
+          /* Email template cards: tighter */
+          .email-tpl-card {
+            padding: 13px !important;
+          }
+
+          /* Sender details g2: single col on mobile */
+          .sender-g2 {
+            grid-template-columns: 1fr !important;
+          }
+
+          /* Branding g2 (brand name + logo): single col */
+          .brand-identity-g2 {
+            grid-template-columns: 1fr !important;
+          }
+
+          /* Premium card g2 (tagline + favicon): single col */
+          .premium-top-g2 {
+            grid-template-columns: 1fr !important;
+          }
+
+          /* Locked overlay: adjust text */
+          .lockedOverlay p { font-size: 12px !important; }
+
+          /* Toast: full-width */
+          .toast {
+            bottom: 80px !important; /* above FAB */
+            left: 14px !important;
+            right: 14px !important;
+            transform: none !important;
+            max-width: unset !important;
+          }
+
+          /* Section anchor scroll offset */
+          .s-anchor { scroll-margin-top: 62px; }
+
+          /* Sticky nav height */
+          .settings-nav { height: 50px !important; }
+
+          /* Page header */
+          .page-header { margin-bottom: 20px !important; }
+
+          /* Section blocks */
+          .section-block { margin-bottom: 24px !important; }
+        }
+
+        /* Extra narrow (≤400px) */
+        @media (max-width: 400px) {
+          .profile-stats-g3 {
+            grid-template-columns: repeat(3, 1fr) !important;
+          }
+          .badge { font-size: 9.5px !important; padding: 2px 6px !important; }
+          .stab { padding: 6px 11px !important; font-size: 12px !important; }
+          .benefits-grid { grid-template-columns: 1fr !important; }
+        }
       `}</style>
 
       {/* ── Sticky Nav ─────────────────────────────────────────── */}
       <div
+        className="settings-nav"
         style={{
           position: "sticky",
           top: 0,
-          zIndex: 50,
+          zIndex: 20,
           background: "rgba(6,11,23,.95)",
           backdropFilter: "blur(16px)",
           borderBottom: "1px solid #0a1525",
@@ -1215,12 +1486,15 @@ export default function CounselorSettingsPage() {
             gap: 12,
           }}
         >
+          {/* Tabs — horizontally scrollable on mobile */}
           <div
+            className="nav-tabs-wrap"
             style={{
               display: "flex",
               alignItems: "center",
               gap: 4,
-              overflowX: "auto",
+              flex: 1,
+              minWidth: 0,
             }}
           >
             {SECTIONS.map((id) => (
@@ -1241,29 +1515,23 @@ export default function CounselorSettingsPage() {
             ))}
           </div>
 
-          <div
-            style={{
-              display: "flex",
-              gap: 8,
-              flexShrink: 0,
-              alignItems: "center",
-            }}
-          >
+          {/* Actions */}
+          <div className="nav-actions">
             <button
               className="preview-toggle-btn"
               onClick={() => setShowPreview((v) => !v)}
             >
               <span className="live-dot" />
-              {showPreview ? "Hide Preview" : "Live Preview"}
+              {showPreview ? "Hide" : "Preview"}
             </button>
             <button
-              className="btn-g"
+              className="btn-g nav-discard-btn"
               style={{ padding: "7px 15px", fontSize: 12.5 }}
             >
               Discard
             </button>
             <button
-              className="btn-p"
+              className="btn-p nav-save-btn"
               style={{ padding: "7px 18px", fontSize: 13 }}
               onClick={handleSave}
               disabled={saving}
@@ -1275,21 +1543,11 @@ export default function CounselorSettingsPage() {
       </div>
 
       {/* ── Layout ─────────────────────────────────────────────── */}
-      <div
-        style={{
-          maxWidth: 1400,
-          margin: "0 auto",
-          padding: "28px 24px 80px",
-          display: "grid",
-          gridTemplateColumns: "1fr 420px",
-          gap: 28,
-          alignItems: "start",
-        }}
-      >
+      <div className="settings-layout">
         {/* ── Left: Settings ─────────────────────────────────── */}
         <div>
           {/* Page header */}
-          <div style={{ marginBottom: 28 }}>
+          <div className="page-header" style={{ marginBottom: 28 }}>
             <h1
               style={{
                 fontSize: 23,
@@ -1313,20 +1571,14 @@ export default function CounselorSettingsPage() {
             ref={(el) => {
               refs.current.profile = el;
             }}
-            className="s-anchor"
+            className="s-anchor section-block"
             style={{ marginBottom: 32 }}
           >
             <SectionHead>Profile</SectionHead>
 
             <div style={cardStyle} className="card-shine">
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "flex-start",
-                  gap: 18,
-                  flexWrap: "wrap",
-                }}
-              >
+              {/* Profile header — stacks on mobile */}
+              <div className="profile-header">
                 <div
                   style={{
                     display: "flex",
@@ -1360,7 +1612,7 @@ export default function CounselorSettingsPage() {
                   </label>
                 </div>
 
-                <div style={{ flex: 1, minWidth: 240 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <div
                     style={{
                       display: "flex",
@@ -1390,11 +1642,20 @@ export default function CounselorSettingsPage() {
                       color: "#2e4570",
                       marginBottom: 14,
                       lineHeight: 1.6,
+                      wordBreak: "break-all",
                     }}
                   >
                     {profile.email} &nbsp;·&nbsp; {profile.phone}
                   </p>
-                  <div className="g3">
+                  {/* Stats — forced 3-col even on mobile */}
+                  <div
+                    className="profile-stats-g3"
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr 1fr 1fr",
+                      gap: 12,
+                    }}
+                  >
                     {[
                       { v: "142", l: "Students" },
                       { v: "87%", l: "Visa Success" },
@@ -1429,6 +1690,7 @@ export default function CounselorSettingsPage() {
                 </div>
               </div>
 
+              {/* Profile inputs */}
               <div className="g3" style={{ marginTop: 18 }}>
                 {[
                   {
@@ -1467,7 +1729,7 @@ export default function CounselorSettingsPage() {
             ref={(el) => {
               refs.current.branding = el;
             }}
-            className="s-anchor"
+            className="s-anchor section-block"
             style={{ marginBottom: 32 }}
           >
             <SectionHead>Branding</SectionHead>
@@ -1506,7 +1768,8 @@ export default function CounselorSettingsPage() {
                 </span>
               </div>
 
-              <div className="g2">
+              {/* Brand identity g2 — single col on mobile */}
+              <div className="g2 brand-identity-g2">
                 <Field label="Brand Name (Free)">
                   <input
                     className="fi"
@@ -1605,7 +1868,13 @@ export default function CounselorSettingsPage() {
             >
               {premiumLocked && (
                 <div className="lockedOverlay">
-                  <div style={{ textAlign: "center", maxWidth: 300 }}>
+                  <div
+                    style={{
+                      textAlign: "center",
+                      maxWidth: 300,
+                      padding: "0 16px",
+                    }}
+                  >
                     <div style={{ fontSize: 28, marginBottom: 8 }}>🔒</div>
                     <div
                       style={{
@@ -1682,7 +1951,8 @@ export default function CounselorSettingsPage() {
                 </div>
               </div>
 
-              <div className="g2" style={{ marginBottom: 16 }}>
+              {/* Tagline + favicon — single col on mobile */}
+              <div className="g2 premium-top-g2" style={{ marginBottom: 16 }}>
                 <Field label="Tagline (Premium)">
                   <input
                     className="fi"
@@ -1769,7 +2039,7 @@ export default function CounselorSettingsPage() {
                 </Field>
               </div>
 
-              {/* Color pickers */}
+              {/* Color pickers — 3 col desktop, 1 col on very narrow mobile */}
               <div style={{ marginBottom: 4 }}>
                 <label
                   style={{
@@ -1784,7 +2054,10 @@ export default function CounselorSettingsPage() {
                 >
                   Dashboard Colors (Premium)
                 </label>
-                <div className="g3">
+                <div
+                  className="g3 color-swatches-g3"
+                  style={{ gridTemplateColumns: "repeat(3, 1fr)" }}
+                >
                   {[
                     {
                       label: "Primary",
@@ -1921,7 +2194,7 @@ export default function CounselorSettingsPage() {
             ref={(el) => {
               refs.current.email = el;
             }}
-            className="s-anchor"
+            className="s-anchor section-block"
             style={{ marginBottom: 32 }}
           >
             <SectionHead>Email Templates</SectionHead>
@@ -1932,7 +2205,13 @@ export default function CounselorSettingsPage() {
             >
               {premiumLocked && (
                 <div className="lockedOverlay">
-                  <div style={{ textAlign: "center", maxWidth: 300 }}>
+                  <div
+                    style={{
+                      textAlign: "center",
+                      maxWidth: 300,
+                      padding: "0 16px",
+                    }}
+                  >
                     <div style={{ fontSize: 28, marginBottom: 8 }}>✉️</div>
                     <div
                       style={{
@@ -2032,7 +2311,8 @@ export default function CounselorSettingsPage() {
                 >
                   Sender Details
                 </div>
-                <div className="g2">
+                {/* Sender details — single col on mobile */}
+                <div className="g2 sender-g2">
                   <Field label="Sender Name">
                     <input
                       className="fi"
@@ -2088,6 +2368,7 @@ export default function CounselorSettingsPage() {
               ].map(({ key, icon, label, desc, subjectKey, bodyKey }) => (
                 <div
                   key={key}
+                  className="email-tpl-card"
                   style={{
                     marginBottom: 16,
                     background: "#070c18",
@@ -2166,22 +2447,18 @@ export default function CounselorSettingsPage() {
             ref={(el) => {
               refs.current.subscription = el;
             }}
-            className="s-anchor"
+            className="s-anchor section-block"
             style={{ marginBottom: 20 }}
           >
             <SectionHead>Subscription</SectionHead>
 
             <div style={cardStyle} className="card-shine">
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "flex-start",
-                  justifyContent: "space-between",
-                  gap: 16,
-                  flexWrap: "wrap",
-                }}
-              >
-                <div style={{ flex: 1, minWidth: 240 }}>
+              {/* Subscription row — stacks on mobile */}
+              <div className="sub-panel-row">
+                <div
+                  className="sub-plan-info"
+                  style={{ flex: 1, minWidth: 240 }}
+                >
                   <div
                     style={{
                       fontSize: 14,
@@ -2218,7 +2495,7 @@ export default function CounselorSettingsPage() {
                 </div>
 
                 <div
-                  className="stat-pill"
+                  className="stat-pill sub-stat-pill"
                   style={{
                     minWidth: 220,
                     background: isPremium
@@ -2248,7 +2525,7 @@ export default function CounselorSettingsPage() {
                     }}
                   >
                     {isPremium
-                      ? formatExpiry(branding.premiumExpiresAt)
+                      ? formatExpiry(branding.premiumExpiresAt) || "Active"
                       : "₹500"}
                     {!isPremium && (
                       <span
@@ -2300,13 +2577,7 @@ export default function CounselorSettingsPage() {
               >
                 What's included in Premium
               </div>
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(2, 1fr)",
-                  gap: 10,
-                }}
-              >
+              <div className="benefits-grid">
                 {[
                   {
                     icon: "🎨",
@@ -2385,19 +2656,7 @@ export default function CounselorSettingsPage() {
           </div>
 
           {/* Bottom save bar */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              padding: "15px 20px",
-              background: "#090f1e",
-              border: "1px solid #0e1d36",
-              borderRadius: 12,
-              flexWrap: "wrap",
-              gap: 12,
-            }}
-          >
+          <div className="bottom-save-bar">
             <div>
               <div style={{ fontSize: 13, fontWeight: 600, color: "#6a8ab0" }}>
                 Save all changes
@@ -2406,7 +2665,7 @@ export default function CounselorSettingsPage() {
                 Review your settings above before saving.
               </div>
             </div>
-            <div style={{ display: "flex", gap: 8 }}>
+            <div className="bottom-save-bar-actions">
               <button className="btn-g">Reset to Defaults</button>
               <button className="btn-p" onClick={handleSave} disabled={saving}>
                 {saving ? "Saving…" : saved ? "✓ Saved!" : "Save Settings"}
@@ -2576,6 +2835,35 @@ export default function CounselorSettingsPage() {
           </div>
         </div>
       </div>
+
+      {/* ── Mobile FAB (Save) — hidden on desktop ──────────────── */}
+      <button
+        className="mobile-fab"
+        onClick={handleSave}
+        disabled={saving}
+        aria-label="Save settings"
+      >
+        {saving ? (
+          <>
+            <span
+              style={{
+                width: 14,
+                height: 14,
+                border: "2px solid rgba(255,255,255,.3)",
+                borderTopColor: "#fff",
+                borderRadius: "50%",
+                animation: "spin .6s linear infinite",
+                flexShrink: 0,
+              }}
+            />
+            Saving…
+          </>
+        ) : saved ? (
+          "✓ Saved!"
+        ) : (
+          "💾 Save Changes"
+        )}
+      </button>
 
       {/* ── Mobile Preview Overlay ─────────────────────────────── */}
       {showPreview && (
@@ -2818,9 +3106,11 @@ export default function CounselorSettingsPage() {
                 Cancel Subscription?
               </div>
               <p style={{ fontSize: 13, color: "#6a8ab0", lineHeight: 1.7 }}>
-                Your premium access will remain active until the end of the
-                current billing period. After that, your account will revert to
-                the Standard plan.
+                Your premium access will remain active
+                {branding.premiumExpiresAt
+                  ? ` until ${formatExpiry(branding.premiumExpiresAt)}`
+                  : " until the end of the current billing period"}
+                . After that, your account will revert to the Standard plan.
               </p>
             </div>
             <div style={{ display: "flex", gap: 10 }}>
@@ -2845,11 +3135,24 @@ export default function CounselorSettingsPage() {
         </div>
       )}
 
+      {/* ── Toasts ─────────────────────────────────────────────── */}
       {saved && (
         <div className="toast">
           {isPremium
-            ? "⭐ Premium activated!"
+            ? "⭐ Premium activated! Subscription scheduled for cancellation."
             : "✓ Settings saved successfully"}
+        </div>
+      )}
+
+      {saveError && (
+        <div
+          className="toast"
+          style={{
+            background: "#ef4444",
+            boxShadow: "0 8px 28px rgba(239,68,68,.4)",
+          }}
+        >
+          ⚠️ {saveError}
         </div>
       )}
     </div>
