@@ -17,6 +17,7 @@ import {
   LogOut,
   ChevronRight,
   FileCheck,
+  User,
 } from "lucide-react";
 
 export default function CounselorSidebar() {
@@ -50,6 +51,11 @@ export default function CounselorSidebar() {
       icon: GraduationCap,
       label: "Students",
       href: "/dashboard/counselor-dashboard/students",
+    },
+    {
+      icon: User,
+      label: "Meetings",
+      href: "/dashboard/counselor-dashboard/meetings",
     },
     {
       icon: FileCheck,

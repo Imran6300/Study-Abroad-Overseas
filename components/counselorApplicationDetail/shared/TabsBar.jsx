@@ -6,11 +6,14 @@ import DeadlinesTab from "@/components/counselorApplicationDetail/deadlines/Dead
 import ApplicationsTab from "@/components/counselorApplicationDetail/applications/ApplicationsTab";
 import VisaTab from "@/components/counselorApplicationDetail/visa/VisaTab";
 import ActivityTab from "@/components/counselorApplicationDetail/activity/ActivityTab";
+import DepositTracker from "@/components/counselordashboard/DepositTracker";
+import OfferLetterUpload from "@/components/counselordashboard/OfferLetterUpload";
 
 export default function TabsBar({
   tabs,
   activeTab,
   setActiveTab,
+  leadId,
   application,
   profile,
   overviewApplication,
@@ -157,6 +160,17 @@ export default function TabsBar({
         {/* ── ACTIVITY ── */}
         {activeTab === "activity" && (
           <ActivityTab activities={activities} loading={loadingActivities} />
+        )}
+
+        {/* ── FINANCE (deposit + offer letter) ── */}
+        {activeTab === "finance" && leadId && (
+          <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-5">
+            <DepositTracker
+              leadId={leadId}
+              leadName={profile?.name || "Student"}
+            />
+            <OfferLetterUpload leadId={leadId} mode="counselor" />
+          </div>
         )}
       </div>
     </motion.div>

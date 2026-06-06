@@ -17,6 +17,7 @@ import Image from "next/image";
 
 const NAV_LINKS = [
   { href: "/dashboard/user", label: "Dashboard", icon: "🏠" },
+
   { href: "/dashboard/user/applications", label: "Applications", icon: "🎓" },
   {
     href: "/dashboard/user/saved-universities",
@@ -24,8 +25,16 @@ const NAV_LINKS = [
     icon: "⭐",
   },
   { href: "/dashboard/user/deadlines", label: "Deadlines", icon: "⏰" },
+
   { href: "/dashboard/user/documents", label: "Documents", icon: "📄" },
   { href: "/dashboard/user/visa", label: "Visa Progress", icon: "🛂" },
+
+  {
+    href: "/dashboard/user/counseling",
+    label: "Counseling Sessions",
+    icon: "💬",
+  },
+
   { href: "/dashboard/user/settings", label: "Settings", icon: "⚙️" },
 ];
 

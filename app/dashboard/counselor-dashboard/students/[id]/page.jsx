@@ -537,6 +537,7 @@ export default function KhizarApplicationDetailPage() {
     { key: "applications", label: "Applications", icon: ClipboardList },
     { key: "visa", label: "Visa", icon: Plane },
     { key: "notes", label: "Notes", icon: MessageSquare },
+    { key: "finance", label: "Finance", icon: FileText },
     { key: "activity", label: "Activity", icon: Activity },
   ];
 
@@ -646,6 +647,7 @@ export default function KhizarApplicationDetailPage() {
           tabs={tabs}
           activeTab={activeTab}
           setActiveTab={setActiveTab}
+          leadId={id}
           application={application}
           profile={profile}
           overviewApplication={overviewApplication}

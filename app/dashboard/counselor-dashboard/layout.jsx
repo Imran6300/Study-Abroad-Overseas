@@ -6,6 +6,7 @@ import { useEffect } from "react";
 
 import CounselorSidebar from "@/components/counselordashboard/CounselorSidebar";
 import CounselorDashboardHeader from "@/components/counselordashboard/CounselorDashboardHeader";
+import { getSocket } from "@/lib/socket";
 
 export default function CounselorLayout({ children }) {
   const { user, authChecked } = useSelector((state) => state.auth);
@@ -22,6 +23,13 @@ export default function CounselorLayout({ children }) {
       router.replace("/dashboard/user");
     }
   }, [authChecked, user, router]);
+
+  // Join socket room for real-time counselor notifications
+  useEffect(() => {
+    if (!user?._id) return;
+    const socket = getSocket();
+    socket.emit("join-dashboard", user._id);
+  }, [user?._id]);
 
   if (!authChecked) {
     return (

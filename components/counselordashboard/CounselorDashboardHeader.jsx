@@ -1,28 +1,120 @@
-// components/dashboard/DashboardHeader.jsx
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Bell, Check, Info, AlertTriangle, X, Moon, Sun } from "lucide-react";
+// ─────────────────────────────────────────────────────────────────────────────
+// FILE: components/counselordashboard/CounselorDashboardHeader.jsx
+//
+// FULLY WIRED notification bell for the counselor dashboard.
+//
+// What works:
+//   1. On mount  → fetches real notifications from GET /api/counselor/notifications
+//   2. Socket.IO → listens for "counselor-new-notification" (push) and
+//                  "counselor-notification-count" (badge update) in real time
+//   3. Click     → marks individual notification read via PATCH /:id/read
+//   4. "Mark all read" → PATCH /api/counselor/notifications/read-all
+//   5. Delete    → DELETE /api/counselor/notifications/:id
+//   6. Badge     → red dot with count + ping animation when > 0
+// ─────────────────────────────────────────────────────────────────────────────
 
-export default function DashboardHeader({
+import { useState, useRef, useEffect, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Bell, Check, Info, AlertTriangle, X, Trash2 } from "lucide-react";
+import { useDispatch, useSelector } from "react-redux";
+import { getSocket } from "@/lib/socket";
+import {
+  fetchCounselorNotifications,
+  markCounselorNotifRead,
+  markAllCounselorNotifsRead,
+  deleteCounselorNotif,
+  addCounselorNotification,
+  setCounselorUnreadCount,
+} from "@/store/notificationSlice";
+
+// ── helpers ───────────────────────────────────────────────────────────────────
+function timeAgo(dateStr) {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return `${Math.floor(hrs / 24)}d ago`;
+}
+
+const TYPE_ICON = {
+  student_registered: <Check size={15} className="text-emerald-500" />,
+  application_update: <Info size={15} className="text-sky-500" />,
+  payment: <AlertTriangle size={15} className="text-amber-500" />,
+  deadline: <AlertTriangle size={15} className="text-orange-500" />,
+  document: <Check size={15} className="text-emerald-500" />,
+  message: <Info size={15} className="text-violet-500" />,
+  system: <Info size={15} className="text-slate-500" />,
+};
+
+const TYPE_BG = {
+  student_registered: "bg-emerald-50",
+  application_update: "bg-sky-50",
+  payment: "bg-amber-50",
+  deadline: "bg-orange-50",
+  document: "bg-emerald-50",
+  message: "bg-violet-50",
+  system: "bg-slate-50",
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+export default function CounselorDashboardHeader({
   title = "Counselor Dashboard",
   counselorName = "Counselor",
   btnName = null,
   onButtonClick,
 }) {
+  const dispatch = useDispatch();
+  const { user } = useSelector((s) => s.auth);
+
+  const { counselorNotifs, counselorUnread, counselorLoading } = useSelector(
+    (s) => s.notifications,
+  );
+
+  const [showNotifications, setShowNotifications] = useState(false);
+  const notificationRef = useRef(null);
+
   const initials =
     counselorName
       .split(" ")
       .map((n) => n[0])
       .join("")
       .slice(0, 2)
-      .toUpperCase() || "AD";
+      .toUpperCase() || "CO";
 
-  const [showNotifications, setShowNotifications] = useState(false);
-  const [darkHeader, setDarkHeader] = useState(false);
-  const notificationRef = useRef(null);
+  // ── 1. Fetch on mount ─────────────────────────────────────────────────────
+  useEffect(() => {
+    if (user?._id) {
+      dispatch(fetchCounselorNotifications());
+    }
+  }, [user?._id, dispatch]);
 
+  // ── 2. Socket.IO real-time ────────────────────────────────────────────────
+  useEffect(() => {
+    if (!user?._id) return;
+
+    const socket = getSocket();
+
+    const handleNew = (notif) => {
+      dispatch(addCounselorNotification(notif));
+    };
+    const handleCount = (count) => {
+      dispatch(setCounselorUnreadCount(count));
+    };
+
+    socket.on("counselor-new-notification", handleNew);
+    socket.on("counselor-notification-count", handleCount);
+
+    return () => {
+      socket.off("counselor-new-notification", handleNew);
+      socket.off("counselor-notification-count", handleCount);
+    };
+  }, [user?._id, dispatch]);
+
+  // ── 3. Click outside ─────────────────────────────────────────────────────
   useEffect(() => {
     const handler = (e) => {
       if (
@@ -35,76 +127,44 @@ export default function DashboardHeader({
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const notifications = [
-    {
-      id: 1,
-      type: "success",
-      title: "New student registered",
-      message: "Ayan Sharma just created an account from Dubai",
-      time: "5 min ago",
-      read: false,
-    },
-    {
-      id: 2,
-      type: "info",
-      title: "Visa application update",
-      message: "UK Tier 4 visa requirements changed for 2026",
-      time: "1 hr ago",
-      read: true,
-    },
-    {
-      id: 3,
-      type: "warning",
-      title: "Payment pending",
-      message: "Invoice #3921 for Maria Gonzalez is overdue",
-      time: "3 hrs ago",
-      read: false,
-    },
-    {
-      id: 4,
-      type: "info",
-      title: "Document verified",
-      message: "Hassan's IELTS certificate has been verified",
-      time: "5 hrs ago",
-      read: true,
-    },
-  ];
+  // ── Actions ───────────────────────────────────────────────────────────────
+  const handleMarkRead = useCallback(
+    (id) => dispatch(markCounselorNotifRead(id)),
+    [dispatch],
+  );
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  const handleMarkAllRead = useCallback(() => {
+    dispatch(markAllCounselorNotifsRead());
+  }, [dispatch]);
 
-  const iconMap = {
-    success: <Check size={16} className="text-emerald-500" />,
-    info: <Info size={16} className="text-sky-500" />,
-    warning: <AlertTriangle size={16} className="text-amber-500" />,
-  };
-
-  const bgMap = {
-    success: "bg-emerald-50",
-    info: "bg-sky-50",
-    warning: "bg-amber-50",
-  };
+  const handleDelete = useCallback(
+    (e, id) => {
+      e.stopPropagation();
+      dispatch(deleteCounselorNotif(id));
+    },
+    [dispatch],
+  );
 
   return (
     <header className="bg-white/90 backdrop-blur-2xl border-b border-slate-200/60 shadow-[0_1px_12px_rgba(14,165,233,0.06)] sticky top-0 z-30 transition-all duration-300">
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 sm:h-[68px]">
-          {/* LEFT: Title */}
+          {/* ── LEFT: Title ───────────────────────────────────────────────── */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, ease: "easeOut" }}
             className="flex items-center gap-3 min-w-0"
           >
-            {/* Accent bar */}
             <div className="w-1 h-7 rounded-full bg-gradient-to-b from-sky-500 to-indigo-600 hidden sm:block" />
             <h1 className="text-lg sm:text-xl lg:text-2xl font-extrabold bg-gradient-to-r from-sky-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent tracking-tight truncate">
               {title}
             </h1>
           </motion.div>
 
-          {/* RIGHT */}
+          {/* ── RIGHT ─────────────────────────────────────────────────────── */}
           <div className="flex items-center gap-1.5 sm:gap-3">
-            {/* Notification bell */}
+            {/* BELL */}
             <div className="relative" ref={notificationRef}>
               <motion.button
                 whileHover={{ scale: 1.1 }}
@@ -114,16 +174,18 @@ export default function DashboardHeader({
                 aria-label="Notifications"
               >
                 <Bell size={20} strokeWidth={1.8} />
-                {unreadCount > 0 && (
+
+                {counselorUnread > 0 && (
                   <>
                     <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full animate-ping" />
                     <span className="absolute -top-0.5 -right-0.5 min-w-[17px] h-[17px] px-1 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center shadow">
-                      {unreadCount > 9 ? "9+" : unreadCount}
+                      {counselorUnread > 9 ? "9+" : counselorUnread}
                     </span>
                   </>
                 )}
               </motion.button>
 
+              {/* Dropdown */}
               <AnimatePresence>
                 {showNotifications && (
                   <motion.div
@@ -133,63 +195,110 @@ export default function DashboardHeader({
                     transition={{ duration: 0.18 }}
                     className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden z-50"
                   >
+                    {/* Header */}
                     <div className="flex items-center justify-between px-5 py-3.5 bg-gradient-to-r from-sky-50 to-indigo-50 border-b border-slate-100">
                       <div className="flex items-center gap-2">
                         <h3 className="font-bold text-slate-800 text-sm">
                           Notifications
                         </h3>
-                        {unreadCount > 0 && (
+                        {counselorUnread > 0 && (
                           <span className="bg-sky-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
-                            {unreadCount} new
+                            {counselorUnread} new
                           </span>
                         )}
                       </div>
-                      <button
-                        onClick={() => setShowNotifications(false)}
-                        className="text-slate-400 hover:text-slate-700 transition-colors"
-                      >
-                        <X size={16} />
-                      </button>
+                      <div className="flex items-center gap-2">
+                        {counselorUnread > 0 && (
+                          <button
+                            onClick={handleMarkAllRead}
+                            className="text-[11px] font-semibold text-sky-600 hover:text-sky-700 transition-colors"
+                          >
+                            Mark all read
+                          </button>
+                        )}
+                        <button
+                          onClick={() => setShowNotifications(false)}
+                          className="text-slate-400 hover:text-slate-700 transition-colors"
+                        >
+                          <X size={16} />
+                        </button>
+                      </div>
                     </div>
 
+                    {/* List */}
                     <div className="max-h-[380px] overflow-y-auto">
-                      {notifications.map((notif, i) => (
+                      {counselorLoading && (
+                        <p className="p-6 text-center text-sm text-slate-400">
+                          Loading…
+                        </p>
+                      )}
+                      {!counselorLoading && counselorNotifs.length === 0 && (
+                        <p className="p-6 text-center text-sm text-slate-400">
+                          No notifications yet
+                        </p>
+                      )}
+                      {counselorNotifs.map((notif, i) => (
                         <motion.div
-                          key={notif.id}
+                          key={notif._id}
                           initial={{ opacity: 0, x: 10 }}
                           animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: i * 0.05 }}
-                          className={`px-5 py-3.5 border-b border-slate-50 hover:bg-slate-50/80 transition-colors cursor-pointer ${!notif.read ? "bg-sky-50/30" : ""}`}
+                          transition={{ delay: i * 0.04 }}
+                          onClick={() =>
+                            !notif.isRead && handleMarkRead(notif._id)
+                          }
+                          className={`px-5 py-3.5 border-b border-slate-50 hover:bg-slate-50/80 transition-colors cursor-pointer group ${
+                            !notif.isRead ? "bg-sky-50/30" : ""
+                          }`}
                         >
                           <div className="flex items-start gap-3">
+                            {/* Type icon */}
                             <div
-                              className={`w-7 h-7 rounded-full ${bgMap[notif.type]} flex items-center justify-center shrink-0 mt-0.5`}
+                              className={`w-7 h-7 rounded-full ${
+                                TYPE_BG[notif.type] || "bg-slate-50"
+                              } flex items-center justify-center shrink-0 mt-0.5`}
                             >
-                              {iconMap[notif.type]}
+                              {TYPE_ICON[notif.type] || (
+                                <Bell size={14} className="text-slate-400" />
+                              )}
                             </div>
+
+                            {/* Content */}
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">
                                 <p className="font-semibold text-slate-800 text-sm truncate">
                                   {notif.title}
                                 </p>
-                                {!notif.read && (
+                                {!notif.isRead && (
                                   <span className="w-1.5 h-1.5 rounded-full bg-sky-500 shrink-0" />
                                 )}
                               </div>
-                              <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
+                              <p className="text-xs text-slate-500 mt-0.5 leading-relaxed line-clamp-2">
                                 {notif.message}
                               </p>
                               <p className="text-[10px] text-slate-400 mt-1.5 font-medium">
-                                {notif.time}
+                                {timeAgo(notif.createdAt)}
                               </p>
                             </div>
+
+                            {/* Delete */}
+                            <button
+                              onClick={(e) => handleDelete(e, notif._id)}
+                              className="shrink-0 opacity-0 group-hover:opacity-50 hover:!opacity-100 transition-opacity text-slate-400 hover:text-red-400 p-1"
+                              title="Delete"
+                            >
+                              <Trash2 size={13} />
+                            </button>
                           </div>
                         </motion.div>
                       ))}
                     </div>
 
+                    {/* Footer */}
                     <div className="px-5 py-3 bg-slate-50/50 text-center">
-                      <button className="text-xs font-semibold text-sky-600 hover:text-sky-700 transition-colors">
+                      <button
+                        onClick={() => setShowNotifications(false)}
+                        className="text-xs font-semibold text-sky-600 hover:text-sky-700 transition-colors"
+                      >
                         View all notifications →
                       </button>
                     </div>
@@ -222,7 +331,7 @@ export default function DashboardHeader({
               </div>
             </div>
 
-            {/* Action Button */}
+            {/* Action button */}
             {btnName && (
               <motion.button
                 whileHover={{ scale: 1.03, y: -1 }}
