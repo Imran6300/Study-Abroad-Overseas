@@ -1,6 +1,6 @@
+/** @type {import('tailwindcss').Config} */
 module.exports = {
   content: ["./app/**/*.{js,jsx,ts,tsx}", "./components/**/*.{js,jsx,ts,tsx}"],
-  plugins: [require("@tailwindcss/line-clamp")],
 
   theme: {
     extend: {
@@ -9,9 +9,11 @@ module.exports = {
           "0%, 100%": { transform: "translate(0px, 0px)" },
           "50%": { transform: "translate(40px, -40px)" },
         },
+
         imgFloat: {
           "50%": { transform: "translateY(-18px)" },
         },
+
         cardIntro: {
           "0%": {
             opacity: "0",
@@ -22,6 +24,7 @@ module.exports = {
             transform: "translateY(0) scale(1)",
           },
         },
+
         cartBounce: {
           "0%, 100%": { transform: "scale(1)" },
           "50%": { transform: "scale(1.2)" },
@@ -37,5 +40,8 @@ module.exports = {
     },
   },
 
-  plugins: [],
+  plugins: [
+    require("@tailwindcss/line-clamp"),
+    require("@tailwindcss/typography"),
+  ],
 };

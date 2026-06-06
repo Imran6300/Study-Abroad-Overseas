@@ -156,6 +156,9 @@ export default function BlogPostForm({
 
     // Append rich content (HTML)
     if (editor) {
+      console.log("TIPTAP HTML:");
+      console.log(editor.getHTML());
+
       submitData.append("content", editor.getHTML());
     }
 
@@ -523,6 +526,62 @@ export default function BlogPostForm({
         <div className="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm">
           <div className="bg-gray-50 px-4 py-3 border-b text-sm font-medium text-gray-600">
             Full Article Body
+          </div>
+
+          <div className="border-b p-2 flex gap-2 bg-gray-50">
+            <button
+              type="button"
+              onClick={() => editor.chain().focus().toggleBold().run()}
+              className="px-2 py-1 border rounded"
+            >
+              Bold
+            </button>
+
+            <button
+              type="button"
+              onClick={() =>
+                editor.chain().focus().toggleHeading({ level: 1 }).run()
+              }
+              className="px-2 py-1 border rounded"
+            >
+              H1
+            </button>
+
+            <button
+              type="button"
+              onClick={() =>
+                editor.chain().focus().toggleHeading({ level: 2 }).run()
+              }
+              className="px-2 py-1 border rounded"
+            >
+              H2
+            </button>
+
+            <button
+              type="button"
+              onClick={() =>
+                editor.chain().focus().toggleHeading({ level: 3 }).run()
+              }
+              className="px-2 py-1 border rounded"
+            >
+              H3
+            </button>
+
+            <button
+              type="button"
+              onClick={() => editor.chain().focus().toggleBulletList().run()}
+              className="px-2 py-1 border rounded"
+            >
+              Bullet List
+            </button>
+
+            <button
+              type="button"
+              onClick={() => editor.chain().focus().toggleOrderedList().run()}
+              className="px-2 py-1 border rounded"
+            >
+              Number List
+            </button>
           </div>
 
           <div className="min-h-[480px] bg-white">
