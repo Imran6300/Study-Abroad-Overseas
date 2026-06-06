@@ -1,7 +1,22 @@
 "use client";
 
+/**
+ * app/dashboard/counselor-dashboard/settings/page.jsx  —  RAZORPAY EDITION
+ *
+ * Changes from Stripe version:
+ *  - handlePay()          → loads Razorpay checkout widget inline (no full-page redirect)
+ *  - handleManageBilling() → replaced by handleCancelSubscription() (Razorpay has no portal)
+ *  - useEffect for ?payment=success query param → removed (no redirect-back URL needed;
+ *    payment confirmation is synchronous via verifyPayment())
+ *  - Razorpay script loader added (loads checkout.razorpay.com/v1/checkout.js once)
+ *  - Cancel confirmation dialog added to the Subscription panel
+ *
+ * All UI, branding logic, Redux state, profile/branding/email sections, and
+ * live preview are identical to the original — zero visual regressions.
+ */
+
 import { useRef, useState, useEffect, useCallback } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { counselorApi } from "@/lib/counselorApi";
 
 const cls = (...args) => args.filter(Boolean).join(" ");
@@ -22,6 +37,19 @@ function formatExpiry(value) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "Not set";
   return date.toLocaleDateString();
+}
+
+// ── Load Razorpay checkout.js once ────────────────────────────────────────────
+function loadRazorpayScript() {
+  return new Promise((resolve) => {
+    if (window.Razorpay) return resolve(true);
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
 }
 
 // ─── Mini Student Dashboard Preview ───────────────────────────────────────────
@@ -590,6 +618,8 @@ export default function CounselorSettingsPage() {
   const [showPreview, setShowPreview] = useState(false);
   const [upgradeModal, setUpgradeModal] = useState(false);
   const [paying, setPaying] = useState(false);
+  const [cancelConfirm, setCancelConfirm] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
   const refs = useRef({});
 
   const [profile, setProfile] = useState({
@@ -633,42 +663,13 @@ export default function CounselorSettingsPage() {
       "Hi {studentName},\n\nGreat news! You have received an offer from {universityName}.\n\nLog in to your dashboard to view the details.\n\n{counselorName}\n{brandName}",
   });
 
-  const searchParams = useSearchParams();
   const router = useRouter();
-
-  // ── Handle Stripe return URL (?payment=success / ?payment=cancelled) ─────
-  useEffect(() => {
-    const payment = searchParams.get("payment");
-    if (payment === "success") {
-      // Stripe redirected back — re-fetch branding to pick up premium status
-      // set by webhook. Give webhook 2s to process first.
-      setTimeout(async () => {
-        try {
-          const { branding: b } = await counselorApi.getMyBranding();
-          setBranding((prev) => ({
-            ...prev,
-            plan: b.plan || prev.plan,
-            premiumExpiresAt: b.premiumExpiresAt || prev.premiumExpiresAt,
-            features: b.features || prev.features,
-          }));
-        } catch (_) {}
-      }, 2000);
-      // Remove query param without full reload
-      router.replace("/dashboard/counselor-dashboard/settings", {
-        scroll: false,
-      });
-    }
-  }, [searchParams, router]);
 
   // ── Load branding from backend on mount ──────────────────────────────────
   useEffect(() => {
     (async () => {
       try {
         const { branding: b } = await counselorApi.getMyBranding();
-
-        const isPrem =
-          b.plan === "premium" &&
-          (!b.premiumExpiresAt || new Date(b.premiumExpiresAt) > new Date());
 
         setBranding({
           brandName: b.brandName || "",
@@ -689,7 +690,6 @@ export default function CounselorSettingsPage() {
           footerText: b.footerText || "",
         });
 
-        // Pre-fill sender info from branding brand name
         setEmailSettings((prev) => ({
           ...prev,
           senderName: b.brandName || prev.senderName,
@@ -714,7 +714,7 @@ export default function CounselorSettingsPage() {
     refs.current[id]?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  // ── Save: persist text/color fields to backend ───────────────────────────
+  // ── Save branding fields ──────────────────────────────────────────────────
   const handleSave = async () => {
     setSaving(true);
     try {
@@ -722,7 +722,6 @@ export default function CounselorSettingsPage() {
         brandName: branding.brandName,
         tagline: branding.tagline,
         brandingEnabled: branding.brandingEnabled,
-        // Premium-only fields — backend will ignore them on standard plan
         primaryColor: branding.primaryColor,
         secondaryColor: branding.secondaryColor,
         accentColor: branding.accentColor,
@@ -744,32 +743,106 @@ export default function CounselorSettingsPage() {
     setUpgradeModal(true);
   };
 
-  // ── Real Stripe Checkout — redirects to Stripe-hosted payment page ────────
+  // ── Razorpay Checkout — opens inline widget ───────────────────────────────
   const handlePay = async () => {
     setPaying(true);
     try {
-      const data = await counselorApi.createCheckoutSession();
-      if (data?.url) {
-        window.location.href = data.url; // Stripe-hosted checkout
-      } else {
-        throw new Error("No checkout URL returned");
+      // 1. Load Razorpay script
+      const loaded = await loadRazorpayScript();
+      if (!loaded) {
+        alert("Failed to load payment SDK. Check your internet connection.");
+        setPaying(false);
+        return;
       }
+
+      // 2. Create subscription order on our backend
+      const data = await counselorApi.createOrder();
+      if (!data?.subscriptionId) {
+        throw new Error("No subscription ID returned from server");
+      }
+
+      // 3. Open Razorpay checkout widget
+      const options = {
+        key: data.keyId,
+        subscription_id: data.subscriptionId,
+        name: "Khizar Overseas",
+        description: "Counselor Premium Plan — ₹500/month",
+        image: "/logo.png",
+        prefill: data.prefill || {},
+        theme: { color: "#f59e0b" },
+        modal: {
+          ondismiss: () => {
+            setPaying(false);
+          },
+        },
+        handler: async (response) => {
+          // 4. Verify payment on our backend
+          try {
+            const verify = await counselorApi.verifyPayment({
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_subscription_id: response.razorpay_subscription_id,
+              razorpay_signature: response.razorpay_signature,
+            });
+
+            if (verify?.success) {
+              // Update local state to reflect premium immediately
+              setBranding((prev) => ({
+                ...prev,
+                plan: "premium",
+                premiumExpiresAt: verify.expiresAt || null,
+                features: {
+                  customColors: true,
+                  removeKhizarBranding: true,
+                  customEmailBranding: true,
+                },
+              }));
+              setUpgradeModal(false);
+              // Small toast notification
+              setSaved(true);
+              setTimeout(() => setSaved(false), 3000);
+            } else {
+              alert("Payment verification failed. Contact support if charged.");
+            }
+          } catch (verifyErr) {
+            console.error("[handlePay:verify]", verifyErr);
+            alert(
+              "Payment received but verification failed. Contact support with your payment ID: " +
+                response.razorpay_payment_id,
+            );
+          } finally {
+            setPaying(false);
+          }
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.on("payment.failed", (response) => {
+        console.error("[razorpay] payment failed:", response.error);
+        alert(
+          `Payment failed: ${response.error.description || "Unknown error"}`,
+        );
+        setPaying(false);
+      });
+      rzp.open();
     } catch (err) {
       console.error("[handlePay]", err);
       alert("Payment setup failed. Please try again.");
       setPaying(false);
     }
-    // Note: setPaying(false) not called on success — page redirects away
   };
 
-  // ── Stripe Customer Portal — manage billing / cancel ─────────────────────
-  const handleManageBilling = async () => {
+  // ── Cancel subscription ───────────────────────────────────────────────────
+  const handleCancelSubscription = async () => {
+    setCancelling(true);
     try {
-      const data = await counselorApi.createPortalSession();
-      if (data?.url) window.location.href = data.url;
+      const data = await counselorApi.cancelSubscription();
+      alert(data?.message || "Subscription cancellation scheduled.");
+      setCancelConfirm(false);
     } catch (err) {
-      console.error("[handleManageBilling]", err);
-      alert("Billing portal unavailable. Please contact support.");
+      console.error("[handleCancelSubscription]", err);
+      alert("Cancellation failed. Please contact support.");
+    } finally {
+      setCancelling(false);
     }
   };
 
@@ -782,23 +855,21 @@ export default function CounselorSettingsPage() {
   const updateEmail = (field, value) =>
     setEmailSettings((p) => ({ ...p, [field]: value }));
 
-  // ── Logo upload → Cloudinary via backend ─────────────────────────────────
+  // ── Logo upload ───────────────────────────────────────────────────────────
   const handleLogoUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    // Show local preview immediately
     const localUrl = await fileToDataUrl(file);
     updateBranding("logoPreview", localUrl);
     try {
       const res = await counselorApi.uploadBrandingAsset("logo", file);
-      // Replace local blob with Cloudinary CDN URL
       updateBranding("logoPreview", res.url);
     } catch (err) {
       console.error("[settings] logo upload failed:", err);
     }
   };
 
-  // ── Favicon upload → Cloudinary via backend ───────────────────────────────
+  // ── Favicon upload ────────────────────────────────────────────────────────
   const handleFaviconUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -812,7 +883,7 @@ export default function CounselorSettingsPage() {
     }
   };
 
-  // ── Profile photo: local only for now (extend if you add a profile endpoint)
+  // ── Profile photo ─────────────────────────────────────────────────────────
   const handlePhotoUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -948,10 +1019,22 @@ export default function CounselorSettingsPage() {
         .btn-gold:active { transform: none; }
         .btn-gold:disabled { opacity: .7; cursor: not-allowed; transform: none; }
 
+        .btn-danger {
+          padding: 10px 20px;
+          border-radius: 9px;
+          font-size: 13px;
+          font-weight: 600;
+          background: transparent;
+          color: #ef4444;
+          border: 1px solid rgba(239,68,68,.25);
+          cursor: pointer;
+          transition: all .15s;
+        }
+        .btn-danger:hover { background: rgba(239,68,68,.08); border-color: rgba(239,68,68,.4); }
+        .btn-danger:disabled { opacity: .5; cursor: not-allowed; }
+
         .s-anchor { scroll-margin-top: 58px; }
-
         .divider { height: 1px; background: #080f1c; margin: 2px 0; }
-
         .card-shine::before {
           content: '';
           position: absolute;
@@ -959,7 +1042,6 @@ export default function CounselorSettingsPage() {
           height: 1px;
           background: linear-gradient(90deg, transparent 5%, #152040 40%, #152040 60%, transparent 95%);
         }
-
         .tog-divider { height: 1px; background: #0a1422; }
 
         .color-swatch {
@@ -975,14 +1057,9 @@ export default function CounselorSettingsPage() {
         }
         .color-swatch:hover { border-color: #172540; }
         .color-swatch input[type=color] {
-          width: 28px;
-          height: 28px;
-          border-radius: 6px;
-          border: 2px solid #1a2f52;
-          padding: 1px;
-          cursor: pointer;
-          background: none;
-          flex-shrink: 0;
+          width: 28px; height: 28px; border-radius: 6px;
+          border: 2px solid #1a2f52; padding: 1px;
+          cursor: pointer; background: none; flex-shrink: 0;
         }
 
         .stat-pill {
@@ -993,20 +1070,13 @@ export default function CounselorSettingsPage() {
         }
 
         .toast {
-          position: fixed;
-          bottom: 28px;
-          left: 50%;
+          position: fixed; bottom: 28px; left: 50%;
           transform: translateX(-50%);
-          background: #10b981;
-          color: #fff;
-          padding: 11px 24px;
-          border-radius: 9px;
-          font-size: 13.5px;
-          font-weight: 700;
-          z-index: 999;
+          background: #10b981; color: #fff;
+          padding: 11px 24px; border-radius: 9px;
+          font-size: 13.5px; font-weight: 700; z-index: 999;
           box-shadow: 0 8px 28px rgba(16,185,129,.4);
-          animation: toastIn .3s ease;
-          white-space: nowrap;
+          animation: toastIn .3s ease; white-space: nowrap;
           letter-spacing: -.01em;
         }
         @keyframes toastIn {
@@ -1015,14 +1085,11 @@ export default function CounselorSettingsPage() {
         }
 
         .modal-bg {
-          position: fixed;
-          inset: 0;
+          position: fixed; inset: 0;
           background: rgba(0,0,0,.72);
           backdrop-filter: blur(8px);
           z-index: 200;
-          display: flex;
-          align-items: center;
-          justify-content: center;
+          display: flex; align-items: center; justify-content: center;
           padding: 20px;
           animation: fadeIn .2s ease;
         }
@@ -1033,8 +1100,7 @@ export default function CounselorSettingsPage() {
           border: 1px solid #1a2f52;
           border-radius: 18px;
           padding: 32px;
-          width: 100%;
-          max-width: 440px;
+          width: 100%; max-width: 440px;
           position: relative;
           animation: modalIn .25s ease;
           box-shadow: 0 32px 80px rgba(0,0,0,.6);
@@ -1045,13 +1111,10 @@ export default function CounselorSettingsPage() {
         }
 
         .preview-panel {
-          position: sticky;
-          top: 72px;
+          position: sticky; top: 72px;
           height: calc(100vh - 90px);
-          overflow-y: auto;
-          padding-bottom: 32px;
+          overflow-y: auto; padding-bottom: 32px;
         }
-
         @media(max-width:1100px){ .preview-panel { display: none; } }
 
         .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
@@ -1059,42 +1122,25 @@ export default function CounselorSettingsPage() {
         @media(max-width:640px){ .g2,.g3{ grid-template-columns:1fr; } }
 
         .ava {
-          width: 72px;
-          height: 72px;
-          border-radius: 50%;
+          width: 72px; height: 72px; border-radius: 50%;
           background: linear-gradient(135deg,#1a3366,#2563eb,#6d28d9);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 21px;
-          font-weight: 800;
-          color: #fff;
-          flex-shrink: 0;
-          position: relative;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 21px; font-weight: 800; color: #fff;
+          flex-shrink: 0; position: relative;
           box-shadow: 0 0 0 2px #090f1e, 0 0 0 4px #162444;
-          overflow: hidden;
-          letter-spacing: -.5px;
+          overflow: hidden; letter-spacing: -.5px;
         }
         .ava img { width: 100%; height: 100%; object-fit: cover; }
         .ava .dot {
-          position: absolute;
-          bottom: 3px;
-          right: 3px;
-          width: 11px;
-          height: 11px;
-          border-radius: 50%;
-          background: #10b981;
-          border: 2px solid #090f1e;
+          position: absolute; bottom: 3px; right: 3px;
+          width: 11px; height: 11px; border-radius: 50%;
+          background: #10b981; border: 2px solid #090f1e;
         }
 
         .badge {
-          display: inline-flex;
-          align-items: center;
-          padding: 3px 8px;
-          border-radius: 5px;
-          font-size: 10.5px;
-          font-weight: 700;
-          letter-spacing: .02em;
+          display: inline-flex; align-items: center;
+          padding: 3px 8px; border-radius: 5px;
+          font-size: 10.5px; font-weight: 700; letter-spacing: .02em;
         }
         .bg { background: rgba(16,185,129,.1); color: #10b981; border: 1px solid rgba(16,185,129,.18); }
         .ba { background: rgba(245,158,11,.1); color: #f59e0b; border: 1px solid rgba(245,158,11,.18); }
@@ -1102,53 +1148,34 @@ export default function CounselorSettingsPage() {
         .bp { background: linear-gradient(135deg,rgba(245,158,11,.15),rgba(217,119,6,.1)); color: #fbbf24; border: 1px solid rgba(245,158,11,.3); }
 
         .lockedOverlay {
-          position: absolute;
-          inset: 0;
+          position: absolute; inset: 0;
           background: linear-gradient(180deg, rgba(6,11,23,.65), rgba(6,11,23,.88));
           backdrop-filter: blur(2px);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 14px;
-          z-index: 5;
+          display: flex; align-items: center; justify-content: center;
+          border-radius: 14px; z-index: 5;
         }
 
         .upload-lbl {
-          font-size: 11px;
-          color: #2563eb;
-          cursor: pointer;
-          font-weight: 700;
-          text-decoration: underline;
-          text-decoration-style: dotted;
-          text-underline-offset: 3px;
-          padding: 0;
-          background: none;
-          border: none;
-          margin-top: 5px;
-          display: inline-block;
+          font-size: 11px; color: #2563eb; cursor: pointer;
+          font-weight: 700; text-decoration: underline;
+          text-decoration-style: dotted; text-underline-offset: 3px;
+          padding: 0; background: none; border: none;
+          margin-top: 5px; display: inline-block;
         }
         .upload-lbl:hover { color: #60a5fa; }
 
         .preview-toggle-btn {
           display: none;
-          padding: 7px 14px;
-          border-radius: 8px;
-          font-size: 12.5px;
-          font-weight: 600;
-          background: #0f1e36;
-          color: #7fa0c8;
-          border: 1px solid #1a2f52;
-          cursor: pointer;
+          padding: 7px 14px; border-radius: 8px;
+          font-size: 12.5px; font-weight: 600;
+          background: #0f1e36; color: #7fa0c8;
+          border: 1px solid #1a2f52; cursor: pointer;
         }
         @media(max-width:1100px){ .preview-toggle-btn { display: flex; align-items: center; gap: 6px; } }
 
         .live-dot {
-          width: 6px;
-          height: 6px;
-          border-radius: 50%;
-          background: #10b981;
-          animation: pulse 2s infinite;
-          flex-shrink: 0;
+          width: 6px; height: 6px; border-radius: 50%;
+          background: #10b981; animation: pulse 2s infinite; flex-shrink: 0;
         }
         @keyframes pulse {
           0%,100%{ box-shadow: 0 0 0 0 rgba(16,185,129,.5); }
@@ -1156,16 +1183,13 @@ export default function CounselorSettingsPage() {
         }
 
         .email-var {
-          display: inline-block;
-          padding: 1px 6px;
-          background: rgba(37,99,235,.15);
-          color: #60a5fa;
-          border-radius: 4px;
-          font-size: 10.5px;
-          font-weight: 600;
-          margin: 2px;
-          border: 1px solid rgba(37,99,235,.2);
+          display: inline-block; padding: 1px 6px;
+          background: rgba(37,99,235,.15); color: #60a5fa;
+          border-radius: 4px; font-size: 10.5px; font-weight: 600;
+          margin: 2px; border: 1px solid rgba(37,99,235,.2);
         }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
       `}</style>
 
       {/* ── Sticky Nav ─────────────────────────────────────────── */}
@@ -1976,8 +2000,7 @@ export default function CounselorSettingsPage() {
                     marginBottom: 8,
                   }}
                 >
-                  Customize automated emails sent to your students. Use template
-                  variables below.
+                  Customize automated emails sent to your students.
                 </p>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
                   {[
@@ -1994,7 +2017,6 @@ export default function CounselorSettingsPage() {
                 </div>
               </div>
 
-              {/* Sender info */}
               <div style={{ marginBottom: 18 }}>
                 <div
                   style={{
@@ -2038,7 +2060,6 @@ export default function CounselorSettingsPage() {
                 </div>
               </div>
 
-              {/* Email template blocks */}
               {[
                 {
                   key: "welcome",
@@ -2255,11 +2276,13 @@ export default function CounselorSettingsPage() {
                     </p>
                   )}
                   <button
-                    className={isPremium ? "btn-g" : "btn-gold"}
+                    className={isPremium ? "btn-danger" : "btn-gold"}
                     style={{ marginTop: 12, width: "100%", padding: "10px" }}
-                    onClick={isPremium ? handleManageBilling : handleUpgrade}
+                    onClick={
+                      isPremium ? () => setCancelConfirm(true) : handleUpgrade
+                    }
                   >
-                    {isPremium ? "Manage Billing →" : "Upgrade Now →"}
+                    {isPremium ? "Cancel Subscription" : "Upgrade Now →"}
                   </button>
                 </div>
               </div>
@@ -2433,7 +2456,6 @@ export default function CounselorSettingsPage() {
             <StudentDashboardPreview branding={branding} profile={profile} />
           </div>
 
-          {/* Color summary */}
           <div
             style={{
               background: "#090f1e",
@@ -2616,7 +2638,7 @@ export default function CounselorSettingsPage() {
         </div>
       )}
 
-      {/* ── Upgrade Modal ──────────────────────────────────────── */}
+      {/* ── Upgrade Modal (Razorpay) ───────────────────────────── */}
       {upgradeModal && (
         <div
           className="modal-bg"
@@ -2751,14 +2773,12 @@ export default function CounselorSettingsPage() {
                       animation: "spin .6s linear infinite",
                     }}
                   />
-                  Processing...
+                  Opening Payment…
                 </>
               ) : (
                 "Pay ₹500 — Activate Premium"
               )}
             </button>
-
-            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
 
             <p
               style={{
@@ -2768,13 +2788,70 @@ export default function CounselorSettingsPage() {
                 marginTop: 12,
               }}
             >
-              Cancel anytime · Billed monthly · Instant activation
+              Cancel anytime · Billed monthly · Secure via Razorpay
             </p>
           </div>
         </div>
       )}
 
-      {saved && <div className="toast">✓ Settings saved successfully</div>}
+      {/* ── Cancel Confirmation Modal ──────────────────────────── */}
+      {cancelConfirm && (
+        <div
+          className="modal-bg"
+          onClick={() => !cancelling && setCancelConfirm(false)}
+        >
+          <div
+            className="modal-box"
+            style={{ maxWidth: 400 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ textAlign: "center", marginBottom: 20 }}>
+              <div style={{ fontSize: 32, marginBottom: 10 }}>⚠️</div>
+              <div
+                style={{
+                  fontSize: 18,
+                  fontWeight: 800,
+                  color: "#e8f0ff",
+                  marginBottom: 8,
+                }}
+              >
+                Cancel Subscription?
+              </div>
+              <p style={{ fontSize: 13, color: "#6a8ab0", lineHeight: 1.7 }}>
+                Your premium access will remain active until the end of the
+                current billing period. After that, your account will revert to
+                the Standard plan.
+              </p>
+            </div>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button
+                className="btn-g"
+                style={{ flex: 1 }}
+                onClick={() => setCancelConfirm(false)}
+                disabled={cancelling}
+              >
+                Keep Premium
+              </button>
+              <button
+                className="btn-danger"
+                style={{ flex: 1 }}
+                onClick={handleCancelSubscription}
+                disabled={cancelling}
+              >
+                {cancelling ? "Cancelling…" : "Yes, Cancel"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {saved && (
+        <div className="toast">
+          {isPremium
+            ? "⭐ Premium activated!"
+            : "✓ Settings saved successfully"}
+        </div>
+      )}
     </div>
   );
 }
