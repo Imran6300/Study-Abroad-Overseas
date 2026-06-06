@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import AdminSidebar from "@/components/admindashboard/AdminSidebar";
 import DashboardHeader from "@/components/admindashboard/DashboardHeader";
-import ExportButtons from "@/components/admindashboard/ExportButtons";
+import ExportButtons from "@/components/counselordashboard/ExportButtons";
 import { useSelector } from "react-redux";
 import {
   TrendingUp,
