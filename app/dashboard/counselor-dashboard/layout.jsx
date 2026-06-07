@@ -25,6 +25,7 @@ import { useEffect } from "react";
 
 import CounselorSidebar from "@/components/counselordashboard/CounselorSidebar";
 import CounselorDashboardHeader from "@/components/counselordashboard/CounselorDashboardHeader";
+import SaasBanner from "@/components/counselordashboard/SaasBanner";
 import { getSocket } from "@/lib/socket";
 
 export default function CounselorLayout({ children }) {
@@ -109,7 +110,13 @@ export default function CounselorLayout({ children }) {
         )}
 
         {/* Page content */}
-        <main className="flex-1">{children}</main>
+        <main className="flex-1">
+          <div className="px-4 sm:px-6 lg:px-8 pt-4">
+            <SaasBanner />
+          </div>
+
+          {children}
+        </main>
       </div>
     </div>
   );

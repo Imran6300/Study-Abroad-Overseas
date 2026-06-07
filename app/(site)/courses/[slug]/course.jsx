@@ -26,6 +26,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { PublicOnly } from "@/components/shared/PortalVisibility";
 import {
   ChevronDown,
   Globe,
@@ -378,27 +379,29 @@ export default function CourseDetailPage({ slug }) {
         </AnimatePresence>
 
         {/* Final CTA */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          className="mt-20 text-center"
-        >
-          <h2 className="text-3xl md:text-4xl font-bold mb-6">
-            Ready to Start Your {course.name} Journey?
-          </h2>
-          <p className="text-lg text-gray-300 mb-10 max-w-2xl mx-auto">
-            Get personalized university recommendations, scholarship guidance,
-            application support — completely free.
-          </p>
-          <Link
-            href="/assessment"
-            className="inline-flex items-center gap-3 px-10 py-5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-lg rounded-full shadow-xl shadow-emerald-500/30 hover:shadow-2xl hover:shadow-emerald-600/50 hover:scale-[1.03] transition-all duration-300"
+        <PublicOnly>
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="mt-20 text-center"
           >
-            Get Free Personalized Consultation
-            <ArrowRight className="w-6 h-6" />
-          </Link>
-        </motion.div>
+            <h2 className="text-3xl md:text-4xl font-bold mb-6">
+              Ready to Start Your {course.name} Journey?
+            </h2>
+            <p className="text-lg text-gray-300 mb-10 max-w-2xl mx-auto">
+              Get personalized university recommendations, scholarship guidance,
+              application support — completely free.
+            </p>
+            <Link
+              href="/assessment"
+              className="inline-flex items-center gap-3 px-10 py-5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-lg rounded-full shadow-xl shadow-emerald-500/30 hover:shadow-2xl hover:shadow-emerald-600/50 hover:scale-[1.03] transition-all duration-300"
+            >
+              Get Free Personalized Consultation
+              <ArrowRight className="w-6 h-6" />
+            </Link>
+          </motion.div>
+        </PublicOnly>
       </div>
     </div>
   );

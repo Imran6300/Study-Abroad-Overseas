@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import * as gtag from "@/lib/gtag";
 import UniversityCard from "@/components/ui/UniversityCard";
 import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
+import { PublicOnly } from "@/components/shared/PortalVisibility";
 import axios from "axios";
 import {
   GraduationCap,
@@ -437,15 +438,19 @@ export default function UniversitiesClient({
 
   return (
     <LazyMotion features={loadFeatures}>
-      {modalOpen && (
-        <LeadModal
-          onClose={closeModal}
-          setMessage={setMessage}
-          setMessageStatus={setMessageStatus}
-        />
-      )}
+      <PublicOnly>
+        {modalOpen && (
+          <LeadModal
+            onClose={closeModal}
+            setMessage={setMessage}
+            setMessageStatus={setMessageStatus}
+          />
+        )}
+      </PublicOnly>
 
-      <FloatingCTA onOpen={openModal} />
+      <PublicOnly>
+        <FloatingCTA onOpen={openModal} />
+      </PublicOnly>
 
       {/* Toast */}
       {message && (
@@ -472,51 +477,55 @@ export default function UniversitiesClient({
                 Find your perfect university — compare rankings, programs,
                 acceptance rates & student experience.
               </p>
-              <div className="mt-8 flex flex-col sm:flex-row gap-4">
-                <button
-                  onClick={() => {
-                    gtag.event({
-                      action: "cta_click",
-                      category: "engagement",
-                      label: "free_shortlist_button",
-                    });
+              <PublicOnly>
+                <div className="mt-8 flex flex-col sm:flex-row gap-4">
+                  <button
+                    onClick={() => {
+                      gtag.event({
+                        action: "cta_click",
+                        category: "engagement",
+                        label: "free_shortlist_button",
+                      });
 
-                    openModal();
-                  }}
-                  className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-8 py-4 rounded-2xl font-bold text-base shadow-lg hover:scale-[1.03] transition-transform"
-                >
-                  Get Free University Shortlist <ArrowRight size={18} />
-                </button>
-                <a
-                  href={WA_NUMBER}
-                  onClick={() => {
-                    gtag.event({
-                      action: "whatsapp_click",
-                      category: "contact",
-                      label: "floating_cta_whatsapp",
-                    });
-                  }}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center gap-2 border border-green-500/40 text-green-400 px-8 py-4 rounded-2xl font-bold text-base hover:bg-green-500/10 transition-all"
-                >
-                  <MessageCircle size={18} /> WhatsApp Us
-                </a>
-              </div>
-              <div className="mt-6 flex flex-wrap gap-3">
-                {[
-                  "500+ Students Placed",
-                  "Free Shortlisting",
-                  "Hyderabad-Based Experts",
-                ].map((t) => (
-                  <span
-                    key={t}
-                    className="flex items-center gap-1.5 text-sm text-gray-400 bg-white/5 border border-white/10 px-4 py-2 rounded-full"
+                      openModal();
+                    }}
+                    className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-8 py-4 rounded-2xl font-bold text-base shadow-lg hover:scale-[1.03] transition-transform"
                   >
-                    <CheckCircle2 size={13} className="text-blue-400" /> {t}
-                  </span>
-                ))}
-              </div>
+                    Get Free University Shortlist <ArrowRight size={18} />
+                  </button>
+                  <a
+                    href={WA_NUMBER}
+                    onClick={() => {
+                      gtag.event({
+                        action: "whatsapp_click",
+                        category: "contact",
+                        label: "floating_cta_whatsapp",
+                      });
+                    }}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center gap-2 border border-green-500/40 text-green-400 px-8 py-4 rounded-2xl font-bold text-base hover:bg-green-500/10 transition-all"
+                  >
+                    <MessageCircle size={18} /> WhatsApp Us
+                  </a>
+                </div>
+              </PublicOnly>
+              <PublicOnly>
+                <div className="mt-6 flex flex-wrap gap-3">
+                  {[
+                    "500+ Students Placed",
+                    "Free Shortlisting",
+                    "Hyderabad-Based Experts",
+                  ].map((t) => (
+                    <span
+                      key={t}
+                      className="flex items-center gap-1.5 text-sm text-gray-400 bg-white/5 border border-white/10 px-4 py-2 rounded-full"
+                    >
+                      <CheckCircle2 size={13} className="text-blue-400" /> {t}
+                    </span>
+                  ))}
+                </div>
+              </PublicOnly>
             </div>
           </div>
         </div>
@@ -570,7 +579,9 @@ export default function UniversitiesClient({
 
               {/* Inline CTA after 8 results — rendered outside the grid */}
               {results.length > BANNER_AFTER_INDEX && (
-                <InlineCTABanner onOpen={openModal} />
+                <PublicOnly>
+                  <InlineCTABanner onOpen={openModal} />
+                </PublicOnly>
               )}
 
               {hasMore && (
@@ -588,37 +599,39 @@ export default function UniversitiesClient({
           )}
 
           {/* ── FINAL CTA ── */}
-          <div className="mt-16 bg-gradient-to-br from-blue-950/40 to-indigo-950/30 border border-blue-500/20 rounded-3xl p-8 sm:p-12 text-center">
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-white">
-              Still Searching? Let Us Do It For You
-            </h2>
-            <p className="mt-4 text-gray-400 text-sm sm:text-base max-w-xl mx-auto">
-              Our counselors in Hyderabad will evaluate your profile and
-              shortlist the best universities — completely free.
-            </p>
-            <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
-              <button
-                onClick={() => {
-                  gtag.event({
-                    action: "cta_click",
-                    category: "engagement",
-                    label: "free_shortlist_button",
-                  });
+          <PublicOnly>
+            <div className="mt-16 bg-gradient-to-br from-blue-950/40 to-indigo-950/30 border border-blue-500/20 rounded-3xl p-8 sm:p-12 text-center">
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-white">
+                Still Searching? Let Us Do It For You
+              </h2>
+              <p className="mt-4 text-gray-400 text-sm sm:text-base max-w-xl mx-auto">
+                Our counselors in Hyderabad will evaluate your profile and
+                shortlist the best universities — completely free.
+              </p>
+              <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
+                <button
+                  onClick={() => {
+                    gtag.event({
+                      action: "cta_click",
+                      category: "engagement",
+                      label: "free_shortlist_button",
+                    });
 
-                  openModal();
-                }}
-                className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-8 py-4 rounded-2xl font-bold text-base shadow-xl hover:scale-[1.03] transition-transform"
-              >
-                Book Free Counseling <ArrowRight size={18} />
-              </button>
-              <a
-                href="tel:+918074708569"
-                className="inline-flex items-center justify-center gap-2 border border-white/20 text-white px-8 py-4 rounded-2xl font-semibold text-base hover:bg-white/5 transition-colors"
-              >
-                <PhoneCall size={18} className="text-blue-400" /> Call Us Now
-              </a>
+                    openModal();
+                  }}
+                  className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-8 py-4 rounded-2xl font-bold text-base shadow-xl hover:scale-[1.03] transition-transform"
+                >
+                  Book Free Counseling <ArrowRight size={18} />
+                </button>
+                <a
+                  href="tel:+918074708569"
+                  className="inline-flex items-center justify-center gap-2 border border-white/20 text-white px-8 py-4 rounded-2xl font-semibold text-base hover:bg-white/5 transition-colors"
+                >
+                  <PhoneCall size={18} className="text-blue-400" /> Call Us Now
+                </a>
+              </div>
             </div>
-          </div>
+          </PublicOnly>
         </main>
       </div>
     </LazyMotion>

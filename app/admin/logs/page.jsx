@@ -1,138 +1,174 @@
-// app/admin/logs/page.jsx
+// app/admin/logs/page.jsx — REAL DATA (no mock)
+// Fetches from GET /user/activity/admin
+// Supports: severity filter, search (client-side on loaded page), server-side pagination
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import AdminSidebar from "@/components/admindashboard/AdminSidebar";
 import DashboardHeader from "@/components/admindashboard/DashboardHeader";
 import { useSelector } from "react-redux";
 import {
   Search,
-  Filter,
-  Calendar,
   CheckCircle2,
   AlertCircle,
   Info,
   XCircle,
+  RefreshCw,
 } from "lucide-react";
-
-// Animation variants (consistent with your other pages)
 import {
   containerVariants,
   itemVariants,
 } from "@/components/Animations/formanimations/animate";
 
+const BASE = process.env.NEXT_PUBLIC_BACKEND_URL;
+const LIMIT = 20;
+
+// Map ActivityLog severity → badge style
+// Your ActivityLog model uses severity field (not "level")
+// Possible values from the model: "info" | "warning" | "error" | "success"
+const SEVERITY_CFG = {
+  success: {
+    label: "SUCCESS",
+    cls: "bg-green-100 text-green-800",
+    icon: <CheckCircle2 size={13} />,
+  },
+  info: {
+    label: "INFO",
+    cls: "bg-blue-100 text-blue-800",
+    icon: <Info size={13} />,
+  },
+  warning: {
+    label: "WARNING",
+    cls: "bg-amber-100 text-amber-800",
+    icon: <AlertCircle size={13} />,
+  },
+  error: {
+    label: "ERROR",
+    cls: "bg-red-100 text-red-800",
+    icon: <XCircle size={13} />,
+  },
+};
+
+function SeverityBadge({ severity }) {
+  const cfg = SEVERITY_CFG[severity?.toLowerCase()] || SEVERITY_CFG.info;
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${cfg.cls}`}
+    >
+      {cfg.icon}
+      {cfg.label}
+    </span>
+  );
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return "—";
+  return new Date(dateStr).toLocaleString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function getActorName(log) {
+  // actor is an embedded object: { userId, name, role }
+  return (
+    log.actor?.name || log.counselor?.name || log.student?.name || "System"
+  );
+}
+
+function getActionLabel(log) {
+  // action is a string like "lead.created", "application.status_changed", etc.
+  return log.action || "—";
+}
+
+function getMessageText(log) {
+  return log.description || log.message || log.details || "—";
+}
+
 export default function LogsPage() {
   const { user } = useSelector((state) => state.auth);
   const CounselorName = user?.name;
+
   const [logs, setLogs] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [pages, setPages] = useState(1);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
-  const [logTypeFilter, setLogTypeFilter] = useState("all");
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Filters (server-side)
+  const [severity, setSeverity] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
-  const logsPerPage = 15;
 
-  useEffect(() => {
-    // Dummy logs data — replace with real API later
-    const mockLogs = Array.from({ length: 85 }, (_, i) => ({
-      id: i + 1,
-      timestamp: new Date(
-        Date.now() - Math.random() * 10000000000,
-      ).toLocaleString("en-IN", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-      level: ["INFO", "SUCCESS", "WARNING", "ERROR"][
-        Math.floor(Math.random() * 4)
-      ],
-      user: ["Imran", "Sara", "John", "Aisha", "System"][
-        Math.floor(Math.random() * 5)
-      ],
-      action: [
-        "User login",
-        "Student profile updated",
-        "Application status changed to Visa Pending",
-        "New university added",
-        "Payment recorded",
-        "Visa approved notification sent",
-        "Failed login attempt",
-        "Counselor assigned",
-        "Document uploaded",
-        "Report generated",
-      ][Math.floor(Math.random() * 10)],
-      message: [
-        "Successful login from Hyderabad",
-        "Student Priya Sharma updated passport details",
-        "Application APP-042 moved to Visa Pending",
-        "Added University of Alberta to database",
-        "Received ₹45,000 via Razorpay",
-        "Visa approval email sent to Ahmed Khan",
-        "Invalid credentials from IP 192.168.1.5",
-        "Assigned Sara Ahmed to student Rahul Verma",
-        "Offer letter uploaded successfully",
-        "Monthly revenue report exported",
-      ][Math.floor(Math.random() * 10)],
-    }));
+  // Client-side search across the current page
+  const [search, setSearch] = useState("");
 
-    setTimeout(() => {
-      setLogs(mockLogs);
-      setLoading(false);
-    }, 800);
-  }, []);
+  const fetchLogs = useCallback(
+    async (page = 1, sev = "all", silent = false) => {
+      if (!silent) setLoading(true);
+      else setRefreshing(true);
+      try {
+        const params = new URLSearchParams({
+          page,
+          limit: LIMIT,
+        });
+        if (sev !== "all") params.set("severity", sev);
 
-  // Filter logs
-  const filteredLogs = logs.filter((log) => {
-    const matchesSearch =
-      log.message.toLowerCase().includes(search.toLowerCase()) ||
-      log.user.toLowerCase().includes(search.toLowerCase()) ||
-      log.action.toLowerCase().includes(search.toLowerCase());
-
-    const matchesType =
-      logTypeFilter === "all" ||
-      log.level.toLowerCase() === logTypeFilter.toLowerCase();
-
-    return matchesSearch && matchesType;
-  });
-
-  // Pagination
-  const totalPages = Math.ceil(filteredLogs.length / logsPerPage);
-  const startIndex = (currentPage - 1) * logsPerPage;
-  const paginatedLogs = filteredLogs.slice(
-    startIndex,
-    startIndex + logsPerPage,
+        const res = await fetch(
+          `${BASE}/user/activity/admin?${params.toString()}`,
+          { credentials: "include" },
+        );
+        if (!res.ok) throw new Error("Failed to fetch logs");
+        const data = await res.json();
+        setLogs(data.logs || []);
+        setTotal(data.total || 0);
+        setPages(data.pages || 1);
+      } catch (err) {
+        console.error("[LogsPage]", err);
+        setLogs([]);
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    },
+    [],
   );
 
-  const getLevelBadge = (level) => {
-    const colors = {
-      success: "bg-green-100 text-green-800",
-      info: "bg-blue-100 text-blue-800",
-      warning: "bg-amber-100 text-amber-800",
-      error: "bg-red-100 text-red-800",
-    };
+  useEffect(() => {
+    fetchLogs(1, "all");
+  }, [fetchLogs]);
 
-    const icons = {
-      success: <CheckCircle2 size={14} />,
-      info: <Info size={14} />,
-      warning: <AlertCircle size={14} />,
-      error: <XCircle size={14} />,
-    };
-
-    const key = level.toLowerCase();
-
-    return (
-      <span
-        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
-          colors[key] || "bg-gray-100 text-gray-800"
-        }`}
-      >
-        {icons[key] || null}
-        {level}
-      </span>
-    );
+  const handleSeverityChange = (sev) => {
+    setSeverity(sev);
+    setCurrentPage(1);
+    setSearch("");
+    fetchLogs(1, sev);
   };
+
+  const handlePageChange = (p) => {
+    setCurrentPage(p);
+    fetchLogs(p, severity, true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // Client-side search on the current page only
+  const filtered = search.trim()
+    ? logs.filter((log) => {
+        const q = search.toLowerCase();
+        return (
+          getActionLabel(log).toLowerCase().includes(q) ||
+          getMessageText(log).toLowerCase().includes(q) ||
+          getActorName(log).toLowerCase().includes(q) ||
+          (log.entity?.type || "").toLowerCase().includes(q)
+        );
+      })
+    : logs;
+
+  const startIndex = (currentPage - 1) * LIMIT + 1;
+  const endIndex = Math.min(startIndex + LIMIT - 1, total);
 
   if (loading) {
     return (
@@ -142,7 +178,7 @@ export default function LogsPage() {
           animate={{ opacity: 1 }}
           className="flex flex-col items-center gap-4"
         >
-          <div className="w-12 h-12 border-4 border-sky-200 border-t-sky-600 rounded-full animate-spin"></div>
+          <div className="w-12 h-12 border-4 border-sky-200 border-t-sky-600 rounded-full animate-spin" />
           <p className="text-lg text-gray-600">Loading system logs...</p>
         </motion.div>
       </div>
@@ -166,20 +202,18 @@ export default function LogsPage() {
             animate="show"
             className="space-y-6 max-w-7xl mx-auto"
           >
-            {/* Filters */}
+            {/* Filters row */}
             <motion.div
               variants={itemVariants}
               className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between"
             >
+              {/* Search (client-side on current page) */}
               <div className="relative w-full sm:w-80">
                 <input
                   type="text"
-                  placeholder="Search logs by message, user or action..."
+                  placeholder="Search action, message, actor..."
                   value={search}
-                  onChange={(e) => {
-                    setSearch(e.target.value);
-                    setCurrentPage(1);
-                  }}
+                  onChange={(e) => setSearch(e.target.value)}
                   className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-sky-500 text-sm"
                 />
                 <Search
@@ -188,111 +222,145 @@ export default function LogsPage() {
                 />
               </div>
 
-              <div className="flex flex-wrap gap-2">
-                {["All", "Success", "Info", "Warning", "Error"].map((type) => (
+              <div className="flex flex-wrap items-center gap-2">
+                {/* Severity filter buttons */}
+                {["all", "success", "info", "warning", "error"].map((sev) => (
                   <button
-                    key={type}
-                    onClick={() => {
-                      setLogTypeFilter(
-                        type.toLowerCase() === "all"
-                          ? "all"
-                          : type.toLowerCase(),
-                      );
-                      setCurrentPage(1);
-                    }}
-                    className={`
-                      px-4 py-2 rounded-full text-sm font-medium transition-all
-                      ${
-                        logTypeFilter ===
-                        (type.toLowerCase() === "all"
-                          ? "all"
-                          : type.toLowerCase())
-                          ? "bg-sky-600 text-white shadow-md"
-                          : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
-                      }
-                    `}
+                    key={sev}
+                    onClick={() => handleSeverityChange(sev)}
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all capitalize ${
+                      severity === sev
+                        ? "bg-sky-600 text-white shadow-md"
+                        : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+                    }`}
                   >
-                    {type}
+                    {sev === "all" ? "All" : SEVERITY_CFG[sev]?.label || sev}
                   </button>
                 ))}
+
+                {/* Refresh */}
+                <button
+                  onClick={() => fetchLogs(currentPage, severity, true)}
+                  disabled={refreshing}
+                  className="p-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 text-gray-600 transition-colors disabled:opacity-50"
+                  title="Refresh logs"
+                >
+                  <RefreshCw
+                    size={16}
+                    className={refreshing ? "animate-spin" : ""}
+                  />
+                </button>
               </div>
             </motion.div>
 
-            {/* Logs Table */}
+            {/* Summary */}
+            {total > 0 && (
+              <motion.div variants={itemVariants}>
+                <p className="text-sm text-gray-500">
+                  {total.toLocaleString("en-IN")} total log
+                  {total !== 1 ? "s" : ""} — showing {startIndex}–{endIndex}
+                </p>
+              </motion.div>
+            )}
+
+            {/* Table */}
             <motion.div
               variants={itemVariants}
               className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden"
             >
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700">
-                        Timestamp
-                      </th>
-                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700">
-                        Level
-                      </th>
-                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700 hidden sm:table-cell">
-                        User
-                      </th>
-                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700">
-                        Action
-                      </th>
-                      <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700">
-                        Message
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {paginatedLogs.map((log) => (
-                      <tr
-                        key={log.id}
-                        className="hover:bg-gray-50 transition-colors"
-                      >
-                        <td className="px-4 py-3 sm:px-6 text-xs sm:text-sm text-gray-600 whitespace-nowrap">
-                          {log.timestamp}
-                        </td>
-                        <td className="px-4 py-3 sm:px-6">
-                          {getLevelBadge(log.level)}
-                        </td>
-                        <td className="px-4 py-3 sm:px-6 text-xs sm:text-sm text-gray-700 hidden sm:table-cell">
-                          {log.user}
-                        </td>
-                        <td className="px-4 py-3 sm:px-6 text-xs sm:text-sm font-medium text-gray-900">
-                          {log.action}
-                        </td>
-                        <td className="px-4 py-3 sm:px-6 text-xs sm:text-sm text-gray-600">
-                          {log.message}
-                        </td>
+              {filtered.length === 0 ? (
+                <div className="py-16 text-center text-gray-400">
+                  <p className="text-base font-medium">No logs found</p>
+                  <p className="text-sm mt-1">
+                    {search
+                      ? "Try clearing the search."
+                      : severity !== "all"
+                        ? `No ${severity} logs on this page.`
+                        : "No activity has been recorded yet."}
+                  </p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        {[
+                          "Timestamp",
+                          "Severity",
+                          "Actor",
+                          "Action",
+                          "Details",
+                        ].map((h) => (
+                          <th
+                            key={h}
+                            className="px-4 py-3 sm:px-6 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap"
+                          >
+                            {h}
+                          </th>
+                        ))}
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {filtered.map((log, i) => (
+                        <tr
+                          key={log._id || i}
+                          className="hover:bg-gray-50 transition-colors"
+                        >
+                          <td className="px-4 py-3 sm:px-6 text-xs text-gray-500 whitespace-nowrap">
+                            {formatDate(log.createdAt)}
+                          </td>
+                          <td className="px-4 py-3 sm:px-6">
+                            <SeverityBadge severity={log.severity} />
+                          </td>
+                          <td className="px-4 py-3 sm:px-6">
+                            <p className="text-sm font-medium text-gray-800 whitespace-nowrap">
+                              {getActorName(log)}
+                            </p>
+                            {log.actor?.role && (
+                              <p className="text-xs text-gray-400 capitalize">
+                                {log.actor.role}
+                              </p>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 sm:px-6">
+                            <span className="text-xs font-mono bg-gray-100 text-gray-700 px-2 py-0.5 rounded">
+                              {getActionLabel(log)}
+                            </span>
+                            {log.entity?.type && (
+                              <p className="text-xs text-gray-400 mt-0.5 capitalize">
+                                {log.entity.type}
+                                {log.entity.name ? ` — ${log.entity.name}` : ""}
+                              </p>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 sm:px-6 text-sm text-gray-600 max-w-xs truncate">
+                            {getMessageText(log)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
 
               {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="px-4 py-3 sm:px-6 flex items-center justify-between border-t border-gray-200">
-                  <div className="text-sm text-gray-500">
-                    Showing {startIndex + 1}–
-                    {Math.min(startIndex + logsPerPage, filteredLogs.length)} of{" "}
-                    {filteredLogs.length}
-                  </div>
+              {pages > 1 && (
+                <div className="px-4 py-3 sm:px-6 flex items-center justify-between border-t border-gray-100">
+                  <p className="text-sm text-gray-500">
+                    Page {currentPage} of {pages}
+                  </p>
                   <div className="flex gap-2">
                     <button
-                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                      disabled={currentPage === 1}
-                      className="px-3 py-1.5 rounded-md border border-gray-300 text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      disabled={currentPage === 1 || refreshing}
+                      className="px-3 py-1.5 rounded-md border border-gray-300 text-sm disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-50"
                     >
                       Previous
                     </button>
                     <button
-                      onClick={() =>
-                        setCurrentPage((p) => Math.min(totalPages, p + 1))
-                      }
-                      disabled={currentPage === totalPages}
-                      className="px-3 py-1.5 rounded-md border border-gray-300 text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      disabled={currentPage === pages || refreshing}
+                      className="px-3 py-1.5 rounded-md border border-gray-300 text-sm disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-50"
                     >
                       Next
                     </button>
@@ -300,18 +368,6 @@ export default function LogsPage() {
                 </div>
               )}
             </motion.div>
-
-            {filteredLogs.length === 0 && (
-              <motion.div
-                variants={itemVariants}
-                className="text-center py-16 text-gray-500"
-              >
-                <p className="text-lg">No logs found matching your filters.</p>
-                <p className="text-sm mt-2">
-                  Try clearing search or changing log type filter.
-                </p>
-              </motion.div>
-            )}
           </motion.div>
         </main>
       </div>

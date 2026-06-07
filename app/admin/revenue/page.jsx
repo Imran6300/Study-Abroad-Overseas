@@ -1,5 +1,5 @@
-// app/admin/revenue/page.jsx
 "use client";
+// app/admin/revenue/page.jsx — REAL DATA ONLY (no mock)
 
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
@@ -8,422 +8,434 @@ import DashboardHeader from "@/components/admindashboard/DashboardHeader";
 import {
   DollarSign,
   TrendingUp,
+  CheckCircle,
   Clock,
-  ArrowUpRight,
-  ArrowDownRight,
+  AlertCircle,
 } from "lucide-react";
 import { useSelector } from "react-redux";
-
-//animation components
 import {
   containerVariants,
   itemVariants,
 } from "@/components/Animations/formanimations/animate";
 
+const BASE = process.env.NEXT_PUBLIC_BACKEND_URL;
+
+const STATUS_CFG = {
+  trial: { label: "Trial", cls: "bg-blue-50 text-blue-700 border-blue-200" },
+  active_free: {
+    label: "Free (KO Enroll)",
+    cls: "bg-green-50 text-green-700 border-green-200",
+  },
+  payment_required: {
+    label: "Payment Due",
+    cls: "bg-red-50 text-red-700 border-red-200",
+  },
+  paid: {
+    label: "Paid",
+    cls: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  },
+  suspended: {
+    label: "Suspended",
+    cls: "bg-gray-100 text-gray-500 border-gray-200",
+  },
+};
+
+function StatCard({ icon: Icon, iconBg, label, value, sub, loading }) {
+  return (
+    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+      <div className="flex items-center gap-3 mb-3">
+        <div
+          className={`w-9 h-9 rounded-xl flex items-center justify-center ${iconBg}`}
+        >
+          <Icon size={18} className="text-white" />
+        </div>
+        <p className="text-sm text-gray-500">{label}</p>
+      </div>
+      {loading ? (
+        <div className="h-8 w-24 bg-gray-100 rounded animate-pulse" />
+      ) : (
+        <p className="text-2xl font-bold text-gray-900">{value ?? "—"}</p>
+      )}
+      {sub && !loading && <p className="text-xs text-gray-400 mt-1">{sub}</p>}
+    </div>
+  );
+}
+
+function RecordEnrollmentButton({ counselorId, onDone }) {
+  const [loading, setLoading] = useState(false);
+  const [done, setDone] = useState(false);
+  const record = async () => {
+    if (!counselorId || loading || done) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`${BASE}/api/saas/admin/record-enrollment`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ counselorId }),
+      });
+      if (res.ok) {
+        setDone(true);
+        onDone?.();
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+  if (done)
+    return (
+      <span className="text-xs font-semibold text-green-600">Recorded</span>
+    );
+  return (
+    <button
+      onClick={record}
+      disabled={loading}
+      className="px-2.5 py-1 text-xs font-semibold bg-green-50 text-green-700 border border-green-200 rounded-lg hover:bg-green-100 transition-colors disabled:opacity-50"
+    >
+      {loading ? "..." : "+ KO Enroll"}
+    </button>
+  );
+}
+
 export default function RevenuePage() {
-  const { user } = useSelector((state) => state.auth);
-  const CounselorName = user?.name;
-  const [revenueData, setRevenueData] = useState({
-    total: 0,
-    thisMonth: 0,
-    pending: 0,
-    growth: 0,
-    transactions: [],
-  });
+  const { user } = useSelector((s) => s.auth);
+  const [stats, setStats] = useState(null);
+  const [counselors, setCounselors] = useState([]);
+  const [filter, setFilter] = useState("all");
   const [loading, setLoading] = useState(true);
-  const [timeRange, setTimeRange] = useState("thisMonth");
   const chartRef = useRef(null);
-  const chartInstance = useRef(null);
+  const chartInst = useRef(null);
+
+  const load = () => {
+    setLoading(true);
+    Promise.all([
+      fetch(`${BASE}/api/admin/stats/revenue`, { credentials: "include" }).then(
+        (r) => r.json(),
+      ),
+      fetch(`${BASE}/api/saas/admin/overview?limit=200`, {
+        credentials: "include",
+      }).then((r) => r.json()),
+    ])
+      .then(([rev, saas]) => {
+        setStats(rev.data || null);
+        setCounselors(saas.data || []);
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  };
 
   useEffect(() => {
-    // Dummy data – you will replace this with real backend later
-    const mockData = {
-      total: 1245000,
-      thisMonth: 285000,
-      pending: 98000,
-      growth: 18.4, // % vs last month
-      monthlyRevenue: [
-        { month: "Jan", revenue: 180000 },
-        { month: "Feb", revenue: 210000 },
-        { month: "Mar", revenue: 195000 },
-        { month: "Apr", revenue: 240000 },
-        { month: "May", revenue: 320000 },
-        { month: "Jun", revenue: 285000 },
-        { month: "Jul", revenue: 400000 },
-        { month: "Aug", revenue: 380000 },
-        { month: "Sep", revenue: 450000 },
-        { month: "Oct", revenue: 520000 },
-        { month: "Nov", revenue: 600000 },
-        { month: "Dec", revenue: 285000 },
-      ],
-      transactions: [
-        {
-          id: "TXN-001",
-          student: "Ahmed Khan",
-          amount: 45000,
-          type: "Visa Fee",
-          counselor: "Sara Ahmed",
-          date: "2026-01-28",
-          status: "Completed",
-        },
-        {
-          id: "TXN-002",
-          student: "Priya Sharma",
-          amount: 120000,
-          type: "Application Package",
-          counselor: "John Mathew",
-          date: "2026-01-25",
-          status: "Pending",
-        },
-        {
-          id: "TXN-003",
-          student: "Rahul Verma",
-          amount: 75000,
-          type: "Commission",
-          counselor: "Aisha Khan",
-          date: "2026-01-20",
-          status: "Completed",
-        },
-        {
-          id: "TXN-004",
-          student: "Sneha Patel",
-          amount: 95000,
-          type: "Visa Fee",
-          counselor: "Sara Ahmed",
-          date: "2026-01-15",
-          status: "Completed",
-        },
-        {
-          id: "TXN-005",
-          student: "Vikram Singh",
-          amount: 60000,
-          type: "Counseling Fee",
-          counselor: "John Mathew",
-          date: "2026-01-10",
-          status: "Completed",
-        },
-      ],
-    };
-
-    setRevenueData(mockData);
-    setLoading(false);
-
-    return () => {
-      // Cleanup chart on unmount
-      if (chartInstance.current) {
-        chartInstance.current.destroy();
-      }
-    };
+    load();
   }, []);
 
   useEffect(() => {
-    if (loading || !chartRef.current) return;
-
-    let chart;
-
-    import("chart.js/auto").then((module) => {
-      const Chart = module.default;
-
-      const ctx = chartRef.current.getContext("2d");
-
-      if (chartInstance.current) {
-        chartInstance.current.destroy();
-      }
-
-      chart = new Chart(ctx, {
-        type: "line",
+    if (loading || counselors.length === 0) return;
+    import("chart.js/auto").then((mod) => {
+      const Chart = mod.default;
+      if (!chartRef.current) return;
+      chartInst.current?.destroy();
+      const counts = {};
+      for (const c of counselors)
+        counts[c.saasStatus] = (counts[c.saasStatus] || 0) + 1;
+      chartInst.current = new Chart(chartRef.current, {
+        type: "doughnut",
         data: {
-          labels: revenueData.monthlyRevenue.map((item) => item.month),
+          labels: Object.keys(counts).map((k) => STATUS_CFG[k]?.label || k),
           datasets: [
             {
-              label: "Monthly Revenue (₹)",
-              data: revenueData.monthlyRevenue.map((item) => item.revenue),
-              borderColor: "#0284c7",
-              backgroundColor: "rgba(2,132,199,0.15)",
-              tension: 0.4,
-              fill: true,
+              data: Object.values(counts),
+              backgroundColor: [
+                "#3b82f6",
+                "#10b981",
+                "#ef4444",
+                "#22c55e",
+                "#94a3b8",
+              ],
+              borderWidth: 2,
             },
           ],
         },
         options: {
           responsive: true,
-          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: "bottom", labels: { font: { size: 11 } } },
+          },
         },
       });
-
-      chartInstance.current = chart;
     });
-
     return () => {
-      if (chartInstance.current) {
-        chartInstance.current.destroy();
-        chartInstance.current = null;
-      }
+      chartInst.current?.destroy();
+      chartInst.current = null;
     };
-  }, [loading, revenueData]);
+  }, [loading, counselors]);
 
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="flex flex-col items-center gap-4"
-        >
-          <div className="w-12 h-12 border-4 border-sky-200 border-t-sky-600 rounded-full animate-spin"></div>
-          <p className="text-lg text-gray-600">Loading revenue data...</p>
-        </motion.div>
-      </div>
-    );
-  }
-
-  const formatCurrency = (amount) =>
-    new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency: "INR",
-      maximumFractionDigits: 0,
-    }).format(amount);
+  const paid = counselors.filter((c) => c.saasStatus === "paid").length;
+  const due = counselors.filter(
+    (c) => c.saasStatus === "payment_required",
+  ).length;
+  const trial = counselors.filter((c) => c.saasStatus === "trial").length;
+  const free = counselors.filter((c) => c.saasStatus === "active_free").length;
+  const currentMRR = paid * 5000;
+  const potentialMRR = due * 5000;
+  const filtered =
+    filter === "all"
+      ? counselors
+      : counselors.filter((c) => c.saasStatus === filter);
 
   return (
     <div className="flex min-h-screen bg-gray-50">
       <AdminSidebar />
-
       <div className="flex-1 flex flex-col overflow-hidden">
-        <DashboardHeader
-          title="Revenue & Earnings"
-          counselorName={CounselorName}
-          btnName="+ Record Payment"
-        />
-
+        <DashboardHeader title="Revenue" counselorName={user?.name} />
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
           <motion.div
             variants={containerVariants}
             initial="hidden"
             animate="show"
-            className="space-y-6 sm:space-y-10 max-w-7xl mx-auto"
+            className="space-y-8 max-w-7xl mx-auto"
           >
-            {/* KPI Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
-              <motion.div
-                variants={itemVariants}
-                className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 sm:p-6 hover:shadow-md transition-shadow"
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <p className="text-sm text-gray-600">Total Revenue</p>
-                  <DollarSign size={20} className="text-emerald-600" />
-                </div>
-                <p className="text-2xl sm:text-3xl font-bold text-gray-900">
-                  {formatCurrency(revenueData.total)}
-                </p>
-                <p className="text-xs text-gray-500 mt-1">All time</p>
-              </motion.div>
+            <motion.div
+              variants={itemVariants}
+              className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4"
+            >
+              <StatCard
+                icon={DollarSign}
+                iconBg="bg-green-500"
+                label="Current MRR"
+                value={`₹${currentMRR.toLocaleString("en-IN")}`}
+                sub={`${paid} paid counselors`}
+                loading={loading}
+              />
+              <StatCard
+                icon={AlertCircle}
+                iconBg="bg-red-500"
+                label="Payment Due"
+                value={due}
+                sub={`₹${potentialMRR.toLocaleString("en-IN")} potential`}
+                loading={loading}
+              />
+              <StatCard
+                icon={Clock}
+                iconBg="bg-blue-500"
+                label="In Trial"
+                value={trial}
+                sub="Active trials"
+                loading={loading}
+              />
+              <StatCard
+                icon={CheckCircle}
+                iconBg="bg-emerald-500"
+                label="Free (KO Enrolled)"
+                value={free}
+                sub="Processed KO enrollment"
+                loading={loading}
+              />
+              <StatCard
+                icon={TrendingUp}
+                iconBg="bg-purple-500"
+                label="Total Enrollments"
+                value={stats?.totalEnrollments ?? 0}
+                sub="Via KO network"
+                loading={loading}
+              />
+            </motion.div>
 
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <motion.div
                 variants={itemVariants}
-                className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 sm:p-6 hover:shadow-md transition-shadow"
+                className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5"
               >
-                <div className="flex items-center justify-between mb-3">
-                  <p className="text-sm text-gray-600">This Month</p>
-                  <TrendingUp size={20} className="text-sky-600" />
-                </div>
-                <p className="text-2xl sm:text-3xl font-bold text-sky-700">
-                  {formatCurrency(revenueData.thisMonth)}
-                </p>
-                <div className="flex items-center gap-1 text-xs mt-1">
-                  <ArrowUpRight size={14} className="text-emerald-600" />
-                  <span className="text-emerald-600 font-medium">
-                    {revenueData.growth}%
+                <h3 className="font-semibold text-gray-800 mb-4">
+                  Counselor Breakdown
+                </h3>
+                {loading ? (
+                  <div className="h-52 bg-gray-50 animate-pulse rounded-xl" />
+                ) : counselors.length === 0 ? (
+                  <div className="h-52 flex items-center justify-center text-gray-400 text-sm">
+                    No counselors yet
+                  </div>
+                ) : (
+                  <div className="h-52 flex items-center justify-center">
+                    <canvas ref={chartRef} />
+                  </div>
+                )}
+              </motion.div>
+              <motion.div
+                variants={itemVariants}
+                className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm p-5"
+              >
+                <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+                  <h3 className="font-semibold text-gray-800">
+                    Revenue Summary
+                  </h3>
+                  <span className="text-sm bg-green-50 border border-green-200 text-green-700 rounded-xl px-3 py-1.5 font-bold">
+                    ₹{currentMRR.toLocaleString("en-IN")}/mo MRR
                   </span>
-                  <span className="text-gray-500">vs last month</span>
                 </div>
-              </motion.div>
-
-              <motion.div
-                variants={itemVariants}
-                className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 sm:p-6 hover:shadow-md transition-shadow"
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <p className="text-sm text-gray-600">Pending Payments</p>
-                  <Clock size={20} className="text-amber-600" />
+                <div className="space-y-3">
+                  {[
+                    {
+                      l: "Paid counselors × ₹5,000",
+                      v: `₹${currentMRR.toLocaleString("en-IN")}`,
+                      c: "text-green-700",
+                    },
+                    {
+                      l: "Potential (payment due × ₹5,000)",
+                      v: `₹${potentialMRR.toLocaleString("en-IN")}`,
+                      c: "text-amber-600",
+                    },
+                    {
+                      l: "Total counselors in system",
+                      v: counselors.length,
+                      c: "text-gray-700",
+                    },
+                    {
+                      l: "Applications this month",
+                      v: stats?.applicationsThisMonth ?? "—",
+                      c: "text-gray-700",
+                    },
+                    {
+                      l: "Platform conversion rate",
+                      v:
+                        stats?.conversionRate != null
+                          ? `${stats.conversionRate}%`
+                          : "—",
+                      c: "text-gray-700",
+                    },
+                  ].map((row) => (
+                    <div
+                      key={row.l}
+                      className="flex items-center justify-between py-2.5 border-b border-gray-50 last:border-0"
+                    >
+                      <span className="text-sm text-gray-600">{row.l}</span>
+                      <span className={`text-sm font-bold ${row.c}`}>
+                        {loading ? "..." : row.v}
+                      </span>
+                    </div>
+                  ))}
                 </div>
-                <p className="text-2xl sm:text-3xl font-bold text-amber-700">
-                  {formatCurrency(revenueData.pending)}
-                </p>
-                <p className="text-xs text-gray-500 mt-1">
-                  Awaiting collection
-                </p>
-              </motion.div>
-
-              <motion.div
-                variants={itemVariants}
-                className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 sm:p-6 hover:shadow-md transition-shadow"
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <p className="text-sm text-gray-600">Avg. per Student</p>
-                  <ArrowUpRight size={20} className="text-indigo-600" />
-                </div>
-                <p className="text-2xl sm:text-3xl font-bold text-indigo-700">
-                  {formatCurrency(Math.round(revenueData.total / 50))}{" "}
-                  {/* dummy calc */}
-                </p>
-                <p className="text-xs text-gray-500 mt-1">
-                  Based on all applications
-                </p>
               </motion.div>
             </div>
 
-            {/* Filters */}
             <motion.div
               variants={itemVariants}
-              className="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+              className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden"
             >
-              <div className="flex flex-wrap gap-2">
-                {["This Month", "This Year", "All Time"].map((range) => (
-                  <button
-                    key={range}
-                    onClick={() => setTimeRange(range)}
-                    className={`
-                      px-4 py-2 rounded-full text-sm font-medium transition-all
-                      ${
-                        timeRange === range
-                          ? "bg-sky-600 text-white shadow-md"
-                          : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
-                      }
-                    `}
-                  >
-                    {range}
-                  </button>
-                ))}
-              </div>
-
-              <div className="relative w-full sm:w-64">
-                <input
-                  type="text"
-                  placeholder="Search transactions..."
-                  className="w-full px-4 py-2.5 pl-10 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-sky-500 text-sm"
-                />
-                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                    />
-                  </svg>
+              <div className="p-5 border-b border-gray-100 flex items-center justify-between flex-wrap gap-3">
+                <h3 className="font-semibold text-gray-800">
+                  All Counselors — SaaS Status
+                </h3>
+                <div className="flex gap-2 flex-wrap">
+                  {[
+                    "all",
+                    "trial",
+                    "active_free",
+                    "payment_required",
+                    "paid",
+                  ].map((f) => (
+                    <button
+                      key={f}
+                      onClick={() => setFilter(f)}
+                      className={`px-3 py-1 rounded-lg text-xs font-semibold capitalize transition-all ${filter === f ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
+                    >
+                      {f === "all" ? "All" : STATUS_CFG[f]?.label || f}
+                    </button>
+                  ))}
                 </div>
               </div>
-            </motion.div>
-
-            {/* Revenue Chart – Chart.js integrated */}
-            <motion.div
-              variants={itemVariants}
-              className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 sm:p-6"
-            >
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-5 gap-4">
-                <h3 className="text-lg sm:text-xl font-semibold text-gray-900">
-                  Revenue Trend
-                </h3>
-                <select
-                  value={timeRange}
-                  onChange={(e) => setTimeRange(e.target.value)}
-                  className="text-sm border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-sky-500 bg-white"
-                >
-                  <option value="thisMonth">Monthly</option>
-                  <option value="thisYear">Yearly</option>
-                  <option value="allTime">All Time</option>
-                </select>
-              </div>
-
-              <div className="h-64 sm:h-80">
-                <canvas ref={chartRef}></canvas>
-              </div>
-            </motion.div>
-
-            {/* Recent Transactions */}
-            <motion.div variants={itemVariants}>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg sm:text-xl font-semibold text-gray-900">
-                  Recent Transactions
-                </h3>
-                <button className="text-sky-600 hover:text-sky-800 text-sm font-medium flex items-center gap-1">
-                  View All <ArrowUpRight size={14} />
-                </button>
-              </div>
-
-              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
+              <div className="overflow-x-auto">
+                {loading ? (
+                  <div className="p-8 text-center">
+                    <div className="w-6 h-6 border-4 border-blue-400 border-t-transparent rounded-full animate-spin mx-auto" />
+                  </div>
+                ) : filtered.length === 0 ? (
+                  <div className="p-8 text-center text-gray-400 text-sm">
+                    No counselors found
+                  </div>
+                ) : (
+                  <table className="w-full text-sm">
                     <thead className="bg-gray-50">
                       <tr>
-                        <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700">
-                          ID
-                        </th>
-                        <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700">
-                          Student
-                        </th>
-                        <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700 hidden sm:table-cell">
-                          Type
-                        </th>
-                        <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700">
-                          Counselor
-                        </th>
-                        <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700">
-                          Amount
-                        </th>
-                        <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700">
-                          Date
-                        </th>
-                        <th className="px-4 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-700">
-                          Status
-                        </th>
+                        {[
+                          "Counselor",
+                          "Status",
+                          "Trial Ends",
+                          "KO Enrollments",
+                          "Paid Until",
+                          "Action",
+                        ].map((h) => (
+                          <th
+                            key={h}
+                            className="px-4 py-3 text-left text-xs font-semibold text-gray-600 whitespace-nowrap"
+                          >
+                            {h}
+                          </th>
+                        ))}
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-200">
-                      {revenueData.transactions.map((tx) => (
-                        <tr
-                          key={tx.id}
-                          className="hover:bg-gray-50 transition-colors"
-                        >
-                          <td className="px-4 py-3 sm:px-6 text-xs sm:text-sm font-medium">
-                            {tx.id}
-                          </td>
-                          <td className="px-4 py-3 sm:px-6 text-xs sm:text-sm">
-                            {tx.student}
-                          </td>
-                          <td className="px-4 py-3 sm:px-6 text-xs sm:text-sm hidden sm:table-cell">
-                            {tx.type}
-                          </td>
-                          <td className="px-4 py-3 sm:px-6 text-xs sm:text-sm">
-                            {tx.counselor}
-                          </td>
-                          <td className="px-4 py-3 sm:px-6 text-xs sm:text-sm font-bold text-emerald-700">
-                            {formatCurrency(tx.amount)}
-                          </td>
-                          <td className="px-4 py-3 sm:px-6 text-xs sm:text-sm text-gray-600">
-                            {new Date(tx.date).toLocaleDateString()}
-                          </td>
-                          <td className="px-4 py-3 sm:px-6">
-                            <span
-                              className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${
-                                tx.status === "Completed"
-                                  ? "bg-green-100 text-green-800"
-                                  : "bg-amber-100 text-amber-800"
-                              }`}
-                            >
-                              {tx.status}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
+                    <tbody>
+                      {filtered.map((c, i) => {
+                        const cfg = STATUS_CFG[c.saasStatus] || {};
+                        return (
+                          <tr
+                            key={c._id || i}
+                            className="border-t border-gray-50 hover:bg-gray-50 transition-colors"
+                          >
+                            <td className="px-4 py-3">
+                              <p className="font-medium text-gray-800">
+                                {c.counselor?.name || "—"}
+                              </p>
+                              <p className="text-xs text-gray-400">
+                                {c.counselor?.email || ""}
+                              </p>
+                            </td>
+                            <td className="px-4 py-3">
+                              <span
+                                className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold border ${cfg.cls}`}
+                              >
+                                {cfg.label || c.saasStatus}
+                              </span>
+                              {c.isInTrial && c.trialDaysLeft <= 5 && (
+                                <p className="text-[10px] text-red-500 mt-0.5">
+                                  {c.trialDaysLeft}d left
+                                </p>
+                              )}
+                            </td>
+                            <td className="px-4 py-3 text-xs text-gray-500">
+                              {c.trialEndsAt
+                                ? new Date(c.trialEndsAt).toLocaleDateString(
+                                    "en-IN",
+                                  )
+                                : "—"}
+                            </td>
+                            <td className="px-4 py-3">
+                              <span
+                                className={`font-bold text-sm ${c.enrollmentCount >= 1 ? "text-green-700" : "text-gray-400"}`}
+                              >
+                                {c.enrollmentCount || 0}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-xs text-gray-500">
+                              {c.saasPaymentValidUntil
+                                ? new Date(
+                                    c.saasPaymentValidUntil,
+                                  ).toLocaleDateString("en-IN")
+                                : "—"}
+                            </td>
+                            <td className="px-4 py-3">
+                              <RecordEnrollmentButton
+                                counselorId={c.counselor?._id}
+                                onDone={load}
+                              />
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
-                </div>
+                )}
               </div>
             </motion.div>
           </motion.div>

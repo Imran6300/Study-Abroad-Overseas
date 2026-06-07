@@ -784,7 +784,7 @@ export default function CounselorSettingsPage() {
         key: data.keyId,
         subscription_id: data.subscriptionId,
         name: "Khizar Overseas",
-        description: "Counselor Premium Plan — ₹500/month",
+        description: "Counselor Premium Plan — ₹999/month",
         image: "/logo.png",
         prefill: data.prefill || {},
         theme: { color: "#f59e0b" },
@@ -1905,7 +1905,7 @@ export default function CounselorSettingsPage() {
                         marginBottom: 12,
                       }}
                     >
-                      ₹500
+                      ₹999
                       <span
                         style={{
                           fontSize: 12,
@@ -2242,7 +2242,7 @@ export default function CounselorSettingsPage() {
                         marginBottom: 12,
                       }}
                     >
-                      ₹500
+                      ₹999
                       <span
                         style={{
                           fontSize: 12,
@@ -2526,7 +2526,7 @@ export default function CounselorSettingsPage() {
                   >
                     {isPremium
                       ? formatExpiry(branding.premiumExpiresAt) || "Active"
-                      : "₹500"}
+                      : "₹999"}
                     {!isPremium && (
                       <span
                         style={{
@@ -2648,7 +2648,7 @@ export default function CounselorSettingsPage() {
                   }}
                 >
                   <button className="btn-gold" onClick={handleUpgrade}>
-                    Upgrade Now — ₹500/month
+                    Upgrade Now — ₹999/month
                   </button>
                 </div>
               )}

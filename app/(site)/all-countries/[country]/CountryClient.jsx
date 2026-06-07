@@ -10,6 +10,9 @@ import * as gtag from "@/lib/gtag";
 
 import MessageBox from "@/components/ui/MessageBox";
 
+import { useSelector } from "react-redux";
+import { selectIsCounselorStudent } from "@/store/authSelectors";
+
 import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 import {
   PhoneCall,
@@ -581,6 +584,7 @@ export default function CountryDetail({ country, universities = [] }) {
   const [messageStatus, setMessageStatus] = useState("");
 
   const [message, setMessage] = useState("");
+  const isCounselorStudent = useSelector(selectIsCounselorStudent);
 
   /* PERF: useCallback → stable refs → memo'd children never
      re-render when parent state changes for other reasons. */
@@ -747,7 +751,7 @@ export default function CountryDetail({ country, universities = [] }) {
 
       {/* PERF: Modal only mounted when open — eliminates DOM nodes
           and all Framer Motion overhead when not needed. */}
-      {modalOpen && (
+      {!isCounselorStudent && modalOpen && (
         <LeadModal
           onClose={closeModal}
           name={name}
@@ -756,7 +760,9 @@ export default function CountryDetail({ country, universities = [] }) {
         />
       )}
 
-      <FloatingCTA onOpen={openModal} countryName={name} />
+      {!isCounselorStudent && (
+        <FloatingCTA onOpen={openModal} countryName={name} />
+      )}
 
       <MessageBox
         status={messageStatus}
@@ -846,44 +852,46 @@ export default function CountryDetail({ country, universities = [] }) {
                 </Link>
               </m.div>
 
-              <m.div
-                variants={fadeUp}
-                initial="hidden"
-                animate="visible"
-                transition={{ delay: 0.22 }}
-                className="mt-7 flex flex-col sm:flex-row gap-3 sm:gap-4"
-              >
-                <button
-                  onClick={() => {
-                    gtag.event({
-                      action: "cta_click",
-                      category: "engagement",
-                      label: `country_${name}_cta`,
-                    });
+              {!isCounselorStudent && (
+                <m.div
+                  variants={fadeUp}
+                  initial="hidden"
+                  animate="visible"
+                  transition={{ delay: 0.22 }}
+                  className="mt-7 flex flex-col sm:flex-row gap-3 sm:gap-4"
+                >
+                  <button
+                    onClick={() => {
+                      gtag.event({
+                        action: "cta_click",
+                        category: "engagement",
+                        label: `country_${name}_cta`,
+                      });
 
-                    openModal();
-                  }}
-                  className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-400 to-blue-500 text-[#020617] px-6 py-3.5 sm:px-8 sm:py-4 rounded-xl sm:rounded-2xl font-bold text-sm sm:text-base shadow-lg shadow-cyan-500/25 hover:scale-[1.03] transition-transform"
-                >
-                  Get Free Counseling <ArrowRight size={18} />
-                </button>
-                <a
-                  href={WA_NUMBER}
-                  onClick={() => {
-                    gtag.event({
-                      action: "whatsapp_click",
-                      category: "contact",
-                      label: `country_${name}_whatsapp`,
-                    });
-                  }}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 text-white px-6 py-3.5 sm:px-8 sm:py-4 rounded-xl sm:rounded-2xl font-semibold text-sm sm:text-base hover:bg-white/15 transition-colors"
-                >
-                  <MessageCircle size={18} className="text-green-400" />
-                  WhatsApp Us
-                </a>
-              </m.div>
+                      openModal();
+                    }}
+                    className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-400 to-blue-500 text-[#020617] px-6 py-3.5 sm:px-8 sm:py-4 rounded-xl sm:rounded-2xl font-bold text-sm sm:text-base shadow-lg shadow-cyan-500/25 hover:scale-[1.03] transition-transform"
+                  >
+                    Get Free Counseling <ArrowRight size={18} />
+                  </button>
+                  <a
+                    href={WA_NUMBER}
+                    onClick={() => {
+                      gtag.event({
+                        action: "whatsapp_click",
+                        category: "contact",
+                        label: `country_${name}_whatsapp`,
+                      });
+                    }}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 text-white px-6 py-3.5 sm:px-8 sm:py-4 rounded-xl sm:rounded-2xl font-semibold text-sm sm:text-base hover:bg-white/15 transition-colors"
+                  >
+                    <MessageCircle size={18} className="text-green-400" />
+                    WhatsApp Us
+                  </a>
+                </m.div>
+              )}
             </div>
           </div>
         </section>
@@ -989,42 +997,45 @@ export default function CountryDetail({ country, universities = [] }) {
               )}
 
               {/* INLINE LEAD CAPTURE */}
-              <m.div
-                variants={fadeUp}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
-                className="bg-gradient-to-br from-cyan-900/30 to-blue-900/20 border border-cyan-500/20 rounded-3xl p-6 sm:p-8"
-              >
-                <div className="flex flex-col sm:flex-row sm:items-center gap-5 sm:gap-8">
-                  <div className="flex-1">
-                    <p className="text-xs font-semibold text-cyan-400 uppercase tracking-widest mb-2">
-                      Free · No Obligation
-                    </p>
-                    <h3 className="text-xl sm:text-2xl font-bold text-white">
-                      Not sure where to start?
-                    </h3>
-                    <p className="mt-2 text-sm text-gray-400">
-                      Our counselors in Hyderabad will evaluate your profile and
-                      suggest the best universities & scholarships in {name}.
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => {
-                      gtag.event({
-                        action: "cta_click",
-                        category: "engagement",
-                        label: `country_${name}_cta`,
-                      });
+              {!isCounselorStudent && (
+                <m.div
+                  variants={fadeUp}
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true }}
+                  className="bg-gradient-to-br from-cyan-900/30 to-blue-900/20 border border-cyan-500/20 rounded-3xl p-6 sm:p-8"
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-5 sm:gap-8">
+                    <div className="flex-1">
+                      <p className="text-xs font-semibold text-cyan-400 uppercase tracking-widest mb-2">
+                        Free · No Obligation
+                      </p>
+                      <h3 className="text-xl sm:text-2xl font-bold text-white">
+                        Not sure where to start?
+                      </h3>
+                      <p className="mt-2 text-sm text-gray-400">
+                        Our counselors in Hyderabad will evaluate your profile
+                        and suggest the best universities & scholarships in{" "}
+                        {name}.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        gtag.event({
+                          action: "cta_click",
+                          category: "engagement",
+                          label: `country_${name}_cta`,
+                        });
 
-                      openModal();
-                    }}
-                    className="shrink-0 inline-flex items-center gap-2 bg-gradient-to-r from-cyan-400 to-blue-500 text-[#020617] px-7 py-4 rounded-xl font-bold text-sm sm:text-base hover:scale-[1.03] transition-transform shadow-lg shadow-cyan-500/20 whitespace-nowrap"
-                  >
-                    Talk to an Expert <ArrowRight size={16} />
-                  </button>
-                </div>
-              </m.div>
+                        openModal();
+                      }}
+                      className="shrink-0 inline-flex items-center gap-2 bg-gradient-to-r from-cyan-400 to-blue-500 text-[#020617] px-7 py-4 rounded-xl font-bold text-sm sm:text-base hover:scale-[1.03] transition-transform shadow-lg shadow-cyan-500/20 whitespace-nowrap"
+                    >
+                      Talk to an Expert <ArrowRight size={16} />
+                    </button>
+                  </div>
+                </m.div>
+              )}
 
               {/* FAQ */}
               <m.section
@@ -1062,9 +1073,11 @@ export default function CountryDetail({ country, universities = [] }) {
             </div>
 
             {/* RIGHT SIDEBAR */}
-            <aside className="hidden lg:block">
-              <CTACard onOpen={openModal} countryName={name} />
-            </aside>
+            {!isCounselorStudent && (
+              <aside className="hidden lg:block">
+                <CTACard onOpen={openModal} countryName={name} />
+              </aside>
+            )}
           </div>
         </section>
 
@@ -1105,51 +1118,53 @@ export default function CountryDetail({ country, universities = [] }) {
         )}
 
         {/* ── FINAL CTA BANNER ── */}
-        <section className="py-16 sm:py-20 border-t border-white/10 mb-20 lg:mb-0">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
-            <m.div
-              variants={fadeUp}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              className="bg-gradient-to-br from-[#0B0F19] to-[#0a1428] border border-cyan-500/20 rounded-3xl p-8 sm:p-12"
-            >
-              <div className="flex justify-center mb-5">
-                <FiveStars size={18} />
-              </div>
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white">
-                Ready to Study in {name}?
-              </h2>
-              <p className="mt-4 text-gray-400 text-sm sm:text-base max-w-xl mx-auto">
-                Join hundreds of students from Hyderabad who trusted us for
-                their journey. Get your profile evaluated — completely free.
-              </p>
-              <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
-                <button
-                  onClick={() => {
-                    gtag.event({
-                      action: "cta_click",
-                      category: "engagement",
-                      label: `country_${name}_cta`,
-                    });
+        {!isCounselorStudent && (
+          <section className="py-16 sm:py-20 border-t border-white/10 mb-20 lg:mb-0">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
+              <m.div
+                variants={fadeUp}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+                className="bg-gradient-to-br from-[#0B0F19] to-[#0a1428] border border-cyan-500/20 rounded-3xl p-8 sm:p-12"
+              >
+                <div className="flex justify-center mb-5">
+                  <FiveStars size={18} />
+                </div>
+                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white">
+                  Ready to Study in {name}?
+                </h2>
+                <p className="mt-4 text-gray-400 text-sm sm:text-base max-w-xl mx-auto">
+                  Join hundreds of students from Hyderabad who trusted us for
+                  their journey. Get your profile evaluated — completely free.
+                </p>
+                <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
+                  <button
+                    onClick={() => {
+                      gtag.event({
+                        action: "cta_click",
+                        category: "engagement",
+                        label: `country_${name}_cta`,
+                      });
 
-                    openModal();
-                  }}
-                  className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-400 to-blue-500 text-[#020617] px-8 py-4 rounded-2xl font-bold text-base shadow-xl shadow-cyan-500/25 hover:scale-[1.03] transition-transform"
-                >
-                  Book Free Counseling <ArrowRight size={18} />
-                </button>
-                <a
-                  href={PHONE_NUMBER}
-                  className="inline-flex items-center justify-center gap-2 border border-white/20 text-white px-8 py-4 rounded-2xl font-semibold text-base hover:bg-white/5 transition-colors"
-                >
-                  <PhoneCall size={18} className="text-cyan-400" />
-                  Call Us Now
-                </a>
-              </div>
-            </m.div>
-          </div>
-        </section>
+                      openModal();
+                    }}
+                    className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-400 to-blue-500 text-[#020617] px-8 py-4 rounded-2xl font-bold text-base shadow-xl shadow-cyan-500/25 hover:scale-[1.03] transition-transform"
+                  >
+                    Book Free Counseling <ArrowRight size={18} />
+                  </button>
+                  <a
+                    href={PHONE_NUMBER}
+                    className="inline-flex items-center justify-center gap-2 border border-white/20 text-white px-8 py-4 rounded-2xl font-semibold text-base hover:bg-white/5 transition-colors"
+                  >
+                    <PhoneCall size={18} className="text-cyan-400" />
+                    Call Us Now
+                  </a>
+                </div>
+              </m.div>
+            </div>
+          </section>
+        )}
       </main>
     </LazyMotion>
   );
