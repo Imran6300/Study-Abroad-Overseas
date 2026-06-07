@@ -58,7 +58,7 @@ export default function UniversitiesSlider({ items }) {
               image={item.images?.[0]?.url}
               logo={item.logo?.url}
               name={item.name}
-              location={`${item.city ? item.city + ", " : ""}${item.country}`}
+              location={`${item.city ? item.city + ", " : ""}${item.country?.name}`}
               rank={item.qsRanking}
               desc={item.description}
               students={item.totalStudents}
