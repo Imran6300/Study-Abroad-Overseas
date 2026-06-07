@@ -3064,7 +3064,7 @@ export default function CounselorSettingsPage() {
                   Opening Payment…
                 </>
               ) : (
-                "Pay ₹500 — Activate Premium"
+                "Pay ₹999 — Activate Premium"
               )}
             </button>
 
