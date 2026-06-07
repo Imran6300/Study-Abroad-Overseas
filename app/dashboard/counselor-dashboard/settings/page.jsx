@@ -2987,7 +2987,7 @@ export default function CounselorSettingsPage() {
                     letterSpacing: "-0.04em",
                   }}
                 >
-                  ₹500
+                  ₹999
                 </span>
                 <span
                   style={{ fontSize: 14, color: "#4a6e9a", fontWeight: 500 }}
