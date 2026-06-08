@@ -17,20 +17,25 @@ export default function LoginPage() {
 
   const searchParams = useSearchParams();
   const activated = searchParams.get("activated") === "true";
+  // NEW: show success message if redirected here after password reset
+  const passwordReset = searchParams.get("reset") === "true";
 
   const [messageStatus, setMessageStatus] = useState(
-    activated ? "success" : "",
+    activated || passwordReset ? "success" : "",
   );
-
   const [message, setMessage] = useState(
-    activated ? "Account activated successfully. Please login." : "",
+    activated
+      ? "Account activated successfully. Please login."
+      : passwordReset
+        ? "Password updated successfully. Please login with your new password."
+        : "",
   );
 
   useEffect(() => {
-    if (activated) {
+    if (activated || passwordReset) {
       router.replace("/login");
     }
-  }, [activated, router]);
+  }, [activated, passwordReset, router]);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -65,12 +70,10 @@ export default function LoginPage() {
         return;
       }
 
-      // ✅ Save user to Redux
       dispatch(authSuccess(data.user));
 
       const role = data.user.role;
 
-      // ✅ Role-based redirect
       if (role === "admin" || role === "super_admin") {
         router.replace("/dashboard/admin-dashboard");
       } else if (role === "counselor") {
@@ -101,6 +104,7 @@ export default function LoginPage() {
         <div className="absolute w-56 h-56 bg-[#4A6BFF]/20 blur-3xl rounded-full top-0 left-0 -translate-x-1/3 -translate-y-1/3" />
         <div className="absolute w-56 h-56 bg-[#22C55E]/20 blur-3xl rounded-full bottom-0 right-0 translate-x-1/3 translate-y-1/3" />
       </div>
+
       {/* CARD */}
       <motion.div
         initial={{ opacity: 0, y: 30 }}
@@ -153,9 +157,19 @@ export default function LoginPage() {
 
           {/* PASSWORD */}
           <div>
-            <label className="text-sm font-medium text-gray-700">
-              Password
-            </label>
+            {/* Label row with inline Forgot Password link */}
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-sm font-medium text-gray-700">
+                Password
+              </label>
+              {/* NEW: Forgot password link */}
+              <Link
+                href="/forgot-password"
+                className="text-xs text-[#4A6BFF] hover:underline font-medium"
+              >
+                Forgot password?
+              </Link>
+            </div>
 
             <div className="relative">
               <input
@@ -165,7 +179,7 @@ export default function LoginPage() {
                 required
                 autoComplete="current-password"
                 placeholder="••••••••"
-                className="w-full mt-1 px-4 py-3 pr-12 rounded-xl border border-gray-200 focus:border-[#4A6BFF] outline-none text-sm"
+                className="w-full px-4 py-3 pr-12 rounded-xl border border-gray-200 focus:border-[#4A6BFF] outline-none text-sm"
               />
 
               <button
@@ -179,11 +193,11 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {/* SUBMIT BUTTON */}
+          {/* GOOGLE + DIVIDER */}
           <div className="space-y-4">
             <a
               href={`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/google`}
-              className="w-full flex items-center justify-center gap-3 border border-gray-300  rounded-lg py-2.5 text-sm  hover:bg-gray-50 transition"
+              className="w-full flex items-center justify-center gap-3 border border-gray-300 rounded-lg py-2.5 text-sm hover:bg-gray-50 transition"
             >
               <img
                 src="https://www.svgrepo.com/show/475656/google-color.svg"
@@ -199,6 +213,8 @@ export default function LoginPage() {
               <div className="flex-1 h-px bg-gray-300"></div>
             </div>
           </div>
+
+          {/* SUBMIT */}
           <button
             type="submit"
             disabled={loading}
