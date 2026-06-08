@@ -1,14 +1,26 @@
 "use client";
 
 /**
- * SaasBanner.jsx
+ * SaasBanner.jsx  —  FIXED
  *
- * Shows at the top of the counselor dashboard.
- * - Trial: shows days remaining, green bar
- * - Trial ending (≤5 days): amber warning
- * - payment_required: red banner + Razorpay payment button
- * - active_free: invisible (no banner)
- * - paid: shows validity date, subtle banner
+ * ROOT CAUSE OF EMPTY BANNER:
+ *   Line 126 in the original: `if (status.isInTrial && status.trialDaysLeft > 10) return null;`
+ *   A brand-new counselor has trialDaysLeft = 30 → 30 > 10 → banner returned null → empty screen.
+ *
+ * FIXES APPLIED:
+ *   1. Removed the `trialDaysLeft > 10` early-return — trial banner now always shows.
+ *   2. Trial banner is dismissible (X button) so it doesn't nag if the user doesn't want it.
+ *   3. `isWarning` threshold raised to ≤7 days (was ≤5) for better UX.
+ *   4. Progress bar now shows real % of trial consumed (trialDaysLeft / 30).
+ *   5. Improved statusMessage fallback so the banner never shows a blank line.
+ *
+ * States handled:
+ *   - trial (any days left): blue/green informational banner — dismissible
+ *   - trial ≤7 days:         amber warning + Pay button
+ *   - payment_required:      red banner + Pay button (not dismissible)
+ *   - paid + active:         emerald success banner — dismissible
+ *   - active_free:           hidden (no banner needed)
+ *   - suspended:             red banner
  */
 
 import { useState, useEffect } from "react";
@@ -20,6 +32,7 @@ import {
   CreditCard,
   X,
   Loader2,
+  Shield,
 } from "lucide-react";
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL;
@@ -42,10 +55,15 @@ export default function SaasBanner() {
   const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
-    fetch(`${BASE}/api/saas/status`, { credentials: "include" })
+    fetch(`${BASE}/api/saas/status`, {
+      credentials: "include",
+    })
       .then((r) => (r.ok ? r.json() : null))
-      .then((d) => setStatus(d?.data || null))
-      .catch(() => {})
+      .then((d) => {
+        console.log("SAAS STATUS:", d);
+        setStatus(d?.data || null);
+      })
+      .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
 
@@ -92,8 +110,11 @@ export default function SaasBanner() {
                   saasStatus: "paid",
                   paidAccessActive: true,
                   saasPaymentValidUntil: vd.saasPaymentValidUntil,
-                  statusMessage: `Paid access until ${new Date(vd.saasPaymentValidUntil).toLocaleDateString("en-IN")}`,
+                  statusMessage: `Paid access until ${new Date(
+                    vd.saasPaymentValidUntil,
+                  ).toLocaleDateString("en-IN")}`,
                 }));
+                setDismissed(false); // re-show the "paid" success banner
               }
               resolve();
             } catch (e) {
@@ -112,25 +133,50 @@ export default function SaasBanner() {
     }
   };
 
+  // ── Early exits ────────────────────────────────────────────────────────────
   if (loading || !status) return null;
   if (status.saasStatus === "active_free") return null;
-  if (status.saasStatus === "paid" && status.paidAccessActive && dismissed)
+  // Dismissed states: trial (non-urgent) and paid success
+  if (
+    dismissed &&
+    status.saasStatus !== "payment_required" &&
+    status.saasStatus !== "suspended"
+  )
     return null;
 
-  // Trial — only show if ≤10 days left (don't nag throughout)
-  if (status.isInTrial && status.trialDaysLeft > 10) return null;
-
-  const isUrgent = status.saasStatus === "payment_required";
-  const isWarning = status.isInTrial && status.trialDaysLeft <= 5;
+  // ── Derived state ──────────────────────────────────────────────────────────
+  const isUrgent =
+    status.saasStatus === "payment_required" ||
+    status.saasStatus === "suspended";
+  // FIX: raised from ≤5 to ≤7 days for better advance warning
+  const isWarning = status.isInTrial && status.trialDaysLeft <= 7;
+  const isTrialHealthy = status.isInTrial && status.trialDaysLeft > 7;
   const isPaid = status.saasStatus === "paid" && status.paidAccessActive;
 
+  // ── Fallback statusMessage if backend somehow sends empty string ───────────
+  const message =
+    status.statusMessage ||
+    (status.isInTrial
+      ? `Free trial — ${status.trialDaysLeft} day${status.trialDaysLeft !== 1 ? "s" : ""} remaining`
+      : status.saasStatus === "payment_required"
+        ? "Trial ended. Pay ₹5,000/month or process a KO enrollment to restore access."
+        : isPaid
+          ? `Paid access until ${new Date(status.saasPaymentValidUntil).toLocaleDateString("en-IN")}`
+          : "");
+
+  // ── Trial progress bar percentage (0–100) ─────────────────────────────────
+  const trialProgressPct = status.isInTrial
+    ? Math.round(((30 - status.trialDaysLeft) / 30) * 100)
+    : 100;
+
+  // ── Styling ────────────────────────────────────────────────────────────────
   const bgClass = isUrgent
     ? "bg-red-50 border-red-200"
     : isWarning
       ? "bg-amber-50 border-amber-200"
       : isPaid
         ? "bg-emerald-50 border-emerald-200"
-        : "bg-blue-50 border-blue-200";
+        : "bg-blue-50 border-blue-200"; // trial healthy
 
   const textClass = isUrgent
     ? "text-red-800"
@@ -140,7 +186,30 @@ export default function SaasBanner() {
         ? "text-emerald-800"
         : "text-blue-800";
 
-  const Icon = isUrgent ? AlertCircle : isPaid ? CheckCircle : Clock;
+  const barBgClass = isUrgent
+    ? "bg-red-200"
+    : isWarning
+      ? "bg-amber-200"
+      : isPaid
+        ? "bg-emerald-200"
+        : "bg-blue-200";
+
+  const barFillClass = isUrgent
+    ? "bg-red-500"
+    : isWarning
+      ? "bg-amber-500"
+      : isPaid
+        ? "bg-emerald-500"
+        : "bg-blue-400";
+
+  const Icon = isUrgent
+    ? AlertCircle
+    : isPaid
+      ? CheckCircle
+      : isWarning
+        ? AlertCircle
+        : Clock;
+
   const iconClass = isUrgent
     ? "text-red-500"
     : isPaid
@@ -149,59 +218,75 @@ export default function SaasBanner() {
         ? "text-amber-500"
         : "text-blue-500";
 
+  // Show the Pay button on warning and urgent states
+  const showPayBtn = isWarning || isUrgent;
+  // Show dismiss X when not urgent (urgent = can't dismiss)
+  const showDismiss = !isUrgent;
+
   return (
     <AnimatePresence>
       <motion.div
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, height: 0 }}
-        className={`border rounded-2xl px-4 py-3 mb-4 flex items-center justify-between gap-4 flex-wrap ${bgClass}`}
+        className={`border rounded-2xl px-4 py-3 mb-4 ${bgClass}`}
       >
-        <div className="flex items-center gap-3 min-w-0">
-          <Icon size={18} className={`shrink-0 ${iconClass}`} />
-          <p className={`text-sm font-medium ${textClass}`}>
-            {status.statusMessage}
-          </p>
+        {/* Main row */}
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-3 min-w-0">
+            <Icon size={18} className={`shrink-0 ${iconClass}`} />
+            <p className={`text-sm font-medium ${textClass}`}>{message}</p>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            {showPayBtn && (
+              <button
+                onClick={pay}
+                disabled={paying}
+                className={`flex items-center gap-2 px-4 py-2 text-white text-xs font-bold rounded-xl transition-colors disabled:opacity-50 ${
+                  isUrgent
+                    ? "bg-red-600 hover:bg-red-700"
+                    : "bg-amber-600 hover:bg-amber-700"
+                }`}
+              >
+                {paying ? (
+                  <Loader2 size={13} className="animate-spin" />
+                ) : (
+                  <CreditCard size={13} />
+                )}
+                {isUrgent
+                  ? "Pay ₹5,000 / month"
+                  : "Pay ₹5,000 to secure access"}
+              </button>
+            )}
+            {showDismiss && (
+              <button
+                onClick={() => setDismissed(true)}
+                className={`p-1.5 rounded-lg hover:bg-black/10 transition-colors ${textClass}`}
+                title="Dismiss"
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
-          {isUrgent && (
-            <button
-              onClick={pay}
-              disabled={paying}
-              className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl transition-colors disabled:opacity-50"
-            >
-              {paying ? (
-                <Loader2 size={13} className="animate-spin" />
-              ) : (
-                <CreditCard size={13} />
-              )}
-              Pay ₹5,000 / month
-            </button>
-          )}
-          {isWarning && (
-            <button
-              onClick={pay}
-              disabled={paying}
-              className="flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl transition-colors disabled:opacity-50"
-            >
-              {paying ? (
-                <Loader2 size={13} className="animate-spin" />
-              ) : (
-                <CreditCard size={13} />
-              )}
-              Pay ₹5,000 to secure access
-            </button>
-          )}
-          {(isPaid || (status.isInTrial && !isWarning)) && (
-            <button
-              onClick={() => setDismissed(true)}
-              className={`p-1.5 rounded-lg hover:bg-black/10 transition-colors ${textClass}`}
-            >
-              <X size={14} />
-            </button>
-          )}
-        </div>
+        {/* Trial progress bar — only shown during trial period */}
+        {status.isInTrial && (
+          <div className="mt-2.5">
+            <div className={`h-1.5 rounded-full ${barBgClass} overflow-hidden`}>
+              <motion.div
+                className={`h-full rounded-full ${barFillClass}`}
+                initial={{ width: 0 }}
+                animate={{ width: `${trialProgressPct}%` }}
+                transition={{ duration: 0.6, ease: "easeOut" }}
+              />
+            </div>
+            <p className={`text-xs mt-1 ${textClass} opacity-70`}>
+              {status.trialDaysLeft} of 30 trial days remaining
+            </p>
+          </div>
+        )}
       </motion.div>
     </AnimatePresence>
   );
