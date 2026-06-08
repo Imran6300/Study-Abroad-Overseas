@@ -481,7 +481,7 @@ const MobileMenu = ({ open, onClose, isLoggedIn, handleLogout, user }) => {
 
               <MobileNavItem label="Why Us" link="/why-us" onClose={onClose} />
               <MobileNavItem
-                label="For Parents"
+                label="For Partners"
                 link="/partners"
                 onClose={onClose}
               />
