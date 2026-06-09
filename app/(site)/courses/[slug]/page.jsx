@@ -1,4 +1,4 @@
-// app/courses/[slug]/page.jsx
+// app/(site)/courses/[slug]/page.jsx
 
 import CourseDetailPage from "./course";
 
@@ -32,22 +32,32 @@ export async function generateMetadata({ params }) {
     };
   }
 
-  // ── SEO Title ── long-tail, high-intent, under ~60–65 chars when possible
+  // Use admin-filled SEO fields first, then auto-generate
   const mainCountry =
     program.topCountry ||
     program.topUniversities?.[0]?.country?.name ||
     "Abroad";
 
   const level = program.level || "Masters / Bachelors";
-  const title = `${program.title} in ${mainCountry} ${level} 2026 – Fees, Scholarships & Top Universities`;
 
-  // ── Meta Description ── compelling, ~150–158 chars, includes CTA
-  const description = program.overviewDescription
-    ? `${program.overviewDescription.slice(0, 118)}... Top universities, tuition fees, scholarships up to 100%, eligibility, visa & job prospects for Indian students. Free guidance!`
-    : `Study ${program.title} abroad in 2026. Best universities, fees, scholarships, entry requirements & high salary careers. Free counseling from Hyderabad.`;
+  const title =
+    program.seo?.metaTitle ||
+    `${program.title} in ${mainCountry} ${level} 2026 – Fees, Scholarships & Top Universities`;
+
+  const description =
+    program.seo?.metaDescription ||
+    (program.overviewDescription
+      ? `${program.overviewDescription.slice(0, 118)}... Top universities, tuition fees, scholarships up to 100%, eligibility, visa & job prospects for Indian students. Free guidance!`
+      : `Study ${program.title} abroad in 2026. Best universities, fees, scholarships, entry requirements & high salary careers. Free counseling from Hyderabad.`);
+
+  const canonicalUrl =
+    program.seo?.canonicalUrl ||
+    `https://www.khizaroverseas.in/courses/${slug}`;
 
   const image =
-    program.bgImage?.url || "https://khizaroverseas.in/og-courses.jpg";
+    program.seo?.socialMeta?.ogImage?.url ||
+    program.bgImage?.url ||
+    "https://khizaroverseas.in/og-courses.jpg";
 
   return {
     metadataBase: new URL("https://khizaroverseas.in"),
@@ -56,7 +66,7 @@ export async function generateMetadata({ params }) {
     description,
 
     alternates: {
-      canonical: `/courses/${slug}`,
+      canonical: canonicalUrl,
     },
 
     robots: {
@@ -65,9 +75,9 @@ export async function generateMetadata({ params }) {
     },
 
     openGraph: {
-      title,
-      description,
-      url: `https://khizaroverseas.in/courses/${slug}`,
+      title: program.seo?.socialMeta?.ogTitle || title,
+      description: program.seo?.socialMeta?.ogDescription || description,
+      url: canonicalUrl,
       siteName: "Khizar Overseas – Study Abroad from Hyderabad",
       images: [
         {
@@ -79,19 +89,21 @@ export async function generateMetadata({ params }) {
       ],
       locale: "en_IN",
       type: "article",
-      // Helps freshness signals
       publishedTime: program.createdAt || undefined,
       modifiedTime: program.updatedAt || program.createdAt || undefined,
     },
 
     twitter: {
       card: "summary_large_image",
-      title,
-      description,
-      images: [image],
+      title: program.seo?.socialMeta?.twitterTitle || title,
+      description: program.seo?.socialMeta?.twitterDescription || description,
+      images: [
+        program.seo?.socialMeta?.ogImage?.url ||
+          program.bgImage?.url ||
+          "https://khizaroverseas.in/og-courses.jpg",
+      ],
     },
 
-    // Optional – still used by some tools / rank trackers
     keywords: [
       `${program.title} abroad`,
       `${program.title} 2026`,
@@ -114,7 +126,7 @@ export default async function ProgramPage({ params }) {
             Course Not Found
           </h1>
           <p className="text-xl text-gray-300 mb-10">
-            Sorry, we couldn't find this study abroad program.
+            Sorry, we couldn&apos;t find this study abroad program.
           </p>
           <a
             href="/courses"
@@ -127,31 +139,13 @@ export default async function ProgramPage({ params }) {
     );
   }
 
-  // ── Rich structured data ── this is one of the strongest parts
-  const mainCountry =
-    program.topCountry ||
-    program.topUniversities?.[0]?.country ||
-    "Multiple Countries";
+  const canonicalUrl = `https://www.khizaroverseas.in/courses/${slug}`;
 
-  const breadcrumbJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: [
-      {
-        "@type": "ListItem",
-        position: 1,
-        name: "Courses",
-        item: "https://khizaroverseas.in/courses",
-      },
-      {
-        "@type": "ListItem",
-        position: 2,
-        name: program.title,
-        item: `https://khizaroverseas.in/courses/${slug}`,
-      },
-    ],
-  };
-
+  // ── 1. Course JSON-LD ─────────────────────────────────────────────────────
+  // schema.org/Course — the primary structured data type for this page.
+  // hasCourseInstance is the key field: it tells Google which universities
+  // offer this course and in which countries. This enables rich results
+  // showing specific offerings directly in search results.
   const courseJsonLd = {
     "@context": "https://schema.org",
     "@type": "Course",
@@ -159,68 +153,192 @@ export default async function ProgramPage({ params }) {
     description:
       program.overviewDescription ||
       `Study ${program.title} abroad – top universities, fees, scholarships & career outcomes for 2026 intake.`,
+    url: canonicalUrl,
+    image: program.bgImage?.url || undefined,
     provider: {
       "@type": "Organization",
       name: "Khizar Overseas",
-      url: "https://khizaroverseas.in",
-      sameAs: [
-        "https://www.instagram.com/khizaroverseas/",
-        "https://www.linkedin.com/company/khizaroverseas",
-        // ← add more real social links if you have them
-      ],
+      url: "https://www.khizaroverseas.in",
     },
-    educationalCredentialAwarded: `${program.level} Degree`,
-    applicationCategory: program.field || "Education",
-    // Very powerful for study-abroad – shows specific offerings
-    hasCourseInstance: (program.topUniversities || [])
-      .slice(0, 8)
-      .map((uni) => ({
-        "@type": "CourseInstance",
-        name: `${program.title} at ${uni.name}`,
-        provider: {
-          "@type": "CollegeOrUniversity",
-          name: uni.name,
-          url:
-            uni.website ||
-            `https://khizaroverseas.in/programs/universities/${uni.slug}`,
-        },
-        location: {
-          "@type": "Country",
-          name: uni.country?.name,
-        },
-        courseMode: "full-time",
-      })),
-    offers: program.fees
-      ? {
-          "@type": "Offer",
-          price: program.fees.replace(/[^0-9.]/g, ""),
-          priceCurrency: "USD",
-          category: "Tuition",
-        }
+    educationalCredentialAwarded: program.level
+      ? `${program.level} Degree`
       : undefined,
-    occupationalCredentialAwarded:
-      program.popularJobRoles?.join(", ") || undefined,
+    // courseMode comes from structuredData after enrichment
+    ...(program.structuredData?.courseMode && {
+      courseMode: program.structuredData.courseMode,
+    }),
+    // Duration in ISO 8601 format (e.g. "P2Y" = 2 years) — ideally set by admin
+    // We store the raw string from the DB and pass it as-is for now
+    ...(program.duration && { timeToComplete: program.duration }),
+    // Career prospects — helps with occupation-related queries
+    ...(program.careerProspects && {
+      educationalProgramMode: program.careerProspects,
+    }),
+    // Popular job roles map to occupationalCategory
+    ...(program.popularJobRoles?.length && {
+      occupationalCredentialAwarded: program.popularJobRoles.join(", "),
+    }),
+    // Tuition fee if available
+    ...(program.fees && {
+      offers: {
+        "@type": "Offer",
+        description: `Annual tuition: ${program.fees}`,
+        category: "Tuition",
+      },
+    }),
+    // Average salary — useful for intent queries like "data science salary abroad"
+    ...(program.avgSalary && {
+      salaryUponCompletion: {
+        "@type": "MonetaryAmountDistribution",
+        currency: "USD",
+        median: program.avgSalary,
+      },
+    }),
+    // Target audience: Indian students planning to study abroad
     audience: {
       "@type": "EducationalAudience",
       educationalRole: "Prospective International Students",
       geographicAreaServed: "India",
     },
+    // hasCourseInstance: one entry per university that offers this course.
+    // This is the most powerful field for programmatic SEO — it surfaces
+    // specific offering details in search results.
+    hasCourseInstance: (program.topUniversities || [])
+      .slice(0, 8)
+      .map((uni) => ({
+        "@type": "CourseInstance",
+        name: `${program.title} at ${uni.name}`,
+        courseMode: program.structuredData?.courseMode || "full-time",
+        instructor: {
+          "@type": "CollegeOrUniversity",
+          name: uni.name,
+          url:
+            uni.website ||
+            `https://www.khizaroverseas.in/programs/universities/${uni.slug}`,
+        },
+        location: uni.country?.name
+          ? {
+              "@type": "Country",
+              name: uni.country.name,
+            }
+          : undefined,
+      }))
+      .filter(Boolean),
+  };
+
+  // ── 2. FAQPage JSON-LD ───────────────────────────────────────────────────
+  // Uses admin-filled faqs[] if they exist (best quality).
+  // Falls back to auto-generated FAQs from program data.
+  // These appear as expandable accordions in Google search results.
+  let faqJsonLd = null;
+
+  if (program.faqs?.length) {
+    faqJsonLd = {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: program.faqs.map((f) => ({
+        "@type": "Question",
+        name: f.question,
+        acceptedAnswer: { "@type": "Answer", text: f.answer },
+      })),
+    };
+  } else {
+    // Auto-generated fallback FAQs — always present so every course page
+    // is eligible for FAQ rich results from day one
+    const mainCountry =
+      program.topCountry ||
+      program.countries?.[0]?.name ||
+      program.topUniversities?.[0]?.country?.name ||
+      "top countries";
+
+    const feeText = program.fees
+      ? `around ${program.fees} per year`
+      : "varying amounts depending on the university and country";
+
+    const salaryText = program.avgSalary
+      ? `an average salary of ${program.avgSalary}`
+      : "competitive salaries depending on country and specialisation";
+
+    faqJsonLd = {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: [
+        {
+          "@type": "Question",
+          name: `What is the cost of studying ${program.title} abroad for Indian students?`,
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: `The cost of studying ${program.title} abroad varies by country and university. Fees are typically ${feeText}. Scholarships can cover up to 100% of tuition for eligible students. Khizar Overseas offers free counseling to help you find the best funding options.`,
+          },
+        },
+        {
+          "@type": "Question",
+          name: `Which country is best to study ${program.title} from India?`,
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: `${mainCountry} ${typeof mainCountry === "string" && mainCountry.includes(",") ? "are" : "is"} among the most popular destination${typeof mainCountry === "string" && mainCountry.includes(",") ? "s" : ""} for Indian students studying ${program.title}. The best country depends on your budget, target university rankings, post-study work visa options, and career goals. Khizar Overseas provides personalized country selection guidance for free.`,
+          },
+        },
+        {
+          "@type": "Question",
+          name: `What are the career prospects after studying ${program.title} abroad?`,
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: program.careerProspects
+              ? `${program.careerProspects} Graduates typically earn ${salaryText}.`
+              : `Graduates with a ${program.title} degree from top international universities can expect ${salaryText}. Career opportunities span multiple industries globally. Contact Khizar Overseas for detailed career guidance.`,
+          },
+        },
+      ],
+    };
+  }
+
+  // ── 3. BreadcrumbList JSON-LD ────────────────────────────────────────────
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: "https://www.khizaroverseas.in",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Courses",
+        item: "https://www.khizaroverseas.in/courses",
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: program.title,
+        item: canonicalUrl,
+      },
+    ],
   };
 
   return (
     <>
+      {/* Course — primary entity + hasCourseInstance per university */}
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(breadcrumbJsonLd),
-        }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(courseJsonLd) }}
       />
 
+      {/* FAQPage — expandable accordions in SERP */}
+      {faqJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        />
+      )}
+
+      {/* BreadcrumbList — path shown under title in SERP */}
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(courseJsonLd),
-        }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
 
       <CourseDetailPage slug={slug} />

@@ -1,4 +1,4 @@
-// app/blog/[slug]/page.jsx
+// app/(site)/blog/[slug]/page.jsx
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -23,39 +23,221 @@ async function getBlog(slug) {
 }
 
 export async function generateMetadata({ params }) {
-  const { slug } = await params; // ✅ FIXED
+  const { slug } = await params;
   const blog = await getBlog(slug);
 
   if (!blog) {
     return { title: "Blog Not Found" };
   }
 
+  const title = blog.metaTitle || blog.title;
+  const description = blog.metaDescription || blog.excerpt || "";
+  const canonicalUrl =
+    blog.canonicalUrl || `https://www.khizaroverseas.in/blog/${slug}`;
+
+  const ogImage = blog.socialMeta?.ogImage?.url || blog.coverImage?.url || null;
+
   return {
-    title: blog.metaTitle || blog.title,
-    description: blog.metaDescription || blog.excerpt,
-    openGraph: {
-      title: blog.metaTitle || blog.title,
-      description: blog.metaDescription || blog.excerpt,
-      images: blog.coverImage?.url ? [blog.coverImage.url] : [],
-      type: "article",
+    title,
+    description,
+
+    alternates: { canonical: canonicalUrl },
+
+    robots: {
+      index: !blog.noIndex,
+      follow: true,
     },
+
+    keywords: blog.tags?.length ? blog.tags.join(", ") : undefined,
+
+    openGraph: {
+      title: blog.socialMeta?.ogTitle || title,
+      description: blog.socialMeta?.ogDescription || description,
+      url: canonicalUrl,
+      siteName: "Khizar Overseas",
+      type: "article",
+      images: ogImage
+        ? [{ url: ogImage, width: 1200, height: 630, alt: title }]
+        : [],
+      publishedTime: blog.publishDate
+        ? new Date(blog.publishDate).toISOString()
+        : undefined,
+      modifiedTime: blog.updatedAt
+        ? new Date(blog.updatedAt).toISOString()
+        : undefined,
+      // section helps Google categorize content correctly
+      section: blog.structuredData?.articleSection || undefined,
+      tags: blog.tags || [],
+    },
+
     twitter: {
       card: "summary_large_image",
-      title: blog.metaTitle || blog.title,
-      description: blog.metaDescription || blog.excerpt,
-      images: blog.coverImage?.url ? [blog.coverImage.url] : [],
+      title: blog.socialMeta?.twitterTitle || title,
+      description: blog.socialMeta?.twitterDescription || description,
+      images: ogImage ? [ogImage] : [],
     },
   };
 }
+
 export default async function Post({ params }) {
-  const { slug } = await params; // ✅ unwrap params
+  const { slug } = await params;
   const blog = await getBlog(slug);
+
   if (!blog) {
-    return <div>Blog not found or loading failed.</div>; // this will show in source
+    return <div>Blog not found or loading failed.</div>;
   }
 
+  const canonicalUrl =
+    blog.canonicalUrl || `https://www.khizaroverseas.in/blog/${slug}`;
+
+  const title = blog.metaTitle || blog.title;
+  const description = blog.metaDescription || blog.excerpt || "";
+
+  // ── 1. Article JSON-LD ───────────────────────────────────────────────────
+  // schema.org/Article — primary type for blog posts.
+  // datePublished + dateModified are critical for freshness signals.
+  // wordCount and articleSection help Google understand content quality.
+  const articleJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: blog.title,
+    description,
+    url: canonicalUrl,
+    image: blog.coverImage?.url
+      ? {
+          "@type": "ImageObject",
+          url: blog.coverImage.url,
+          caption: blog.altText || blog.title,
+        }
+      : undefined,
+    datePublished: blog.publishDate
+      ? new Date(blog.publishDate).toISOString()
+      : undefined,
+    dateModified: blog.updatedAt
+      ? new Date(blog.updatedAt).toISOString()
+      : blog.publishDate
+        ? new Date(blog.publishDate).toISOString()
+        : undefined,
+    author: {
+      "@type": "Organization",
+      name: blog.author?.name || "Khizar Overseas",
+      url: "https://www.khizaroverseas.in",
+    },
+    publisher: {
+      "@type": "Organization",
+      name: "Khizar Overseas",
+      url: "https://www.khizaroverseas.in",
+      logo: {
+        "@type": "ImageObject",
+        url: "https://www.khizaroverseas.in/logo.png",
+      },
+    },
+    // wordCount is a content quality signal — stored by the blog model hook
+    ...(blog.structuredData?.wordCount && {
+      wordCount: blog.structuredData.wordCount,
+    }),
+    // articleSection (e.g. "Visa Guides", "Country Guides") helps with
+    // topic clustering in Google's understanding of your content
+    ...(blog.structuredData?.articleSection && {
+      articleSection: blog.structuredData.articleSection,
+    }),
+    // keywords from tags
+    ...(blog.tags?.length && { keywords: blog.tags.join(", ") }),
+    // inLanguage for multi-language signals
+    inLanguage: "en-IN",
+    // isPartOf: links this article back to your blog section
+    isPartOf: {
+      "@type": "Blog",
+      name: "Khizar Overseas Study Abroad Blog",
+      url: "https://www.khizaroverseas.in/blog",
+    },
+  };
+
+  // ── 2. FAQPage JSON-LD ───────────────────────────────────────────────────
+  // Only emitted if admin has filled in faqs[] for this blog post.
+  // Blog FAQs are particularly valuable because they appear as expandable
+  // accordions below the article snippet in Google — doubling your SERP
+  // real estate for free.
+  let faqJsonLd = null;
+
+  if (blog.faqs?.length) {
+    faqJsonLd = {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: blog.faqs.map((f) => ({
+        "@type": "Question",
+        name: f.question,
+        acceptedAnswer: { "@type": "Answer", text: f.answer },
+      })),
+    };
+  }
+
+  // ── 3. BreadcrumbList JSON-LD ────────────────────────────────────────────
+  // Uses stored breadcrumbs[] if admin set them, otherwise auto-builds
+  // from relatedCountries. Falls back to a clean Home > Blog > Post path.
+  let breadcrumbItems;
+
+  if (blog.breadcrumbs?.length) {
+    // Admin-stored breadcrumbs — highest quality, use as-is
+    breadcrumbItems = blog.breadcrumbs;
+  } else if (blog.relatedCountries?.length) {
+    // If blog is about a specific country, include the country crumb
+    const firstCountry = blog.relatedCountries[0];
+    breadcrumbItems = [
+      { name: "Home", url: "https://www.khizaroverseas.in" },
+      { name: "Blog", url: "https://www.khizaroverseas.in/blog" },
+      ...(firstCountry?.name && firstCountry?.slug
+        ? [
+            {
+              name: `Study in ${firstCountry.name}`,
+              url: `https://www.khizaroverseas.in/all-countries/${firstCountry.slug}`,
+            },
+          ]
+        : []),
+      { name: blog.title, url: canonicalUrl },
+    ];
+  } else {
+    // Plain fallback: Home > Blog > This Post
+    breadcrumbItems = [
+      { name: "Home", url: "https://www.khizaroverseas.in" },
+      { name: "Blog", url: "https://www.khizaroverseas.in/blog" },
+      { name: blog.title, url: canonicalUrl },
+    ];
+  }
+
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: breadcrumbItems.map((item, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: item.name,
+      item: item.url,
+    })),
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-b  mt-5 from-slate-50 via-white to-slate-50/80">
+    <div className="min-h-screen bg-gradient-to-b mt-5 from-slate-50 via-white to-slate-50/80">
+      {/* Article JSON-LD — primary entity + freshness signals */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
+      />
+
+      {/* FAQPage — only if faqs[] filled in admin, doubles SERP real estate */}
+      {faqJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        />
+      )}
+
+      {/* BreadcrumbList — navigation path shown in SERP */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+
       {/* Elegant thin accent gradient bar */}
       <div className="h-1 bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 w-full" />
 
@@ -76,7 +258,7 @@ export default async function Post({ params }) {
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent/0 z-10" />
               <Image
                 src={blog.coverImage?.url}
-                alt={blog.title}
+                alt={blog.altText || blog.title}
                 width={1400}
                 height={720}
                 priority
@@ -115,7 +297,9 @@ export default async function Post({ params }) {
               </div>
               <div className="flex items-center gap-3">
                 <FaUser className="text-orange-600 text-xl flex-shrink-0" />
-                <span className="font-medium">{"Khizar Overseas Team"}</span>
+                <span className="font-medium">
+                  {blog.author?.name || "Khizar Overseas Team"}
+                </span>
               </div>
               <div className="flex items-center gap-3">
                 <FaClock className="text-orange-600 text-xl flex-shrink-0" />

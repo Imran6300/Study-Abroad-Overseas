@@ -147,81 +147,72 @@ export async function generateMetadata({ params }) {
 export default async function CountryPage({ params }) {
   const { country: slug } = await params;
   const country = await getCountry(slug);
+  if (!country) return notFound();
 
-  if (!country) {
-    notFound();
-  }
-
-  let universities = [];
-
-  try {
-    const uniRes = await fetch(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/universities?country=${encodeURIComponent(country.name)}`,
-      { next: { revalidate: 3600 } },
-    );
-
-    if (uniRes.ok) {
-      const uniData = await uniRes.json();
-      universities = uniData.universities || [];
-    }
-  } catch (error) {
-    console.error("Universities fetch failed:", error);
-  }
-
-  // ── Structured Data: helps Google show rich snippets ─────────────────────
-  const structuredData = {
+  // Build JSON-LD
+  const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "Article",
-    headline: buildCountryTitle(country),
-    description: buildCountryDescription(country),
+    "@type": "Country",
+    name: country.name,
     url: `https://www.khizaroverseas.in/all-countries/${slug}`,
-    publisher: {
-      "@type": "Organization",
-      name: "Khizar Overseas",
-      url: "https://www.khizaroverseas.in",
-      logo: {
-        "@type": "ImageObject",
-        url: "https://www.khizaroverseas.in/logo.png",
-      },
-    },
-    // FAQ schema — increases CTR by showing Q&A in SERP
-    mainEntity: [
+    description: buildCountryDescription(country),
+  };
+
+  const breadcrumbLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
       {
-        "@type": "Question",
-        name: `What is the visa success rate for Indian students in ${country.name}?`,
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: country.visaSuccessRate
-            ? `The student visa success rate for Indian applicants in ${country.name} is ${country.visaSuccessRate}%.`
-            : `Contact Khizar Overseas for the latest visa success rate data for ${country.name}.`,
-        },
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: "https://www.khizaroverseas.in",
       },
       {
-        "@type": "Question",
-        name: `How to study in ${country.name} from India in 2026?`,
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: `To study in ${country.name} from India, you need to: 1) Choose a university and program, 2) Meet eligibility requirements, 3) Apply for admission, 4) Apply for a student visa. Khizar Overseas provides free counseling to guide you through the entire process.`,
-        },
+        "@type": "ListItem",
+        position: 2,
+        name: "All Countries",
+        item: "https://www.khizaroverseas.in/all-countries",
       },
       {
-        "@type": "Question",
-        name: `Is ${country.name} good for Indian students?`,
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: `${country.name} is a popular study destination for Indian students with ${universities.length > 0 ? `${universities.length}+ partner universities` : "multiple universities"} available. Khizar Overseas helps Indian students with admissions and visa guidance.`,
-        },
+        "@type": "ListItem",
+        position: 3,
+        name: `Study in ${country.name}`,
+        item: `https://www.khizaroverseas.in/all-countries/${slug}`,
       },
     ],
   };
+
+  // FAQ JSON-LD only if country has faqs
+  const faqLd = country.faqs?.length
+    ? {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        mainEntity: country.faqs.map((f) => ({
+          "@type": "Question",
+          name: f.question,
+          acceptedAnswer: { "@type": "Answer", text: f.answer },
+        })),
+      }
+    : null;
 
   return (
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <CountryClient country={country} universities={universities} />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
+      />
+      {faqLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
+        />
+      )}
+      <CountryClient country={country} />
     </>
   );
 }
