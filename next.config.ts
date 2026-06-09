@@ -17,6 +17,35 @@ const nextConfig = {
     ];
   },
 
+  async rewrites() {
+  return [
+    {
+      source: "/sitemap.xml",
+      destination: "https://api.khizaroverseas.in/sitemap.xml",
+    },
+    {
+      source: "/sitemap-countries.xml",
+      destination: "https://api.khizaroverseas.in/sitemap-countries.xml",
+    },
+    {
+      source: "/sitemap-universities.xml",
+      destination: "https://api.khizaroverseas.in/sitemap-universities.xml",
+    },
+    {
+      source: "/sitemap-courses.xml",
+      destination: "https://api.khizaroverseas.in/sitemap-courses.xml",
+    },
+    {
+      source: "/sitemap-combo.xml",
+      destination: "https://api.khizaroverseas.in/sitemap-combo.xml",
+    },
+    {
+      source: "/sitemap-blogs.xml",
+      destination: "https://api.khizaroverseas.in/sitemap-blogs.xml",
+    },
+  ];
+},
+
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "res.cloudinary.com" },
