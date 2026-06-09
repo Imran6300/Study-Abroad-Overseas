@@ -20,6 +20,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Bell, Check, Info, AlertTriangle, X, Trash2 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { getSocket } from "@/lib/socket";
+import { LogOut } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { logout } from "@/store/authSlice";
+import { disconnectSocket } from "@/lib/socket";
 import {
   fetchCounselorNotifications,
   markCounselorNotifRead,
@@ -77,6 +81,12 @@ export default function CounselorDashboardHeader({
   const [showNotifications, setShowNotifications] = useState(false);
   const notificationRef = useRef(null);
 
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const profileRef = useRef(null);
+
+  const router = useRouter();
+
   const initials =
     counselorName
       .split(" ")
@@ -114,6 +124,20 @@ export default function CounselorDashboardHeader({
     };
   }, [user?._id, dispatch]);
 
+  useEffect(() => {
+    const handler = (e) => {
+      if (profileRef.current && !profileRef.current.contains(e.target)) {
+        setShowProfileMenu(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handler);
+
+    return () => {
+      document.removeEventListener("mousedown", handler);
+    };
+  }, []);
+
   // ── 3. Click outside ─────────────────────────────────────────────────────
   useEffect(() => {
     const handler = (e) => {
@@ -144,6 +168,37 @@ export default function CounselorDashboardHeader({
     },
     [dispatch],
   );
+
+  const handleLogout = async () => {
+    if (loggingOut) return;
+
+    try {
+      setLoggingOut(true);
+      setShowProfileMenu(false);
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/logout`,
+        {
+          method: "POST",
+          credentials: "include",
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("Logout failed");
+      }
+
+      disconnectSocket();
+
+      dispatch(logout());
+
+      router.replace("/login");
+    } catch (error) {
+      console.error("Logout failed:", error);
+    } finally {
+      setLoggingOut(false);
+    }
+  };
 
   return (
     <header className="bg-white/90 backdrop-blur-2xl border-b border-slate-200/60 shadow-[0_1px_12px_rgba(14,165,233,0.06)] sticky top-0 z-30 transition-all duration-300">
@@ -311,7 +366,11 @@ export default function CounselorDashboardHeader({
             <div className="w-px h-7 bg-slate-200 hidden sm:block" />
 
             {/* Avatar */}
-            <div className="flex items-center gap-2.5 group cursor-pointer">
+            <div
+              className="flex items-center gap-2.5 group cursor-pointer relative"
+              ref={profileRef}
+              onClick={() => setShowProfileMenu((prev) => !prev)}
+            >
               <motion.div
                 whileHover={{ scale: 1.06 }}
                 className="relative shrink-0"
@@ -329,6 +388,45 @@ export default function CounselorDashboardHeader({
                   COUNSELOR
                 </span>
               </div>
+              <AnimatePresence>
+                {showProfileMenu && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                    transition={{ duration: 0.2 }}
+                    className="
+        absolute top-full mt-2 right-0
+        w-48 bg-white
+        border border-slate-200
+        rounded-xl
+        shadow-xl
+        overflow-hidden
+        z-50
+      "
+                  >
+                    <button
+                      disabled={loggingOut}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleLogout();
+                      }}
+                      className="
+          w-full flex items-center gap-3
+          px-4 py-3
+          text-red-600
+          hover:bg-red-50
+          transition-colors
+          disabled:opacity-50
+          disabled:cursor-not-allowed
+        "
+                    >
+                      <LogOut size={18} />
+                      {loggingOut ? "Logging out..." : "Logout"}
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* Action button */}

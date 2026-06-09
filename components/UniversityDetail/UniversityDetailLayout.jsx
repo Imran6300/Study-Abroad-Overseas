@@ -39,6 +39,26 @@ const toBase64 = (str) =>
     ? Buffer.from(str).toString("base64")
     : window.btoa(str);
 
+const smartText = (value, fallback = "Not Provided") => {
+  if (
+    value === null ||
+    value === undefined ||
+    value === "" ||
+    (typeof value === "string" && value.trim() === "")
+  ) {
+    return fallback;
+  }
+  return value;
+};
+
+const smartNumber = (value, fallback = "Not Available") => {
+  return value === null || value === undefined ? fallback : value;
+};
+
+const smartArray = (arr, fallback = "Not Provided") => {
+  return Array.isArray(arr) && arr.length > 0 ? arr.join(", ") : fallback;
+};
+
 export default function UniversityDetailLayout({ uni, similarUniversities }) {
   const [status, setStatus] = useState(null);
   const [message, setMessage] = useState("");
@@ -55,13 +75,31 @@ export default function UniversityDetailLayout({ uni, similarUniversities }) {
   }, [uni.name]);
 
   /* ================= NORMALIZED VALUES ================= */
-  const location = `${uni.city || ""}`.trim();
-  const rank = uni.qsRanking ?? "—";
-  const acceptance = uni.acceptanceRate ? `${uni.acceptanceRate}%` : "Top";
-  const students = uni.totalStudents ?? "—";
-  const tuition = uni.tuitionFee ?? "Varies by program";
-  const intake = uni.intakes?.join(", ") ?? "Fall, Spring";
-  const description = uni.description ?? "";
+  const location = smartText(uni.city);
+
+  const rank =
+    uni.qsRanking !== null && uni.qsRanking !== undefined
+      ? uni.qsRanking
+      : "Not Ranked";
+
+  const acceptance =
+    uni.acceptanceRate !== null && uni.acceptanceRate !== undefined
+      ? `${uni.acceptanceRate}%`
+      : "Not Available";
+
+  const students = smartNumber(uni.totalStudents, "Not Available");
+
+  const tuition = smartText(
+    uni.tuitionFee,
+    "Contact university for fee details",
+  );
+
+  const intake = smartArray(uni.intakes, "Intake information not available");
+
+  const description = smartText(
+    uni.description,
+    "University description is currently unavailable.",
+  );
 
   const images =
     Array.isArray(uni.images) && uni.images.length > 0
@@ -149,7 +187,7 @@ export default function UniversityDetailLayout({ uni, similarUniversities }) {
               href={`/all-countries/${uni.country?.slug}`}
               className="text-blue-400 underline"
             >
-              Study in {uni.country?.name}
+              Study in {smartText(uni.country?.name, "Unknown Country")}
             </Link>
           </p>
           <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-sm text-[#8892B0]">
@@ -231,12 +269,16 @@ export default function UniversityDetailLayout({ uni, similarUniversities }) {
                       className="block bg-[#112240] border border-[#1E3A5F] rounded-xl p-5 hover:border-[#4169E1] transition-all hover:scale-[1.02]"
                     >
                       <h3 className="font-semibold text-[#CCD6F6] text-lg break-words">
-                        {course.title}
+                        {smartText(course.title, "Unnamed Course")}
                       </h3>
                       <div className="text-sm text-[#8892B0] mt-2 flex flex-wrap gap-x-3 gap-y-1">
-                        <span>{course.level}</span>
+                        <span>
+                          {smartText(course.level, "Level Not Specified")}
+                        </span>
                         <span className="hidden sm:inline">•</span>
-                        <span>{course.duration}</span>
+                        <span>
+                          {smartText(course.duration, "Duration Not Available")}
+                        </span>
                       </div>
                     </Link>
                   ))}
@@ -264,7 +306,10 @@ export default function UniversityDetailLayout({ uni, similarUniversities }) {
             <div className="bg-[#112240] border border-[#1E3A5F] rounded-2xl p-6">
               <h3 className="font-semibold mb-5 text-lg">University Facts</h3>
               <Fact label="Location" value={location} />
-              <Fact label="Global Rank" value={`#${rank}`} />
+              <Fact
+                label="Global Rank"
+                value={rank === "Not Ranked" ? rank : `#${rank}`}
+              />
               <Fact label="Students" value={students} />
               <Fact label="Tuition Fees" value={tuition} />
               <Fact label="Intake" value={intake} />
@@ -306,7 +351,10 @@ export default function UniversityDetailLayout({ uni, similarUniversities }) {
                     similarUni.images?.[0]?.url ||
                     similarUni.logo?.url ||
                     "/images/default-university.jpg",
-                  location: `${similarUni.city}, ${similarUni.country?.name}`,
+                  location:
+                    [similarUni.city, similarUni.country?.name]
+                      .filter(Boolean)
+                      .join(", ") || "Location Not Available",
                 }}
               />
             ))
@@ -327,7 +375,7 @@ function Fact({ label, value }) {
       <span className="text-[#8892B0] whitespace-nowrap">{label}</span>
 
       <span className="text-[#CCD6F6] text-sm font-normal text-right max-w-[60%] break-words leading-relaxed">
-        {value}
+        {value || "Not Provided"}
       </span>
     </div>
   );

@@ -1,7 +1,12 @@
 // components/dashboard/DashboardHeader.jsx
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bell, Check, Info, AlertTriangle, X } from "lucide-react";
+import { LogOut } from "lucide-react";
+
+import { useDispatch } from "react-redux";
+import { logout } from "@/store/authSlice";
+import { useRouter } from "next/navigation";
+import { disconnectSocket } from "@/lib/socket"; // adjust path
 
 export default function DashboardHeader({
   title = "Dashboard",
@@ -16,53 +21,48 @@ export default function DashboardHeader({
       .join("")
       .slice(0, 2)
       .toUpperCase() || "AD";
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const profileRef = useRef(null);
 
-  const [showNotifications, setShowNotifications] = useState(false);
-  const notificationRef = useRef(null);
+  const [loggingOut, setLoggingOut] = useState(false);
 
-  // Close dropdown when clicking outside
+  const dispatch = useDispatch();
+  const router = useRouter();
+
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (
-        notificationRef.current &&
-        !notificationRef.current.contains(event.target)
-      ) {
-        setShowNotifications(false);
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setShowProfileMenu(false);
       }
     };
+
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, []);
 
-  // Sample notifications — replace with your real data (from context, redux, api, etc.)
-  const notifications = [
-    {
-      id: 1,
-      type: "success",
-      title: "New student registered",
-      message: "Ayan Sharma just created an account from Dubai",
-      time: "5 min ago",
-      read: false,
-    },
-    {
-      id: 2,
-      type: "info",
-      title: "Visa application update",
-      message: "UK Tier 4 visa requirements changed for 2026",
-      time: "1 hr ago",
-      read: true,
-    },
-    {
-      id: 3,
-      type: "warning",
-      title: "Payment pending",
-      message: "Invoice #3921 for Maria Gonzalez is overdue",
-      time: "3 hrs ago",
-      read: false,
-    },
-  ];
+  const handleLogout = async () => {
+    try {
+      setLoggingOut(true);
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
+      await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/logout`, {
+        method: "POST",
+        credentials: "include",
+      });
+
+      disconnectSocket();
+
+      dispatch(logout());
+
+      router.replace("/login");
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoggingOut(false);
+    }
+  };
 
   return (
     <header
@@ -97,116 +97,12 @@ export default function DashboardHeader({
 
           {/* Right side */}
           <div className="flex items-center gap-4 sm:gap-6">
-            {/* Notification bell with dropdown */}
-            <div className="relative" ref={notificationRef}>
-              <motion.button
-                whileHover={{ scale: 1.12 }}
-                whileTap={{ scale: 0.92 }}
-                onClick={() => setShowNotifications((prev) => !prev)}
-                className="
-                  relative p-2.5 text-gray-600 
-                  hover:text-sky-600 
-                  rounded-full 
-                  hover:bg-sky-50/60 
-                  transition-all duration-200
-                "
-                aria-label="Notifications"
-              >
-                <Bell size={22} strokeWidth={1.8} />
-                {unreadCount > 0 && (
-                  <>
-                    <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full animate-ping"></span>
-                    <span className="absolute -top-1 -right-1 min-w-[18px] h-5 px-1.5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm">
-                      {unreadCount > 99 ? "99+" : unreadCount}
-                    </span>
-                  </>
-                )}
-              </motion.button>
-
-              {/* Dropdown Panel */}
-              <AnimatePresence>
-                {showNotifications && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                    transition={{ duration: 0.2 }}
-                    className="
-                      absolute right-0 mt-3 w-80 sm:w-96 
-                      bg-white rounded-xl shadow-2xl 
-                      border border-gray-200/80 
-                      overflow-hidden z-50
-                    "
-                  >
-                    {/* Header */}
-                    <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100 bg-gradient-to-r from-sky-50 to-indigo-50">
-                      <h3 className="font-semibold text-gray-900">
-                        Notifications
-                      </h3>
-                      <button
-                        onClick={() => setShowNotifications(false)}
-                        className="text-gray-500 hover:text-gray-800"
-                      >
-                        <X size={18} />
-                      </button>
-                    </div>
-
-                    {/* Notification List */}
-                    <div className="max-h-[420px] overflow-y-auto">
-                      {notifications.length === 0 ? (
-                        <div className="py-10 text-center text-gray-500">
-                          No new notifications
-                        </div>
-                      ) : (
-                        notifications.map((notif) => (
-                          <div
-                            key={notif.id}
-                            className={`
-                              px-5 py-3.5 border-b border-gray-100 hover:bg-gray-50/80 transition-colors
-                              ${!notif.read ? "bg-sky-50/40" : ""}
-                            `}
-                          >
-                            <div className="flex items-start gap-3">
-                              <div className="mt-0.5">
-                                {notif.type === "success" && (
-                                  <Check
-                                    size={18}
-                                    className="text-emerald-600"
-                                  />
-                                )}
-                                {notif.type === "info" && (
-                                  <Info size={18} className="text-sky-600" />
-                                )}
-                                {notif.type === "warning" && (
-                                  <AlertTriangle
-                                    size={18}
-                                    className="text-amber-600"
-                                  />
-                                )}
-                              </div>
-                              <div className="flex-1">
-                                <p className="font-medium text-gray-900 text-sm">
-                                  {notif.title}
-                                </p>
-                                <p className="text-sm text-gray-600 mt-0.5">
-                                  {notif.message}
-                                </p>
-                                <p className="text-xs text-gray-500 mt-1.5">
-                                  {notif.time}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
             {/* Avatar + name (unchanged) */}
-            <div className="flex items-center gap-3 group">
+            <div
+              className="flex items-center gap-3 group relative cursor-pointer"
+              ref={profileRef}
+              onClick={() => setShowProfileMenu((prev) => !prev)}
+            >
               <motion.div whileHover={{ scale: 1.08 }} className="relative">
                 <div
                   className="
@@ -234,6 +130,46 @@ export default function DashboardHeader({
                   Welcome back
                 </span>
               </div>
+
+              <AnimatePresence>
+                {showProfileMenu && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                    transition={{ duration: 0.2 }}
+                    className="
+        absolute top-14 right-0
+        w-48 bg-white
+        border border-gray-200
+        rounded-xl
+        shadow-xl
+        overflow-hidden
+        z-50
+      "
+                  >
+                    <button
+                      disabled={loggingOut}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleLogout();
+                      }}
+                      className="
+    w-full flex items-center gap-3
+    px-4 py-3
+    text-red-600
+    hover:bg-red-50
+    transition-colors
+    disabled:opacity-50
+    disabled:cursor-not-allowed
+  "
+                    >
+                      <LogOut size={18} />
+                      {loggingOut ? "Logging out..." : "Logout"}
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* Primary Action Button (unchanged) */}
