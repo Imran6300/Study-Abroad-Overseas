@@ -1207,11 +1207,6 @@ function ApplicationModal({ onClose, prefillStudent }) {
   };
 
   const handleSubmit = () => {
-    if (!prefillStudent?._id) {
-      alert("Please go back and select a student first.");
-      return;
-    }
-
     const documents = DOCUMENT_SLOTS.filter(
       ({ key }) => documentUploads[key]?.supabasePath,
     ).map(({ key, type }) => ({
@@ -1222,7 +1217,9 @@ function ApplicationModal({ onClose, prefillStudent }) {
 
     dispatch(
       createKhizarApplication({
-        studentId: prefillStudent._id,
+        ...(prefillStudent?._id
+          ? { studentId: prefillStudent._id }
+          : { studentEmail: form.email }),
         universityName: form.universityName,
         country: form.preferredCountry,
         course: form.preferredCourse,
@@ -1322,7 +1319,10 @@ function ApplicationModal({ onClose, prefillStudent }) {
                   New Managed Application
                 </h2>
                 <p className="text-indigo-300 text-[11px] mt-0.5">
-                  Khizar Overseas · {prefillStudent?.name || "New Student"}
+                  Khizar Overseas ·{" "}
+                  {prefillStudent?.name ||
+                    form.studentName ||
+                    "New Application"}
                 </p>
               </div>
             </div>
