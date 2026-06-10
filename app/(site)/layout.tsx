@@ -1,3 +1,4 @@
+// app/(site)/layout.tsx
 "use client";
 
 import NavBar from "@/components/Header/nav-bar";
@@ -16,28 +17,15 @@ import {
 
 import { selectActiveBranding } from "@/store/brandingSlice";
 
-export default function SiteLayout({
-  children,
-}: {
-  children: ReactNode;
-}) {
+export default function SiteLayout({ children }: { children: ReactNode }) {
   const user = useSelector(selectAuthUser);
   const authChecked = useSelector(selectAuthChecked);
   const isCounselorStudent = useSelector(selectIsCounselorStudent);
-
   const branding = useSelector(selectActiveBranding);
-
   const router = useRouter();
 
   const role = user?.role;
-
-  const staffRoles = [
-    "admin",
-    "super_admin",
-    "editor",
-    "counselor",
-  ];
-
+  const staffRoles = ["admin", "super_admin", "editor", "counselor"];
   const isStaff = staffRoles.includes(role);
 
   useEffect(() => {
@@ -53,12 +41,21 @@ export default function SiteLayout({
     }
   }, [authChecked, isStaff, role, router]);
 
-  // Prevent render until auth check completes
+  // ✅ FIX: Never return null. While auth is being checked, render the
+  // page content immediately (SSR works, no 404). Staff redirect fires
+  // via useEffect after authChecked becomes true — the brief flash is
+  // imperceptible at normal network speeds and far better than a 404.
   if (!authChecked) {
-    return null;
+    return (
+      <>
+        <NavBar />
+        {children}
+        <Footer />
+      </>
+    );
   }
 
-  // Prevent staff flash
+  // Prevent staff flash after auth resolves
   if (isStaff) {
     return null;
   }
@@ -69,20 +66,15 @@ export default function SiteLayout({
         <div
           className="fixed top-0 left-0 right-0 z-[9999] border-b backdrop-blur-md"
           style={{
-            background:
-              branding.secondaryColor || "#0A192F",
-            borderColor: `${branding.accentColor || "#ffffff"
-              }20`,
+            background: branding.secondaryColor || "#0A192F",
+            borderColor: `${branding.accentColor || "#ffffff"}20`,
           }}
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <Link
               href="/dashboard/user"
               className="inline-flex items-center gap-2 font-medium transition-all duration-200 hover:translate-x-[-2px]"
-              style={{
-                color:
-                  branding.accentColor || "#ffffff",
-              }}
+              style={{ color: branding.accentColor || "#ffffff" }}
             >
               ← Back to Dashboard
             </Link>

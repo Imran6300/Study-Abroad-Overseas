@@ -9,12 +9,7 @@ import Providers from "@/components/providers/Providers";
 import NavBar from "@/components/Header/nav-bar";
 import Footer from "@/components/Footer/Footer";
 
+// app/(site)/study-in-[slug]/layout.jsx
 export default function StudyInLayout({ children }) {
-  return (
-    <Providers>
-      <NavBar />
-      {children}
-      <Footer />
-    </Providers>
-  );
+  return children;
 }
