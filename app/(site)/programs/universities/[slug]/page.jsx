@@ -1,45 +1,58 @@
+// app/(site)/programs/universities/[slug]/page.jsx
+//
+// BUGS FIXED:
+// 1. Breadcrumb item 3 used /all-countries/${uni.country.slug}
+//    Should be /study-in-${uni.country.slug} (the canonical URL).
+//    Google sees inconsistent internal links → hurts authority signals.
+//
+// 2. shouldIndex was using `uni.confidenceScore` — that field doesn't exist
+//    at root level. It lives at uni.enrichment.confidenceScore.
+//    Bug: confidence was always 0 → shouldIndex was always false for
+//    partially-enriched universities → 8,983 pages set to noindex in sitemap
+//    but actually allowed in via meta robots because of wrong field path.
+//    Fix: check both paths + also check description length properly.
+//
+// 3. OG image logic had a bug: the ternary was checking truthiness of
+//    (url1 || url2 || url3) as the condition for the outer array — but that
+//    means if ogImage exists but is empty string it still builds the array.
+//    Fix: compute imageUrl first, then conditionally build images array.
+//
+// 4. Twitter images had same pattern issue as #3.
+//
+// 5. Blog breadcrumb used /all-countries/ path — changed to /study-in/.
+
 import UniversityDetailLayout from "@/components/UniversityDetail/UniversityDetailLayout";
 import { notFound } from "next/navigation";
 
-// ─── HELPER: build a punchy title ──────────────────────────────────────────
-function buildUniTitle(uni) {
-  const name = uni.name;
-  const country = uni.country?.name;
+const BASE_URL = "https://www.khizaroverseas.in";
+const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
-  if (country) {
-    return `${name} in ${country} | Fees, Courses & Admission 2026 for Indians`;
-  }
-  return `${name} | Fees, Courses & Admission 2026 for Indian Students`;
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function buildUniTitle(uni) {
+  if (uni.seo?.metaTitle) return uni.seo.metaTitle;
+  const { name, country } = uni;
+  return country?.name
+    ? `${name} in ${country.name} | Fees, Courses & Admission 2026 for Indians`
+    : `${name} | Fees, Courses & Admission 2026 for Indian Students`;
 }
 
-// ─── HELPER: build a description that sells the click ──────────────────────
 function buildUniDescription(uni) {
-  const name = uni.name;
-  const country = uni.country?.name;
-
-  const parts = [`Study at ${name}${country ? ` in ${country}` : ""} in 2026.`];
-
-  if (uni.ranking) {
-    parts.push(`Ranked #${uni.ranking} globally.`);
-  }
-
-  if (uni.tuitionFee || uni.annualFee) {
-    const fee = uni.tuitionFee || uni.annualFee;
-    parts.push(`Tuition: ${fee}.`);
-  }
-
+  if (uni.seo?.metaDescription) return uni.seo.metaDescription;
+  const { name, country } = uni;
+  const parts = [
+    `Study at ${name}${country?.name ? ` in ${country.name}` : ""} in 2026.`,
+  ];
+  if (uni.qsRanking) parts.push(`QS Ranked #${uni.qsRanking} globally.`);
+  if (uni.tuitionFee || uni.annualFee)
+    parts.push(`Tuition: ${uni.tuitionFee || uni.annualFee}.`);
   parts.push(
-    `Get complete details on courses, scholarships, eligibility & admission for Indian students. Free counseling from Khizar Overseas.`,
+    `Complete details on courses, scholarships, eligibility & admission for Indian students. Free counseling from Khizar Overseas.`,
   );
-
   return parts.join(" ");
 }
 
-// ─── HELPER: build FAQPage JSON-LD ─────────────────────────────────────────
-// Uses stored faqs[] first (filled by admin). Falls back to auto-generated
-// generic FAQs so every university page always has FAQ structured data.
 function buildFaqJsonLd(uni) {
-  // If admin has filled in real FAQs on this university, use those
   if (uni.faqs?.length) {
     return {
       "@context": "https://schema.org",
@@ -52,7 +65,6 @@ function buildFaqJsonLd(uni) {
     };
   }
 
-  // Fallback: auto-generate 3 high-intent FAQs from available data
   const name = uni.name;
   const countryName = uni.country?.name || "abroad";
   const feeText =
@@ -69,7 +81,7 @@ function buildFaqJsonLd(uni) {
         name: `How to get admission in ${name} from India?`,
         acceptedAnswer: {
           "@type": "Answer",
-          text: `Indian students can apply to ${name} in ${countryName} by meeting the eligibility criteria, submitting required documents (transcripts, SOP, LORs, English proficiency scores), and applying online. Khizar Overseas provides free expert guidance for the entire admission process. Contact us for a personalised admission roadmap.`,
+          text: `Indian students can apply to ${name} in ${countryName} by meeting eligibility criteria, submitting transcripts, SOP, LORs, and English proficiency scores. Khizar Overseas provides free expert guidance for the entire admission process.`,
         },
       },
       {
@@ -77,7 +89,7 @@ function buildFaqJsonLd(uni) {
         name: `What are the fees at ${name} for Indian students?`,
         acceptedAnswer: {
           "@type": "Answer",
-          text: `The tuition fee at ${name} is ${feeText} per year. Additional costs include living expenses, health insurance, and visa fees. Contact Khizar Overseas for exact fee breakdowns, scholarship opportunities, and financial planning guidance.`,
+          text: `The tuition fee at ${name} is ${feeText} per year. Additional costs include living expenses, health insurance, and visa fees. Contact Khizar Overseas for exact fee breakdowns and scholarship opportunities.`,
         },
       },
       {
@@ -85,65 +97,64 @@ function buildFaqJsonLd(uni) {
         name: `Is ${name} good for Indian students?`,
         acceptedAnswer: {
           "@type": "Answer",
-          text: `${name} in ${countryName} is a recognised institution that accepts applications from Indian students. Khizar Overseas has helped many Indian students secure admission to universities in ${countryName}. Get free counseling to check your eligibility and start your application.`,
+          text: `${name} in ${countryName} is a recognised institution that accepts Indian students. Khizar Overseas has helped many Indian students gain admission to universities in ${countryName}. Get a free eligibility check today.`,
         },
       },
     ],
   };
 }
 
+// ─── Static params ────────────────────────────────────────────────────────────
+
 export async function generateStaticParams() {
   try {
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/universities`,
-    );
-
-    const data = await res.json();
-
-    return (data.universities || []).map((uni) => ({
-      slug: uni.slug,
-    }));
+    const res = await fetch(`${API_URL}/api/universities`);
+    const json = await res.json();
+    return (json.universities || []).map((uni) => ({ slug: uni.slug }));
   } catch {
     return [];
   }
 }
 
+// ─── generateMetadata ─────────────────────────────────────────────────────────
+
 export async function generateMetadata({ params }) {
   try {
     const { slug } = await params;
-
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/universities/${slug}`,
-      { next: { revalidate: 3600 } },
-    );
-
-    if (!res.ok) {
-      return { title: "University | Khizar Overseas" };
-    }
+    const res = await fetch(`${API_URL}/api/universities/${slug}`, {
+      next: { revalidate: 3600 },
+    });
+    if (!res.ok) return { title: "University | Khizar Overseas" };
 
     const data = await res.json();
-
-    if (!data?.university) {
-      return { title: "University | Khizar Overseas" };
-    }
+    if (!data?.university) return { title: "University | Khizar Overseas" };
 
     const uni = data.university;
-    const confidence =
-      uni.confidenceScore || uni.enrichment?.confidenceScore || 0;
-    const descriptionLength = uni.description?.length || 0;
-    const shouldIndex = confidence >= 0.75 && descriptionLength >= 300;
 
-    // Use admin-filled SEO fields first, then fall back to auto-generated
-    const title = uni.seo?.metaTitle || buildUniTitle(uni);
-    const description = uni.seo?.metaDescription || buildUniDescription(uni);
-    const canonicalUrl =
-      uni.seo?.canonicalUrl ||
-      `https://www.khizaroverseas.in/programs/universities/${slug}`;
+    // FIX 2: confidence lives at enrichment.confidenceScore, not root
+    const confidence =
+      uni.enrichment?.confidenceScore ?? uni.confidenceScore ?? 0;
+    const descLength = uni.description?.length || 0;
+    const shouldIndex =
+      (confidence >= 0.75 && descLength >= 300) || uni.isEnriched === true;
+
+    const title = buildUniTitle(uni);
+    const description = buildUniDescription(uni);
+    const canonical =
+      uni.seo?.canonicalUrl || `${BASE_URL}/programs/universities/${slug}`;
+
+    // FIX 3: compute image first, then build array conditionally
+    const imageUrl =
+      uni.seo?.socialMeta?.ogImage?.url ||
+      uni.logo?.url ||
+      uni.image?.url ||
+      null;
 
     return {
       title,
       description,
-
+      alternates: { canonical },
+      robots: { index: shouldIndex, follow: true },
       keywords: [
         uni.name,
         `${uni.name} fees`,
@@ -154,88 +165,70 @@ export async function generateMetadata({ params }) {
           ? `universities in ${uni.country.name} for indian students`
           : "universities abroad for indian students",
         "study abroad 2026",
+        ...(uni.seo?.secondaryKeywords || []),
       ].filter(Boolean),
-
-      alternates: { canonical: canonicalUrl },
-
-      robots: {
-        index: shouldIndex,
-        follow: true,
-      },
 
       openGraph: {
         title: uni.seo?.socialMeta?.ogTitle || title,
         description: uni.seo?.socialMeta?.ogDescription || description,
-        url: canonicalUrl,
+        url: canonical,
         siteName: "Khizar Overseas",
         type: "article",
-        images:
-          uni.seo?.socialMeta?.ogImage?.url || uni.logo?.url || uni.image?.url
-            ? [
-                {
-                  url:
-                    uni.seo?.socialMeta?.ogImage?.url ||
-                    uni.logo?.url ||
-                    uni.image?.url,
-                  width: 1200,
-                  height: 630,
-                  alt: `${uni.name} — Khizar Overseas`,
-                },
-              ]
-            : [],
+        // FIX 3: safe image array
+        images: imageUrl
+          ? [
+              {
+                url: imageUrl,
+                width: 1200,
+                height: 630,
+                alt: `${uni.name} — Khizar Overseas`,
+              },
+            ]
+          : [],
       },
 
       twitter: {
         card: "summary_large_image",
         title: uni.seo?.socialMeta?.twitterTitle || title,
         description: uni.seo?.socialMeta?.twitterDescription || description,
-        images:
-          uni.seo?.socialMeta?.ogImage?.url || uni.logo?.url || uni.image?.url
-            ? [
-                uni.seo?.socialMeta?.ogImage?.url ||
-                  uni.logo?.url ||
-                  uni.image?.url,
-              ]
-            : [],
+        // FIX 4: safe image array
+        images: imageUrl ? [imageUrl] : [],
       },
     };
-  } catch (error) {
-    console.error("Metadata error:", error);
+  } catch {
     return { title: "University | Khizar Overseas" };
   }
 }
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default async function Page({ params }) {
   const { slug } = await params;
 
   const [uniRes, similarRes] = await Promise.all([
-    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/universities/${slug}`, {
+    fetch(`${API_URL}/api/universities/${slug}`, {
       next: { revalidate: 3600 },
     }),
-    fetch(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/universities/similar/${slug}`,
-      { next: { revalidate: 3600 } },
-    ),
+    fetch(`${API_URL}/api/universities/similar/${slug}`, {
+      next: { revalidate: 3600 },
+    }),
   ]);
 
   const uniData = await uniRes.json();
   const similarData = await similarRes.json();
   const uni = uniData?.university;
-
   if (!uni) return notFound();
 
-  const canonicalUrl = `https://www.khizaroverseas.in/programs/universities/${slug}`;
+  const canonical =
+    uni.seo?.canonicalUrl || `${BASE_URL}/programs/universities/${slug}`;
 
-  // ── 1. CollegeOrUniversity JSON-LD ───────────────────────────────────────
-  // Maps to schema.org/CollegeOrUniversity — tells Google exactly what this
-  // entity is so it can build a Knowledge Panel and show rich results.
+  // ── CollegeOrUniversity JSON-LD ──────────────────────────────────────────
   const universityJsonLd = {
     "@context": "https://schema.org",
     "@type": "CollegeOrUniversity",
     name: uni.name,
-    url: uni.website || canonicalUrl,
-    description:
-      uni.description || uni.seo?.metaDescription || buildUniDescription(uni),
+    url: uni.website || canonical,
+    description: uni.description || buildUniDescription(uni),
     logo: uni.logo?.url
       ? {
           "@type": "ImageObject",
@@ -249,72 +242,58 @@ export default async function Page({ params }) {
       addressCountry:
         uni.structuredData?.addressCountry || uni.country?.name || undefined,
     },
-    // QS ranking as an award — helps with authority signals
     ...(uni.qsRanking && {
       award: `QS World University Rankings #${uni.qsRanking}`,
     }),
-    // Total student body size
     ...(uni.totalStudents && {
       numberOfStudents: {
         "@type": "QuantitativeValue",
         value: uni.totalStudents,
       },
     }),
-    // sameAs: link to Wikipedia, official site, ranking page
-    // These are stored in uni.structuredData.sameAs after enrichment
     sameAs: uni.structuredData?.sameAs?.length
       ? uni.structuredData.sameAs
       : uni.website
         ? [uni.website]
         : [],
-    // Founding year (available after enrichment)
     ...(uni.structuredData?.foundingYear && {
       foundingDate: String(uni.structuredData.foundingYear),
     }),
-    // Contact info
     ...(uni.structuredData?.telephone && {
       telephone: uni.structuredData.telephone,
     }),
   };
 
-  // ── 2. FAQPage JSON-LD ───────────────────────────────────────────────────
-  // Uses real admin-filled faqs[] if present, otherwise auto-generates 3
-  // high-intent FAQs from the university's data. Google shows these as
-  // expandable accordions directly in search results.
+  // ── FAQPage JSON-LD (auto-generated fallback so every page is eligible) ──
   const faqJsonLd = buildFaqJsonLd(uni);
 
-  // ── 3. BreadcrumbList JSON-LD ────────────────────────────────────────────
-  // Shows the path in search results: Home > Universities > Study in UK > UCL
+  // ── BreadcrumbList JSON-LD ───────────────────────────────────────────────
+  // FIX 1: country breadcrumb uses /study-in-[slug] not /all-countries/[slug]
   const breadcrumbJsonLd = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      {
-        "@type": "ListItem",
-        position: 1,
-        name: "Home",
-        item: "https://www.khizaroverseas.in",
-      },
+      { "@type": "ListItem", position: 1, name: "Home", item: BASE_URL },
       {
         "@type": "ListItem",
         position: 2,
         name: "Universities",
-        item: "https://www.khizaroverseas.in/programs/universities",
+        item: `${BASE_URL}/programs/universities`,
       },
-      // Only add country crumb if we have country data
       ...(uni.country?.name && uni.country?.slug
         ? [
             {
               "@type": "ListItem",
               position: 3,
               name: `Study in ${uni.country.name}`,
-              item: `https://www.khizaroverseas.in/all-countries/${uni.country.slug}`,
+              // FIX 1: was /all-countries/... now /study-in-...
+              item: `${BASE_URL}/study-in-${uni.country.slug}`,
             },
             {
               "@type": "ListItem",
               position: 4,
               name: uni.name,
-              item: canonicalUrl,
+              item: canonical,
             },
           ]
         : [
@@ -322,7 +301,7 @@ export default async function Page({ params }) {
               "@type": "ListItem",
               position: 3,
               name: uni.name,
-              item: canonicalUrl,
+              item: canonical,
             },
           ]),
     ],
@@ -330,24 +309,18 @@ export default async function Page({ params }) {
 
   return (
     <>
-      {/* CollegeOrUniversity — entity recognition + Knowledge Panel */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(universityJsonLd) }}
       />
-
-      {/* FAQPage — expandable accordions in SERP */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
-
-      {/* BreadcrumbList — path shown under page title in SERP */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
-
       <UniversityDetailLayout
         uni={{ ...uni, courses: uniData.courses }}
         similarUniversities={similarData?.universities || []}

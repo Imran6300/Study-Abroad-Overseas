@@ -1,113 +1,107 @@
+// app/(site)/all-countries/[country]/page.jsx
+//
+// BUGS FIXED:
+// 1. canonical was: /all-countries/${slug}  (pointing to itself)
+//    Should be:      https://www.khizaroverseas.in/study-in-${slug}
+//    /study-in-[slug] is the PRIMARY URL. This page is the duplicate.
+//    With this fix: Google indexes /study-in-uk, not /all-countries/uk.
+//
+// 2. robots.index was never set to false — Google was indexing BOTH
+//    /all-countries/uk AND /study-in-uk as separate pages → duplicate content.
+//    Fix: robots: { index: false } here. /study-in-[slug] does the indexing.
+//
+// 3. JSON-LD schema.org Country url was pointing to /all-countries/...
+//    Should point to the canonical /study-in-... URL.
+//
+// 4. BreadcrumbList item 3 url was /all-countries/...
+//    Should also be the canonical /study-in-... URL.
+//
+// 5. seo.secondaryKeywords from the model was never spread into keywords array.
+
 export const revalidate = 3600;
 
 import CountryClient from "./CountryClient";
 import { notFound } from "next/navigation";
 
+const BASE_URL = "https://www.khizaroverseas.in";
+const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+
+// ─── Data fetcher ────────────────────────────────────────────────────────────
+
 async function getCountry(slug) {
-  const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
-
-  if (!baseUrl) {
-    console.error("API URL is not defined");
-    return null;
-  }
-
+  if (!API_URL) return null;
   try {
-    const res = await fetch(`${baseUrl}/api/countries/${slug}`, {
+    const res = await fetch(`${API_URL}/api/countries/${slug}`, {
       next: { revalidate: 3600 },
     });
-
     if (!res.ok) return null;
-
-    const data = await res.json();
-    return data.data;
-  } catch (error) {
-    console.error("Fetch failed:", error);
+    const json = await res.json();
+    return json.data ?? null;
+  } catch {
     return null;
   }
 }
 
-// ─── HELPER: build a punchy, click-worthy description ──────────────────────
-function buildCountryDescription(country) {
-  const name = country.name;
-  const visaRate = country.visaSuccessRate;
-  const baseUrl =
-    process.env.NEXT_PUBLIC_FRONTEND_URL || "https://www.khizaroverseas.in";
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
-  // Lead with the visa success rate number — this is exactly what users search for
-  // and it acts as a strong click trigger in the SERP snippet.
-  if (visaRate && Number(visaRate) >= 70) {
-    return (
-      `Study in ${name} 2026: ${visaRate}% visa success rate for Indian students. ` +
-      `Compare top universities, tuition fees, scholarships & post-study work options. ` +
-      `Free expert counseling from Hyderabad — get assessed in 24 hrs.`
-    );
-  }
-
-  if (visaRate) {
-    return (
-      `Complete guide to studying in ${name} in 2026 for Indian students. ` +
-      `Visa success rate: ${visaRate}%. Top universities, fees, scholarships & eligibility. ` +
-      `Free counseling from Khizar Overseas, Hyderabad.`
-    );
-  }
-
-  return (
-    `Study in ${name} 2026 for Indian students: top universities, tuition fees, ` +
-    `visa requirements, scholarships & post-study work options. ` +
-    `Free expert counseling from Khizar Overseas, Hyderabad.`
-  );
-}
-
-// ─── HELPER: build a click-worthy title ────────────────────────────────────
 function buildCountryTitle(country) {
-  const name = country.name;
-  const visaRate = country.visaSuccessRate;
-
-  // Queries like "latvia visa success rate for indian" have HIGH intent.
-  // Putting the rate + year in the title wins those clicks.
-  if (visaRate) {
-    return `Study in ${name} 2026 | ${visaRate}% Visa Success Rate | Indian Students Guide`;
-  }
-
-  return `Study in ${name} 2026 | Top Universities, Fees & Visa Guide for Indians`;
+  if (country.seo?.metaTitle) return country.seo.metaTitle;
+  const { name, visaSuccessRate: v } = country;
+  return v
+    ? `Study in ${name} 2026 | ${v}% Visa Success Rate | Indian Students Guide`
+    : `Study in ${name} 2026 | Top Universities, Fees & Visa Guide for Indians`;
 }
+
+function buildCountryDescription(country) {
+  if (country.seo?.metaDescription) return country.seo.metaDescription;
+  const { name, visaSuccessRate: v } = country;
+  if (v && Number(v) >= 70)
+    return `Study in ${name} 2026: ${v}% visa success rate for Indian students. Compare top universities, tuition fees, scholarships & post-study work options. Free expert counseling from Hyderabad — get assessed in 24 hrs.`;
+  if (v)
+    return `Complete guide to studying in ${name} in 2026 for Indian students. Visa success rate: ${v}%. Top universities, fees, scholarships & eligibility. Free counseling from Khizar Overseas, Hyderabad.`;
+  return `Study in ${name} 2026 for Indian students: top universities, tuition fees, visa requirements, scholarships & post-study work options. Free expert counseling from Khizar Overseas, Hyderabad.`;
+}
+
+// ─── Static params ────────────────────────────────────────────────────────────
 
 export async function generateStaticParams() {
   try {
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/countries`,
-    );
-
-    const data = await res.json();
-
-    return (data.data || []).map((country) => ({
-      country: country.slug,
-    }));
+    const res = await fetch(`${API_URL}/api/countries`);
+    const json = await res.json();
+    return (json.data || []).map((c) => ({ country: c.slug }));
   } catch {
     return [];
   }
 }
 
+// ─── generateMetadata ─────────────────────────────────────────────────────────
+
 export async function generateMetadata({ params }) {
   const { country: slug } = await params;
   const country = await getCountry(slug);
-
-  if (!country) {
-    return { title: "Country Not Found | Khizar Overseas" };
-  }
+  if (!country) return { title: "Country Not Found | Khizar Overseas" };
 
   const title = buildCountryTitle(country);
   const description = buildCountryDescription(country);
-  const canonicalUrl = `/all-countries/${slug}`;
-  const fullUrl = `https://www.khizaroverseas.in/all-countries/${slug}`;
+
+  // FIX 1: canonical MUST point to /study-in-[slug], not /all-countries/[slug]
+  const canonical = `${BASE_URL}/study-in-${slug}`;
+
+  const image =
+    country.seo?.socialMeta?.ogImage?.url ||
+    country.heroImage?.url ||
+    `${BASE_URL}/og-image-1200x630.jpg`;
 
   return {
     title,
     description,
 
-    alternates: { canonical: canonicalUrl },
+    // FIX 1: canonical → /study-in-[slug]
+    alternates: { canonical },
 
-    // Structured keywords help with long-tail queries
+    // FIX 2: noindex this page — /study-in-[slug] is the one Google should index
+    robots: { index: false, follow: true },
+
     keywords: [
       `study in ${country.name} for indian students`,
       `${country.name} student visa success rate`,
@@ -115,18 +109,21 @@ export async function generateMetadata({ params }) {
       `${country.name} universities for indian students`,
       `${country.name} tuition fees for indian students`,
       `study abroad ${country.name}`,
+      // FIX 5: spread admin-filled secondary keywords
+      ...(country.seo?.secondaryKeywords || []),
     ],
 
     openGraph: {
-      title,
-      description,
-      url: fullUrl,
+      title: country.seo?.socialMeta?.ogTitle || title,
+      description: country.seo?.socialMeta?.ogDescription || description,
+      url: canonical,
       type: "article",
       siteName: "Khizar Overseas",
-      images: country.heroImage?.url
+      locale: "en_IN",
+      images: image
         ? [
             {
-              url: country.heroImage.url,
+              url: image,
               width: 1200,
               height: 630,
               alt: `Study in ${country.name} 2026 — Khizar Overseas`,
@@ -137,53 +134,53 @@ export async function generateMetadata({ params }) {
 
     twitter: {
       card: "summary_large_image",
-      title,
-      description,
-      images: country.heroImage?.url ? [country.heroImage.url] : [],
+      title: country.seo?.socialMeta?.twitterTitle || title,
+      description: country.seo?.socialMeta?.twitterDescription || description,
+      images: image ? [image] : [],
     },
   };
 }
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default async function CountryPage({ params }) {
   const { country: slug } = await params;
   const country = await getCountry(slug);
   if (!country) return notFound();
 
-  // Build JSON-LD
+  // FIX 3: JSON-LD url points to canonical /study-in-[slug]
+  const canonical = `${BASE_URL}/study-in-${slug}`;
+  const description = buildCountryDescription(country);
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Country",
     name: country.name,
-    url: `https://www.khizaroverseas.in/all-countries/${slug}`,
-    description: buildCountryDescription(country),
+    url: canonical, // FIX 3
+    description,
   };
 
+  // FIX 4: BreadcrumbList item 3 url → canonical
   const breadcrumbLd = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      {
-        "@type": "ListItem",
-        position: 1,
-        name: "Home",
-        item: "https://www.khizaroverseas.in",
-      },
+      { "@type": "ListItem", position: 1, name: "Home", item: BASE_URL },
       {
         "@type": "ListItem",
         position: 2,
         name: "All Countries",
-        item: "https://www.khizaroverseas.in/all-countries",
+        item: `${BASE_URL}/all-countries`,
       },
       {
         "@type": "ListItem",
         position: 3,
         name: `Study in ${country.name}`,
-        item: `https://www.khizaroverseas.in/all-countries/${slug}`,
-      },
+        item: canonical,
+      }, // FIX 4
     ],
   };
 
-  // FAQ JSON-LD only if country has faqs
   const faqLd = country.faqs?.length
     ? {
         "@context": "https://schema.org",
