@@ -16,14 +16,13 @@ import Link from "next/link";
 // ⭐ Stats with animated numbers
 const stats = [
   {
-    number: 75,
-    suffix: "M+",
-    label: "Total Scholarships Secured",
-    isCurrency: true,
+    number: 250,
+    suffix: "+",
+    label: "Scholarships Analyzed",
   },
   { number: 93, suffix: "%", label: "Scholarship Success Rate" },
   { number: 5000, suffix: "+", label: "Students Guided" },
-  { number: 25, suffix: "+ Countries", label: "Funding Support Options" },
+  { number: 25, suffix: "+ Countries", label: "Study Destinations Covered" },
 ];
 
 // ⭐ Scholarship Cards
@@ -40,8 +39,8 @@ const scholarships = [
   },
   {
     icon: Wallet,
-    title: "Need-Based Financial Support",
-    desc: "Financial assistance for students requiring help with tuition fees or living expenses.",
+    title: "Need-Based Scholarship Guidance",
+    desc: "Guidance on scholarships and university awards available for eligible students.",
     points: [
       "Complete financial background review",
       "Supporting documents & letters",
@@ -70,20 +69,20 @@ const scholarships = [
   },
   {
     icon: HandCoins,
-    title: "Education Loans & Financial Planning",
-    desc: "Guidance for secured, unsecured loans, NBFC funding & bank documentation.",
+    title: "Study Cost Planning Resources",
+    desc: "Information and referrals to independent third-party education financing providers.",
     points: [
-      "Loan comparison & EMI mapping",
+      "Information about available financing options",
       "Document checklist support",
       "Forex, travel & living cost planning",
     ],
   },
   {
     icon: Sparkles,
-    title: "Personalized Funding Roadmap",
-    desc: "Your financial mentor creates a complete funding plan, saving up to ₹25 Lakhs.",
+    title: "Personalized Scholarship Roadmap",
+    desc: "Receive a personalized scholarship strategy based on your profile and study destination.",
     points: [
-      "Hybrid plan: scholarships + loan strategy",
+      "From scholarships and grants to university awards, we help students identify opportunities that may reduce study costs.",
       "Part-time work & earning guidance",
       "Full breakdown of costs for transparency",
     ],
@@ -184,13 +183,13 @@ export default function ScholarshipsFunding() {
       <FadeContent blur>
         <div className="text-center max-w-xl sm:max-w-2xl md:max-w-3xl mx-auto mb-12 sm:mb-14 md:mb-16 relative z-10">
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#1A2433] leading-tight">
-            Scholarships & Funding Support
+            Scholarship Guidance & Opportunities
           </h2>
 
           <p className="text-gray-600 mt-3 sm:mt-4 text-sm sm:text-base md:text-lg leading-relaxed">
-            Our expert funding team helps students reduce their study‑abroad
-            cost through scholarships, grants, and financial aid — ensuring
-            finances never stop your dream.
+            Our scholarship guidance team helps students identify scholarship
+            opportunities, grants, and university awards that match their
+            academic profile and study goals.
           </p>
 
           <div className="w-24 sm:w-32 h-[3px] sm:h-[4px] bg-gradient-to-r from-[#4169E1] to-[#32CD32] mx-auto mt-4 sm:mt-6 rounded-full" />
@@ -213,7 +212,7 @@ export default function ScholarshipsFunding() {
               "
             >
               <h3 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#4169E1]">
-                {s.isCurrency ? "₹" : ""}
+                {s.isCurrency ? "" : ""}
                 {animatedValues[i]}
                 {s.suffix}
               </h3>
@@ -321,11 +320,11 @@ sm:hover:shadow-[0_15px_40px_rgba(65,105,225,0.45)]
       <FadeContent blur delay={120}>
         <div className="text-center max-w-lg sm:max-w-xl md:max-w-3xl mx-auto mt-16 sm:mt-20 text-gray-700 relative z-10">
           <p className="leading-relaxed text-sm sm:text-base md:text-lg">
-            From fully funded opportunities to tuition reductions and financial
-            planning — we ensure every student gets maximum financial advantage.
+            From scholarships and university awards to tuition reductions, we
+            help students identify opportunities that may reduce study costs.
           </p>
           <p className="mt-3 sm:mt-4 font-semibold text-[#4169E1] text-sm xs:text-base md:text-lg">
-            Your dedicated funding mentor will guide you throughout.
+            Your dedicated scholarship advisor will guide you throughout.
           </p>
         </div>
       </FadeContent>
@@ -347,12 +346,12 @@ sm:hover:shadow-[0_15px_40px_rgba(65,105,225,0.45)]
               a: "Yes — need‑based, diversity‑based, and course‑specific scholarships do not require high marks.",
             },
             {
-              q: "Do you help with education loans?",
-              a: "Yes! We assist with secured/unsecured loans, NBFCs, bank documentation, and affordability planning.",
+              q: "Do you provide education loans?",
+              a: "No. Khizar Overseas does not provide loans. We may connect students with independent third-party financing providers when requested.",
             },
             {
-              q: "How much can I save through your funding support?",
-              a: "Students commonly save ₹1–25 Lakhs through scholarships, waivers, and financial optimization.",
+              q: "How do scholarship opportunities vary?",
+              a: "Scholarship opportunities vary depending on academic profile, destination, and university requirements.",
             },
             {
               q: "Is the scholarship process complicated?",
@@ -386,7 +385,7 @@ sm:hover:scale-105
 sm:hover:shadow-[0_20px_55px_rgba(65,105,225,0.5)]
             "
           >
-            Book Your Free Funding Consultation
+            Book Your Free Scholarship Consultation
             <span className="text-sm sm:text-lg md:text-2xl">→</span>
           </Link>
 
