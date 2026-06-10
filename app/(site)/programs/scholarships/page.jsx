@@ -122,7 +122,6 @@ export default function Scholarships() {
         className="fixed top-0 left-0 right-0 h-1 z-50 origin-left"
         style={{ scaleX, backgroundColor: Palette.coral }}
       />
-
       {/* HERO + LEAD FORM */}
       <section className="relative min-h-screen flex items-center justify-center px-5 sm:px-6 py-16 sm:py-24">
         <div className="absolute inset-0 pointer-events-none">
@@ -160,24 +159,24 @@ export default function Scholarships() {
             </div>
 
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black mb-4 leading-tight tracking-tight text-white">
-              Get Your{" "}
+              Discover{" "}
               <span style={{ color: Palette.royalBlue }}>
-                Study Abroad Funded
+                Scholarship Opportunities for
               </span>{" "}
-              with Scholarships
+              Study Abroad
             </h1>
 
             <p className="text-base sm:text-lg md:text-xl mb-6 max-w-xl opacity-90">
               We map your profile to high-probability global scholarships and
               build a done-with-you application plan so you stop guessing and
-              start securing real funding.
+              start discovering scholarship opportunities.
             </p>
 
             {/* Micro proof row */}
             <div className="flex flex-wrap items-center gap-4 mb-8 text-xs sm:text-sm opacity-80">
               <div className="flex items-center gap-2">
                 <span className="inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400" />
-                <span>₹120 Cr+ funding secured</span>
+                <span>Scholarship opportunities explored</span>
               </div>
               <span className="h-4 w-px bg-white/25" />
               <div className="flex items-center gap-2">
@@ -237,10 +236,7 @@ export default function Scholarships() {
                 </div>
                 <div className="hidden sm:flex flex-col items-end text-right">
                   <span className="text-xs uppercase tracking-widest opacity-60">
-                    Avg. funding
-                  </span>
-                  <span className="text-base sm:text-lg font-bold text-emerald-400">
-                    ₹18–32L
+                    Scholarship Opportunities Available
                   </span>
                 </div>
               </div>
@@ -358,7 +354,7 @@ export default function Scholarships() {
 
                 <div className="space-y-1.5">
                   <label className="block text-xs font-medium text-white/70">
-                    What do you want funded?
+                    What scholarship support are you looking for?
                   </label>
                   <select
                     name="fundingGoal"
@@ -399,7 +395,14 @@ export default function Scholarships() {
           </motion.div>
         </div>
       </section>
-
+      <div className="max-w-7xl mx-auto px-5 py-4 text-xs text-white/60 border-y border-white/10">
+        Disclaimer: Khizar Overseas is an education consulting platform. We do
+        not provide loans, lend money, distribute scholarships, guarantee
+        funding, or act as a financial institution. Scholarships, grants, and
+        financial aid are offered solely by universities, governments, and
+        third-party organizations. We only assist students in identifying and
+        applying for relevant opportunities.
+      </div>
       {/* SOCIAL PROOF STRIP */}
       <section className="py-6 bg-black/40 border-y border-white/5">
         <div className="max-w-6xl mx-auto px-5 sm:px-6 flex flex-wrap items-center justify-between gap-4 text-xs sm:text-sm">
@@ -423,10 +426,8 @@ export default function Scholarships() {
           </div>
         </div>
       </section>
-
       {/* BENTO VALUE SECTION */}
       <BentoSection />
-
       {/* PROCESS + OUTCOMES */}
       <section className="py-20 sm:py-28 bg-[#020617]/70 border-y border-white/5">
         <div className="max-w-6xl mx-auto px-5 sm:px-6 grid lg:grid-cols-[1.4fr_minmax(0,1fr)] gap-12 lg:gap-16 items-start">
@@ -490,8 +491,8 @@ export default function Scholarships() {
               <li className="flex gap-2">
                 <span className="mt-1 h-1.5 w-1.5 rounded-full bg-amber-300" />
                 <span>
-                  A realistic funding estimate (range) so you know how much to
-                  arrange beyond scholarships.
+                  A realistic scholarship opportunity assessment so you know how
+                  much to arrange beyond scholarships.
                 </span>
               </li>
             </ul>
@@ -518,7 +519,6 @@ export default function Scholarships() {
           </div>
         </div>
       </section>
-
       {/* CATEGORIES GRID */}
       <section className="py-20 sm:py-28 bg-[#020617]/40">
         <div className="max-w-7xl mx-auto px-5 sm:px-6">
@@ -567,7 +567,6 @@ export default function Scholarships() {
           </div>
         </div>
       </section>
-
       {/* RESULTS / STATS + TESTIMONIAL CARD */}
       <section className="py-20 sm:py-28">
         <div className="max-w-7xl mx-auto px-5 sm:px-6">
@@ -590,7 +589,6 @@ export default function Scholarships() {
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-8 mb-10 sm:mb-14">
             {[
-              ["₹120 Cr+", "Total funding secured"],
               ["5,000+", "Students guided"],
               ["96%+", "Plan completion rate"],
               ["45+", "Countries covered"],
@@ -642,7 +640,6 @@ export default function Scholarships() {
           </div>
         </div>
       </section>
-
       {/* FINAL CTA */}
       <section className="relative py-24 sm:py-32 md:py-40 text-center overflow-hidden">
         <motion.div
@@ -653,14 +650,14 @@ export default function Scholarships() {
 
         <div className="relative z-10 max-w-4xl mx-auto px-5 sm:px-6">
           <h2 className="text-3xl sm:text-4xl md:text-6xl font-black mb-5 sm:mb-7 text-white tracking-tight leading-tight">
-            Turn your admission offer into a{" "}
-            <span style={{ color: Palette.royalBlue }}>funded</span> offer
+            Explore scholarship opportunities for your{" "}
+            <span style={{ color: Palette.royalBlue }}>admission</span> offer
           </h2>
 
           <p className="text-sm sm:text-lg md:text-xl mb-8 sm:mb-10 opacity-90 max-w-2xl mx-auto">
             2026 intakes are already filling up. Start with a free, no-pressure
-            scholarship check and see how much funding is realistically on the
-            table for you.
+            scholarship check and see which scholarship opportunities may be
+            available for you
           </p>
 
           <div className="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6">
