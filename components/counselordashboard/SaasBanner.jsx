@@ -54,17 +54,33 @@ export default function SaasBanner() {
   const [paying, setPaying] = useState(false);
   const [dismissed, setDismissed] = useState(false);
 
+  // Fetch status — also re-fetches on window focus and every 30 minutes
+  // so the countdown never shows stale data (e.g. 30 days after 3 days).
   useEffect(() => {
-    fetch(`${BASE}/api/saas/status`, {
-      credentials: "include",
-    })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => {
-        console.log("SAAS STATUS:", d);
-        setStatus(d?.data || null);
+    const fetchStatus = () => {
+      fetch(`${BASE}/api/saas/status`, {
+        credentials: "include",
       })
-      .catch(console.error)
-      .finally(() => setLoading(false));
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => {
+          console.log("SAAS STATUS:", d);
+          setStatus(d?.data || null);
+        })
+        .catch(console.error)
+        .finally(() => setLoading(false));
+    };
+
+    fetchStatus();
+
+    // Re-fetch when the tab regains focus (counselor switches tabs and comes back)
+    window.addEventListener("focus", fetchStatus);
+    // Re-fetch every 30 minutes while the tab is open
+    const interval = setInterval(fetchStatus, 30 * 60 * 1000);
+
+    return () => {
+      window.removeEventListener("focus", fetchStatus);
+      clearInterval(interval);
+    };
   }, []);
 
   const pay = async () => {
