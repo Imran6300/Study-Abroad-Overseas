@@ -34,41 +34,51 @@ const nextConfig = {
   },
 
   async rewrites() {
-    return [
-      // ── Sitemap index ─────────────────────────────────────────────────
-      {
-        source:      "/sitemap.xml",
-        destination: "https://api.khizaroverseas.in/sitemap.xml",
-      },
+  return [
 
-      // ── Sub-sitemaps ──────────────────────────────────────────────────
-      {
-        source:      "/sitemap-countries.xml",
-        destination: "https://api.khizaroverseas.in/sitemap-countries.xml",
-      },
-      {
-        source:      "/sitemap-universities.xml",
-        destination: "https://api.khizaroverseas.in/sitemap-universities.xml",
-      },
-      {
-        source:      "/sitemap-courses.xml",
-        destination: "https://api.khizaroverseas.in/sitemap-courses.xml",
-      },
-      // FIX 1+2: these three were missing
-      {
-        source:      "/sitemap-static.xml",
-        destination: "https://api.khizaroverseas.in/sitemap-static.xml",
-      },
-      {
-        source:      "/sitemap-combo.xml",
-        destination: "https://api.khizaroverseas.in/sitemap-combo.xml",
-      },
-      {
-        source:      "/sitemap-blogs.xml",
-        destination: "https://api.khizaroverseas.in/sitemap-blogs.xml",
-      },
-    ];
-  },
+    // Country SEO URLs
+    {
+      source: "/study-in-:slug",
+      destination: "/study-in/:slug",
+    },
+
+    // ── Sitemap index ─────────────────────────────────────────────────
+    {
+      source: "/sitemap.xml",
+      destination: "https://api.khizaroverseas.in/sitemap.xml",
+    },
+
+    {
+      source: "/sitemap-countries.xml",
+      destination: "https://api.khizaroverseas.in/sitemap-countries.xml",
+    },
+
+    {
+      source: "/sitemap-universities.xml",
+      destination: "https://api.khizaroverseas.in/sitemap-universities.xml",
+    },
+
+    {
+      source: "/sitemap-courses.xml",
+      destination: "https://api.khizaroverseas.in/sitemap-courses.xml",
+    },
+
+    {
+      source: "/sitemap-static.xml",
+      destination: "https://api.khizaroverseas.in/sitemap-static.xml",
+    },
+
+    {
+      source: "/sitemap-combo.xml",
+      destination: "https://api.khizaroverseas.in/sitemap-combo.xml",
+    },
+
+    {
+      source: "/sitemap-blogs.xml",
+      destination: "https://api.khizaroverseas.in/sitemap-blogs.xml",
+    },
+  ];
+},
 
   images: {
     remotePatterns: [
