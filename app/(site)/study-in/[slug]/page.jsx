@@ -1,25 +1,38 @@
-// app/(site)/study-in-[slug]/page.jsx
+// app/(site)/study-in/[slug]/page.jsx
 //
-// WHY THIS FILE IS NEEDED:
-// The folder study-in-[slug] only had a layout.jsx — Next.js had no page
-// to render, so it fell through to /_not-found → 404.
+// FOLDER STRUCTURE CHANGE (required for App Router):
+//   OLD (broken): app/(site)/study-in-[slug]/page.jsx
+//   NEW (fixed):  app/(site)/study-in/[slug]/page.jsx
 //
-// This is the CANONICAL URL for every country landing page.
-// /all-countries/[country]/page.jsx is the DUPLICATE (noindex).
-// SEO data comes from /api/public/country/:slug (seoMetaController.getStudyInCountry)
-// which returns { seo, jsonLd, country } — richer than /api/countries/:slug.
+// WHY:  In Next.js App Router, the folder name "study-in-[slug]" is a
+//       STATIC segment that only matches the literal URL "/study-in-[slug]".
+//       It does NOT match "/study-in-afghanistan".
+//       The App Router requires the ENTIRE folder name to be [param]
+//       for dynamic routing. Partial dynamic segments (prefix + [param])
+//       are not supported in App Router folder names — only in Pages Router.
+//
+// HOW THE URL STAYS /study-in-afghanistan:
+//       middleware.ts rewrites /study-in-{slug} → /study-in/{slug} internally.
+//       The browser URL never changes. Google sees /study-in-afghanistan. ✓
+//
+// DATA FLOW:
+//   1. Browser hits /study-in-afghanistan
+//   2. middleware.ts rewrites to /study-in/afghanistan (internal, invisible)
+//   3. This page renders with params.slug = "afghanistan"
+//   4. getCountryPage("afghanistan") → GET /api/public/country/afghanistan
+//   5. Backend seoRouter: GET /public/country/:countrySlug → getStudyInCountry
+//   6. Returns { seo, jsonLd, country }
+//   7. CountryClient renders the full country landing page
 
 export const revalidate = 3600;
 
-import CountryClient from "../all-countries/[country]/CountryClient";
+import CountryClient from "../../all-countries/[country]/CountryClient";
 import { notFound } from "next/navigation";
 
 const BASE_URL = "https://www.khizaroverseas.in";
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 // ─── Data fetcher ─────────────────────────────────────────────────────────────
-// Uses the dedicated SEO endpoint which returns seo + jsonLd + country
-// in one round-trip. Falls back to the basic country endpoint if needed.
 
 async function getCountryPage(slug) {
   if (!API_URL) return null;
@@ -39,6 +52,7 @@ async function getCountryPage(slug) {
 // ─── Static params ────────────────────────────────────────────────────────────
 
 export async function generateStaticParams() {
+  if (!API_URL) return [];
   try {
     const res = await fetch(`${API_URL}/api/countries`);
     const json = await res.json();
@@ -63,7 +77,6 @@ export async function generateMetadata({ params }) {
     title: seo.title,
     description: seo.description,
 
-    // This IS the canonical URL — index it
     alternates: { canonical: seo.canonical || canonical },
     robots: { index: !seo.noIndex, follow: true },
 
