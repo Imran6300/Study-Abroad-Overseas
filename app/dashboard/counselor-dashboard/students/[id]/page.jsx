@@ -277,8 +277,6 @@ export default function KhizarApplicationDetailPage() {
     }
   };
   const handleCreateApplication = async (payload) => {
-    console.log("BEFORE DISPATCH", JSON.stringify(payload, null, 2));
-
     const studentId =
       application.student._id || application.student.userId || id;
 
@@ -288,6 +286,10 @@ export default function KhizarApplicationDetailPage() {
         payload,
       }),
     );
+
+    // Re-fetch the fully-enriched list so university name, country, etc.
+    // are populated immediately without requiring a page refresh.
+    await dispatch(fetchStudentApplications(studentId));
   };
 
   const handleDeleteApplication = async (applicationId) => {

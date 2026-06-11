@@ -10,16 +10,18 @@ const initialState = {
   error: null,
 };
 
-// ─── Student fetches their OWN applications ──────────────────────────────────
-// FIX: was calling /api/admin/applications/:userId (admin-only → 403 for students).
-// Correct endpoint: GET /api/applications (no :id — server reads req.user._id).
+// ─── Counselor/Admin fetches a STUDENT's applications by userId ───────────────
+// Uses the admin endpoint GET /api/admin/applications/:userId which returns
+// fully-populated application documents with university name, country, etc.
+// This is called from the counselor's student detail page.
 export const fetchStudentApplications = createAsyncThunk(
   "applications/fetchStudentApplications",
-  async (_, thunkAPI) => {
+  async (userId, thunkAPI) => {
     try {
-      const response = await axios.get(`${API}/api/applications`, {
-        withCredentials: true,
-      });
+      const response = await axios.get(
+        `${API}/api/admin/applications/${userId}`,
+        { withCredentials: true },
+      );
       return response.data.applications;
     } catch (error) {
       return thunkAPI.rejectWithValue(
