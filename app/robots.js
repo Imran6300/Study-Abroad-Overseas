@@ -4,14 +4,15 @@ export default function robots() {
       {
         userAgent: "*",
         allow: "/",
-        // Block pages that shouldn't be indexed — saves crawl budget
+        // Block private/internal routes
+        // NOTE: /_next/ is intentionally NOT blocked — Google needs it to render pages
         disallow: [
           "/api/",
-          "/_next/",
           "/login",
           "/signup",
-          "/dashboard",
-          "/admin",
+          "/dashboard/",
+          "/admin/",
+          "/activate-account",
         ],
       },
     ],
