@@ -19,8 +19,6 @@ export default function StepDescriptionCourses({
     }));
   };
 
-  console.log("coursesList", coursesList);
-
   // Remove program row
   const handleRemoveProgram = (index) => {
     const updated = [...form.programs];

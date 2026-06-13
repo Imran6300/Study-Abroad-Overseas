@@ -161,9 +161,6 @@ export default function FreeAssessmentPage() {
 
       const data = await res.json();
 
-      console.log("STATUS:", res.status);
-      console.log("BACKEND RESPONSE:", data);
-
       if (!res.ok) {
         setErrorMessage(data.message || "Something went wrong");
         setSubmitStatus("error");

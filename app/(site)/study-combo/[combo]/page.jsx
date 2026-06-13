@@ -26,14 +26,11 @@ const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 // ─── Data fetcher ─────────────────────────────────────────────────────────────
 
 async function getComboPage(combo) {
-  console.log("API_URL =", API_URL);
-  console.log("combo =", combo);
   if (!API_URL) return null;
   try {
     const res = await fetch(`${API_URL}/api/public/combo/${combo}`, {
       next: { revalidate: 3600 },
     });
-    console.log("status =", res.status);
     if (!res.ok) return null;
     const json = await res.json();
     if (!json.success) return null;

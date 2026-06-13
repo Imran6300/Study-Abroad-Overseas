@@ -24,7 +24,6 @@ export default function Step4({
     }
 
     if (!executeRecaptcha) {
-      console.log("Recaptcha not ready");
       return;
     }
 

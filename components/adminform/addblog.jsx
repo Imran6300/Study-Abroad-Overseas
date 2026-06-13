@@ -156,9 +156,6 @@ export default function BlogPostForm({
 
     // Append rich content (HTML)
     if (editor) {
-      console.log("TIPTAP HTML:");
-      console.log(editor.getHTML());
-
       submitData.append("content", editor.getHTML());
     }
 

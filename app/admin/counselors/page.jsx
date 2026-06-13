@@ -689,8 +689,6 @@ export default function CounselorsAdminPage() {
 
   const handleApprove = useCallback(
     async (application) => {
-      console.log("APPROVE APPLICATION:", application);
-      console.log("APPROVE ID:", application.id);
       try {
         await axios.put(
           `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/partners/${application.id}`,
@@ -716,7 +714,6 @@ export default function CounselorsAdminPage() {
 
   const handleReject = useCallback(
     async (id) => {
-      console.log("REJECT ID:", id);
       try {
         await axios.put(
           `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/partners/${id}`,

@@ -46,11 +46,7 @@ export default function StudentsAdminPage() {
           { credentials: "include" },
         );
 
-        console.log("STATUS:", res.status);
-
         const data = await res.json();
-
-        console.log("API RESPONSE:", data);
 
         // SAFE CHECK
         const leadsArray = Array.isArray(data?.leads)

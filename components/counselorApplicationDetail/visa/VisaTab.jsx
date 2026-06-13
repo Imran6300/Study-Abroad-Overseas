@@ -9,8 +9,6 @@ export default function VisaTab({ application }) {
   const [visa, setVisa] = useState(null);
   const [loadingVisa, setLoadingVisa] = useState(true);
 
-  // FIX: removed production console.log statements (debug noise)
-
   useEffect(() => {
     if (application?.student?._id) {
       fetchVisa();

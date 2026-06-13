@@ -8,7 +8,6 @@ export default function SettingsPanel() {
   const [showModal, setShowModal] = useState(false);
 
   const handleDeleteAccount = () => {
-    console.log("Delete account API call here");
     setShowModal(false);
   };
 

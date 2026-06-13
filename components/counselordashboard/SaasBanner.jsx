@@ -63,7 +63,6 @@ export default function SaasBanner() {
       })
         .then((r) => (r.ok ? r.json() : null))
         .then((d) => {
-          console.log("SAAS STATUS:", d);
           setStatus(d?.data || null);
         })
         .catch(console.error)

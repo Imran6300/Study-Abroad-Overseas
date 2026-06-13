@@ -171,7 +171,6 @@ export default function ApplicationForm({
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("SUBMIT FORM", JSON.stringify(form, null, 2));
     onSubmit(form);
   };
 

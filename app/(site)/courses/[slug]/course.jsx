@@ -51,9 +51,6 @@ export default function CourseDetailPage({ slug }) {
     (state) => state.courses,
   );
 
-  // ✅ FIX 1: Removed console.log("selectedCourse:", selectedCourse);
-  // ✅ FIX 1: Removed console.log("topUniversities:", selectedCourse?.topUniversities);
-
   useEffect(() => {
     // Guard already correct in next_config.zip: compares selectedCourse.slug (not selectedCourse.course?.slug)
     if (slug && (!selectedCourse || selectedCourse.slug !== slug)) {
