@@ -33,6 +33,12 @@ const nextConfig = {
         destination: "/study-in/:slug",
       },
 
+
+{
+  source: "/study-:combo",
+  destination: "/study-combo/:combo",
+},
+
       // Sitemap index
       {
         source: "/sitemap.xml",
@@ -68,6 +74,7 @@ const nextConfig = {
         source: "/sitemap-blogs.xml",
         destination: "https://api.khizaroverseas.in/sitemap-blogs.xml",
       },
+      
     ];
   },
 
