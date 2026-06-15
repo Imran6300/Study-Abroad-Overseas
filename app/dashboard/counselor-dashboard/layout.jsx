@@ -3,20 +3,17 @@
 /**
  * app/dashboard/counselor-dashboard/layout.jsx
  *
- * CHANGES vs original:
+ * Changes vs previous version:
  *
- * 1. Content left-offset corrected:
- *    - Original: `pl-[68px]` — wrong, sidebar collapses to 82px not 68px.
- *    - Fixed:    `lg:pl-[82px]` — matches the collapsed sidebar width exactly.
+ * 1. OnboardingBanner added inside <main>, above {children}.
+ *    - Shown on login #1 and #2 only — self-managing via localStorage.
+ *    - Has its own dismiss (X) button.
+ *    - Only renders on non-settings pages (settings has its own full layout).
  *
- * 2. Mobile top-bar spacing added:
- *    - On mobile (<lg) the sidebar is hidden and a 56px top bar is shown.
- *    - Content needs `pt-14` on mobile to clear that top bar.
- *    - On desktop the top bar is hidden so no top padding needed.
- *    - Combined class: `pt-14 lg:pt-0 lg:pl-[82px]`
+ * 2. CounselorFooter already present (from previous update).
  *
- * Everything else — auth guard, socket join, header visibility logic,
- * page title logic — is identical to the original.
+ * Everything else — auth guard, socket join, header visibility, SaasBanner
+ * comment — is unchanged.
  */
 
 import { useSelector } from "react-redux";
@@ -25,6 +22,8 @@ import { useEffect } from "react";
 
 import CounselorSidebar from "@/components/counselordashboard/CounselorSidebar";
 import CounselorDashboardHeader from "@/components/counselordashboard/CounselorDashboardHeader";
+import CounselorFooter from "@/components/counselordashboard/CounselorFooter";
+import OnboardingBanner from "@/components/counselordashboard/OnboardingBanner";
 import SaasBanner from "@/components/counselordashboard/SaasBanner";
 import { getSocket } from "@/lib/socket";
 
@@ -65,9 +64,9 @@ export default function CounselorLayout({ children }) {
     return null;
   }
 
-  // ── Header visibility ───────────────────────────────────────────────────
+  // ── Header + banner visibility ──────────────────────────────────────────
   // Settings page has its own full-page layout (sticky nav + live preview),
-  // so we suppress the global dashboard header there.
+  // so we suppress the global dashboard header AND onboarding banner there.
   const hideHeaderRoutes = ["/dashboard/counselor-dashboard/settings"];
   const shouldHideHeader = hideHeaderRoutes.includes(pathname);
 
@@ -86,22 +85,18 @@ export default function CounselorLayout({ children }) {
       return "Application Details";
     if (pathname === "/dashboard/counselor-dashboard/settings")
       return "Settings";
+    if (pathname === "/dashboard/counselor-dashboard/manual")
+      return "Dashboard Manual";
     return "Counselor Dashboard";
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Sidebar — renders its own desktop sidebar + mobile top bar + mobile drawer */}
+      {/* Sidebar */}
       <CounselorSidebar />
 
-      {/*
-        Content wrapper offsets:
-          mobile  → pt-14        (clear the 56px mobile top bar; no left offset — sidebar is hidden)
-          desktop → lg:pt-0      (no top bar on desktop)
-                    lg:pl-[82px] (clear the collapsed 82px sidebar)
-      */}
       <div className="pt-14 lg:pt-0 lg:pl-[82px] min-h-screen flex flex-col">
-        {/* Global dashboard header (hidden on settings page) */}
+        {/* Global header (hidden on settings page) */}
         {!shouldHideHeader && (
           <CounselorDashboardHeader
             title={getPageTitle()}
@@ -109,14 +104,19 @@ export default function CounselorLayout({ children }) {
           />
         )}
 
-        {/* Page content */}
         <main className="flex-1">
-          <div className="px-4 sm:px-6 lg:px-8 pt-4">
+          {/* <div className="px-4 sm:px-6 lg:px-8 pt-4">
             <SaasBanner />
-          </div>
+          </div> */}
+
+          {/* Onboarding banner — only on non-settings pages, self-hides after 2 logins */}
+          {!shouldHideHeader && <OnboardingBanner />}
 
           {children}
         </main>
+
+        {/* Footer */}
+        <CounselorFooter />
       </div>
     </div>
   );

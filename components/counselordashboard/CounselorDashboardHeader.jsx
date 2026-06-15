@@ -279,7 +279,6 @@ export default function CounselorDashboardHeader({
                         </button>
                       </div>
                     </div>
-
                     {/* List */}
                     <div className="max-h-[380px] overflow-y-auto">
                       {counselorLoading && (
@@ -347,8 +346,7 @@ export default function CounselorDashboardHeader({
                         </motion.div>
                       ))}
                     </div>
-
-                    {/* Footer */}
+                    {/* Footer
                     <div className="px-5 py-3 bg-slate-50/50 text-center">
                       <button
                         onClick={() => setShowNotifications(false)}
@@ -356,7 +354,7 @@ export default function CounselorDashboardHeader({
                       >
                         View all notifications →
                       </button>
-                    </div>
+                    </div>{" "} */}
                   </motion.div>
                 )}
               </AnimatePresence>
