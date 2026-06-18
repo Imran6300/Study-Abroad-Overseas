@@ -121,7 +121,7 @@ export default function TermsConditionsPage() {
             clearly before engagement (via quote, invoice, or agreement).
           </p>
           <p>
-            Payments are processed through secure gateways (e.g., Razorpay). All
+            Payments are processed through secure gateways (e.g., CashFree). All
             fees are non-refundable once Services commence (document review,
             profile building, application submission, etc.), except as
             explicitly agreed in writing.

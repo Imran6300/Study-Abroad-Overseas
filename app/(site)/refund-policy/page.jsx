@@ -142,7 +142,7 @@ export default function RefundPolicyPage() {
 
           <p>
             Payments may be processed using secure third-party payment gateways
-            such as Razorpay. Refunds approved under this policy will be issued
+            such as cashfree. Refunds approved under this policy will be issued
             through the same payment method whenever possible.
           </p>
 

@@ -419,7 +419,7 @@ export default function PartnerAgreementPage() {
                       Payment Gateway
                     </td>
                     <td className="p-4 text-gray-700">
-                      Razorpay (UPI, Net Banking, Cards)
+                      CashFree (UPI, Net Banking, Cards)
                     </td>
                   </tr>
                   <tr>

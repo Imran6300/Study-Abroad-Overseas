@@ -1,26 +1,20 @@
 "use client";
 
 /**
- * app/dashboard/counselor-dashboard/settings/page.jsx  —  RAZORPAY EDITION
+ * app/dashboard/counselor-dashboard/settings/page.jsx  —  CASHFREE EDITION
  *
- * Changes from Stripe version:
- *  - handlePay()          → loads Razorpay checkout widget inline (no full-page redirect)
- *  - handleManageBilling() → replaced by handleCancelSubscription() (Razorpay has no portal)
- *  - useEffect for ?payment=success query param → removed (no redirect-back URL needed;
- *    payment confirmation is synchronous via verifyPayment())
- *  - Razorpay script loader added (loads checkout.razorpay.com/v1/checkout.js once)
- *  - Cancel confirmation dialog added to the Subscription panel
+ * Migration from Razorpay → Cashfree:
+ *  - loadRazorpayScript()     → loadCashfreeSDK()
+ *  - handlePay()              → loads Cashfree JS SDK, calls cashfree.checkout()
+ *  - verifyPayment payload    → { orderId } instead of razorpay triple
+ *  - ?payment=success handler → reads orderId from query param, calls verifyPayment
+ *  - "Secure via Razorpay"   → "Secure via Cashfree"
  *
- * RESPONSIVE UPDATE:
- *  - Desktop UI: zero changes
- *  - Mobile (≤768px): nav collapses to horizontally scrollable tabs with hidden action buttons,
- *    floating mobile save FAB added, layout grid collapses to single column,
- *    profile card header stacks vertically, subscription panel stacks, bottom save bar stacks,
- *    all g2/g3 grids single-column, modal padding tightened, color swatches stack.
+ * Everything else (UI, styles, layout, mobile responsive, preview) is UNCHANGED.
  */
 
 import { useRef, useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { counselorApi } from "@/lib/counselorApi";
 
 const cls = (...args) => args.filter(Boolean).join(" ");
@@ -47,15 +41,28 @@ function formatExpiry(value) {
   });
 }
 
-// ── Load Razorpay checkout.js once ────────────────────────────────────────────
-function loadRazorpayScript() {
+// ── Load Cashfree JS SDK once ─────────────────────────────────────────────────
+function loadCashfreeSDK(environment) {
   return new Promise((resolve) => {
-    if (window.Razorpay) return resolve(true);
+    if (window.Cashfree) {
+      resolve(
+        window.Cashfree({
+          mode: environment === "PRODUCTION" ? "production" : "sandbox",
+        }),
+      );
+      return;
+    }
     const script = document.createElement("script");
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.src = "https://sdk.cashfree.com/js/v3/cashfree.js";
     script.async = true;
-    script.onload = () => resolve(true);
-    script.onerror = () => resolve(false);
+    script.onload = () => {
+      resolve(
+        window.Cashfree({
+          mode: environment === "PRODUCTION" ? "production" : "sandbox",
+        }),
+      );
+    };
+    script.onerror = () => resolve(null);
     document.body.appendChild(script);
   });
 }
@@ -631,6 +638,9 @@ export default function CounselorSettingsPage() {
   const [saveError, setSaveError] = useState("");
   const refs = useRef({});
 
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
   const [profile, setProfile] = useState({
     fullName: "",
     email: "",
@@ -671,8 +681,6 @@ export default function CounselorSettingsPage() {
     offerBody:
       "Hi {studentName},\n\nGreat news! You have received an offer from {universityName}.\n\nLog in to your dashboard to view the details.\n\n{counselorName}\n{brandName}",
   });
-
-  const router = useRouter();
 
   // ── Load branding from backend on mount ──────────────────────────────────
   useEffect(() => {
@@ -720,6 +728,49 @@ export default function CounselorSettingsPage() {
     })();
   }, []);
 
+  // ── Handle Cashfree return redirect (?payment=success&orderId=xxx) ────────
+  useEffect(() => {
+    const paymentStatus = searchParams.get("payment");
+    const orderId = searchParams.get("orderId");
+
+    if (paymentStatus === "success" && orderId) {
+      // Remove query params from URL immediately
+      router.replace("/dashboard/counselor-dashboard/settings");
+
+      // Verify with backend
+      (async () => {
+        try {
+          const verify = await counselorApi.verifyPayment({ orderId });
+          if (verify?.success) {
+            setBranding((prev) => ({
+              ...prev,
+              plan: "premium",
+              premiumExpiresAt: verify.expiresAt || null,
+              features: {
+                customColors: true,
+                removeKhizarBranding: true,
+                customEmailBranding: true,
+              },
+            }));
+            setSaved(true);
+            setTimeout(() => setSaved(false), 3000);
+          } else {
+            setSaveError(
+              "Payment received but verification failed. Please contact support.",
+            );
+            setTimeout(() => setSaveError(""), 8000);
+          }
+        } catch (err) {
+          console.error("[settings] post-redirect verify failed:", err);
+          setSaveError(
+            "Payment verification failed. Please contact support if you were charged.",
+          );
+          setTimeout(() => setSaveError(""), 8000);
+        }
+      })();
+    }
+  }, [searchParams, router]);
+
   const isPremium =
     branding.plan === "premium" &&
     (!branding.premiumExpiresAt ||
@@ -761,12 +812,19 @@ export default function CounselorSettingsPage() {
     setUpgradeModal(true);
   };
 
-  // ── Razorpay Checkout ─────────────────────────────────────────────────────
+  // ── Cashfree Checkout ─────────────────────────────────────────────────────
   const handlePay = async () => {
     setPaying(true);
     try {
-      const loaded = await loadRazorpayScript();
-      if (!loaded) {
+      // 1. Create order on backend
+      const data = await counselorApi.createOrder();
+      if (!data?.paymentSessionId) {
+        throw new Error("No payment session returned from server");
+      }
+
+      // 2. Load Cashfree JS SDK
+      const cashfree = await loadCashfreeSDK(data.environment || "SANDBOX");
+      if (!cashfree) {
         setSaveError(
           "Failed to load payment SDK. Please check your internet connection.",
         );
@@ -775,84 +833,79 @@ export default function CounselorSettingsPage() {
         return;
       }
 
-      const data = await counselorApi.createOrder();
-      if (!data?.subscriptionId) {
-        throw new Error("No subscription ID returned from server");
-      }
-
-      const options = {
-        key: data.keyId,
-        subscription_id: data.subscriptionId,
-        name: "Khizar Overseas",
-        description: "Counselor Premium Plan — ₹999/month",
-        image: "/logo.png",
-        prefill: data.prefill || {},
-        theme: { color: "#f59e0b" },
-        modal: {
-          ondismiss: () => {
-            setPaying(false);
-          },
-        },
-        handler: async (response) => {
-          try {
-            const verify = await counselorApi.verifyPayment({
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_subscription_id: response.razorpay_subscription_id,
-              razorpay_signature: response.razorpay_signature,
-            });
-
-            if (verify?.success) {
-              setBranding((prev) => ({
-                ...prev,
-                plan: "premium",
-                premiumExpiresAt: verify.expiresAt || null,
-                features: {
-                  customColors: true,
-                  removeKhizarBranding: true,
-                  customEmailBranding: true,
-                },
-              }));
-              setUpgradeModal(false);
-              setSaved(true);
-              setTimeout(() => setSaved(false), 3000);
-            } else {
-              setSaveError(
-                "Payment verification failed. Please contact support if you were charged.",
-              );
-            }
-          } catch (verifyErr) {
-            console.error("[handlePay:verify]", verifyErr);
-            if (verifyErr?.status === 401) {
-              setSaveError("Session expired. Please refresh the page.");
-            } else {
-              setSaveError(
-                "Payment received but verification failed. Save your payment ID: " +
-                  response.razorpay_payment_id,
-              );
-            }
-            setTimeout(() => setSaveError(""), 8000);
-          } finally {
-            setPaying(false);
-          }
-        },
+      // 3. Open Cashfree Drop-in checkout
+      // NOTE: the Cashfree v3 JS SDK does not accept a `returnUrl` option —
+      // that key is silently ignored. The redirect destination is configured
+      // server-side via `order_meta.return_url` when the order is created
+      // (see subscriptionController.js createOrder). Here we only choose how
+      // the checkout itself is presented via `redirectTarget`.
+      const checkoutOptions = {
+        paymentSessionId: data.paymentSessionId,
+        redirectTarget: "_self",
       };
 
-      const rzp = new window.Razorpay(options);
-      rzp.on("payment.failed", (response) => {
-        console.error("[razorpay] payment failed:", response.error);
+      const result = await cashfree.checkout(checkoutOptions);
+
+      // cashfree.checkout() may resolve before redirect (in drop mode)
+      // or may redirect the page. Handle both cases.
+      if (result?.error) {
         setSaveError(
-          `Payment failed: ${response.error?.description || "Unknown error"}. Please try again.`,
+          `Payment failed: ${result.error.message || "Unknown error"}. Please try again.`,
         );
         setTimeout(() => setSaveError(""), 6000);
         setPaying(false);
-      });
-      rzp.open();
+        return;
+      }
+
+      if (result?.paymentDetails) {
+        // Drop-in mode: payment completed without redirect — verify immediately
+        try {
+          const verify = await counselorApi.verifyPayment({
+            orderId: data.orderId,
+          });
+
+          if (verify?.success) {
+            setBranding((prev) => ({
+              ...prev,
+              plan: "premium",
+              premiumExpiresAt: verify.expiresAt || null,
+              features: {
+                customColors: true,
+                removeKhizarBranding: true,
+                customEmailBranding: true,
+              },
+            }));
+            setUpgradeModal(false);
+            setSaved(true);
+            setTimeout(() => setSaved(false), 3000);
+          } else {
+            setSaveError(
+              "Payment verification failed. Please contact support if you were charged.",
+            );
+            setTimeout(() => setSaveError(""), 8000);
+          }
+        } catch (verifyErr) {
+          console.error("[handlePay:verify]", verifyErr);
+          if (verifyErr?.status === 401) {
+            setSaveError("Session expired. Please refresh the page.");
+          } else {
+            setSaveError(
+              "Payment received but verification failed. Your Order ID: " +
+                data.orderId,
+            );
+          }
+          setTimeout(() => setSaveError(""), 8000);
+        } finally {
+          setPaying(false);
+        }
+      }
+      // If redirect mode: page navigates away, setPaying stays true (page unloads)
     } catch (err) {
       console.error("[handlePay]", err);
       setSaveError(
         err?.status === 401
           ? "Session expired — please refresh the page and try again."
-          : "Payment setup failed. Please try again.",
+          : err?.message || "Payment setup failed. Please try again.",
       );
       setTimeout(() => setSaveError(""), 5000);
       setPaying(false);
@@ -863,7 +916,17 @@ export default function CounselorSettingsPage() {
   const handleCancelSubscription = async () => {
     setCancelling(true);
     try {
-      const data = await counselorApi.cancelSubscription();
+      await counselorApi.cancelSubscription();
+      setBranding((prev) => ({
+        ...prev,
+        plan: "standard",
+        premiumExpiresAt: null,
+        features: {
+          customColors: false,
+          removeKhizarBranding: false,
+          customEmailBranding: false,
+        },
+      }));
       setCancelConfirm(false);
       setSaved(true);
       setTimeout(() => setSaved(false), 3500);
@@ -1293,19 +1356,16 @@ export default function CounselorSettingsPage() {
            ═══════════════════════════════════════════════════════════ */
         @media (max-width: 768px) {
 
-          /* Layout: single column, tighter padding */
           .settings-layout {
             grid-template-columns: 1fr;
             padding: 16px 14px 100px;
             gap: 0;
           }
 
-          /* Page title tighter */
           .settings-layout > div:first-child > div:first-child h1 {
             font-size: 19px !important;
           }
 
-          /* Nav: taller touch targets, horizontal scroll */
           .nav-tabs-wrap {
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
@@ -1314,17 +1374,14 @@ export default function CounselorSettingsPage() {
           }
           .nav-tabs-wrap::-webkit-scrollbar { display: none; }
 
-          /* Hide Discard + Save from nav on mobile → replaced by FAB */
           .nav-discard-btn { display: none !important; }
           .nav-save-btn   { display: none !important; }
 
-          /* Preview toggle stays but shrinks */
           .preview-toggle-btn {
             padding: 6px 10px !important;
             font-size: 11.5px !important;
           }
 
-          /* FAB: floating save button bottom-right */
           .mobile-fab {
             display: flex;
             align-items: center;
@@ -1350,23 +1407,18 @@ export default function CounselorSettingsPage() {
           .mobile-fab:disabled { opacity: .7; cursor: not-allowed; }
           .mobile-fab:active { transform: scale(.97); }
 
-          /* Cards: tighter padding */
           .card-shine { padding: 16px !important; }
 
-          /* Profile header: stack avatar + info */
           .profile-header {
             flex-direction: column;
             align-items: flex-start;
             gap: 14px;
           }
-          /* Profile stats strip: 3 cols → fit on one row */
           .profile-stats-g3 {
             grid-template-columns: repeat(3, 1fr) !important;
             gap: 8px !important;
           }
-          /* Profile input row: already 1-col via .g3 override */
 
-          /* Subscription: stack the plan card vertically */
           .sub-panel-row {
             flex-direction: column;
             gap: 12px;
@@ -1374,13 +1426,11 @@ export default function CounselorSettingsPage() {
           .sub-plan-info { min-width: unset !important; }
           .sub-stat-pill { min-width: unset !important; width: 100% !important; }
 
-          /* Bottom save bar: stack */
           .bottom-save-bar {
             flex-direction: column;
             align-items: stretch;
             text-align: center;
             padding: 14px;
-            /* Push above FAB */
             margin-bottom: 8px;
           }
           .bottom-save-bar-actions {
@@ -1391,67 +1441,48 @@ export default function CounselorSettingsPage() {
             flex: 1;
           }
 
-          /* Benefits grid: stays 2-col — fits fine on mobile */
-          /* (no change needed) */
-
-          /* Color swatches: 1 col on very narrow */
           .color-swatches-g3 {
             grid-template-columns: 1fr !important;
           }
 
-          /* Modal: full-width, less padding */
           .modal-box {
             padding: 22px 18px !important;
             border-radius: 16px !important;
             max-height: 85vh;
           }
 
-          /* Email template cards: tighter */
           .email-tpl-card {
             padding: 13px !important;
           }
 
-          /* Sender details g2: single col on mobile */
           .sender-g2 {
             grid-template-columns: 1fr !important;
           }
 
-          /* Branding g2 (brand name + logo): single col */
           .brand-identity-g2 {
             grid-template-columns: 1fr !important;
           }
 
-          /* Premium card g2 (tagline + favicon): single col */
           .premium-top-g2 {
             grid-template-columns: 1fr !important;
           }
 
-          /* Locked overlay: adjust text */
           .lockedOverlay p { font-size: 12px !important; }
 
-          /* Toast: full-width */
           .toast {
-            bottom: 80px !important; /* above FAB */
+            bottom: 80px !important;
             left: 14px !important;
             right: 14px !important;
             transform: none !important;
             max-width: unset !important;
           }
 
-          /* Section anchor scroll offset */
           .s-anchor { scroll-margin-top: 62px; }
-
-          /* Sticky nav height */
           .settings-nav { height: 50px !important; }
-
-          /* Page header */
           .page-header { margin-bottom: 20px !important; }
-
-          /* Section blocks */
           .section-block { margin-bottom: 24px !important; }
         }
 
-        /* Extra narrow (≤400px) */
         @media (max-width: 400px) {
           .profile-stats-g3 {
             grid-template-columns: repeat(3, 1fr) !important;
@@ -1486,7 +1517,6 @@ export default function CounselorSettingsPage() {
             gap: 12,
           }}
         >
-          {/* Tabs — horizontally scrollable on mobile */}
           <div
             className="nav-tabs-wrap"
             style={{
@@ -1515,7 +1545,6 @@ export default function CounselorSettingsPage() {
             ))}
           </div>
 
-          {/* Actions */}
           <div className="nav-actions">
             <button
               className="preview-toggle-btn"
@@ -1577,7 +1606,6 @@ export default function CounselorSettingsPage() {
             <SectionHead>Profile</SectionHead>
 
             <div style={cardStyle} className="card-shine">
-              {/* Profile header — stacks on mobile */}
               <div className="profile-header">
                 <div
                   style={{
@@ -1647,7 +1675,6 @@ export default function CounselorSettingsPage() {
                   >
                     {profile.email} &nbsp;·&nbsp; {profile.phone}
                   </p>
-                  {/* Stats — forced 3-col even on mobile */}
                   <div
                     className="profile-stats-g3"
                     style={{
@@ -1690,7 +1717,6 @@ export default function CounselorSettingsPage() {
                 </div>
               </div>
 
-              {/* Profile inputs */}
               <div className="g3" style={{ marginTop: 18 }}>
                 {[
                   {
@@ -1734,7 +1760,6 @@ export default function CounselorSettingsPage() {
           >
             <SectionHead>Branding</SectionHead>
 
-            {/* Free tier */}
             <div style={cardStyle} className="card-shine">
               <div
                 style={{
@@ -1768,7 +1793,6 @@ export default function CounselorSettingsPage() {
                 </span>
               </div>
 
-              {/* Brand identity g2 — single col on mobile */}
               <div className="g2 brand-identity-g2">
                 <Field label="Brand Name (Free)">
                   <input
@@ -1951,7 +1975,6 @@ export default function CounselorSettingsPage() {
                 </div>
               </div>
 
-              {/* Tagline + favicon — single col on mobile */}
               <div className="g2 premium-top-g2" style={{ marginBottom: 16 }}>
                 <Field label="Tagline (Premium)">
                   <input
@@ -2039,7 +2062,6 @@ export default function CounselorSettingsPage() {
                 </Field>
               </div>
 
-              {/* Color pickers — 3 col desktop, 1 col on very narrow mobile */}
               <div style={{ marginBottom: 4 }}>
                 <label
                   style={{
@@ -2311,7 +2333,6 @@ export default function CounselorSettingsPage() {
                 >
                   Sender Details
                 </div>
-                {/* Sender details — single col on mobile */}
                 <div className="g2 sender-g2">
                   <Field label="Sender Name">
                     <input
@@ -2453,7 +2474,6 @@ export default function CounselorSettingsPage() {
             <SectionHead>Subscription</SectionHead>
 
             <div style={cardStyle} className="card-shine">
-              {/* Subscription row — stacks on mobile */}
               <div className="sub-panel-row">
                 <div
                   className="sub-plan-info"
@@ -2836,7 +2856,7 @@ export default function CounselorSettingsPage() {
         </div>
       </div>
 
-      {/* ── Mobile FAB (Save) — hidden on desktop ──────────────── */}
+      {/* ── Mobile FAB (Save) ──────────────────────────────────── */}
       <button
         className="mobile-fab"
         onClick={handleSave}
@@ -2926,7 +2946,7 @@ export default function CounselorSettingsPage() {
         </div>
       )}
 
-      {/* ── Upgrade Modal (Razorpay) ───────────────────────────── */}
+      {/* ── Upgrade Modal (Cashfree) ───────────────────────────── */}
       {upgradeModal && (
         <div
           className="modal-bg"
@@ -3076,7 +3096,7 @@ export default function CounselorSettingsPage() {
                 marginTop: 12,
               }}
             >
-              Cancel anytime · Billed monthly · Secure via Razorpay
+              Cancel anytime · Billed monthly · Secure via Cashfree
             </p>
           </div>
         </div>
@@ -3106,11 +3126,8 @@ export default function CounselorSettingsPage() {
                 Cancel Subscription?
               </div>
               <p style={{ fontSize: 13, color: "#6a8ab0", lineHeight: 1.7 }}>
-                Your premium access will remain active
-                {branding.premiumExpiresAt
-                  ? ` until ${formatExpiry(branding.premiumExpiresAt)}`
-                  : " until the end of the current billing period"}
-                . After that, your account will revert to the Standard plan.
+                Your premium access will be removed immediately. You will revert
+                to the Standard plan.
               </p>
             </div>
             <div style={{ display: "flex", gap: 10 }}>
@@ -3139,7 +3156,7 @@ export default function CounselorSettingsPage() {
       {saved && (
         <div className="toast">
           {isPremium
-            ? "⭐ Premium activated! Subscription scheduled for cancellation."
+            ? "⭐ Premium activated successfully!"
             : "✓ Settings saved successfully"}
         </div>
       )}

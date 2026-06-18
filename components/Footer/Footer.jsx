@@ -194,7 +194,7 @@ export default function Footer() {
 
       <div className="mt-12 pt-10 border-t border-[#4169E1]/15 text-center text-sm text-gray-600 space-y-3">
         <p className="text-xs text-gray-500">
-          Secure payments powered by Razorpay
+          Secure payments powered by CashFree
         </p>
         <p>
           © {new Date().getFullYear()} Khizar Overseas — All Rights Reserved

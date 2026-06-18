@@ -243,7 +243,7 @@ export default function CounselorRefundPolicyPage() {
             />
             <p className="text-gray-700 leading-relaxed mb-5">
               Payments are processed using secure third-party payment gateways,
-              primarily <strong>Razorpay</strong>. Refunds approved under this
+              primarily <strong>CashFree</strong>. Refunds approved under this
               policy will be issued through the same payment method whenever
               possible. In cases where the original payment method is
               unavailable, we will coordinate an alternative with you.

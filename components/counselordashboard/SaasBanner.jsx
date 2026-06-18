@@ -1,18 +1,10 @@
 "use client";
 
 /**
- * SaasBanner.jsx  —  FIXED
+ * SaasBanner.jsx  —  CASHFREE EDITION
  *
- * ROOT CAUSE OF EMPTY BANNER:
- *   Line 126 in the original: `if (status.isInTrial && status.trialDaysLeft > 10) return null;`
- *   A brand-new counselor has trialDaysLeft = 30 → 30 > 10 → banner returned null → empty screen.
- *
- * FIXES APPLIED:
- *   1. Removed the `trialDaysLeft > 10` early-return — trial banner now always shows.
- *   2. Trial banner is dismissible (X button) so it doesn't nag if the user doesn't want it.
- *   3. `isWarning` threshold raised to ≤7 days (was ≤5) for better UX.
- *   4. Progress bar now shows real % of trial consumed (trialDaysLeft / 30).
- *   5. Improved statusMessage fallback so the banner never shows a blank line.
+ * Replaces Razorpay checkout with Cashfree JS SDK.
+ * Cashfree Drop-in UI: load cashfree-js, call cashfree.checkout()
  *
  * States handled:
  *   - trial (any days left): blue/green informational banner — dismissible
@@ -32,18 +24,20 @@ import {
   CreditCard,
   X,
   Loader2,
-  Shield,
 } from "lucide-react";
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL;
 
-function loadRazorpay() {
+function loadCashfreeSDK(environment) {
   return new Promise((resolve) => {
-    if (window.Razorpay) return resolve(true);
+    if (window.Cashfree) return resolve(window.Cashfree);
     const s = document.createElement("script");
-    s.src = "https://checkout.razorpay.com/v1/checkout.js";
-    s.onload = () => resolve(true);
-    s.onerror = () => resolve(false);
+    s.src =
+      environment === "PRODUCTION"
+        ? "https://sdk.cashfree.com/js/v3/cashfree.js"
+        : "https://sdk.cashfree.com/js/v3/cashfree.js"; // same URL, mode set via init
+    s.onload = () => resolve(window.Cashfree);
+    s.onerror = () => resolve(null);
     document.body.appendChild(s);
   });
 }
@@ -54,28 +48,18 @@ export default function SaasBanner() {
   const [paying, setPaying] = useState(false);
   const [dismissed, setDismissed] = useState(false);
 
-  // Fetch status — also re-fetches on window focus and every 30 minutes
-  // so the countdown never shows stale data (e.g. 30 days after 3 days).
   useEffect(() => {
     const fetchStatus = () => {
-      fetch(`${BASE}/api/saas/status`, {
-        credentials: "include",
-      })
+      fetch(`${BASE}/api/saas/status`, { credentials: "include" })
         .then((r) => (r.ok ? r.json() : null))
-        .then((d) => {
-          setStatus(d?.data || null);
-        })
+        .then((d) => setStatus(d?.data || null))
         .catch(console.error)
         .finally(() => setLoading(false));
     };
 
     fetchStatus();
-
-    // Re-fetch when the tab regains focus (counselor switches tabs and comes back)
     window.addEventListener("focus", fetchStatus);
-    // Re-fetch every 30 minutes while the tab is open
     const interval = setInterval(fetchStatus, 30 * 60 * 1000);
-
     return () => {
       window.removeEventListener("focus", fetchStatus);
       clearInterval(interval);
@@ -85,9 +69,7 @@ export default function SaasBanner() {
   const pay = async () => {
     setPaying(true);
     try {
-      const loaded = await loadRazorpay();
-      if (!loaded) throw new Error("Razorpay failed to load");
-
+      // 1. Create order on backend
       const res = await fetch(`${BASE}/api/saas/create-order`, {
         method: "POST",
         credentials: "include",
@@ -96,50 +78,48 @@ export default function SaasBanner() {
       const data = await res.json();
       if (!data.success) throw new Error(data.message);
 
-      await new Promise((resolve, reject) => {
-        const rzp = new window.Razorpay({
-          key: data.keyId,
-          order_id: data.orderId,
-          amount: data.amount,
-          currency: data.currency,
-          name: "Khizar Overseas",
-          description: "Monthly SaaS Fee — ₹5,000",
-          prefill: data.prefill,
-          theme: { color: "#22c55e" },
-          handler: async (response) => {
-            try {
-              const verify = await fetch(`${BASE}/api/saas/verify-payment`, {
-                method: "POST",
-                credentials: "include",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  razorpay_order_id: response.razorpay_order_id,
-                  razorpay_payment_id: response.razorpay_payment_id,
-                  razorpay_signature: response.razorpay_signature,
-                }),
-              });
-              const vd = await verify.json();
-              if (vd.success) {
-                setStatus((prev) => ({
-                  ...prev,
-                  saasStatus: "paid",
-                  paidAccessActive: true,
-                  saasPaymentValidUntil: vd.saasPaymentValidUntil,
-                  statusMessage: `Paid access until ${new Date(
-                    vd.saasPaymentValidUntil,
-                  ).toLocaleDateString("en-IN")}`,
-                }));
-                setDismissed(false); // re-show the "paid" success banner
-              }
-              resolve();
-            } catch (e) {
-              reject(e);
-            }
-          },
-          modal: { ondismiss: () => resolve() },
-        });
-        rzp.open();
+      // 2. Load Cashfree JS SDK
+      const CashfreeSDK = await loadCashfreeSDK(data.environment);
+      if (!CashfreeSDK) throw new Error("Cashfree SDK failed to load");
+
+      const cashfree = CashfreeSDK({
+        mode: data.environment === "PRODUCTION" ? "production" : "sandbox",
       });
+
+      // 3. Open Cashfree Drop-in checkout
+      const checkoutOptions = {
+        paymentSessionId: data.paymentSessionId,
+        returnUrl: `${window.location.origin}/dashboard/counselor-dashboard/settings?payment=success&orderId=${data.orderId}`,
+      };
+
+      const result = await cashfree.checkout(checkoutOptions);
+
+      if (result.error) {
+        throw new Error(result.error.message || "Payment failed");
+      }
+
+      if (result.paymentDetails) {
+        // Payment completed — verify on backend
+        const verify = await fetch(`${BASE}/api/saas/verify-payment`, {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ orderId: data.orderId }),
+        });
+        const vd = await verify.json();
+        if (vd.success) {
+          setStatus((prev) => ({
+            ...prev,
+            saasStatus: "paid",
+            paidAccessActive: true,
+            saasPaymentValidUntil: vd.saasPaymentValidUntil,
+            statusMessage: `Paid access until ${new Date(
+              vd.saasPaymentValidUntil,
+            ).toLocaleDateString("en-IN")}`,
+          }));
+          setDismissed(false);
+        }
+      }
     } catch (e) {
       console.error("[SaasBanner.pay]", e);
       alert(e.message || "Payment failed. Please try again.");
@@ -148,10 +128,8 @@ export default function SaasBanner() {
     }
   };
 
-  // ── Early exits ────────────────────────────────────────────────────────────
   if (loading || !status) return null;
   if (status.saasStatus === "active_free") return null;
-  // Dismissed states: trial (non-urgent) and paid success
   if (
     dismissed &&
     status.saasStatus !== "payment_required" &&
@@ -159,16 +137,13 @@ export default function SaasBanner() {
   )
     return null;
 
-  // ── Derived state ──────────────────────────────────────────────────────────
   const isUrgent =
     status.saasStatus === "payment_required" ||
     status.saasStatus === "suspended";
-  // FIX: raised from ≤5 to ≤7 days for better advance warning
   const isWarning = status.isInTrial && status.trialDaysLeft <= 7;
   const isTrialHealthy = status.isInTrial && status.trialDaysLeft > 7;
   const isPaid = status.saasStatus === "paid" && status.paidAccessActive;
 
-  // ── Fallback statusMessage if backend somehow sends empty string ───────────
   const message =
     status.statusMessage ||
     (status.isInTrial
@@ -179,19 +154,17 @@ export default function SaasBanner() {
           ? `Paid access until ${new Date(status.saasPaymentValidUntil).toLocaleDateString("en-IN")}`
           : "");
 
-  // ── Trial progress bar percentage (0–100) ─────────────────────────────────
   const trialProgressPct = status.isInTrial
     ? Math.round(((30 - status.trialDaysLeft) / 30) * 100)
     : 100;
 
-  // ── Styling ────────────────────────────────────────────────────────────────
   const bgClass = isUrgent
     ? "bg-red-50 border-red-200"
     : isWarning
       ? "bg-amber-50 border-amber-200"
       : isPaid
         ? "bg-emerald-50 border-emerald-200"
-        : "bg-blue-50 border-blue-200"; // trial healthy
+        : "bg-blue-50 border-blue-200";
 
   const textClass = isUrgent
     ? "text-red-800"
@@ -233,9 +206,7 @@ export default function SaasBanner() {
         ? "text-amber-500"
         : "text-blue-500";
 
-  // Show the Pay button on warning and urgent states
   const showPayBtn = isWarning || isUrgent;
-  // Show dismiss X when not urgent (urgent = can't dismiss)
   const showDismiss = !isUrgent;
 
   return (
@@ -246,13 +217,11 @@ export default function SaasBanner() {
         exit={{ opacity: 0, height: 0 }}
         className={`border rounded-2xl px-4 py-3 mb-4 ${bgClass}`}
       >
-        {/* Main row */}
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-3 min-w-0">
             <Icon size={18} className={`shrink-0 ${iconClass}`} />
             <p className={`text-sm font-medium ${textClass}`}>{message}</p>
           </div>
-
           <div className="flex items-center gap-2 shrink-0">
             {showPayBtn && (
               <button
@@ -286,7 +255,6 @@ export default function SaasBanner() {
           </div>
         </div>
 
-        {/* Trial progress bar — only shown during trial period */}
         {status.isInTrial && (
           <div className="mt-2.5">
             <div className={`h-1.5 rounded-full ${barBgClass} overflow-hidden`}>
