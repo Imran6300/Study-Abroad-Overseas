@@ -3,6 +3,7 @@ import HeroContent from "./HeroContent";
 import HeroVisual from "./HeroVisual";
 import FloatingOrb from "./FloatingOrb";
 import MobileHero from "./MobileHero";
+import WelcomeModalController from "../WelcomeModal/WelcomeModalController";
 
 function Hero() {
   return (
@@ -14,6 +15,9 @@ function Hero() {
           font-[Poppins]
         "
     >
+      {/* Welcome modal — portal-rendered, only fires on first visit */}
+      <WelcomeModalController />
+
       <div className="hidden md:block">
         <FloatingOrb type="blue" />
         <FloatingOrb type="green" />
