@@ -47,7 +47,7 @@ export const metadata = {
     images: ["/images/success-stories-twitter.jpg"], // ← your Twitter card image
   },
 };
-export const revalidate = 60; // ISR (best for testimonials)
+export const revalidate = 86400; // ISR (best for testimonials)
 
 export default async function SuccessStories() {
   const res = await fetch(

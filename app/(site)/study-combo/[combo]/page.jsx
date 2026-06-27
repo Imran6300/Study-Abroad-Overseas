@@ -17,11 +17,44 @@
 
 export const revalidate = 3600;
 
+// Allow unknown combo slugs to still render (on-demand ISR for new combos
+// added after the last build). Set to false if you want a hard 404 for
+// any combo that wasn't pre-built by generateStaticParams.
+export const dynamicParams = true;
+
 import ComboClient from "./ComboClient";
 import { notFound } from "next/navigation";
 
 const BASE_URL = "https://www.khizaroverseas.in";
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+
+// ─── Static params (pre-build all known combo pages at deploy time) ───────────
+
+export async function generateStaticParams() {
+  if (!API_URL) return [];
+  try {
+    const res = await fetch(`${API_URL}/api/courses`, {
+      cache: "no-store", // always fetch fresh at build time
+    });
+    if (!res.ok) return [];
+    const json = await res.json();
+    const courses = json.courses || [];
+
+    const combos = [];
+    for (const course of courses) {
+      // comboPageSlugs is pre-populated by the backend generateComboSlugs script.
+      // Skip courses that have no country relationships.
+      if (course.comboPageSlugs?.length) {
+        for (const countrySlug of course.comboPageSlugs) {
+          combos.push({ combo: `${course.slug}-in-${countrySlug}` });
+        }
+      }
+    }
+    return combos;
+  } catch {
+    return [];
+  }
+}
 
 // ─── Data fetcher ─────────────────────────────────────────────────────────────
 

@@ -18,7 +18,7 @@
 //
 // 5. seo.secondaryKeywords from the model was never spread into keywords array.
 
-export const revalidate = 3600;
+export const revalidate = 86400;
 
 import CountryClient from "./CountryClient";
 import { notFound } from "next/navigation";
@@ -32,7 +32,7 @@ async function getCountry(slug) {
   if (!API_URL) return null;
   try {
     const res = await fetch(`${API_URL}/api/countries/${slug}`, {
-      next: { revalidate: 3600 },
+      next: { revalidate: 86400 },
     });
     if (!res.ok) return null;
     const json = await res.json();

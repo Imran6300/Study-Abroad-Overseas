@@ -24,7 +24,7 @@
 //   6. Returns { seo, jsonLd, country }
 //   7. CountryClient renders the full country landing page
 
-export const revalidate = 3600;
+export const revalidate = 86400;
 
 import CountryClient from "../../all-countries/[country]/CountryClient";
 import { notFound } from "next/navigation";
@@ -38,7 +38,7 @@ async function getCountryPage(slug) {
   if (!API_URL) return null;
   try {
     const res = await fetch(`${API_URL}/api/public/country/${slug}`, {
-      next: { revalidate: 3600 },
+      next: { revalidate: 86400 },
     });
     if (!res.ok) return null;
     const json = await res.json();

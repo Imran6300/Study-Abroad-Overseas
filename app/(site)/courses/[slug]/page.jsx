@@ -2,6 +2,27 @@
 
 import CourseDetailPage from "./course";
 
+// ─── Static params (pre-build all known course pages at deploy time) ──────────
+
+export async function generateStaticParams() {
+  if (!process.env.NEXT_PUBLIC_BACKEND_URL) return [];
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/courses`,
+      { cache: "no-store" }, // always fetch fresh at build time
+    );
+    if (!res.ok) return [];
+    const json = await res.json();
+    return (json.courses || []).map((c) => ({ slug: c.slug }));
+  } catch {
+    return [];
+  }
+}
+
+// Allow unknown slugs to still render on-demand (e.g. newly added courses
+// after the last deploy). Set to false for a hard 404 on unknown slugs.
+export const dynamicParams = true;
+
 async function getCourse(slug) {
   try {
     const res = await fetch(

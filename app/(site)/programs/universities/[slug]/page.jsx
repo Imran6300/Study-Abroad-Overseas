@@ -20,12 +20,22 @@
 // 4. Twitter images had same pattern issue as #3.
 //
 // 5. Blog breadcrumb used /all-countries/ path — changed to /study-in/.
+//
+// PERF FIX:
+// 6. All revalidate windows bumped from 3600 → 86400 (university data
+//    changes rarely; no need to rewrite 8,983 pages every hour).
+//    Page-level export const revalidate = 86400 also added so Next.js
+//    uses this as the default for any fetch that doesn't specify its own.
 
 import UniversityDetailLayout from "@/components/UniversityDetail/UniversityDetailLayout";
 import { notFound } from "next/navigation";
 
 const BASE_URL = "https://www.khizaroverseas.in";
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+
+// Page-level revalidate: all fetches on this route revalidate every 24h.
+// University data changes rarely — no need to regenerate every hour.
+export const revalidate = 86400;
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -122,7 +132,7 @@ export async function generateMetadata({ params }) {
   try {
     const { slug } = await params;
     const res = await fetch(`${API_URL}/api/universities/${slug}`, {
-      next: { revalidate: 3600 },
+      next: { revalidate: 86400 }, // was 3600 — university data changes rarely
     });
     if (!res.ok) return { title: "University | Khizar Overseas" };
 
@@ -207,10 +217,10 @@ export default async function Page({ params }) {
 
   const [uniRes, similarRes] = await Promise.all([
     fetch(`${API_URL}/api/universities/${slug}`, {
-      next: { revalidate: 3600 },
+      next: { revalidate: 86400 }, // was 3600 — university data changes rarely
     }),
     fetch(`${API_URL}/api/universities/similar/${slug}`, {
-      next: { revalidate: 3600 },
+      next: { revalidate: 86400 }, // was 3600 — similar list is even more stable
     }),
   ]);
 

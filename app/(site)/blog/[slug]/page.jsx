@@ -37,7 +37,7 @@ const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 async function getBlog(slug) {
   try {
     const res = await fetch(`${API_URL}/api/blogs/${slug}`, {
-      next: { revalidate: 3600 },
+      next: { revalidate: 86400 },
     });
     if (!res.ok) return null;
     const json = await res.json();
@@ -350,4 +350,4 @@ export default async function Post({ params }) {
   );
 }
 
-export const revalidate = 3600;
+export const revalidate = 86400;
