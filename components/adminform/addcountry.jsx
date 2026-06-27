@@ -80,8 +80,15 @@ export default function AddCountryForm({
             : [{ title: "", description: "" }],
       });
 
+      // FIX: Only set the preview URL for display purposes.
+      // flagFile and photoFile remain null until the user actually picks a new file.
+      // The backend handles the case where no new file is sent (keeps existing image).
       setFlagPreview(initialData.flagImage?.url || null);
       setPhotoPreview(initialData.heroImage?.url || null);
+
+      // Reset file states when switching to a different country
+      setFlagFile(null);
+      setPhotoFile(null);
     }
   }, [initialData]);
 
@@ -158,6 +165,13 @@ export default function AddCountryForm({
     if (isEmpty(formData.topUniversities))
       newErrors.topUniversities = "Top universities required";
 
+    // FIX: In "add" mode, both images are mandatory.
+    // In "edit" mode, they are optional (keeping existing if not changed).
+    if (mode === "add") {
+      if (!flagFile) newErrors.flagImage = "Flag image is required";
+      if (!photoFile) newErrors.heroImage = "Country hero image is required";
+    }
+
     formData.whyStudyCards.forEach((card, index) => {
       if (!card.description || card.description.trim() === "") {
         newErrors[`whyStudyCards_${index}_description`] =
@@ -178,13 +192,11 @@ export default function AddCountryForm({
       (card) => card.description.trim() !== "",
     );
 
-    const flagImage = flagFile
-      ? flagPreview
-      : flagPreview || initialData?.flag || null;
-    const heroImage = photoFile
-      ? photoPreview
-      : photoPreview || initialData?.image || null;
-
+    // FIX: Pass the actual File objects (flagFile / photoFile) to the parent.
+    // If the user didn't pick a new file (null), the parent will simply not
+    // append them to FormData and the backend will keep the existing images.
+    // NEVER pass the preview URL string — multer ignores plain strings and
+    // the backend will see an empty req.files, causing upload failures.
     onSuccess({
       name: formData.name,
       continent: formData.continent,
@@ -196,8 +208,8 @@ export default function AddCountryForm({
       eligibilityRequirements: formData.eligibilityRequirements,
       topUniversities: formData.topUniversities,
       whyStudyCards: cleanedCards,
-      flagImage: flagFile,
-      heroImage: photoFile,
+      flagImage: flagFile || null, // File object or null — never a URL string
+      heroImage: photoFile || null, // File object or null — never a URL string
     });
   };
 

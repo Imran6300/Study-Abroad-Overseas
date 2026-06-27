@@ -158,10 +158,27 @@ export default function CountriesPage() {
     try {
       const formData = new FormData();
 
+      // FIX: Build FormData correctly, handling each field type properly.
+      // File objects (flagImage, heroImage) must be appended directly — not
+      // stringified. Plain strings go in as-is. Arrays of objects (whyStudyCards)
+      // are JSON-stringified so the backend can parse them. Null/undefined file
+      // fields are skipped entirely (backend keeps the existing image in that case).
       Object.entries(submittedData).forEach(([key, value]) => {
-        if (Array.isArray(value)) {
+        if (value === null || value === undefined) {
+          // Skip null values — don't send "null" string to the backend.
+          // For image fields this means "keep existing image unchanged".
+          return;
+        }
+
+        if (value instanceof File) {
+          // Append File objects directly — this is what multer reads as req.files.
+          formData.append(key, value);
+        } else if (Array.isArray(value)) {
+          // Arrays (e.g. whyStudyCards) get JSON-stringified.
+          // The backend parses this with JSON.parse().
           formData.append(key, JSON.stringify(value));
         } else {
+          // Strings and numbers go in as plain values.
           formData.append(key, value);
         }
       });
@@ -196,7 +213,7 @@ export default function CountriesPage() {
         throw new Error(data.message || "Something went wrong.");
       }
 
-      // ✅ SUCCESS
+      // SUCCESS
       await fetchCountries(page, search);
 
       setMessageModal({
@@ -211,7 +228,7 @@ export default function CountriesPage() {
       setMode(null);
       setSelectedCountry(null);
     } catch (err) {
-      // ❌ ERROR
+      // ERROR
       setMessageModal({
         open: true,
         type: "error",
@@ -380,7 +397,7 @@ export default function CountriesPage() {
                               width={48}
                               height={32}
                               className="w-full h-full object-cover"
-                              style={{ objectFit: "cover" }} // if needed
+                              style={{ objectFit: "cover" }}
                               onError={(e) =>
                                 (e.target.src =
                                   "https://via.placeholder.com/48x32?text=Flag")
@@ -397,7 +414,7 @@ export default function CountriesPage() {
                                 width={48}
                                 height={32}
                                 className="w-full h-full object-cover"
-                                style={{ objectFit: "cover" }} // if needed
+                                style={{ objectFit: "cover" }}
                                 onError={(e) =>
                                   (e.target.src =
                                     "https://via.placeholder.com/64x40?text=No+Img")
