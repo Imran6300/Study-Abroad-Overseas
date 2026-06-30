@@ -67,20 +67,30 @@ export const metadata = {
 export const revalidate = 86400;
 
 export default async function WhyChooseUs() {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/testimonials`,
-    { next: { revalidate: 86400 } },
-  );
-
-  const data = await res.json();
-  const testimonials = data.success ? data.data.slice(0, 6) : []; // ← increased to 6 if you have enough good ones
+  let testimonials = [];
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/testimonials`,
+      { next: { revalidate: 86400 } },
+    );
+    if (res.ok) {
+      const data = await res.json();
+      testimonials = data.success ? data.data.slice(0, 6) : []; // ← increased to 6 if you have enough good ones
+    } else {
+      console.error(`[why-us] testimonials fetch failed: ${res.status}`);
+    }
+  } catch (err) {
+    console.error("[why-us] testimonials fetch error:", err.message);
+  }
 
   const totalReviews = testimonials.length;
 
   const averageRating =
-    testimonials.reduce((acc, curr) => {
-      return acc + Number(curr.rating || 5);
-    }, 0) / totalReviews;
+    totalReviews === 0
+      ? 5
+      : testimonials.reduce((acc, curr) => {
+          return acc + Number(curr.rating || 5);
+        }, 0) / totalReviews;
 
   const schema = {
     "@context": "https://schema.org",

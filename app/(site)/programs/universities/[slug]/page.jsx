@@ -215,17 +215,31 @@ export async function generateMetadata({ params }) {
 export default async function Page({ params }) {
   const { slug } = await params;
 
-  const [uniRes, similarRes] = await Promise.all([
-    fetch(`${API_URL}/api/universities/${slug}`, {
-      next: { revalidate: 86400 }, // was 3600 — university data changes rarely
-    }),
-    fetch(`${API_URL}/api/universities/similar/${slug}`, {
-      next: { revalidate: 86400 }, // was 3600 — similar list is even more stable
-    }),
-  ]);
+  let uniData = null;
+  let similarData = null;
 
-  const uniData = await uniRes.json();
-  const similarData = await similarRes.json();
+  try {
+    const [uniRes, similarRes] = await Promise.all([
+      fetch(`${API_URL}/api/universities/${slug}`, {
+        next: { revalidate: 86400 }, // was 3600 — university data changes rarely
+      }),
+      fetch(`${API_URL}/api/universities/similar/${slug}`, {
+        next: { revalidate: 86400 }, // was 3600 — similar list is even more stable
+      }),
+    ]);
+
+    if (uniRes.ok) {
+      uniData = await uniRes.json();
+    } else {
+      console.error(`[university/${slug}] fetch failed: ${uniRes.status}`);
+    }
+    similarData = similarRes.ok ? await similarRes.json() : null;
+  } catch (err) {
+    // A transient backend blip mid-build must not take down the other
+    // ~9,000 university pages being generated in this same build run.
+    console.error(`[university/${slug}] fetch error:`, err.message);
+  }
+
   const uni = uniData?.university;
   if (!uni) return notFound();
 

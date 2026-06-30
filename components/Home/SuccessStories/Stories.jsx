@@ -3,15 +3,23 @@ import SuccessCard from "./SuccessCard";
 export const revalidate = 60;
 
 export default async function Stories() {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/testimonials`,
-    {
-      next: { revalidate: 60 },
-    },
-  );
-
-  const data = await res.json();
-  const students = data.success ? data.data.slice(0, 4) : [];
+  let students = [];
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/testimonials`,
+      {
+        next: { revalidate: 60 },
+      },
+    );
+    if (res.ok) {
+      const data = await res.json();
+      students = data.success ? data.data.slice(0, 4) : [];
+    } else {
+      console.error(`[homepage:Stories] fetch failed: ${res.status}`);
+    }
+  } catch (err) {
+    console.error("[homepage:Stories] fetch error:", err.message);
+  }
 
   return (
     <section className="min-h-screen w-full bg-[#f5f7ff] py-12 sm:py-16 px-4 sm:px-6 flex flex-col items-center">

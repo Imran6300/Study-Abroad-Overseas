@@ -10,20 +10,28 @@ import FinalCTASection from "../../components/Home/ReadyToStart/readytostart";
 
 
 async function getUniversities() {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/universities/featured`,
-    {
-      next: { revalidate: 3600 }
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/universities/featured`,
+      {
+        next: { revalidate: 3600 }
+      }
+    );
+
+    if (!res.ok) {
+      console.error(`[homepage] featured universities fetch failed: ${res.status}`);
+      return [];
     }
-  );
 
-  if (!res.ok) {
-    throw new Error("Failed to fetch universities");
+    const data = await res.json();
+
+    return data.universities || [];
+  } catch (err: unknown) {
+    // Never let a backend hiccup take down the entire site build/render.
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("[homepage] featured universities fetch error:", message);
+    return [];
   }
-
-  const data = await res.json();
-
-  return data.universities || [];
 }
 
 export default async function Page() {

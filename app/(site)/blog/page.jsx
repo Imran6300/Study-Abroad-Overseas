@@ -7,14 +7,22 @@ export const metadata = {
 };
 
 async function getBlogs() {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/blogs`, {
-    next: { revalidate: 86400 },
-  });
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/blogs`,
+      {
+        next: { revalidate: 86400 },
+      },
+    );
 
-  if (!res.ok) return [];
+    if (!res.ok) return [];
 
-  const json = await res.json();
-  return json.data;
+    const json = await res.json();
+    return json.data;
+  } catch (err) {
+    console.error("[blog] fetch error:", err.message);
+    return [];
+  }
 }
 
 export default async function BlogPage() {

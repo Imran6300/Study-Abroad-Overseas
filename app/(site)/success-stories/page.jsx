@@ -50,15 +50,23 @@ export const metadata = {
 export const revalidate = 86400; // ISR (best for testimonials)
 
 export default async function SuccessStories() {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/testimonials`,
-    {
-      next: { revalidate: 86400 },
-    },
-  );
-
-  const data = await res.json();
-  const stories = data.success ? data.data : [];
+  let stories = [];
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/testimonials`,
+      {
+        next: { revalidate: 86400 },
+      },
+    );
+    if (res.ok) {
+      const data = await res.json();
+      stories = data.success ? data.data : [];
+    } else {
+      console.error(`[success-stories] fetch failed: ${res.status}`);
+    }
+  } catch (err) {
+    console.error("[success-stories] fetch error:", err.message);
+  }
   const heroData = stories[0];
 
   return (

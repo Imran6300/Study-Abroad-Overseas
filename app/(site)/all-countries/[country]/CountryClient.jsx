@@ -168,6 +168,7 @@ const LeadModal = memo(function LeadModal({
         email: formData.get("email"),
         phone: formData.get("phone"),
         intake: formData.get("intake"),
+        preferredCountry: formData.get("preferredCountry"),
         name,
         captchaToken,
       };
@@ -210,7 +211,7 @@ const LeadModal = memo(function LeadModal({
       initial="hidden"
       animate="visible"
       exit="exit"
-      className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+      className="fixed inset-0 z-[999] flex items-end sm:items-center justify-center sm:p-4 bg-black/70 backdrop-blur-sm"
       onClick={onClose}
     >
       <m.div
@@ -218,35 +219,40 @@ const LeadModal = memo(function LeadModal({
         initial="hidden"
         animate="visible"
         exit="exit"
-        className="relative w-full max-w-md bg-[#0B0F19] border border-cyan-500/30 rounded-3xl p-8 shadow-2xl shadow-cyan-500/10"
+        className="relative w-full sm:max-w-sm bg-[#0B0F19] border border-cyan-500/30 rounded-t-3xl sm:rounded-3xl px-5 pt-5 pb-6 sm:p-6 shadow-2xl shadow-cyan-500/10 max-h-[90dvh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* drag handle on mobile */}
+        <div className="w-10 h-1 bg-white/20 rounded-full mx-auto mb-4 sm:hidden" />
+
         <button
           onClick={onClose}
           aria-label="Close modal"
           className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
         >
-          <X size={20} />
+          <X size={18} />
         </button>
 
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center">
-            <GraduationCap className="text-cyan-400" size={24} />
+        <div className="flex items-center gap-2.5 mb-3">
+          <div className="w-9 h-9 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center shrink-0">
+            <GraduationCap className="text-cyan-400" size={18} />
           </div>
           <div>
-            <h3 className="text-xl font-bold text-white">Free Counseling</h3>
-            <p className="text-sm text-gray-400">Study in {name}</p>
+            <h3 className="text-base font-bold text-white leading-tight">
+              Free Counseling
+            </h3>
+            <p className="text-xs text-gray-400">Study in {name}</p>
           </div>
         </div>
 
-        <form className="space-y-4" onSubmit={handleSubmit}>
+        <form className="space-y-2.5" onSubmit={handleSubmit}>
           <input
             type="text"
             name="fullName"
             placeholder="Your Full Name"
             required
             autoComplete="name"
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition-colors text-sm"
+            className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition-colors text-sm"
           />
           <input
             type="tel"
@@ -254,7 +260,7 @@ const LeadModal = memo(function LeadModal({
             placeholder="WhatsApp Number"
             required
             autoComplete="tel"
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition-colors text-sm"
+            className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition-colors text-sm"
           />
           <input
             type="email"
@@ -262,13 +268,34 @@ const LeadModal = memo(function LeadModal({
             placeholder="Email Address"
             required
             autoComplete="email"
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition-colors text-sm"
+            className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition-colors text-sm"
           />
+          <select
+            name="preferredCountry"
+            required
+            defaultValue=""
+            className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-3.5 py-2.5 text-gray-300 focus:outline-none focus:border-cyan-400 transition-colors text-sm"
+          >
+            <option value="" disabled>
+              Preferred Country to Study
+            </option>
+            <option value="USA">USA</option>
+            <option value="UK">UK</option>
+            <option value="Canada">Canada</option>
+            <option value="Australia">Australia</option>
+            <option value="Germany">Germany</option>
+            <option value="Ireland">Ireland</option>
+            <option value="New Zealand">New Zealand</option>
+            <option value="France">France</option>
+            <option value="Netherlands">Netherlands</option>
+            <option value="Singapore">Singapore</option>
+            <option value="Other">Other</option>
+          </select>
           <select
             name="intake"
             required
             defaultValue=""
-            className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-4 py-3 text-gray-300 focus:outline-none focus:border-cyan-400 transition-colors text-sm"
+            className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-3.5 py-2.5 text-gray-300 focus:outline-none focus:border-cyan-400 transition-colors text-sm"
           >
             <option value="" disabled>
               Preferred Intake
@@ -285,13 +312,13 @@ const LeadModal = memo(function LeadModal({
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-gradient-to-r from-cyan-400 to-blue-500 text-[#020617] py-4 rounded-xl font-bold text-base hover:scale-[1.02] transition-transform shadow-lg shadow-cyan-500/20"
+            className="w-full bg-gradient-to-r from-cyan-400 to-blue-500 text-[#020617] py-3 rounded-xl font-bold text-sm hover:scale-[1.02] transition-transform shadow-lg shadow-cyan-500/20 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
           >
             {loading ? "Submitting..." : "Book My Free Session →"}
           </button>
         </form>
 
-        <p className="text-center text-xs text-gray-500 mt-4">
+        <p className="text-center text-xs text-gray-500 mt-3">
           🔒 100% Free & Confidential · No spam, ever
         </p>
       </m.div>

@@ -48,11 +48,19 @@ export default async function UniversitiesPage({ searchParams }) {
     ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/universities/search?q=${encodeURIComponent(search)}`
     : `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/universities`;
 
-  const res = await fetch(endpoint, {
-    next: { revalidate: 86400 },
-  });
-
-  const data = await res.json();
+  let data = {};
+  try {
+    const res = await fetch(endpoint, {
+      next: { revalidate: 86400 },
+    });
+    if (res.ok) {
+      data = await res.json();
+    } else {
+      console.error(`[programs/universities] fetch failed: ${res.status}`);
+    }
+  } catch (err) {
+    console.error("[programs/universities] fetch error:", err.message);
+  }
   const universities = data?.universities || [];
 
   // Structured data for the listing page
