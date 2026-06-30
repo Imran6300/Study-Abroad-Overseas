@@ -27,6 +27,7 @@ import {
   Building2,
   Menu,
   X,
+  BookOpen,
 } from "lucide-react";
 
 // ─── Nav items ────────────────────────────────────────────────────────────────
@@ -57,6 +58,11 @@ const menuItems = [
 
 const bottomItems = [
   {
+    icon: BookOpen,
+    label: "Manual",
+    href: "/dashboard/org-admin/manual",
+  },
+  {
     icon: Settings,
     label: "Settings",
     href: "/dashboard/org-admin/settings",
@@ -73,6 +79,7 @@ function getMobileTitle(pathname) {
   if (pathname === "/dashboard/org-admin/students") return "Students";
   if (pathname === "/dashboard/org-admin/applications") return "Applications";
   if (pathname === "/dashboard/org-admin/settings") return "Settings";
+  if (pathname === "/dashboard/org-admin/manual") return "Dashboard Manual";
   return "Organization";
 }
 

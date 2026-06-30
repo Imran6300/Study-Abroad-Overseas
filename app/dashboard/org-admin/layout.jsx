@@ -19,6 +19,7 @@ import { getDashboardPath } from "@/lib/roleRouting";
 
 import OrgAdminSidebar from "@/components/orgadmin/OrgAdminSidebar";
 import OrgAdminHeader from "@/components/orgadmin/OrgAdminHeader";
+import OrgAdminFooter from "@/components/orgadmin/OrgAdminFooter";
 
 // NEW: Partner Subscription Engine
 import { useDispatch } from "react-redux";
@@ -75,6 +76,7 @@ export default function OrgAdminLayout({ children }) {
     if (pathname === "/dashboard/org-admin/applications") return "Applications";
     if (pathname === "/dashboard/org-admin/settings")
       return "Organisation Settings";
+    if (pathname === "/dashboard/org-admin/manual") return "Dashboard Manual";
     return "Organisation Dashboard";
   };
 
@@ -96,38 +98,9 @@ export default function OrgAdminLayout({ children }) {
         {/* Page content */}
         <main className="flex-1">{children}</main>
 
-        {/* Footer — respects removeKhizarBranding at this layout level */}
+        {/* Footer — branding-aware, reads org Redux state internally */}
         <OrgAdminFooter />
       </div>
     </div>
-  );
-}
-
-/**
- * OrgAdminFooter
- * Reads the Organization branding from Redux to decide whether to show
- * "Powered by Khizar Overseas" or the custom footer text.
- * This replaces the hardcoded footer that was previously in the layout.
- */
-function OrgAdminFooter() {
-  const org = useSelector((state) => state.orgAdmin?.organization);
-  const removeKhizar = org?.features?.removeKhizarBranding ?? false;
-  const footerText = org?.branding?.footerText ?? "";
-
-  if (removeKhizar) {
-    // Show custom footer text if set, otherwise show nothing
-    if (!footerText) return null;
-    return (
-      <footer className="py-4 px-6 text-center text-xs text-white/20 border-t border-white/[0.05]">
-        {footerText}
-      </footer>
-    );
-  }
-
-  return (
-    <footer className="py-4 px-6 text-center text-xs text-white/20 border-t border-white/[0.05]">
-      {footerText || "Powered by Khizar Overseas"} &mdash; Organisation
-      Dashboard
-    </footer>
   );
 }
