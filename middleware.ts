@@ -96,6 +96,15 @@ export function middleware(req: NextRequest) {
   if (isAuthenticated && isProtected && role) {
     const correctDash = ROLE_DASHBOARD[role];
 
+    // super_admin has full access to /admin/* (content management: students,
+    // counselors, universities, courses, revenue, logs, etc.) in addition to
+    // their own /dashboard/admin-dashboard. Only "editor" is restricted to
+    // /admin/universities specifically — do not redirect super_admin away
+    // from /admin/* segments.
+    if (role === "super_admin" && pathname.startsWith("/admin")) {
+      return NextResponse.next();
+    }
+
     // Check if pathname is inside a dashboard segment that is NOT theirs
     const dashboardSegments = [
       "/dashboard/admin-dashboard",
