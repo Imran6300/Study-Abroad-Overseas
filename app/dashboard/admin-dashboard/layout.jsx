@@ -3,6 +3,7 @@
 import { useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { getDashboardPath } from "@/lib/roleRouting";
 
 export default function AdminLayout({ children }) {
   const { user, authChecked } = useSelector((state) => state.auth);
@@ -11,17 +12,19 @@ export default function AdminLayout({ children }) {
   useEffect(() => {
     if (!authChecked) return;
 
-    // Not logged in
     if (!user) {
       router.replace("/login");
+      return;
     }
-    // Logged in but NOT admin or super admin
-    else if (user.role !== "admin" && user.role !== "super_admin") {
-      router.replace("/dashboard/user");
+
+    // Only super_admin is allowed here.
+    // admin (Org Admin) goes to /dashboard/org-admin
+    // All others go to their own dashboard.
+    if (user.role !== "super_admin") {
+      router.replace(getDashboardPath(user.role));
     }
   }, [authChecked, user, router]);
 
-  // ⛔ Wait until auth check is done
   if (!authChecked) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#0A192F] text-white">
@@ -30,15 +33,9 @@ export default function AdminLayout({ children }) {
     );
   }
 
-  // ⛔ Prevent UI flash
-  if (!user || (user.role !== "admin" && user.role !== "super_admin")) {
+  if (!user || user.role !== "super_admin") {
     return null;
   }
 
-  // ✅ Admin / Super Admin verified
-  return (
-    <div className="flex min-h-screen">
-      {children}
-    </div>
-  );
+  return <div className="flex min-h-screen">{children}</div>;
 }

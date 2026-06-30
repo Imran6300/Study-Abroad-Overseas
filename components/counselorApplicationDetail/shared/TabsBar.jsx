@@ -114,7 +114,7 @@ export default function TabsBar({
         {/* ── DEADLINES ── */}
         {activeTab === "deadlines" && (
           <DeadlinesTab
-            applicationId={application._id}
+            applicationId={application?._id ?? null}
             deadlines={deadlines}
             savingDeadline={savingDeadline}
             handleCreateDeadline={handleCreateDeadline}

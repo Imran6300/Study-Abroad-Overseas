@@ -16,6 +16,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import dynamic from "next/dynamic";
 import { counselorApi } from "@/lib/counselorApi";
 
 import CounselorKpiCards from "@/components/counselordashboard/CounselorKpiCards";
@@ -24,7 +25,14 @@ import CounselorDeadlines from "@/components/counselordashboard/CounselorDeadlin
 import CounselorRecentActivity from "@/components/counselordashboard/CounselorRecentActivity";
 import CounselorTasks from "@/components/counselordashboard/CounselorTasks";
 import CounselorStudentsTable from "@/components/counselordashboard/CounselorStudentsTable";
-import CounselorAnalytics from "@/components/counselordashboard/CounselorAnalytics";
+// Lazy-loaded: chart.js (~180KB) only downloads when the dashboard renders
+const CounselorAnalytics = dynamic(
+  () => import("@/components/counselordashboard/CounselorAnalytics"),
+  {
+    ssr: false,
+    loading: () => <div className="h-64 rounded-xl bg-white/5 animate-pulse" />,
+  },
+);
 import ApplicationPipelineBoard from "@/components/counselordashboard/Applicationpipelineboard";
 
 export default function CounselorDashboardPage() {

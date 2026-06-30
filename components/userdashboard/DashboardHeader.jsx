@@ -341,7 +341,7 @@ export default function BrandedDashboardHeader({ user, branding }) {
                     ))}
                   </div>
 
-                  {/* Footer */}
+                  {/* Footer
                   <div
                     className="px-4 py-2.5 text-center"
                     style={{ borderTop: `1px solid ${primary}15` }}
@@ -354,7 +354,7 @@ export default function BrandedDashboardHeader({ user, branding }) {
                     >
                       View all notifications →
                     </Link>
-                  </div>
+                  </div> */}
                 </motion.div>
               )}
             </AnimatePresence>

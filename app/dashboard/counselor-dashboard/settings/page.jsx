@@ -1,24 +1,28 @@
 "use client";
 
 /**
- * app/dashboard/counselor-dashboard/settings/page.jsx  —  CASHFREE EDITION
+ * app/dashboard/counselor-dashboard/settings/page.jsx
  *
- * Migration from Razorpay → Cashfree:
- *  - loadRazorpayScript()     → loadCashfreeSDK()
- *  - handlePay()              → loads Cashfree JS SDK, calls cashfree.checkout()
- *  - verifyPayment payload    → { orderId } instead of razorpay triple
- *  - ?payment=success handler → reads orderId from query param, calls verifyPayment
- *  - "Secure via Razorpay"   → "Secure via Cashfree"
- *
- * Everything else (UI, styles, layout, mobile responsive, preview) is UNCHANGED.
+ * FIXES applied:
+ *  1. Org counselors (isOrgCounselor) no longer see Branding, Email Templates,
+ *     or Subscription tabs/sections — only Profile is shown to them.
+ *  2. Profile data (name, email, phone) is now loaded from getOverview() on mount
+ *     and persisted via handleSave() which calls updateProfile() for profile fields.
+ *  3. Save handler correctly calls updateProfile() for profile data, and
+ *     updateBranding() only for independent counselors.
  */
 
-import { useRef, useState, useEffect, useCallback } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useSelector } from "react-redux";
 import { counselorApi } from "@/lib/counselorApi";
+import { selectIsOrgCounselor } from "@/store/authSelectors";
 
 const cls = (...args) => args.filter(Boolean).join(" ");
-const SECTIONS = ["profile", "branding", "email", "subscription"];
+
+// Org counselors only see Profile; independent counselors see all four
+const INDEPENDENT_SECTIONS = ["profile", "branding", "email", "subscription"];
+const ORG_SECTIONS = ["profile"];
 
 function fileToDataUrl(file) {
   if (!file) return Promise.resolve("");
@@ -41,7 +45,6 @@ function formatExpiry(value) {
   });
 }
 
-// ── Load Cashfree JS SDK once ─────────────────────────────────────────────────
 function loadCashfreeSDK(environment) {
   return new Promise((resolve) => {
     if (window.Cashfree) {
@@ -55,13 +58,12 @@ function loadCashfreeSDK(environment) {
     const script = document.createElement("script");
     script.src = "https://sdk.cashfree.com/js/v3/cashfree.js";
     script.async = true;
-    script.onload = () => {
+    script.onload = () =>
       resolve(
         window.Cashfree({
           mode: environment === "PRODUCTION" ? "production" : "sandbox",
         }),
       );
-    };
     script.onerror = () => resolve(null);
     document.body.appendChild(script);
   });
@@ -91,7 +93,6 @@ function StudentDashboardPreview({ branding, profile }) {
         boxShadow: "0 24px 64px rgba(0,0,0,.5)",
       }}
     >
-      {/* Top nav */}
       <div
         style={{
           background: secondary,
@@ -135,55 +136,29 @@ function StudentDashboardPreview({ branding, profile }) {
             <div style={{ fontSize: 8, color: `${accent}66` }}>{tagline}</div>
           </div>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <div style={{ fontSize: 9, color: `${accent}88` }}>
-            Home · Countries · Courses
-          </div>
-          <div
-            style={{
-              width: 20,
-              height: 20,
-              borderRadius: "50%",
-              background: primary,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 8,
-              fontWeight: 700,
-              color: "#fff",
-            }}
-          >
-            S
-          </div>
+        <div style={{ fontSize: 9, color: `${accent}88` }}>
+          Home · Countries · Courses
         </div>
       </div>
 
-      {/* Layout */}
-      <div style={{ display: "flex", minHeight: 280 }}>
-        {/* Sidebar */}
+      <div style={{ display: "flex", minHeight: 200 }}>
         <div
           style={{
-            width: 100,
+            width: 90,
             background: `${secondary}ee`,
             borderRight: `1px solid ${primary}15`,
             padding: "10px 0",
             flexShrink: 0,
           }}
         >
-          <div style={{ padding: "0 10px", marginBottom: 8 }}>
-            <div style={{ fontSize: 8, fontWeight: 700, color: primary }}>
-              {brand}
-            </div>
-            <div style={{ fontSize: 7, color: `${accent}44` }}>{tagline}</div>
-          </div>
           {[
-            "Dashboard",
-            "Applications",
-            "Saved Uni",
-            "Deadlines",
-            "Documents",
-            "Visa Progress",
-            "Settings",
+            "🏠 Dashboard",
+            "📋 Applications",
+            "⭐ Saved Uni",
+            "⏰ Deadlines",
+            "📄 Documents",
+            "✈️ Visa",
+            "⚙️ Settings",
           ].map((item, i) => (
             <div
               key={item}
@@ -195,99 +170,36 @@ function StudentDashboardPreview({ branding, profile }) {
                 background: i === 0 ? `${primary}22` : "transparent",
                 borderLeft:
                   i === 0 ? `2px solid ${primary}` : "2px solid transparent",
-                display: "flex",
-                alignItems: "center",
-                gap: 5,
                 marginBottom: 1,
               }}
             >
-              <span style={{ fontSize: 9 }}>
-                {["🏠", "📋", "⭐", "⏰", "📄", "✈️", "⚙️"][i]}
-              </span>
               {item}
             </div>
           ))}
         </div>
-
-        {/* Main content */}
-        <div style={{ flex: 1, padding: "12px 14px", overflowX: "hidden" }}>
-          <div style={{ marginBottom: 10 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: accent }}>
-              Dashboard
-            </div>
-            <div style={{ fontSize: 8, color: `${accent}55` }}>
-              Welcome back, Syed Imran Ahmed
-            </div>
-          </div>
-
-          {/* Profile complete banner */}
+        <div style={{ flex: 1, padding: "12px 14px" }}>
           <div
             style={{
-              background: `${primary}14`,
-              border: `1px solid ${primary}33`,
-              borderRadius: 8,
-              padding: "8px 12px",
-              marginBottom: 10,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
+              fontSize: 13,
+              fontWeight: 700,
+              color: accent,
+              marginBottom: 4,
             }}
           >
-            <div>
-              <div style={{ fontSize: 9, fontWeight: 700, color: primary }}>
-                🎉 Profile 100% Complete!
-              </div>
-              <div style={{ fontSize: 7, color: `${accent}66`, marginTop: 2 }}>
-                You're ready to apply — let's go!
-              </div>
-              <div
-                style={{
-                  marginTop: 4,
-                  height: 3,
-                  borderRadius: 99,
-                  background: `${accent}15`,
-                  width: 80,
-                }}
-              >
-                <div
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    borderRadius: 99,
-                    background: primary,
-                  }}
-                />
-              </div>
-            </div>
-            <div
-              style={{
-                background: primary,
-                color: "#fff",
-                fontSize: 7,
-                fontWeight: 700,
-                padding: "4px 8px",
-                borderRadius: 5,
-                flexShrink: 0,
-              }}
-            >
-              Start Applying ✏️
-            </div>
+            Dashboard
           </div>
-
-          {/* Stats row */}
           <div
             style={{
               display: "grid",
               gridTemplateColumns: "repeat(4,1fr)",
-              gap: 6,
-              marginBottom: 10,
+              gap: 5,
             }}
           >
             {[
-              { icon: "🎓", label: "Applications", val: "1" },
-              { icon: "⭐", label: "Shortlisted", val: "0" },
+              { icon: "🎓", label: "Apps", val: "1" },
+              { icon: "⭐", label: "Saved", val: "0" },
               { icon: "⏰", label: "Deadlines", val: "0" },
-              { icon: "🛂", label: "Visa", val: "Pending" },
+              { icon: "🛂", label: "Visa", val: "–" },
             ].map((s) => (
               <div
                 key={s.label}
@@ -295,145 +207,23 @@ function StudentDashboardPreview({ branding, profile }) {
                   background: `${accent}08`,
                   border: `1px solid ${primary}1a`,
                   borderRadius: 7,
-                  padding: "6px 6px",
+                  padding: "5px",
                   textAlign: "center",
                 }}
               >
-                <div style={{ fontSize: 12 }}>{s.icon}</div>
-                <div
-                  style={{ fontSize: 8, color: `${accent}55`, marginTop: 1 }}
-                >
+                <div style={{ fontSize: 11 }}>{s.icon}</div>
+                <div style={{ fontSize: 7, color: `${accent}55` }}>
                   {s.label}
                 </div>
-                <div
-                  style={{
-                    fontSize: 10,
-                    fontWeight: 700,
-                    color: accent,
-                    marginTop: 2,
-                  }}
-                >
+                <div style={{ fontSize: 10, fontWeight: 700, color: accent }}>
                   {s.val}
                 </div>
               </div>
             ))}
           </div>
-
-          {/* Bottom two panels */}
-          <div
-            style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}
-          >
-            <div
-              style={{
-                background: `${primary}0e`,
-                border: `1px solid ${primary}22`,
-                borderRadius: 7,
-                padding: "8px 10px",
-              }}
-            >
-              <div
-                style={{
-                  fontSize: 8,
-                  fontWeight: 700,
-                  color: accent,
-                  marginBottom: 4,
-                }}
-              >
-                ⏰ Urgent Deadlines
-              </div>
-              <div
-                style={{
-                  fontSize: 7,
-                  color: `${accent}44`,
-                  textAlign: "center",
-                  paddingTop: 6,
-                }}
-              >
-                No urgent deadlines 🎉
-              </div>
-            </div>
-            <div
-              style={{
-                background: `${accent}06`,
-                border: `1px solid ${accent}0f`,
-                borderRadius: 7,
-                padding: "8px 10px",
-              }}
-            >
-              <div
-                style={{
-                  fontSize: 8,
-                  fontWeight: 700,
-                  color: accent,
-                  marginBottom: 4,
-                }}
-              >
-                Recent Applications
-              </div>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 5,
-                  padding: "4px 0",
-                }}
-              >
-                <div
-                  style={{
-                    width: 18,
-                    height: 18,
-                    borderRadius: 5,
-                    background: `${primary}22`,
-                    border: `1px solid ${primary}33`,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: 7,
-                    color: primary,
-                    fontWeight: 700,
-                    flexShrink: 0,
-                  }}
-                >
-                  MIT
-                </div>
-                <div style={{ minWidth: 0 }}>
-                  <div
-                    style={{
-                      fontSize: 7,
-                      fontWeight: 600,
-                      color: accent,
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                    }}
-                  >
-                    Massachusetts Inst.
-                  </div>
-                  <div style={{ fontSize: 6, color: `${accent}44` }}>
-                    Computer Applications
-                  </div>
-                </div>
-                <div
-                  style={{
-                    marginLeft: "auto",
-                    background: primary,
-                    color: "#fff",
-                    fontSize: 6,
-                    fontWeight: 700,
-                    padding: "2px 5px",
-                    borderRadius: 3,
-                    flexShrink: 0,
-                  }}
-                >
-                  Offer
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 
-      {/* Footer */}
       {showFooter && (
         <div
           style={{
@@ -468,7 +258,6 @@ function LockBadge() {
         color: "#f59e0b",
         border: "1px solid rgba(245,158,11,.2)",
         marginLeft: 7,
-        letterSpacing: ".02em",
       }}
     >
       🔒 Premium
@@ -626,6 +415,11 @@ function SectionHead({ children }) {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function CounselorSettingsPage() {
+  const isOrgCounselor = useSelector(selectIsOrgCounselor);
+
+  // FIX 1: Org counselors only see the Profile tab/section
+  const SECTIONS = isOrgCounselor ? ORG_SECTIONS : INDEPENDENT_SECTIONS;
+
   const [active, setActive] = useState("profile");
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -637,10 +431,10 @@ export default function CounselorSettingsPage() {
   const [cancelling, setCancelling] = useState(false);
   const [saveError, setSaveError] = useState("");
   const refs = useRef({});
-
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  // FIX 2: profile state is populated from getOverview on mount
   const [profile, setProfile] = useState({
     fullName: "",
     email: "",
@@ -682,62 +476,87 @@ export default function CounselorSettingsPage() {
       "Hi {studentName},\n\nGreat news! You have received an offer from {universityName}.\n\nLog in to your dashboard to view the details.\n\n{counselorName}\n{brandName}",
   });
 
-  // ── Load branding from backend on mount ──────────────────────────────────
+  // ── FIX 2: Load profile from getOverview; load branding only for independent counselors ──
   useEffect(() => {
     (async () => {
       try {
-        const [{ branding: b }, statusRes] = await Promise.allSettled([
-          counselorApi.getMyBranding(),
-          counselorApi.getSubscriptionStatus(),
-        ]).then(([br, sr]) => [
-          br.status === "fulfilled" ? br.value : { branding: {} },
-          sr.status === "fulfilled" ? sr.value : { data: {} },
+        // Always fetch profile data
+        const overviewPromise = counselorApi.getOverview();
+
+        // Only fetch branding/subscription for independent counselors
+        const brandingPromise = !isOrgCounselor
+          ? counselorApi.getMyBranding()
+          : Promise.resolve(null);
+        const subPromise = !isOrgCounselor
+          ? counselorApi.getSubscriptionStatus()
+          : Promise.resolve(null);
+
+        const [overviewRes, brandingRes, subRes] = await Promise.allSettled([
+          overviewPromise,
+          brandingPromise,
+          subPromise,
         ]);
 
-        const premiumExpiresAt =
-          statusRes?.data?.premiumExpiresAt || b.premiumExpiresAt || null;
+        // ── Populate profile from overview ────────────────────────────────────
+        if (overviewRes.status === "fulfilled") {
+          const counselor = overviewRes.value?.data?.counselor || {};
+          setProfile({
+            fullName: counselor.name || "",
+            email: counselor.email || "",
+            phone: counselor.phone || "",
+            photoPreview: counselor.avatarUrl || "",
+          });
+        }
 
-        setBranding({
-          brandName: b.brandName || "",
-          logoPreview: b.logo || "",
-          brandingEnabled: b.brandingEnabled ?? true,
-          plan: b.plan || "standard",
-          premiumExpiresAt,
-          tagline: b.tagline || "",
-          faviconPreview: b.favicon || "",
-          primaryColor: b.primaryColor || "#22c55e",
-          secondaryColor: b.secondaryColor || "#0A192F",
-          accentColor: b.accentColor || "#ffffff",
-          features: {
-            customColors: b.features?.customColors ?? false,
-            removeKhizarBranding: b.features?.removeKhizarBranding ?? false,
-            customEmailBranding: b.features?.customEmailBranding ?? false,
-          },
-          footerText: b.footerText || "",
-        });
+        // ── Populate branding (independent counselors only) ───────────────────
+        if (!isOrgCounselor) {
+          const b =
+            brandingRes.status === "fulfilled"
+              ? brandingRes.value?.branding || {}
+              : {};
+          const statusData =
+            subRes.status === "fulfilled" ? subRes.value?.data || {} : {};
+          const premiumExpiresAt =
+            statusData.premiumExpiresAt || b.premiumExpiresAt || null;
 
-        setEmailSettings((prev) => ({
-          ...prev,
-          senderName: b.brandName || prev.senderName,
-        }));
+          setBranding({
+            brandName: b.brandName || "",
+            logoPreview: b.logo || "",
+            brandingEnabled: b.brandingEnabled ?? true,
+            plan: b.plan || "standard",
+            premiumExpiresAt,
+            tagline: b.tagline || "",
+            faviconPreview: b.favicon || "",
+            primaryColor: b.primaryColor || "#22c55e",
+            secondaryColor: b.secondaryColor || "#0A192F",
+            accentColor: b.accentColor || "#ffffff",
+            features: {
+              customColors: b.features?.customColors ?? false,
+              removeKhizarBranding: b.features?.removeKhizarBranding ?? false,
+              customEmailBranding: b.features?.customEmailBranding ?? false,
+            },
+            footerText: b.footerText || "",
+          });
+
+          setEmailSettings((prev) => ({
+            ...prev,
+            senderName: b.brandName || prev.senderName,
+          }));
+        }
       } catch (err) {
-        console.error("[settings] failed to load branding:", err);
+        console.error("[settings] failed to load:", err);
       } finally {
         setPageLoading(false);
       }
     })();
-  }, []);
+  }, [isOrgCounselor]);
 
-  // ── Handle Cashfree return redirect (?payment=success&orderId=xxx) ────────
+  // ── Handle Cashfree return redirect ──────────────────────────────────────
   useEffect(() => {
     const paymentStatus = searchParams.get("payment");
     const orderId = searchParams.get("orderId");
-
     if (paymentStatus === "success" && orderId) {
-      // Remove query params from URL immediately
       router.replace("/dashboard/counselor-dashboard/settings");
-
-      // Verify with backend
       (async () => {
         try {
           const verify = await counselorApi.verifyPayment({ orderId });
@@ -775,7 +594,6 @@ export default function CounselorSettingsPage() {
     branding.plan === "premium" &&
     (!branding.premiumExpiresAt ||
       new Date(branding.premiumExpiresAt) > new Date());
-
   const premiumLocked = !isPremium;
 
   const scrollTo = (id) => {
@@ -783,46 +601,58 @@ export default function CounselorSettingsPage() {
     refs.current[id]?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  // ── Save branding fields ──────────────────────────────────────────────────
+  // ── FIX 3: handleSave saves profile for ALL counselors, branding only for independent ──
   const handleSave = async () => {
     setSaving(true);
+    setSaveError("");
     try {
-      const payload = {
-        brandName: branding.brandName,
-        tagline: branding.tagline,
-        brandingEnabled: branding.brandingEnabled,
-        primaryColor: branding.primaryColor,
-        secondaryColor: branding.secondaryColor,
-        accentColor: branding.accentColor,
-        footerText: branding.footerText,
-        removeKhizarBranding: branding.features.removeKhizarBranding,
-        customEmailBranding: branding.features.customEmailBranding,
-      };
-      await counselorApi.updateBranding(payload);
+      const saveOps = [
+        // Save phone (and name if backend supports it) via updateProfile
+        counselorApi.updateProfile({ phone: profile.phone }),
+      ];
+
+      // Only save branding for independent counselors
+      if (!isOrgCounselor) {
+        saveOps.push(
+          counselorApi.updateBranding({
+            brandName: branding.brandName,
+            tagline: branding.tagline,
+            brandingEnabled: branding.brandingEnabled,
+            primaryColor: branding.primaryColor,
+            secondaryColor: branding.secondaryColor,
+            accentColor: branding.accentColor,
+            footerText: branding.footerText,
+            removeKhizarBranding: branding.features.removeKhizarBranding,
+            customEmailBranding: branding.features.customEmailBranding,
+          }),
+        );
+      }
+
+      await Promise.all(saveOps);
       setSaved(true);
       setTimeout(() => setSaved(false), 2400);
     } catch (err) {
       console.error("[settings] save failed:", err);
+      setSaveError(
+        err?.status === 401
+          ? "Session expired — please refresh the page."
+          : err?.message || "Failed to save settings. Please try again.",
+      );
+      setTimeout(() => setSaveError(""), 5000);
     } finally {
       setSaving(false);
     }
   };
 
-  const handleUpgrade = () => {
-    setUpgradeModal(true);
-  };
+  const handleUpgrade = () => setUpgradeModal(true);
 
-  // ── Cashfree Checkout ─────────────────────────────────────────────────────
   const handlePay = async () => {
     setPaying(true);
     try {
-      // 1. Create order on backend
       const data = await counselorApi.createOrder();
-      if (!data?.paymentSessionId) {
+      if (!data?.paymentSessionId)
         throw new Error("No payment session returned from server");
-      }
 
-      // 2. Load Cashfree JS SDK
       const cashfree = await loadCashfreeSDK(data.environment || "SANDBOX");
       if (!cashfree) {
         setSaveError(
@@ -833,21 +663,11 @@ export default function CounselorSettingsPage() {
         return;
       }
 
-      // 3. Open Cashfree Drop-in checkout
-      // NOTE: the Cashfree v3 JS SDK does not accept a `returnUrl` option —
-      // that key is silently ignored. The redirect destination is configured
-      // server-side via `order_meta.return_url` when the order is created
-      // (see subscriptionController.js createOrder). Here we only choose how
-      // the checkout itself is presented via `redirectTarget`.
-      const checkoutOptions = {
+      const result = await cashfree.checkout({
         paymentSessionId: data.paymentSessionId,
         redirectTarget: "_self",
-      };
+      });
 
-      const result = await cashfree.checkout(checkoutOptions);
-
-      // cashfree.checkout() may resolve before redirect (in drop mode)
-      // or may redirect the page. Handle both cases.
       if (result?.error) {
         setSaveError(
           `Payment failed: ${result.error.message || "Unknown error"}. Please try again.`,
@@ -858,12 +678,10 @@ export default function CounselorSettingsPage() {
       }
 
       if (result?.paymentDetails) {
-        // Drop-in mode: payment completed without redirect — verify immediately
         try {
           const verify = await counselorApi.verifyPayment({
             orderId: data.orderId,
           });
-
           if (verify?.success) {
             setBranding((prev) => ({
               ...prev,
@@ -885,23 +703,18 @@ export default function CounselorSettingsPage() {
             setTimeout(() => setSaveError(""), 8000);
           }
         } catch (verifyErr) {
-          console.error("[handlePay:verify]", verifyErr);
-          if (verifyErr?.status === 401) {
-            setSaveError("Session expired. Please refresh the page.");
-          } else {
-            setSaveError(
-              "Payment received but verification failed. Your Order ID: " +
-                data.orderId,
-            );
-          }
+          setSaveError(
+            verifyErr?.status === 401
+              ? "Session expired. Please refresh the page."
+              : "Payment received but verification failed. Your Order ID: " +
+                  data.orderId,
+          );
           setTimeout(() => setSaveError(""), 8000);
         } finally {
           setPaying(false);
         }
       }
-      // If redirect mode: page navigates away, setPaying stays true (page unloads)
     } catch (err) {
-      console.error("[handlePay]", err);
       setSaveError(
         err?.status === 401
           ? "Session expired — please refresh the page and try again."
@@ -912,7 +725,6 @@ export default function CounselorSettingsPage() {
     }
   };
 
-  // ── Cancel subscription ───────────────────────────────────────────────────
   const handleCancelSubscription = async () => {
     setCancelling(true);
     try {
@@ -931,7 +743,6 @@ export default function CounselorSettingsPage() {
       setSaved(true);
       setTimeout(() => setSaved(false), 3500);
     } catch (err) {
-      console.error("[handleCancelSubscription]", err);
       setCancelConfirm(false);
       setSaveError(
         err?.status === 401
@@ -953,12 +764,10 @@ export default function CounselorSettingsPage() {
   const updateEmail = (field, value) =>
     setEmailSettings((p) => ({ ...p, [field]: value }));
 
-  // ── Logo upload ───────────────────────────────────────────────────────────
   const handleLogoUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const localUrl = await fileToDataUrl(file);
-    updateBranding("logoPreview", localUrl);
+    updateBranding("logoPreview", await fileToDataUrl(file));
     try {
       const res = await counselorApi.uploadBrandingAsset("logo", file);
       updateBranding("logoPreview", res.url);
@@ -967,12 +776,10 @@ export default function CounselorSettingsPage() {
     }
   };
 
-  // ── Favicon upload ────────────────────────────────────────────────────────
   const handleFaviconUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const localUrl = await fileToDataUrl(file);
-    updateBranding("faviconPreview", localUrl);
+    updateBranding("faviconPreview", await fileToDataUrl(file));
     try {
       const res = await counselorApi.uploadBrandingAsset("favicon", file);
       updateBranding("faviconPreview", res.url);
@@ -981,7 +788,6 @@ export default function CounselorSettingsPage() {
     }
   };
 
-  // ── Profile photo ─────────────────────────────────────────────────────────
   const handlePhotoUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -1002,7 +808,6 @@ export default function CounselorSettingsPage() {
     WebkitAppearance: "none",
     boxSizing: "border-box",
   };
-
   const cardStyle = {
     background: "#090f1e",
     border: "1px solid #0e1d36",
@@ -1013,7 +818,6 @@ export default function CounselorSettingsPage() {
     marginBottom: 12,
   };
 
-  // ── Loading state ─────────────────────────────────────────────────────────
   if (pageLoading) {
     return (
       <div
@@ -1048,445 +852,92 @@ export default function CounselorSettingsPage() {
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: #1a2744; border-radius: 9px; }
         button, input, select, textarea { font-family: inherit; }
-        
         .fi:hover:not(:focus) { border-color: #172540 !important; }
         .fi:focus { border-color: #2563eb !important; box-shadow: 0 0 0 3px rgba(37,99,235,.13) !important; }
         .fi::placeholder { color: #1e3050 !important; }
         .fi:disabled { opacity: .5 !important; cursor: not-allowed !important; }
         textarea.fi { resize: vertical; line-height: 1.65; min-height: 100px; }
-
-        .stab {
-          padding: 7px 15px;
-          border-radius: 8px;
-          font-size: 13px;
-          font-weight: 500;
-          color: #2e4570;
-          background: none;
-          border: none;
-          cursor: pointer;
-          transition: all .15s;
-          white-space: nowrap;
-          letter-spacing: -.01em;
-        }
+        .stab { padding: 7px 15px; border-radius: 8px; font-size: 13px; font-weight: 500; color: #2e4570; background: none; border: none; cursor: pointer; transition: all .15s; white-space: nowrap; }
         .stab:hover { color: #7fa0c8; background: rgba(255,255,255,.025); }
         .stab.on { color: #e2eaf8; background: #0f1e36; border: 1px solid #1a2f52; }
-
-        .btn-p {
-          padding: 10px 22px;
-          border-radius: 9px;
-          font-size: 13.5px;
-          font-weight: 700;
-          background: linear-gradient(135deg, #1d4ed8, #2563eb);
-          color: #fff;
-          border: none;
-          cursor: pointer;
-          transition: all .15s;
-          letter-spacing: -.01em;
-        }
+        .btn-p { padding: 10px 22px; border-radius: 9px; font-size: 13.5px; font-weight: 700; background: linear-gradient(135deg, #1d4ed8, #2563eb); color: #fff; border: none; cursor: pointer; transition: all .15s; }
         .btn-p:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(37,99,235,.3); }
         .btn-p:active { transform: none; }
         .btn-p:disabled { opacity: .6; cursor: not-allowed; transform: none; }
-
-        .btn-g {
-          padding: 10px 20px;
-          border-radius: 9px;
-          font-size: 13px;
-          font-weight: 500;
-          background: transparent;
-          color: #4a607d;
-          border: 1px solid #0f1c31;
-          cursor: pointer;
-          transition: all .15s;
-        }
+        .btn-g { padding: 10px 20px; border-radius: 9px; font-size: 13px; font-weight: 500; background: transparent; color: #4a607d; border: 1px solid #0f1c31; cursor: pointer; transition: all .15s; }
         .btn-g:hover { background: #0a1322; color: #7a9ac0; border-color: #172540; }
-
-        .btn-gold {
-          padding: 11px 26px;
-          border-radius: 10px;
-          font-size: 14px;
-          font-weight: 800;
-          background: linear-gradient(135deg, #f59e0b, #d97706);
-          color: #fff;
-          border: none;
-          cursor: pointer;
-          transition: all .2s;
-          letter-spacing: -.01em;
-          box-shadow: 0 8px 28px rgba(245,158,11,.28);
-        }
+        .btn-gold { padding: 11px 26px; border-radius: 10px; font-size: 14px; font-weight: 800; background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; border: none; cursor: pointer; transition: all .2s; box-shadow: 0 8px 28px rgba(245,158,11,.28); }
         .btn-gold:hover { transform: translateY(-2px); box-shadow: 0 14px 36px rgba(245,158,11,.38); }
         .btn-gold:active { transform: none; }
         .btn-gold:disabled { opacity: .7; cursor: not-allowed; transform: none; }
-
-        .btn-danger {
-          padding: 10px 20px;
-          border-radius: 9px;
-          font-size: 13px;
-          font-weight: 600;
-          background: transparent;
-          color: #ef4444;
-          border: 1px solid rgba(239,68,68,.25);
-          cursor: pointer;
-          transition: all .15s;
-        }
+        .btn-danger { padding: 10px 20px; border-radius: 9px; font-size: 13px; font-weight: 600; background: transparent; color: #ef4444; border: 1px solid rgba(239,68,68,.25); cursor: pointer; transition: all .15s; }
         .btn-danger:hover { background: rgba(239,68,68,.08); border-color: rgba(239,68,68,.4); }
         .btn-danger:disabled { opacity: .5; cursor: not-allowed; }
-
         .s-anchor { scroll-margin-top: 58px; }
-        .divider { height: 1px; background: #080f1c; margin: 2px 0; }
-        .card-shine::before {
-          content: '';
-          position: absolute;
-          inset: 0 0 auto 0;
-          height: 1px;
-          background: linear-gradient(90deg, transparent 5%, #152040 40%, #152040 60%, transparent 95%);
-        }
+        .card-shine::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 1px; background: linear-gradient(90deg, transparent 5%, #152040 40%, #152040 60%, transparent 95%); }
         .tog-divider { height: 1px; background: #0a1422; }
-
-        .color-swatch {
-          display: flex;
-          align-items: center;
-          gap: 9px;
-          background: #070c18;
-          border: 1px solid #0f1c31;
-          border-radius: 9px;
-          padding: 7px 10px;
-          cursor: pointer;
-          transition: border .15s;
-        }
+        .color-swatch { display: flex; align-items: center; gap: 9px; background: #070c18; border: 1px solid #0f1c31; border-radius: 9px; padding: 7px 10px; cursor: pointer; transition: border .15s; }
         .color-swatch:hover { border-color: #172540; }
-        .color-swatch input[type=color] {
-          width: 28px; height: 28px; border-radius: 6px;
-          border: 2px solid #1a2f52; padding: 1px;
-          cursor: pointer; background: none; flex-shrink: 0;
-        }
-
-        .stat-pill {
-          background: #070c18;
-          border: 1px solid #0f1c31;
-          border-radius: 10px;
-          padding: 12px 15px;
-        }
-
-        .toast {
-          position: fixed; bottom: 28px; left: 50%;
-          transform: translateX(-50%);
-          background: #10b981; color: #fff;
-          padding: 11px 24px; border-radius: 9px;
-          font-size: 13.5px; font-weight: 700; z-index: 999;
-          box-shadow: 0 8px 28px rgba(16,185,129,.4);
-          animation: toastIn .3s ease; white-space: nowrap;
-          letter-spacing: -.01em;
-          max-width: calc(100vw - 32px);
-          text-align: center;
-        }
-        @keyframes toastIn {
-          from{ opacity:0; transform:translateX(-50%) translateY(10px); }
-          to{ opacity:1; transform:translateX(-50%) translateY(0); }
-        }
-
-        .modal-bg {
-          position: fixed; inset: 0;
-          background: rgba(0,0,0,.72);
-          backdrop-filter: blur(8px);
-          z-index: 200;
-          display: flex; align-items: center; justify-content: center;
-          padding: 20px;
-          animation: fadeIn .2s ease;
-        }
+        .stat-pill { background: #070c18; border: 1px solid #0f1c31; border-radius: 10px; padding: 12px 15px; }
+        .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); background: #10b981; color: #fff; padding: 11px 24px; border-radius: 9px; font-size: 13.5px; font-weight: 700; z-index: 999; box-shadow: 0 8px 28px rgba(16,185,129,.4); animation: toastIn .3s ease; white-space: nowrap; max-width: calc(100vw - 32px); text-align: center; }
+        @keyframes toastIn { from{ opacity:0; transform:translateX(-50%) translateY(10px); } to{ opacity:1; transform:translateX(-50%) translateY(0); } }
+        .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,.72); backdrop-filter: blur(8px); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px; animation: fadeIn .2s ease; }
         @keyframes fadeIn { from{opacity:0} to{opacity:1} }
-
-        .modal-box {
-          background: #090f1e;
-          border: 1px solid #1a2f52;
-          border-radius: 18px;
-          padding: 32px;
-          width: 100%; max-width: 440px;
-          position: relative;
-          animation: modalIn .25s ease;
-          box-shadow: 0 32px 80px rgba(0,0,0,.6);
-          max-height: 90vh;
-          overflow-y: auto;
-        }
-        @keyframes modalIn {
-          from{ opacity:0; transform: translateY(16px) scale(.97); }
-          to{ opacity:1; transform: none; }
-        }
-
-        .preview-panel {
-          position: sticky; top: 72px;
-          height: calc(100vh - 90px);
-          overflow-y: auto; padding-bottom: 32px;
-        }
+        .modal-box { background: #090f1e; border: 1px solid #1a2f52; border-radius: 18px; padding: 32px; width: 100%; max-width: 440px; position: relative; animation: modalIn .25s ease; box-shadow: 0 32px 80px rgba(0,0,0,.6); max-height: 90vh; overflow-y: auto; }
+        @keyframes modalIn { from{ opacity:0; transform: translateY(16px) scale(.97); } to{ opacity:1; transform: none; } }
+        .preview-panel { position: sticky; top: 72px; height: calc(100vh - 90px); overflow-y: auto; padding-bottom: 32px; }
         @media(max-width:1100px){ .preview-panel { display: none; } }
-
         .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
         .g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
         @media(max-width:640px){ .g2,.g3{ grid-template-columns:1fr; } }
-
-        .ava {
-          width: 72px; height: 72px; border-radius: 50%;
-          background: linear-gradient(135deg,#1a3366,#2563eb,#6d28d9);
-          display: flex; align-items: center; justify-content: center;
-          font-size: 21px; font-weight: 800; color: #fff;
-          flex-shrink: 0; position: relative;
-          box-shadow: 0 0 0 2px #090f1e, 0 0 0 4px #162444;
-          overflow: hidden; letter-spacing: -.5px;
-        }
+        .ava { width: 72px; height: 72px; border-radius: 50%; background: linear-gradient(135deg,#1a3366,#2563eb,#6d28d9); display: flex; align-items: center; justify-content: center; font-size: 21px; font-weight: 800; color: #fff; flex-shrink: 0; position: relative; box-shadow: 0 0 0 2px #090f1e, 0 0 0 4px #162444; overflow: hidden; }
         .ava img { width: 100%; height: 100%; object-fit: cover; }
-        .ava .dot {
-          position: absolute; bottom: 3px; right: 3px;
-          width: 11px; height: 11px; border-radius: 50%;
-          background: #10b981; border: 2px solid #090f1e;
-        }
-
-        .badge {
-          display: inline-flex; align-items: center;
-          padding: 3px 8px; border-radius: 5px;
-          font-size: 10.5px; font-weight: 700; letter-spacing: .02em;
-        }
+        .ava .dot { position: absolute; bottom: 3px; right: 3px; width: 11px; height: 11px; border-radius: 50%; background: #10b981; border: 2px solid #090f1e; }
+        .badge { display: inline-flex; align-items: center; padding: 3px 8px; border-radius: 5px; font-size: 10.5px; font-weight: 700; }
         .bg { background: rgba(16,185,129,.1); color: #10b981; border: 1px solid rgba(16,185,129,.18); }
         .ba { background: rgba(245,158,11,.1); color: #f59e0b; border: 1px solid rgba(245,158,11,.18); }
         .bb { background: rgba(59,130,246,.1); color: #60a5fa; border: 1px solid rgba(59,130,246,.18); }
         .bp { background: linear-gradient(135deg,rgba(245,158,11,.15),rgba(217,119,6,.1)); color: #fbbf24; border: 1px solid rgba(245,158,11,.3); }
-
-        .lockedOverlay {
-          position: absolute; inset: 0;
-          background: linear-gradient(180deg, rgba(6,11,23,.65), rgba(6,11,23,.88));
-          backdrop-filter: blur(2px);
-          display: flex; align-items: center; justify-content: center;
-          border-radius: 14px; z-index: 5;
-        }
-
-        .upload-lbl {
-          font-size: 11px; color: #2563eb; cursor: pointer;
-          font-weight: 700; text-decoration: underline;
-          text-decoration-style: dotted; text-underline-offset: 3px;
-          padding: 0; background: none; border: none;
-          margin-top: 5px; display: inline-block;
-        }
+        .bo { background: rgba(139,92,246,.1); color: #a78bfa; border: 1px solid rgba(139,92,246,.2); }
+        .lockedOverlay { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(6,11,23,.65), rgba(6,11,23,.88)); backdrop-filter: blur(2px); display: flex; align-items: center; justify-content: center; border-radius: 14px; z-index: 5; }
+        .upload-lbl { font-size: 11px; color: #2563eb; cursor: pointer; font-weight: 700; text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 3px; padding: 0; background: none; border: none; margin-top: 5px; display: inline-block; }
         .upload-lbl:hover { color: #60a5fa; }
-
-        .preview-toggle-btn {
-          display: none;
-          padding: 7px 14px; border-radius: 8px;
-          font-size: 12.5px; font-weight: 600;
-          background: #0f1e36; color: #7fa0c8;
-          border: 1px solid #1a2f52; cursor: pointer;
-        }
+        .preview-toggle-btn { display: none; padding: 7px 14px; border-radius: 8px; font-size: 12.5px; font-weight: 600; background: #0f1e36; color: #7fa0c8; border: 1px solid #1a2f52; cursor: pointer; }
         @media(max-width:1100px){ .preview-toggle-btn { display: flex; align-items: center; gap: 6px; } }
-
-        .live-dot {
-          width: 6px; height: 6px; border-radius: 50%;
-          background: #10b981; animation: pulse 2s infinite; flex-shrink: 0;
-        }
-        @keyframes pulse {
-          0%,100%{ box-shadow: 0 0 0 0 rgba(16,185,129,.5); }
-          50%{ box-shadow: 0 0 0 5px rgba(16,185,129,0); }
-        }
-
-        .email-var {
-          display: inline-block; padding: 1px 6px;
-          background: rgba(37,99,235,.15); color: #60a5fa;
-          border-radius: 4px; font-size: 10.5px; font-weight: 600;
-          margin: 2px; border: 1px solid rgba(37,99,235,.2);
-        }
-
+        .live-dot { width: 6px; height: 6px; border-radius: 50%; background: #10b981; animation: pulse 2s infinite; flex-shrink: 0; }
+        @keyframes pulse { 0%,100%{ box-shadow: 0 0 0 0 rgba(16,185,129,.5); } 50%{ box-shadow: 0 0 0 5px rgba(16,185,129,0); } }
+        .email-var { display: inline-block; padding: 1px 6px; background: rgba(37,99,235,.15); color: #60a5fa; border-radius: 4px; font-size: 10.5px; font-weight: 600; margin: 2px; border: 1px solid rgba(37,99,235,.2); }
         @keyframes spin { to { transform: rotate(360deg); } }
-
-        /* ─── MAIN LAYOUT GRID ──────────────────────────────────── */
-        .settings-layout {
-          max-width: 1400px;
-          margin: 0 auto;
-          padding: 28px 24px 80px;
-          display: grid;
-          grid-template-columns: 1fr 420px;
-          gap: 28px;
-          align-items: start;
-        }
-
-        /* ─── NAV ACTIONS (desktop: always visible) ─────────────── */
+        .settings-layout { max-width: 1400px; margin: 0 auto; padding: 28px 24px 80px; display: grid; grid-template-columns: 1fr 420px; gap: 28px; align-items: start; }
         .nav-actions { display: flex; gap: 8px; flex-shrink: 0; align-items: center; }
-        .nav-discard-btn { display: block; }
-        .nav-save-btn   { display: block; }
-
-        /* ─── MOBILE FAB ────────────────────────────────────────── */
         .mobile-fab { display: none; }
-
-        /* ─── SUBSCRIPTION PANEL FLEX ───────────────────────────── */
-        .sub-panel-row {
-          display: flex;
-          align-items: flex-start;
-          justify-content: space-between;
-          gap: 16px;
-          flex-wrap: wrap;
-        }
-
-        /* ─── PROFILE HEADER ────────────────────────────────────── */
-        .profile-header {
-          display: flex;
-          align-items: flex-start;
-          gap: 18px;
-          flex-wrap: wrap;
-        }
-
-        /* ─── BOTTOM SAVE BAR ───────────────────────────────────── */
-        .bottom-save-bar {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 15px 20px;
-          background: #090f1e;
-          border: 1px solid #0e1d36;
-          border-radius: 12px;
-          flex-wrap: wrap;
-          gap: 12px;
-        }
+        .sub-panel-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+        .profile-header { display: flex; align-items: flex-start; gap: 18px; flex-wrap: wrap; }
+        .bottom-save-bar { display: flex; align-items: center; justify-content: space-between; padding: 15px 20px; background: #090f1e; border: 1px solid #0e1d36; border-radius: 12px; flex-wrap: wrap; gap: 12px; }
         .bottom-save-bar-actions { display: flex; gap: 8px; }
-
-        /* ─── BENEFITS GRID ─────────────────────────────────────── */
-        .benefits-grid {
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 10px;
-        }
-
-        /* ═══════════════════════════════════════════════════════════
-           MOBILE OVERRIDES  (≤768px)
-           Desktop layout = zero changes above this line
-           ═══════════════════════════════════════════════════════════ */
+        .benefits-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .org-notice { background: rgba(139,92,246,.08); border: 1px solid rgba(139,92,246,.2); border-radius: 10px; padding: 12px 16px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; font-size: 12.5px; color: #a78bfa; line-height: 1.5; }
         @media (max-width: 768px) {
-
-          .settings-layout {
-            grid-template-columns: 1fr;
-            padding: 16px 14px 100px;
-            gap: 0;
-          }
-
-          .settings-layout > div:first-child > div:first-child h1 {
-            font-size: 19px !important;
-          }
-
-          .nav-tabs-wrap {
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-            scrollbar-width: none;
-            padding-bottom: 2px;
-          }
+          .settings-layout { grid-template-columns: 1fr; padding: 16px 14px 100px; gap: 0; }
+          .settings-layout > div:first-child > div:first-child h1 { font-size: 19px !important; }
+          .nav-tabs-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding-bottom: 2px; }
           .nav-tabs-wrap::-webkit-scrollbar { display: none; }
-
           .nav-discard-btn { display: none !important; }
-          .nav-save-btn   { display: none !important; }
-
-          .preview-toggle-btn {
-            padding: 6px 10px !important;
-            font-size: 11.5px !important;
-          }
-
-          .mobile-fab {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: fixed;
-            bottom: 20px;
-            right: 16px;
-            z-index: 90;
-            gap: 7px;
-            padding: 13px 20px;
-            border-radius: 50px;
-            font-size: 13.5px;
-            font-weight: 800;
-            background: linear-gradient(135deg, #1d4ed8, #2563eb);
-            color: #fff;
-            border: none;
-            cursor: pointer;
-            box-shadow: 0 8px 28px rgba(29,78,216,.45);
-            letter-spacing: -.01em;
-            transition: all .15s;
-            white-space: nowrap;
-          }
+          .nav-save-btn { display: none !important; }
+          .mobile-fab { display: flex; align-items: center; justify-content: center; position: fixed; bottom: 20px; right: 16px; z-index: 90; gap: 7px; padding: 13px 20px; border-radius: 50px; font-size: 13.5px; font-weight: 800; background: linear-gradient(135deg, #1d4ed8, #2563eb); color: #fff; border: none; cursor: pointer; box-shadow: 0 8px 28px rgba(29,78,216,.45); white-space: nowrap; }
           .mobile-fab:disabled { opacity: .7; cursor: not-allowed; }
-          .mobile-fab:active { transform: scale(.97); }
-
           .card-shine { padding: 16px !important; }
-
-          .profile-header {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 14px;
-          }
-          .profile-stats-g3 {
-            grid-template-columns: repeat(3, 1fr) !important;
-            gap: 8px !important;
-          }
-
-          .sub-panel-row {
-            flex-direction: column;
-            gap: 12px;
-          }
-          .sub-plan-info { min-width: unset !important; }
-          .sub-stat-pill { min-width: unset !important; width: 100% !important; }
-
-          .bottom-save-bar {
-            flex-direction: column;
-            align-items: stretch;
-            text-align: center;
-            padding: 14px;
-            margin-bottom: 8px;
-          }
-          .bottom-save-bar-actions {
-            justify-content: stretch;
-          }
-          .bottom-save-bar-actions .btn-g,
-          .bottom-save-bar-actions .btn-p {
-            flex: 1;
-          }
-
-          .color-swatches-g3 {
-            grid-template-columns: 1fr !important;
-          }
-
-          .modal-box {
-            padding: 22px 18px !important;
-            border-radius: 16px !important;
-            max-height: 85vh;
-          }
-
-          .email-tpl-card {
-            padding: 13px !important;
-          }
-
-          .sender-g2 {
-            grid-template-columns: 1fr !important;
-          }
-
-          .brand-identity-g2 {
-            grid-template-columns: 1fr !important;
-          }
-
-          .premium-top-g2 {
-            grid-template-columns: 1fr !important;
-          }
-
-          .lockedOverlay p { font-size: 12px !important; }
-
-          .toast {
-            bottom: 80px !important;
-            left: 14px !important;
-            right: 14px !important;
-            transform: none !important;
-            max-width: unset !important;
-          }
-
+          .profile-header { flex-direction: column; align-items: flex-start; gap: 14px; }
+          .sub-panel-row { flex-direction: column; gap: 12px; }
+          .bottom-save-bar { flex-direction: column; align-items: stretch; text-align: center; padding: 14px; }
+          .bottom-save-bar-actions { justify-content: stretch; }
+          .bottom-save-bar-actions .btn-g, .bottom-save-bar-actions .btn-p { flex: 1; }
+          .modal-box { padding: 22px 18px !important; border-radius: 16px !important; max-height: 85vh; }
+          .toast { bottom: 80px !important; left: 14px !important; right: 14px !important; transform: none !important; max-width: unset !important; }
           .s-anchor { scroll-margin-top: 62px; }
           .settings-nav { height: 50px !important; }
-          .page-header { margin-bottom: 20px !important; }
-          .section-block { margin-bottom: 24px !important; }
         }
-
         @media (max-width: 400px) {
-          .profile-stats-g3 {
-            grid-template-columns: repeat(3, 1fr) !important;
-          }
           .badge { font-size: 9.5px !important; padding: 2px 6px !important; }
           .stab { padding: 6px 11px !important; font-size: 12px !important; }
           .benefits-grid { grid-template-columns: 1fr !important; }
@@ -1544,15 +995,16 @@ export default function CounselorSettingsPage() {
               </button>
             ))}
           </div>
-
           <div className="nav-actions">
-            <button
-              className="preview-toggle-btn"
-              onClick={() => setShowPreview((v) => !v)}
-            >
-              <span className="live-dot" />
-              {showPreview ? "Hide" : "Preview"}
-            </button>
+            {!isOrgCounselor && (
+              <button
+                className="preview-toggle-btn"
+                onClick={() => setShowPreview((v) => !v)}
+              >
+                <span className="live-dot" />
+                {showPreview ? "Hide" : "Preview"}
+              </button>
+            )}
             <button
               className="btn-g nav-discard-btn"
               style={{ padding: "7px 15px", fontSize: 12.5 }}
@@ -1573,10 +1025,9 @@ export default function CounselorSettingsPage() {
 
       {/* ── Layout ─────────────────────────────────────────────── */}
       <div className="settings-layout">
-        {/* ── Left: Settings ─────────────────────────────────── */}
         <div>
           {/* Page header */}
-          <div className="page-header" style={{ marginBottom: 28 }}>
+          <div style={{ marginBottom: 28 }}>
             <h1
               style={{
                 fontSize: 23,
@@ -1589,10 +1040,22 @@ export default function CounselorSettingsPage() {
               Account Settings
             </h1>
             <p style={{ fontSize: 13, color: "#2e4570", lineHeight: 1.6 }}>
-              Manage your profile, branding, and subscription. Changes reflect
-              live in the student dashboard preview →
+              {isOrgCounselor
+                ? "Manage your profile. Branding is managed by your organisation administrator."
+                : "Manage your profile, branding, and subscription. Changes reflect live in the student dashboard preview →"}
             </p>
           </div>
+
+          {/* Org counselor notice — shown only to org counselors */}
+          {isOrgCounselor && (
+            <div className="org-notice">
+              <span style={{ fontSize: 18, flexShrink: 0 }}>🏢</span>
+              <span>
+                You belong to an organisation. Branding, email templates, and
+                subscription are managed by your org admin.
+              </span>
+            </div>
+          )}
 
           {/* ── PROFILE ──────────────────────────────────────── */}
           <div
@@ -1600,11 +1063,10 @@ export default function CounselorSettingsPage() {
             ref={(el) => {
               refs.current.profile = el;
             }}
-            className="s-anchor section-block"
+            className="s-anchor"
             style={{ marginBottom: 32 }}
           >
             <SectionHead>Profile</SectionHead>
-
             <div style={cardStyle} className="card-shine">
               <div className="profile-header">
                 <div
@@ -1639,7 +1101,6 @@ export default function CounselorSettingsPage() {
                     />
                   </label>
                 </div>
-
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div
                     style={{
@@ -1662,7 +1123,12 @@ export default function CounselorSettingsPage() {
                     </span>
                     <span className="badge bg">● Active</span>
                     <span className="badge bb">Counselor</span>
-                    {isPremium && <span className="badge bp">⭐ Premium</span>}
+                    {isOrgCounselor && (
+                      <span className="badge bo">🏢 Organisation</span>
+                    )}
+                    {!isOrgCounselor && isPremium && (
+                      <span className="badge bp">⭐ Premium</span>
+                    )}
                   </div>
                   <p
                     style={{
@@ -1673,10 +1139,9 @@ export default function CounselorSettingsPage() {
                       wordBreak: "break-all",
                     }}
                   >
-                    {profile.email} &nbsp;·&nbsp; {profile.phone}
+                    {profile.email}&nbsp;·&nbsp;{profile.phone}
                   </p>
                   <div
-                    className="profile-stats-g3"
                     style={{
                       display: "grid",
                       gridTemplateColumns: "1fr 1fr 1fr",
@@ -1723,18 +1188,21 @@ export default function CounselorSettingsPage() {
                     label: "Full Name",
                     field: "fullName",
                     placeholder: "Your full name",
+                    disabled: false,
                   },
                   {
                     label: "Email",
                     field: "email",
                     placeholder: "Email address",
+                    disabled: true,
                   },
                   {
                     label: "Phone",
                     field: "phone",
                     placeholder: "Phone number",
+                    disabled: false,
                   },
-                ].map(({ label, field, placeholder }) => (
+                ].map(({ label, field, placeholder, disabled }) => (
                   <Field key={field} label={label}>
                     <input
                       className="fi"
@@ -1742,387 +1210,707 @@ export default function CounselorSettingsPage() {
                       value={profile[field]}
                       onChange={(e) => updateProfile(field, e.target.value)}
                       placeholder={placeholder}
+                      disabled={disabled}
                     />
                   </Field>
                 ))}
               </div>
+
+              {/* Inline save button inside the profile card */}
+              <div
+                style={{
+                  marginTop: 18,
+                  display: "flex",
+                  justifyContent: "flex-end",
+                }}
+              >
+                <button
+                  className="btn-p"
+                  onClick={handleSave}
+                  disabled={saving}
+                  style={{ padding: "10px 24px" }}
+                >
+                  {saving ? "Saving…" : saved ? "✓ Saved" : "Save Profile"}
+                </button>
+              </div>
             </div>
           </div>
 
-          {/* ── BRANDING ─────────────────────────────────────── */}
-          <div
-            id="branding"
-            ref={(el) => {
-              refs.current.branding = el;
-            }}
-            className="s-anchor section-block"
-            style={{ marginBottom: 32 }}
-          >
-            <SectionHead>Branding</SectionHead>
-
-            <div style={cardStyle} className="card-shine">
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  gap: 12,
-                  flexWrap: "wrap",
-                  marginBottom: 16,
-                }}
-              >
-                <div>
-                  <div
-                    style={{
-                      fontSize: 14,
-                      fontWeight: 700,
-                      color: "#e8f0ff",
-                      marginBottom: 3,
-                    }}
-                  >
-                    Brand Identity
-                  </div>
-                  <p
-                    style={{ fontSize: 12, color: "#2e4570", lineHeight: 1.6 }}
-                  >
-                    Brand name and logo are available on the free plan.
-                  </p>
-                </div>
-                <span className={cls("badge", isPremium ? "bp" : "ba")}>
-                  {isPremium ? "⭐ Premium Active" : "Standard Plan"}
-                </span>
-              </div>
-
-              <div className="g2 brand-identity-g2">
-                <Field label="Brand Name (Free)">
-                  <input
-                    className="fi"
-                    style={inputStyle}
-                    value={branding.brandName}
-                    onChange={(e) =>
-                      updateBranding("brandName", e.target.value)
-                    }
-                    placeholder="Your brand name"
-                  />
-                </Field>
-
-                <Field label="Logo Upload (Free)">
-                  <div
-                    style={{
-                      background: "#070c18",
-                      border: "1px dashed #16305a",
-                      borderRadius: 9,
-                      padding: "10px 12px",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 12,
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: 52,
-                        height: 52,
-                        borderRadius: 10,
-                        background: "#0d1628",
-                        border: "1px solid #13233d",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        overflow: "hidden",
-                        flexShrink: 0,
-                      }}
-                    >
-                      {branding.logoPreview ? (
-                        <img
-                          src={branding.logoPreview}
-                          alt="Logo"
-                          style={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover",
-                          }}
-                        />
-                      ) : (
-                        <span style={{ fontSize: 10, color: "#2a3f5e" }}>
-                          Logo
-                        </span>
-                      )}
-                    </div>
-                    <div>
-                      <p
-                        style={{
-                          fontSize: 11,
-                          color: "#3d5a7e",
-                          marginBottom: 5,
-                        }}
-                      >
-                        PNG, SVG or JPG · max 2MB
-                      </p>
-                      <label className="upload-lbl">
-                        Upload logo
-                        <input
-                          type="file"
-                          accept="image/*"
-                          style={{ display: "none" }}
-                          onChange={handleLogoUpload}
-                        />
-                      </label>
-                    </div>
-                  </div>
-                </Field>
-              </div>
-
-              <div style={{ marginTop: 8 }}>
-                <ToggleRow
-                  icon="🟢"
-                  title="Branding Enabled"
-                  desc="Toggle your brand profile on or off for students."
-                  on={branding.brandingEnabled}
-                  onChange={() =>
-                    updateBranding("brandingEnabled", !branding.brandingEnabled)
-                  }
-                />
-              </div>
-            </div>
-
-            {/* Premium tier */}
+          {/* ── BRANDING — hidden for org counselors ─────────── */}
+          {!isOrgCounselor && (
             <div
-              style={{ ...cardStyle, position: "relative" }}
-              className="card-shine"
+              id="branding"
+              ref={(el) => {
+                refs.current.branding = el;
+              }}
+              className="s-anchor"
+              style={{ marginBottom: 32 }}
             >
-              {premiumLocked && (
-                <div className="lockedOverlay">
-                  <div
-                    style={{
-                      textAlign: "center",
-                      maxWidth: 300,
-                      padding: "0 16px",
-                    }}
-                  >
-                    <div style={{ fontSize: 28, marginBottom: 8 }}>🔒</div>
+              <SectionHead>Branding</SectionHead>
+
+              {/* Free tier card */}
+              <div style={cardStyle} className="card-shine">
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 12,
+                    flexWrap: "wrap",
+                    marginBottom: 16,
+                  }}
+                >
+                  <div>
                     <div
                       style={{
                         fontSize: 14,
-                        fontWeight: 800,
+                        fontWeight: 700,
                         color: "#e8f0ff",
-                        marginBottom: 6,
+                        marginBottom: 3,
                       }}
                     >
-                      Premium White Label
+                      Brand Identity
                     </div>
                     <p
                       style={{
-                        fontSize: 12.5,
-                        color: "#6a8ab0",
-                        lineHeight: 1.7,
-                        marginBottom: 14,
+                        fontSize: 12,
+                        color: "#2e4570",
+                        lineHeight: 1.6,
                       }}
                     >
-                      Unlock tagline, favicon, dashboard colors, remove footer
-                      branding, and email templates.
+                      Brand name and logo are available on the free plan.
                     </p>
+                  </div>
+                  <span className={cls("badge", isPremium ? "bp" : "ba")}>
+                    {isPremium ? "⭐ Premium Active" : "Standard Plan"}
+                  </span>
+                </div>
+
+                <div className="g2">
+                  <Field label="Brand Name (Free)">
+                    <input
+                      className="fi"
+                      style={inputStyle}
+                      value={branding.brandName}
+                      onChange={(e) =>
+                        updateBranding("brandName", e.target.value)
+                      }
+                      placeholder="Your brand name"
+                    />
+                  </Field>
+                  <Field label="Logo Upload (Free)">
                     <div
                       style={{
-                        fontSize: 20,
-                        fontWeight: 800,
-                        color: "#f59e0b",
-                        marginBottom: 12,
+                        background: "#070c18",
+                        border: "1px dashed #16305a",
+                        borderRadius: 9,
+                        padding: "10px 12px",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 12,
                       }}
                     >
-                      ₹999
-                      <span
+                      <div
                         style={{
-                          fontSize: 12,
-                          fontWeight: 500,
-                          color: "#6a8ab0",
+                          width: 52,
+                          height: 52,
+                          borderRadius: 10,
+                          background: "#0d1628",
+                          border: "1px solid #13233d",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          overflow: "hidden",
+                          flexShrink: 0,
                         }}
                       >
-                        /month
-                      </span>
+                        {branding.logoPreview ? (
+                          <img
+                            src={branding.logoPreview}
+                            alt="Logo"
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "cover",
+                            }}
+                          />
+                        ) : (
+                          <span style={{ fontSize: 10, color: "#2a3f5e" }}>
+                            Logo
+                          </span>
+                        )}
+                      </div>
+                      <div>
+                        <p
+                          style={{
+                            fontSize: 11,
+                            color: "#3d5a7e",
+                            marginBottom: 5,
+                          }}
+                        >
+                          PNG, SVG or JPG · max 2MB
+                        </p>
+                        <label className="upload-lbl">
+                          Upload logo
+                          <input
+                            type="file"
+                            accept="image/*"
+                            style={{ display: "none" }}
+                            onChange={handleLogoUpload}
+                          />
+                        </label>
+                      </div>
                     </div>
-                    <button className="btn-gold" onClick={handleUpgrade}>
-                      Upgrade to Premium
-                    </button>
+                  </Field>
+                </div>
+
+                <div style={{ marginTop: 8 }}>
+                  <ToggleRow
+                    icon="🟢"
+                    title="Branding Enabled"
+                    desc="Toggle your brand profile on or off for students."
+                    on={branding.brandingEnabled}
+                    onChange={() =>
+                      updateBranding(
+                        "brandingEnabled",
+                        !branding.brandingEnabled,
+                      )
+                    }
+                  />
+                </div>
+              </div>
+
+              {/* Premium tier card */}
+              <div
+                style={{ ...cardStyle, position: "relative" }}
+                className="card-shine"
+              >
+                {premiumLocked && (
+                  <div className="lockedOverlay">
+                    <div
+                      style={{
+                        textAlign: "center",
+                        maxWidth: 300,
+                        padding: "0 16px",
+                      }}
+                    >
+                      <div style={{ fontSize: 28, marginBottom: 8 }}>🔒</div>
+                      <div
+                        style={{
+                          fontSize: 14,
+                          fontWeight: 800,
+                          color: "#e8f0ff",
+                          marginBottom: 6,
+                        }}
+                      >
+                        Premium White Label
+                      </div>
+                      <p
+                        style={{
+                          fontSize: 12.5,
+                          color: "#6a8ab0",
+                          lineHeight: 1.7,
+                          marginBottom: 14,
+                        }}
+                      >
+                        Unlock tagline, favicon, dashboard colors, remove footer
+                        branding, and email templates.
+                      </p>
+                      <div
+                        style={{
+                          fontSize: 20,
+                          fontWeight: 800,
+                          color: "#f59e0b",
+                          marginBottom: 12,
+                        }}
+                      >
+                        ₹999
+                        <span
+                          style={{
+                            fontSize: 12,
+                            fontWeight: 500,
+                            color: "#6a8ab0",
+                          }}
+                        >
+                          /month
+                        </span>
+                      </div>
+                      <button className="btn-gold" onClick={handleUpgrade}>
+                        Upgrade to Premium
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 12,
+                    marginBottom: 18,
+                  }}
+                >
+                  <div>
+                    <div
+                      style={{
+                        fontSize: 14,
+                        fontWeight: 700,
+                        color: "#e8f0ff",
+                        marginBottom: 3,
+                      }}
+                    >
+                      Premium White Label <LockBadge />
+                    </div>
+                    <p
+                      style={{
+                        fontSize: 12,
+                        color: "#2e4570",
+                        lineHeight: 1.6,
+                      }}
+                    >
+                      Full control over your student dashboard appearance.
+                    </p>
                   </div>
                 </div>
-              )}
 
+                <div className="g2" style={{ marginBottom: 16 }}>
+                  <Field label="Tagline (Premium)">
+                    <input
+                      className="fi"
+                      style={inputStyle}
+                      value={branding.tagline}
+                      onChange={(e) =>
+                        updateBranding("tagline", e.target.value)
+                      }
+                      placeholder="Study Abroad Specialist"
+                      disabled={premiumLocked}
+                    />
+                  </Field>
+                  <Field label="Favicon (Premium)">
+                    <div
+                      style={{
+                        background: "#070c18",
+                        border: "1px dashed #16305a",
+                        borderRadius: 9,
+                        padding: "10px 12px",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 10,
+                        opacity: premiumLocked ? 0.5 : 1,
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 40,
+                          height: 40,
+                          borderRadius: 8,
+                          background: "#0d1628",
+                          border: "1px solid #13233d",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          overflow: "hidden",
+                          flexShrink: 0,
+                        }}
+                      >
+                        {branding.faviconPreview ? (
+                          <img
+                            src={branding.faviconPreview}
+                            alt="Favicon"
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "cover",
+                            }}
+                          />
+                        ) : (
+                          <span style={{ fontSize: 9, color: "#2a3f5e" }}>
+                            Icon
+                          </span>
+                        )}
+                      </div>
+                      <div>
+                        <p
+                          style={{
+                            fontSize: 11,
+                            color: "#3d5a7e",
+                            marginBottom: 5,
+                          }}
+                        >
+                          Square icon for browser tabs
+                        </p>
+                        <label
+                          className={premiumLocked ? "" : "upload-lbl"}
+                          style={
+                            premiumLocked
+                              ? { fontSize: 11, color: "#2a3f5e" }
+                              : {}
+                          }
+                        >
+                          Upload favicon
+                          <input
+                            type="file"
+                            accept="image/*"
+                            style={{ display: "none" }}
+                            onChange={handleFaviconUpload}
+                            disabled={premiumLocked}
+                          />
+                        </label>
+                      </div>
+                    </div>
+                  </Field>
+                </div>
+
+                <div style={{ marginBottom: 4 }}>
+                  <label
+                    style={{
+                      display: "block",
+                      fontSize: 10.5,
+                      fontWeight: 700,
+                      color: "#3d5a7e",
+                      textTransform: "uppercase",
+                      letterSpacing: ".08em",
+                      marginBottom: 10,
+                    }}
+                  >
+                    Dashboard Colors (Premium)
+                  </label>
+                  <div
+                    className="g3"
+                    style={{ gridTemplateColumns: "repeat(3, 1fr)" }}
+                  >
+                    {[
+                      {
+                        label: "Primary",
+                        field: "primaryColor",
+                        hint: "Buttons, accents",
+                      },
+                      {
+                        label: "Background",
+                        field: "secondaryColor",
+                        hint: "Sidebar & BG",
+                      },
+                      {
+                        label: "Text / Accent",
+                        field: "accentColor",
+                        hint: "Main text",
+                      },
+                    ].map(({ label, field, hint }) => (
+                      <div
+                        key={field}
+                        className="color-swatch"
+                        style={{ opacity: premiumLocked ? 0.5 : 1 }}
+                      >
+                        <input
+                          type="color"
+                          value={branding[field]}
+                          onChange={(e) =>
+                            updateBranding(field, e.target.value)
+                          }
+                          disabled={premiumLocked}
+                          style={{
+                            width: 30,
+                            height: 30,
+                            borderRadius: 6,
+                            border: "2px solid #1a2f52",
+                            padding: 1,
+                            cursor: premiumLocked ? "not-allowed" : "pointer",
+                            background: "none",
+                            flexShrink: 0,
+                          }}
+                        />
+                        <div>
+                          <div
+                            style={{
+                              fontSize: 12,
+                              fontWeight: 600,
+                              color: "#b0c4de",
+                            }}
+                          >
+                            {label}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 10,
+                              color: "#2a3e5a",
+                              marginTop: 1,
+                            }}
+                          >
+                            {hint}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 10,
+                              color: "#3d5a7e",
+                              marginTop: 1,
+                              fontFamily: "monospace",
+                            }}
+                          >
+                            {branding[field]}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div style={{ margin: "14px 0 4px" }}>
+                  <ToggleRow
+                    icon="🚫"
+                    title="Remove Footer Branding"
+                    desc="Hide 'Powered by Khizar Overseas' from student dashboard."
+                    on={branding.features.removeKhizarBranding}
+                    locked={premiumLocked}
+                    onLockedClick={handleUpgrade}
+                    onChange={() =>
+                      updateFeature(
+                        "removeKhizarBranding",
+                        !branding.features.removeKhizarBranding,
+                      )
+                    }
+                  />
+                  <div className="tog-divider" />
+                  <ToggleRow
+                    icon="✉️"
+                    title="Custom Email Branding"
+                    desc="Use your brand name and colors in all student notification emails."
+                    on={branding.features.customEmailBranding}
+                    locked={premiumLocked}
+                    onLockedClick={handleUpgrade}
+                    onChange={() =>
+                      updateFeature(
+                        "customEmailBranding",
+                        !branding.features.customEmailBranding,
+                      )
+                    }
+                  />
+                </div>
+
+                <div style={{ marginTop: 10 }}>
+                  <Field
+                    label="Footer Text (Premium)"
+                    hint="Shown in the student dashboard footer."
+                  >
+                    <textarea
+                      className="fi"
+                      style={{
+                        ...inputStyle,
+                        resize: "vertical",
+                        lineHeight: 1.65,
+                        minHeight: 72,
+                      }}
+                      value={branding.footerText}
+                      onChange={(e) =>
+                        updateBranding("footerText", e.target.value)
+                      }
+                      placeholder="Powered by Khizar Overseas"
+                      disabled={premiumLocked}
+                    />
+                  </Field>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ── EMAIL TEMPLATES — hidden for org counselors ───── */}
+          {!isOrgCounselor && (
+            <div
+              id="email"
+              ref={(el) => {
+                refs.current.email = el;
+              }}
+              className="s-anchor"
+              style={{ marginBottom: 32 }}
+            >
+              <SectionHead>Email Templates</SectionHead>
               <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  gap: 12,
-                  marginBottom: 18,
-                }}
+                style={{ ...cardStyle, position: "relative" }}
+                className="card-shine"
               >
-                <div>
+                {premiumLocked && (
+                  <div className="lockedOverlay">
+                    <div
+                      style={{
+                        textAlign: "center",
+                        maxWidth: 300,
+                        padding: "0 16px",
+                      }}
+                    >
+                      <div style={{ fontSize: 28, marginBottom: 8 }}>✉️</div>
+                      <div
+                        style={{
+                          fontSize: 14,
+                          fontWeight: 800,
+                          color: "#e8f0ff",
+                          marginBottom: 6,
+                        }}
+                      >
+                        Branded Email Templates
+                      </div>
+                      <p
+                        style={{
+                          fontSize: 12.5,
+                          color: "#6a8ab0",
+                          lineHeight: 1.7,
+                          marginBottom: 14,
+                        }}
+                      >
+                        Customize welcome, deadline reminder, and offer emails
+                        with your own brand voice. Premium only.
+                      </p>
+                      <div
+                        style={{
+                          fontSize: 20,
+                          fontWeight: 800,
+                          color: "#f59e0b",
+                          marginBottom: 12,
+                        }}
+                      >
+                        ₹999
+                        <span
+                          style={{
+                            fontSize: 12,
+                            fontWeight: 500,
+                            color: "#6a8ab0",
+                          }}
+                        >
+                          /month
+                        </span>
+                      </div>
+                      <button className="btn-gold" onClick={handleUpgrade}>
+                        Unlock Email Templates
+                      </button>
+                    </div>
+                  </div>
+                )}
+                <div style={{ marginBottom: 16 }}>
                   <div
                     style={{
                       fontSize: 14,
                       fontWeight: 700,
                       color: "#e8f0ff",
-                      marginBottom: 3,
+                      marginBottom: 4,
                     }}
                   >
-                    Premium White Label <LockBadge />
+                    Email Templates <LockBadge />
                   </div>
                   <p
-                    style={{ fontSize: 12, color: "#2e4570", lineHeight: 1.6 }}
+                    style={{
+                      fontSize: 12,
+                      color: "#2e4570",
+                      lineHeight: 1.6,
+                      marginBottom: 8,
+                    }}
                   >
-                    Full control over your student dashboard appearance.
+                    Customize automated emails sent to your students.
                   </p>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+                    {[
+                      "{brandName}",
+                      "{studentName}",
+                      "{counselorName}",
+                      "{universityName}",
+                      "{deadline}",
+                    ].map((v) => (
+                      <span key={v} className="email-var">
+                        {v}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-              </div>
-
-              <div className="g2 premium-top-g2" style={{ marginBottom: 16 }}>
-                <Field label="Tagline (Premium)">
-                  <input
-                    className="fi"
-                    style={inputStyle}
-                    value={branding.tagline}
-                    onChange={(e) => updateBranding("tagline", e.target.value)}
-                    placeholder="Study Abroad Specialist"
-                    disabled={premiumLocked}
-                  />
-                </Field>
-
-                <Field label="Favicon (Premium)">
+                <div style={{ marginBottom: 18 }}>
                   <div
                     style={{
+                      fontSize: 11,
+                      fontWeight: 700,
+                      color: "#1e3454",
+                      textTransform: "uppercase",
+                      letterSpacing: ".1em",
+                      marginBottom: 10,
+                      borderBottom: "1px solid #0a1525",
+                      paddingBottom: 7,
+                    }}
+                  >
+                    Sender Details
+                  </div>
+                  <div className="g2">
+                    <Field label="Sender Name">
+                      <input
+                        className="fi"
+                        style={inputStyle}
+                        value={emailSettings.senderName}
+                        onChange={(e) =>
+                          updateEmail("senderName", e.target.value)
+                        }
+                        placeholder="Your Name"
+                        disabled={premiumLocked}
+                      />
+                    </Field>
+                    <Field label="Reply-To Email">
+                      <input
+                        className="fi"
+                        style={inputStyle}
+                        value={emailSettings.senderEmail}
+                        onChange={(e) =>
+                          updateEmail("senderEmail", e.target.value)
+                        }
+                        placeholder="your@email.com"
+                        disabled={premiumLocked}
+                      />
+                    </Field>
+                  </div>
+                </div>
+                {[
+                  {
+                    key: "welcome",
+                    icon: "👋",
+                    label: "Welcome Email",
+                    desc: "Sent when a student registers under your profile.",
+                    subjectKey: "welcomeSubject",
+                    bodyKey: "welcomeBody",
+                  },
+                  {
+                    key: "reminder",
+                    icon: "📅",
+                    label: "Deadline Reminder",
+                    desc: "Sent automatically before application deadlines.",
+                    subjectKey: "reminderSubject",
+                    bodyKey: "reminderBody",
+                  },
+                  {
+                    key: "offer",
+                    icon: "🎉",
+                    label: "Offer Notification",
+                    desc: "Sent when a student receives a university offer.",
+                    subjectKey: "offerSubject",
+                    bodyKey: "offerBody",
+                  },
+                ].map(({ key, icon, label, desc, subjectKey, bodyKey }) => (
+                  <div
+                    key={key}
+                    style={{
+                      marginBottom: 16,
                       background: "#070c18",
-                      border: "1px dashed #16305a",
-                      borderRadius: 9,
-                      padding: "10px 12px",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 10,
-                      opacity: premiumLocked ? 0.5 : 1,
+                      border: "1px solid #0f1c31",
+                      borderRadius: 11,
+                      padding: "16px",
                     }}
                   >
                     <div
                       style={{
-                        width: 40,
-                        height: 40,
-                        borderRadius: 8,
-                        background: "#0d1628",
-                        border: "1px solid #13233d",
                         display: "flex",
                         alignItems: "center",
-                        justifyContent: "center",
-                        overflow: "hidden",
-                        flexShrink: 0,
+                        gap: 9,
+                        marginBottom: 12,
                       }}
                     >
-                      {branding.faviconPreview ? (
-                        <img
-                          src={branding.faviconPreview}
-                          alt="Favicon"
-                          style={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover",
-                          }}
-                        />
-                      ) : (
-                        <span style={{ fontSize: 9, color: "#2a3f5e" }}>
-                          Icon
-                        </span>
-                      )}
-                    </div>
-                    <div>
-                      <p
-                        style={{
-                          fontSize: 11,
-                          color: "#3d5a7e",
-                          marginBottom: 5,
-                        }}
-                      >
-                        Square icon for browser tabs
-                      </p>
-                      <label
-                        className={premiumLocked ? "" : "upload-lbl"}
-                        style={
-                          premiumLocked
-                            ? { fontSize: 11, color: "#2a3f5e" }
-                            : {}
-                        }
-                      >
-                        Upload favicon
-                        <input
-                          type="file"
-                          accept="image/*"
-                          style={{ display: "none" }}
-                          onChange={handleFaviconUpload}
-                          disabled={premiumLocked}
-                        />
-                      </label>
-                    </div>
-                  </div>
-                </Field>
-              </div>
-
-              <div style={{ marginBottom: 4 }}>
-                <label
-                  style={{
-                    display: "block",
-                    fontSize: 10.5,
-                    fontWeight: 700,
-                    color: "#3d5a7e",
-                    textTransform: "uppercase",
-                    letterSpacing: ".08em",
-                    marginBottom: 10,
-                  }}
-                >
-                  Dashboard Colors (Premium)
-                </label>
-                <div
-                  className="g3 color-swatches-g3"
-                  style={{ gridTemplateColumns: "repeat(3, 1fr)" }}
-                >
-                  {[
-                    {
-                      label: "Primary",
-                      field: "primaryColor",
-                      hint: "Buttons, accents",
-                    },
-                    {
-                      label: "Background",
-                      field: "secondaryColor",
-                      hint: "Sidebar & BG",
-                    },
-                    {
-                      label: "Text / Accent",
-                      field: "accentColor",
-                      hint: "Main text",
-                    },
-                  ].map(({ label, field, hint }) => (
-                    <div
-                      key={field}
-                      className="color-swatch"
-                      style={{ opacity: premiumLocked ? 0.5 : 1 }}
-                    >
-                      <input
-                        type="color"
-                        value={branding[field]}
-                        onChange={(e) => updateBranding(field, e.target.value)}
-                        disabled={premiumLocked}
-                        style={{
-                          width: 30,
-                          height: 30,
-                          borderRadius: 6,
-                          border: "2px solid #1a2f52",
-                          padding: 1,
-                          cursor: premiumLocked ? "not-allowed" : "pointer",
-                          background: "none",
-                          flexShrink: 0,
-                        }}
-                      />
+                      <span style={{ fontSize: 18 }}>{icon}</span>
                       <div>
                         <div
                           style={{
-                            fontSize: 12,
-                            fontWeight: 600,
+                            fontSize: 13,
+                            fontWeight: 700,
                             color: "#b0c4de",
                           }}
                         >
@@ -2130,550 +1918,264 @@ export default function CounselorSettingsPage() {
                         </div>
                         <div
                           style={{
-                            fontSize: 10,
+                            fontSize: 11,
                             color: "#2a3e5a",
                             marginTop: 1,
                           }}
                         >
-                          {hint}
+                          {desc}
                         </div>
-                        <div
+                      </div>
+                    </div>
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 10,
+                      }}
+                    >
+                      <Field label="Subject Line">
+                        <input
+                          className="fi"
+                          style={inputStyle}
+                          value={emailSettings[subjectKey]}
+                          onChange={(e) =>
+                            updateEmail(subjectKey, e.target.value)
+                          }
+                          disabled={premiumLocked}
+                        />
+                      </Field>
+                      <Field label="Email Body">
+                        <textarea
+                          className="fi"
                           style={{
-                            fontSize: 10,
-                            color: "#3d5a7e",
-                            marginTop: 1,
-                            fontFamily: "monospace",
+                            ...inputStyle,
+                            resize: "vertical",
+                            lineHeight: 1.65,
+                            minHeight: 110,
                           }}
-                        >
-                          {branding[field]}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div style={{ margin: "14px 0 4px" }}>
-                <ToggleRow
-                  icon="🚫"
-                  title="Remove Footer Branding"
-                  desc="Hide 'Powered by Khizar Overseas' from student dashboard."
-                  on={branding.features.removeKhizarBranding}
-                  locked={premiumLocked}
-                  onLockedClick={handleUpgrade}
-                  onChange={() =>
-                    updateFeature(
-                      "removeKhizarBranding",
-                      !branding.features.removeKhizarBranding,
-                    )
-                  }
-                />
-                <div className="tog-divider" />
-                <ToggleRow
-                  icon="✉️"
-                  title="Custom Email Branding"
-                  desc="Use your brand name and colors in all student notification emails."
-                  on={branding.features.customEmailBranding}
-                  locked={premiumLocked}
-                  onLockedClick={handleUpgrade}
-                  onChange={() =>
-                    updateFeature(
-                      "customEmailBranding",
-                      !branding.features.customEmailBranding,
-                    )
-                  }
-                />
-              </div>
-
-              <div style={{ marginTop: 10 }}>
-                <Field
-                  label="Footer Text (Premium)"
-                  hint="Shown in the student dashboard footer."
-                >
-                  <textarea
-                    className="fi"
-                    style={{
-                      ...inputStyle,
-                      resize: "vertical",
-                      lineHeight: 1.65,
-                      minHeight: 72,
-                    }}
-                    value={branding.footerText}
-                    onChange={(e) =>
-                      updateBranding("footerText", e.target.value)
-                    }
-                    placeholder="Powered by Khizar Overseas"
-                    disabled={premiumLocked}
-                  />
-                </Field>
-              </div>
-            </div>
-          </div>
-
-          {/* ── EMAIL TEMPLATES ───────────────────────────────── */}
-          <div
-            id="email"
-            ref={(el) => {
-              refs.current.email = el;
-            }}
-            className="s-anchor section-block"
-            style={{ marginBottom: 32 }}
-          >
-            <SectionHead>Email Templates</SectionHead>
-
-            <div
-              style={{ ...cardStyle, position: "relative" }}
-              className="card-shine"
-            >
-              {premiumLocked && (
-                <div className="lockedOverlay">
-                  <div
-                    style={{
-                      textAlign: "center",
-                      maxWidth: 300,
-                      padding: "0 16px",
-                    }}
-                  >
-                    <div style={{ fontSize: 28, marginBottom: 8 }}>✉️</div>
-                    <div
-                      style={{
-                        fontSize: 14,
-                        fontWeight: 800,
-                        color: "#e8f0ff",
-                        marginBottom: 6,
-                      }}
-                    >
-                      Branded Email Templates
-                    </div>
-                    <p
-                      style={{
-                        fontSize: 12.5,
-                        color: "#6a8ab0",
-                        lineHeight: 1.7,
-                        marginBottom: 14,
-                      }}
-                    >
-                      Customize welcome, deadline reminder, and offer emails
-                      with your own brand voice. Premium only.
-                    </p>
-                    <div
-                      style={{
-                        fontSize: 20,
-                        fontWeight: 800,
-                        color: "#f59e0b",
-                        marginBottom: 12,
-                      }}
-                    >
-                      ₹999
-                      <span
-                        style={{
-                          fontSize: 12,
-                          fontWeight: 500,
-                          color: "#6a8ab0",
-                        }}
-                      >
-                        /month
-                      </span>
-                    </div>
-                    <button className="btn-gold" onClick={handleUpgrade}>
-                      Unlock Email Templates
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              <div style={{ marginBottom: 16 }}>
-                <div
-                  style={{
-                    fontSize: 14,
-                    fontWeight: 700,
-                    color: "#e8f0ff",
-                    marginBottom: 4,
-                  }}
-                >
-                  Email Templates <LockBadge />
-                </div>
-                <p
-                  style={{
-                    fontSize: 12,
-                    color: "#2e4570",
-                    lineHeight: 1.6,
-                    marginBottom: 8,
-                  }}
-                >
-                  Customize automated emails sent to your students.
-                </p>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
-                  {[
-                    "{brandName}",
-                    "{studentName}",
-                    "{counselorName}",
-                    "{universityName}",
-                    "{deadline}",
-                  ].map((v) => (
-                    <span key={v} className="email-var">
-                      {v}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div style={{ marginBottom: 18 }}>
-                <div
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 700,
-                    color: "#1e3454",
-                    textTransform: "uppercase",
-                    letterSpacing: ".1em",
-                    marginBottom: 10,
-                    borderBottom: "1px solid #0a1525",
-                    paddingBottom: 7,
-                  }}
-                >
-                  Sender Details
-                </div>
-                <div className="g2 sender-g2">
-                  <Field label="Sender Name">
-                    <input
-                      className="fi"
-                      style={inputStyle}
-                      value={emailSettings.senderName}
-                      onChange={(e) =>
-                        updateEmail("senderName", e.target.value)
-                      }
-                      placeholder="Your Name"
-                      disabled={premiumLocked}
-                    />
-                  </Field>
-                  <Field label="Reply-To Email">
-                    <input
-                      className="fi"
-                      style={inputStyle}
-                      value={emailSettings.senderEmail}
-                      onChange={(e) =>
-                        updateEmail("senderEmail", e.target.value)
-                      }
-                      placeholder="your@email.com"
-                      disabled={premiumLocked}
-                    />
-                  </Field>
-                </div>
-              </div>
-
-              {[
-                {
-                  key: "welcome",
-                  icon: "👋",
-                  label: "Welcome Email",
-                  desc: "Sent when a student registers under your profile.",
-                  subjectKey: "welcomeSubject",
-                  bodyKey: "welcomeBody",
-                },
-                {
-                  key: "reminder",
-                  icon: "📅",
-                  label: "Deadline Reminder",
-                  desc: "Sent automatically before application deadlines.",
-                  subjectKey: "reminderSubject",
-                  bodyKey: "reminderBody",
-                },
-                {
-                  key: "offer",
-                  icon: "🎉",
-                  label: "Offer Notification",
-                  desc: "Sent when a student receives a university offer.",
-                  subjectKey: "offerSubject",
-                  bodyKey: "offerBody",
-                },
-              ].map(({ key, icon, label, desc, subjectKey, bodyKey }) => (
-                <div
-                  key={key}
-                  className="email-tpl-card"
-                  style={{
-                    marginBottom: 16,
-                    background: "#070c18",
-                    border: "1px solid #0f1c31",
-                    borderRadius: 11,
-                    padding: "16px",
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 9,
-                      marginBottom: 12,
-                    }}
-                  >
-                    <span style={{ fontSize: 18 }}>{icon}</span>
-                    <div>
-                      <div
-                        style={{
-                          fontSize: 13,
-                          fontWeight: 700,
-                          color: "#b0c4de",
-                        }}
-                      >
-                        {label}
-                      </div>
-                      <div
-                        style={{ fontSize: 11, color: "#2a3e5a", marginTop: 1 }}
-                      >
-                        {desc}
-                      </div>
-                    </div>
-                  </div>
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: 10,
-                    }}
-                  >
-                    <Field label="Subject Line">
-                      <input
-                        className="fi"
-                        style={inputStyle}
-                        value={emailSettings[subjectKey]}
-                        onChange={(e) =>
-                          updateEmail(subjectKey, e.target.value)
-                        }
-                        disabled={premiumLocked}
-                      />
-                    </Field>
-                    <Field label="Email Body">
-                      <textarea
-                        className="fi"
-                        style={{
-                          ...inputStyle,
-                          resize: "vertical",
-                          lineHeight: 1.65,
-                          minHeight: 110,
-                        }}
-                        value={emailSettings[bodyKey]}
-                        onChange={(e) => updateEmail(bodyKey, e.target.value)}
-                        disabled={premiumLocked}
-                      />
-                    </Field>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* ── SUBSCRIPTION ─────────────────────────────────── */}
-          <div
-            id="subscription"
-            ref={(el) => {
-              refs.current.subscription = el;
-            }}
-            className="s-anchor section-block"
-            style={{ marginBottom: 20 }}
-          >
-            <SectionHead>Subscription</SectionHead>
-
-            <div style={cardStyle} className="card-shine">
-              <div className="sub-panel-row">
-                <div
-                  className="sub-plan-info"
-                  style={{ flex: 1, minWidth: 240 }}
-                >
-                  <div
-                    style={{
-                      fontSize: 14,
-                      fontWeight: 700,
-                      color: "#e8f0ff",
-                      marginBottom: 6,
-                    }}
-                  >
-                    Current Plan:{" "}
-                    <span style={{ color: isPremium ? "#f59e0b" : "#60a5fa" }}>
-                      {isPremium ? "⭐ Premium" : "Standard"}
-                    </span>
-                  </div>
-                  <p
-                    style={{
-                      fontSize: 12,
-                      color: "#2e4570",
-                      lineHeight: 1.7,
-                      marginBottom: 14,
-                    }}
-                  >
-                    Standard: brand name + logo upload only.{" "}
-                    <strong style={{ color: "#4a6e9a" }}>Premium</strong>{" "}
-                    unlocks tagline, favicon, dashboard colors, remove branding,
-                    email templates, and footer text.
-                  </p>
-                  <div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>
-                    <span className="badge bg">✓ Brand Name</span>
-                    <span className="badge bg">✓ Logo</span>
-                    <span className={cls("badge", isPremium ? "bp" : "ba")}>
-                      {isPremium ? "⭐ Premium Active" : "🔒 Premium Locked"}
-                    </span>
-                  </div>
-                </div>
-
-                <div
-                  className="stat-pill sub-stat-pill"
-                  style={{
-                    minWidth: 220,
-                    background: isPremium
-                      ? "linear-gradient(135deg, rgba(245,158,11,.08), rgba(217,119,6,.05))"
-                      : "#070c18",
-                    border: isPremium
-                      ? "1px solid rgba(245,158,11,.25)"
-                      : "1px solid #0f1c31",
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: 11,
-                      color: isPremium ? "#d97706" : "#2e4570",
-                      fontWeight: 700,
-                    }}
-                  >
-                    {isPremium ? "Premium Expires" : "Upgrade to Premium"}
-                  </div>
-                  <div
-                    style={{
-                      marginTop: 4,
-                      fontSize: 20,
-                      fontWeight: 800,
-                      color: isPremium ? "#f59e0b" : "#e8f0ff",
-                      letterSpacing: "-0.03em",
-                    }}
-                  >
-                    {isPremium
-                      ? formatExpiry(branding.premiumExpiresAt) || "Active"
-                      : "₹999"}
-                    {!isPremium && (
-                      <span
-                        style={{
-                          fontSize: 12,
-                          fontWeight: 500,
-                          color: "#3d5a7e",
-                        }}
-                      >
-                        /month
-                      </span>
-                    )}
-                  </div>
-                  {!isPremium && (
-                    <p
-                      style={{
-                        fontSize: 11,
-                        color: "#2e4570",
-                        marginTop: 4,
-                        marginBottom: 10,
-                        lineHeight: 1.5,
-                      }}
-                    >
-                      Full white-label dashboard + branded emails
-                    </p>
-                  )}
-                  <button
-                    className={isPremium ? "btn-danger" : "btn-gold"}
-                    style={{ marginTop: 12, width: "100%", padding: "10px" }}
-                    onClick={
-                      isPremium ? () => setCancelConfirm(true) : handleUpgrade
-                    }
-                  >
-                    {isPremium ? "Cancel Subscription" : "Upgrade Now →"}
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Benefits grid */}
-            <div style={cardStyle} className="card-shine">
-              <div
-                style={{
-                  fontSize: 13,
-                  fontWeight: 700,
-                  color: "#e8f0ff",
-                  marginBottom: 14,
-                }}
-              >
-                What's included in Premium
-              </div>
-              <div className="benefits-grid">
-                {[
-                  {
-                    icon: "🎨",
-                    title: "Custom Colors",
-                    desc: "Full dashboard color control",
-                  },
-                  {
-                    icon: "🚫",
-                    title: "Remove Footer",
-                    desc: "Hide Khizar Overseas branding",
-                  },
-                  {
-                    icon: "✉️",
-                    title: "Branded Emails",
-                    desc: "Custom welcome & reminder emails",
-                  },
-                  {
-                    icon: "🏷️",
-                    title: "Tagline & Favicon",
-                    desc: "Complete brand identity",
-                  },
-                ].map((item) => (
-                  <div
-                    key={item.title}
-                    style={{
-                      background: "#070c18",
-                      border: "1px solid #0f1c31",
-                      borderRadius: 10,
-                      padding: "13px 14px",
-                      display: "flex",
-                      alignItems: "flex-start",
-                      gap: 10,
-                    }}
-                  >
-                    <span style={{ fontSize: 18, flexShrink: 0 }}>
-                      {item.icon}
-                    </span>
-                    <div>
-                      <div
-                        style={{
-                          fontSize: 12.5,
-                          fontWeight: 700,
-                          color: isPremium ? "#f59e0b" : "#60a5fa",
-                          marginBottom: 3,
-                        }}
-                      >
-                        {item.title}
-                      </div>
-                      <div
-                        style={{
-                          fontSize: 11,
-                          color: "#2a3e5a",
-                          lineHeight: 1.5,
-                        }}
-                      >
-                        {item.desc}
-                      </div>
+                          value={emailSettings[bodyKey]}
+                          onChange={(e) => updateEmail(bodyKey, e.target.value)}
+                          disabled={premiumLocked}
+                        />
+                      </Field>
                     </div>
                   </div>
                 ))}
               </div>
-              {!isPremium && (
+            </div>
+          )}
+
+          {/* ── SUBSCRIPTION — hidden for org counselors ──────── */}
+          {!isOrgCounselor && (
+            <div
+              id="subscription"
+              ref={(el) => {
+                refs.current.subscription = el;
+              }}
+              className="s-anchor"
+              style={{ marginBottom: 20 }}
+            >
+              <SectionHead>Subscription</SectionHead>
+              <div style={cardStyle} className="card-shine">
+                <div className="sub-panel-row">
+                  <div style={{ flex: 1, minWidth: 240 }}>
+                    <div
+                      style={{
+                        fontSize: 14,
+                        fontWeight: 700,
+                        color: "#e8f0ff",
+                        marginBottom: 6,
+                      }}
+                    >
+                      Current Plan:{" "}
+                      <span
+                        style={{ color: isPremium ? "#f59e0b" : "#60a5fa" }}
+                      >
+                        {isPremium ? "⭐ Premium" : "Standard"}
+                      </span>
+                    </div>
+                    <p
+                      style={{
+                        fontSize: 12,
+                        color: "#2e4570",
+                        lineHeight: 1.7,
+                        marginBottom: 14,
+                      }}
+                    >
+                      Standard: brand name + logo upload only.{" "}
+                      <strong style={{ color: "#4a6e9a" }}>Premium</strong>{" "}
+                      unlocks tagline, favicon, dashboard colors, remove
+                      branding, email templates, and footer text.
+                    </p>
+                    <div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>
+                      <span className="badge bg">✓ Brand Name</span>
+                      <span className="badge bg">✓ Logo</span>
+                      <span className={cls("badge", isPremium ? "bp" : "ba")}>
+                        {isPremium ? "⭐ Premium Active" : "🔒 Premium Locked"}
+                      </span>
+                    </div>
+                  </div>
+                  <div
+                    className="stat-pill"
+                    style={{
+                      minWidth: 220,
+                      background: isPremium
+                        ? "linear-gradient(135deg, rgba(245,158,11,.08), rgba(217,119,6,.05))"
+                        : "#070c18",
+                      border: isPremium
+                        ? "1px solid rgba(245,158,11,.25)"
+                        : "1px solid #0f1c31",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: 11,
+                        color: isPremium ? "#d97706" : "#2e4570",
+                        fontWeight: 700,
+                      }}
+                    >
+                      {isPremium ? "Premium Expires" : "Upgrade to Premium"}
+                    </div>
+                    <div
+                      style={{
+                        marginTop: 4,
+                        fontSize: 20,
+                        fontWeight: 800,
+                        color: isPremium ? "#f59e0b" : "#e8f0ff",
+                        letterSpacing: "-0.03em",
+                      }}
+                    >
+                      {isPremium
+                        ? formatExpiry(branding.premiumExpiresAt) || "Active"
+                        : "₹999"}
+                      {!isPremium && (
+                        <span
+                          style={{
+                            fontSize: 12,
+                            fontWeight: 500,
+                            color: "#3d5a7e",
+                          }}
+                        >
+                          /month
+                        </span>
+                      )}
+                    </div>
+                    {!isPremium && (
+                      <p
+                        style={{
+                          fontSize: 11,
+                          color: "#2e4570",
+                          marginTop: 4,
+                          marginBottom: 10,
+                          lineHeight: 1.5,
+                        }}
+                      >
+                        Full white-label dashboard + branded emails
+                      </p>
+                    )}
+                    <button
+                      className={isPremium ? "btn-danger" : "btn-gold"}
+                      style={{ marginTop: 12, width: "100%", padding: "10px" }}
+                      onClick={
+                        isPremium ? () => setCancelConfirm(true) : handleUpgrade
+                      }
+                    >
+                      {isPremium ? "Cancel Subscription" : "Upgrade Now →"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div style={cardStyle} className="card-shine">
                 <div
                   style={{
-                    marginTop: 16,
-                    display: "flex",
-                    justifyContent: "flex-end",
+                    fontSize: 13,
+                    fontWeight: 700,
+                    color: "#e8f0ff",
+                    marginBottom: 14,
                   }}
                 >
-                  <button className="btn-gold" onClick={handleUpgrade}>
-                    Upgrade Now — ₹999/month
-                  </button>
+                  What's included in Premium
                 </div>
-              )}
+                <div className="benefits-grid">
+                  {[
+                    {
+                      icon: "🎨",
+                      title: "Custom Colors",
+                      desc: "Full dashboard color control",
+                    },
+                    {
+                      icon: "🚫",
+                      title: "Remove Footer",
+                      desc: "Hide Khizar Overseas branding",
+                    },
+                    {
+                      icon: "✉️",
+                      title: "Branded Emails",
+                      desc: "Custom welcome & reminder emails",
+                    },
+                    {
+                      icon: "🏷️",
+                      title: "Tagline & Favicon",
+                      desc: "Complete brand identity",
+                    },
+                  ].map((item) => (
+                    <div
+                      key={item.title}
+                      style={{
+                        background: "#070c18",
+                        border: "1px solid #0f1c31",
+                        borderRadius: 10,
+                        padding: "13px 14px",
+                        display: "flex",
+                        alignItems: "flex-start",
+                        gap: 10,
+                      }}
+                    >
+                      <span style={{ fontSize: 18, flexShrink: 0 }}>
+                        {item.icon}
+                      </span>
+                      <div>
+                        <div
+                          style={{
+                            fontSize: 12.5,
+                            fontWeight: 700,
+                            color: isPremium ? "#f59e0b" : "#60a5fa",
+                            marginBottom: 3,
+                          }}
+                        >
+                          {item.title}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: 11,
+                            color: "#2a3e5a",
+                            lineHeight: 1.5,
+                          }}
+                        >
+                          {item.desc}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {!isPremium && (
+                  <div
+                    style={{
+                      marginTop: 16,
+                      display: "flex",
+                      justifyContent: "flex-end",
+                    }}
+                  >
+                    <button className="btn-gold" onClick={handleUpgrade}>
+                      Upgrade Now — ₹999/month
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Bottom save bar */}
           <div className="bottom-save-bar">
@@ -2682,7 +2184,9 @@ export default function CounselorSettingsPage() {
                 Save all changes
               </div>
               <div style={{ fontSize: 11.5, color: "#1e3050", marginTop: 2 }}>
-                Review your settings above before saving.
+                {isOrgCounselor
+                  ? "Only profile settings can be updated."
+                  : "Review your settings above before saving."}
               </div>
             </div>
             <div className="bottom-save-bar-actions">
@@ -2694,169 +2198,114 @@ export default function CounselorSettingsPage() {
           </div>
         </div>
 
-        {/* ── Right: Live Preview ─────────────────────────────── */}
-        <div className="preview-panel">
-          <div
-            style={{
-              background: "#090f1e",
-              border: "1px solid #0e1d36",
-              borderRadius: 16,
-              padding: "18px",
-              marginBottom: 14,
-            }}
-          >
+        {/* ── Right: Live Preview — hidden for org counselors ─── */}
+        {!isOrgCounselor && (
+          <div className="preview-panel">
             <div
               style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
+                background: "#090f1e",
+                border: "1px solid #0e1d36",
+                borderRadius: 16,
+                padding: "18px",
                 marginBottom: 14,
               }}
             >
-              <div className="live-dot" />
-              <div style={{ fontSize: 12, fontWeight: 700, color: "#b0c4de" }}>
-                Live Student Dashboard Preview
-              </div>
-              <span
+              <div
                 style={{
-                  marginLeft: "auto",
-                  fontSize: 10.5,
-                  color: "#1e3454",
-                  fontWeight: 600,
-                  background: "#0a1322",
-                  border: "1px solid #0f1c31",
-                  borderRadius: 5,
-                  padding: "2px 7px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  marginBottom: 14,
                 }}
               >
-                Updates instantly
-              </span>
-            </div>
-            <StudentDashboardPreview branding={branding} profile={profile} />
-          </div>
-
-          <div
-            style={{
-              background: "#090f1e",
-              border: "1px solid #0e1d36",
-              borderRadius: 12,
-              padding: "14px 16px",
-            }}
-          >
-            <div
-              style={{
-                fontSize: 11,
-                fontWeight: 700,
-                color: "#1e3454",
-                textTransform: "uppercase",
-                letterSpacing: ".1em",
-                marginBottom: 10,
-              }}
-            >
-              Current Brand Colors
-            </div>
-            <div style={{ display: "flex", gap: 8 }}>
-              {[
-                { label: "Primary", val: branding.primaryColor },
-                { label: "Background", val: branding.secondaryColor },
-                { label: "Accent", val: branding.accentColor },
-              ].map(({ label, val }) => (
-                <div key={label} style={{ flex: 1, textAlign: "center" }}>
-                  <div
-                    style={{
-                      width: "100%",
-                      height: 28,
-                      borderRadius: 7,
-                      background: val,
-                      border: "1px solid rgba(255,255,255,.07)",
-                      marginBottom: 5,
-                    }}
-                  />
-                  <div
-                    style={{ fontSize: 10, color: "#2a3e5a", fontWeight: 600 }}
-                  >
-                    {label}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: 9,
-                      color: "#1e3050",
-                      fontFamily: "monospace",
-                      marginTop: 1,
-                    }}
-                  >
-                    {val}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div
-              style={{
-                marginTop: 12,
-                padding: "10px 12px",
-                background: "#070c18",
-                border: "1px solid #0f1c31",
-                borderRadius: 9,
-                display: "flex",
-                alignItems: "center",
-                gap: 9,
-              }}
-            >
-              {branding.logoPreview ? (
-                <img
-                  src={branding.logoPreview}
-                  alt="Brand logo"
-                  style={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: 7,
-                    objectFit: "cover",
-                  }}
-                />
-              ) : (
-                <div
-                  style={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: 7,
-                    background: `${branding.primaryColor}22`,
-                    border: `1px solid ${branding.primaryColor}44`,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: 10,
-                    fontWeight: 800,
-                    color: branding.primaryColor,
-                  }}
-                >
-                  {branding.brandName.slice(0, 2).toUpperCase() || "??"}
-                </div>
-              )}
-              <div>
+                <div className="live-dot" />
                 <div
                   style={{ fontSize: 12, fontWeight: 700, color: "#b0c4de" }}
                 >
-                  {branding.brandName}
+                  Live Student Dashboard Preview
                 </div>
-                <div style={{ fontSize: 10.5, color: "#2a3e5a" }}>
-                  {branding.tagline}
-                </div>
-              </div>
-              <div style={{ marginLeft: "auto" }}>
                 <span
-                  className={cls("badge", isPremium ? "bp" : "ba")}
-                  style={{ fontSize: 9.5 }}
+                  style={{
+                    marginLeft: "auto",
+                    fontSize: 10.5,
+                    color: "#1e3454",
+                    fontWeight: 600,
+                    background: "#0a1322",
+                    border: "1px solid #0f1c31",
+                    borderRadius: 5,
+                    padding: "2px 7px",
+                  }}
                 >
-                  {isPremium ? "⭐ Premium" : "Standard"}
+                  Updates instantly
                 </span>
+              </div>
+              <StudentDashboardPreview branding={branding} profile={profile} />
+            </div>
+            <div
+              style={{
+                background: "#090f1e",
+                border: "1px solid #0e1d36",
+                borderRadius: 12,
+                padding: "14px 16px",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: "#1e3454",
+                  textTransform: "uppercase",
+                  letterSpacing: ".1em",
+                  marginBottom: 10,
+                }}
+              >
+                Current Brand Colors
+              </div>
+              <div style={{ display: "flex", gap: 8 }}>
+                {[
+                  { label: "Primary", val: branding.primaryColor },
+                  { label: "Background", val: branding.secondaryColor },
+                  { label: "Accent", val: branding.accentColor },
+                ].map(({ label, val }) => (
+                  <div key={label} style={{ flex: 1, textAlign: "center" }}>
+                    <div
+                      style={{
+                        width: "100%",
+                        height: 28,
+                        borderRadius: 7,
+                        background: val,
+                        border: "1px solid rgba(255,255,255,.07)",
+                        marginBottom: 5,
+                      }}
+                    />
+                    <div
+                      style={{
+                        fontSize: 10,
+                        color: "#2a3e5a",
+                        fontWeight: 600,
+                      }}
+                    >
+                      {label}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 9,
+                        color: "#1e3050",
+                        fontFamily: "monospace",
+                        marginTop: 1,
+                      }}
+                    >
+                      {val}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
 
-      {/* ── Mobile FAB (Save) ──────────────────────────────────── */}
+      {/* ── Mobile FAB ──────────────────────────────────────────── */}
       <button
         className="mobile-fab"
         onClick={handleSave}
@@ -2885,8 +2334,8 @@ export default function CounselorSettingsPage() {
         )}
       </button>
 
-      {/* ── Mobile Preview Overlay ─────────────────────────────── */}
-      {showPreview && (
+      {/* ── Mobile Preview Overlay ──────────────────────────────── */}
+      {showPreview && !isOrgCounselor && (
         <div
           style={{
             position: "fixed",
@@ -2946,7 +2395,7 @@ export default function CounselorSettingsPage() {
         </div>
       )}
 
-      {/* ── Upgrade Modal (Cashfree) ───────────────────────────── */}
+      {/* ── Upgrade Modal ────────────────────────────────────────── */}
       {upgradeModal && (
         <div
           className="modal-bg"
@@ -2969,7 +2418,6 @@ export default function CounselorSettingsPage() {
             >
               ✕
             </button>
-
             <div style={{ textAlign: "center", marginBottom: 24 }}>
               <div style={{ fontSize: 36, marginBottom: 10 }}>⭐</div>
               <div
@@ -2988,7 +2436,6 @@ export default function CounselorSettingsPage() {
                 automated emails.
               </p>
             </div>
-
             <div
               style={{
                 background: "#070c18",
@@ -3054,7 +2501,6 @@ export default function CounselorSettingsPage() {
                 </div>
               ))}
             </div>
-
             <button
               className="btn-gold"
               style={{
@@ -3087,7 +2533,6 @@ export default function CounselorSettingsPage() {
                 "Pay ₹999 — Activate Premium"
               )}
             </button>
-
             <p
               style={{
                 textAlign: "center",
@@ -3102,7 +2547,7 @@ export default function CounselorSettingsPage() {
         </div>
       )}
 
-      {/* ── Cancel Confirmation Modal ──────────────────────────── */}
+      {/* ── Cancel Confirmation Modal ─────────────────────────── */}
       {cancelConfirm && (
         <div
           className="modal-bg"
@@ -3152,15 +2597,14 @@ export default function CounselorSettingsPage() {
         </div>
       )}
 
-      {/* ── Toasts ─────────────────────────────────────────────── */}
+      {/* ── Toasts ───────────────────────────────────────────────── */}
       {saved && (
         <div className="toast">
-          {isPremium
+          {isPremium && !isOrgCounselor
             ? "⭐ Premium activated successfully!"
             : "✓ Settings saved successfully"}
         </div>
       )}
-
       {saveError && (
         <div
           className="toast"

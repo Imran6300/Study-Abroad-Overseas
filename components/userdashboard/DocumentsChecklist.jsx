@@ -16,6 +16,27 @@ import {
   HiOutlineExclamationCircle,
 } from "react-icons/hi";
 
+const BASE = process.env.NEXT_PUBLIC_BACKEND_URL;
+
+/** Fetches a fresh 1-hour signed URL from the backend, then opens it. */
+async function openSignedUrl(deadlineId) {
+  try {
+    const res = await fetch(
+      `${BASE}/user/my-deadline/${deadlineId}/document-url`,
+      { credentials: "include" },
+    );
+    const data = await res.json();
+    if (data.success && data.url) {
+      window.open(data.url, "_blank", "noopener,noreferrer");
+    } else {
+      alert("Could not load document. Please try again.");
+    }
+  } catch (err) {
+    console.error("Failed to get signed URL:", err);
+    alert("Could not load document. Please try again.");
+  }
+}
+
 export default function DocumentChecklist({ documents, loading }) {
   const dispatch = useDispatch();
 
@@ -190,9 +211,7 @@ export default function DocumentChecklist({ documents, loading }) {
                 <div className="flex gap-3">
                   <button
                     disabled={loading}
-                    onClick={() =>
-                      window.open(doc.uploadedDocument?.url, "_blank")
-                    }
+                    onClick={() => openSignedUrl(doc._id)}
                     className="text-blue-400 hover:text-blue-300"
                   >
                     <HiOutlineEye size={20} />

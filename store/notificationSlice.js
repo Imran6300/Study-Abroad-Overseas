@@ -1,12 +1,13 @@
 // store/notificationSlice.js
 // ─────────────────────────────────────────────────────────────────────────────
-// Manages notifications for BOTH student and counselor dashboards.
+// Manages notifications for student, counselor, and org-admin dashboards.
 //
-// Student  → hits  GET /user/notifications
-// Counselor → hits GET /api/counselor/notifications
+// Student   → GET /user/notifications
+// Counselor → GET /api/counselor/notifications
+// Org Admin → GET /api/org-admin/notifications
 //
-// Real-time updates arrive via Socket.IO and are handled by the header
-// components directly (they call addNotification / setUnreadCount actions).
+// Real-time updates arrive via Socket.IO and are handled by each header
+// component (they call addXxxNotification / setXxxUnreadCount actions).
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
@@ -148,6 +149,73 @@ export const deleteCounselorNotif = createAsyncThunk(
 );
 
 // ─────────────────────────────────────────────────────────────────────────────
+// ASYNC THUNKS — Org Admin
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const fetchOrgAdminNotifications = createAsyncThunk(
+  "notifications/fetchOrgAdmin",
+  async (_, { rejectWithValue }) => {
+    try {
+      const res = await fetch(`${BASE}/api/org-admin/notifications`, {
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json(); // { success, notifications, unreadCount }
+    } catch (err) {
+      return rejectWithValue(err.message);
+    }
+  },
+);
+
+export const markOrgAdminNotifRead = createAsyncThunk(
+  "notifications/markOrgAdminRead",
+  async (id, { rejectWithValue }) => {
+    try {
+      const res = await fetch(
+        `${BASE}/api/org-admin/notifications/${id}/read`,
+        { method: "PATCH", credentials: "include" },
+      );
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return { id, ...(await res.json()) };
+    } catch (err) {
+      return rejectWithValue(err.message);
+    }
+  },
+);
+
+export const markAllOrgAdminNotifsRead = createAsyncThunk(
+  "notifications/markAllOrgAdminRead",
+  async (_, { rejectWithValue }) => {
+    try {
+      const res = await fetch(`${BASE}/api/org-admin/notifications/read-all`, {
+        method: "PATCH",
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      return rejectWithValue(err.message);
+    }
+  },
+);
+
+export const deleteOrgAdminNotif = createAsyncThunk(
+  "notifications/deleteOrgAdmin",
+  async (id, { rejectWithValue }) => {
+    try {
+      const res = await fetch(`${BASE}/api/org-admin/notifications/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return { id, ...(await res.json()) };
+    } catch (err) {
+      return rejectWithValue(err.message);
+    }
+  },
+);
+
+// ─────────────────────────────────────────────────────────────────────────────
 // SLICE
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -163,6 +231,11 @@ const notificationSlice = createSlice({
     counselorNotifs: [],
     counselorUnread: 0,
     counselorLoading: false,
+
+    // Org Admin
+    orgAdminNotifs: [],
+    orgAdminUnread: 0,
+    orgAdminLoading: false,
 
     error: null,
   },
@@ -185,6 +258,16 @@ const notificationSlice = createSlice({
     // Called by socket "counselor-notification-count" event
     setCounselorUnreadCount(state, action) {
       state.counselorUnread = action.payload;
+    },
+
+    // Called by socket "orgadmin-new-notification" event
+    addOrgAdminNotification(state, action) {
+      state.orgAdminNotifs.unshift(action.payload);
+      state.orgAdminUnread += 1;
+    },
+    // Called by socket "orgadmin-notification-count" event
+    setOrgAdminUnreadCount(state, action) {
+      state.orgAdminUnread = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -263,6 +346,44 @@ const notificationSlice = createSlice({
       );
       state.counselorUnread = action.payload.unreadCount;
     });
+
+    // ── Fetch Org Admin ───────────────────────────────────────────────────
+    builder
+      .addCase(fetchOrgAdminNotifications.pending, (state) => {
+        state.orgAdminLoading = true;
+      })
+      .addCase(fetchOrgAdminNotifications.fulfilled, (state, action) => {
+        state.orgAdminLoading = false;
+        state.orgAdminNotifs = action.payload.notifications || [];
+        state.orgAdminUnread = action.payload.unreadCount || 0;
+      })
+      .addCase(fetchOrgAdminNotifications.rejected, (state, action) => {
+        state.orgAdminLoading = false;
+        state.error = action.payload;
+      });
+
+    // ── Mark Org Admin One Read ───────────────────────────────────────────
+    builder.addCase(markOrgAdminNotifRead.fulfilled, (state, action) => {
+      const notif = state.orgAdminNotifs.find(
+        (n) => n._id === action.payload.id,
+      );
+      if (notif) notif.isRead = true;
+      state.orgAdminUnread = action.payload.unreadCount;
+    });
+
+    // ── Mark All Org Admin Read ───────────────────────────────────────────
+    builder.addCase(markAllOrgAdminNotifsRead.fulfilled, (state) => {
+      state.orgAdminNotifs.forEach((n) => (n.isRead = true));
+      state.orgAdminUnread = 0;
+    });
+
+    // ── Delete Org Admin ──────────────────────────────────────────────────
+    builder.addCase(deleteOrgAdminNotif.fulfilled, (state, action) => {
+      state.orgAdminNotifs = state.orgAdminNotifs.filter(
+        (n) => n._id !== action.payload.id,
+      );
+      state.orgAdminUnread = action.payload.unreadCount;
+    });
   },
 });
 
@@ -271,6 +392,8 @@ export const {
   setStudentUnreadCount,
   addCounselorNotification,
   setCounselorUnreadCount,
+  addOrgAdminNotification,
+  setOrgAdminUnreadCount,
 } = notificationSlice.actions;
 
 export default notificationSlice.reducer;

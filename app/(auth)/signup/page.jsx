@@ -8,6 +8,7 @@ import { useDispatch } from "react-redux";
 import { authStart, authSuccess, authFail } from "../../../store/authSlice";
 import OtpForm from "@/components/auth/OtpForm";
 import { useRouter } from "next/navigation";
+import { getDashboardPath } from "@/lib/roleRouting";
 
 // ────────────────────────────────────────────────
 //  Signup Form Component
@@ -266,7 +267,7 @@ export default function SignupPage() {
       }
 
       dispatch(authSuccess(data.user));
-      router.replace("/dashboard/user");
+      router.replace(getDashboardPath(data.user.role));
     } catch (err) {
       setError("Server error. Please try again.");
       dispatch(authFail("Server error"));

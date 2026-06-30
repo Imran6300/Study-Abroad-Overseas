@@ -53,7 +53,7 @@ export default async function SuccessStories() {
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/testimonials`,
     {
-      next: { revalidate: 60 },
+      next: { revalidate: 86400 },
     },
   );
 

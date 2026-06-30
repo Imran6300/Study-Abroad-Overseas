@@ -1,11 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
-
 import { useDispatch, useSelector } from "react-redux";
-
 import { fetchMyDeadlines } from "@/store/deadlineSlice";
-
 import DocumentChecklist from "@/components/userdashboard/DocumentsChecklist";
 
 export default function DocumentsPage() {
@@ -33,6 +30,30 @@ export default function DocumentsPage() {
       >
         Documents
       </h1>
+
+      {/* Information Banner */}
+      <div
+        className="rounded-xl border p-4"
+        style={{
+          background: "var(--card-bg)",
+          borderColor: "var(--border-color)",
+        }}
+      >
+        <p
+          className="text-sm leading-6"
+          style={{ color: "var(--text-secondary)" }}
+        >
+          <span
+            className="font-semibold"
+            style={{ color: "var(--brand-accent)" }}
+          >
+            Note:
+          </span>{" "}
+          The document upload option will appear here only after your counselor
+          requests the required documents. Once requested, you'll be able to
+          upload them directly from this page.
+        </p>
+      </div>
 
       <DocumentChecklist documents={documents} loading={loading} />
     </div>

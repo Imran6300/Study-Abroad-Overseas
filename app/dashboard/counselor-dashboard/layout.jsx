@@ -3,22 +3,13 @@
 /**
  * app/dashboard/counselor-dashboard/layout.jsx
  *
- * Changes vs previous version:
- *
- * 1. OnboardingBanner added inside <main>, above {children}.
- *    - Shown on login #1 and #2 only — self-managing via localStorage.
- *    - Has its own dismiss (X) button.
- *    - Only renders on non-settings pages (settings has its own full layout).
- *
- * 2. CounselorFooter already present (from previous update).
- *
- * Everything else — auth guard, socket join, header visibility, SaasBanner
- * comment — is unchanged.
+ * Auth guard: only role === "counselor" can access this area.
+ * All other roles are redirected to their own dashboard via getDashboardPath().
  */
 
-import { useSelector } from "react-redux";
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect } from "react";
+import { getDashboardPath } from "@/lib/roleRouting";
 
 import CounselorSidebar from "@/components/counselordashboard/CounselorSidebar";
 import CounselorDashboardHeader from "@/components/counselordashboard/CounselorDashboardHeader";
@@ -27,8 +18,15 @@ import OnboardingBanner from "@/components/counselordashboard/OnboardingBanner";
 import SaasBanner from "@/components/counselordashboard/SaasBanner";
 import { getSocket } from "@/lib/socket";
 
+// NEW: Partner Subscription Engine
+import { useDispatch, useSelector } from "react-redux";
+import { fetchPartnerStatus } from "@/store/partnerSubscriptionSlice";
+import PlanSelectionModal from "@/components/shared/subscription/PlanSelectionModal";
+import SubscriptionBanner from "@/components/shared/subscription/SubscriptionBanner";
+
 export default function CounselorLayout({ children }) {
   const { user, authChecked } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
 
   const router = useRouter();
   const pathname = usePathname();
@@ -39,8 +37,11 @@ export default function CounselorLayout({ children }) {
 
     if (!user) {
       router.replace("/login");
-    } else if (user.role !== "counselor") {
-      router.replace("/dashboard/user");
+      return;
+    }
+
+    if (user.role !== "counselor") {
+      router.replace(getDashboardPath(user.role));
     }
   }, [authChecked, user, router]);
 
@@ -50,6 +51,14 @@ export default function CounselorLayout({ children }) {
     const socket = getSocket();
     socket.emit("join-dashboard", user._id);
   }, [user?._id]);
+
+  // ── NEW: Fetch partner subscription status on mount ─────────────────────
+  // Only for independent counselors (adminId === null)
+  useEffect(() => {
+    if (user?._id && user?.role === "counselor" && !user?.adminId) {
+      dispatch(fetchPartnerStatus());
+    }
+  }, [user?._id, dispatch]);
 
   // ── Loading state ───────────────────────────────────────────────────────
   if (!authChecked) {
@@ -65,8 +74,6 @@ export default function CounselorLayout({ children }) {
   }
 
   // ── Header + banner visibility ──────────────────────────────────────────
-  // Settings page has its own full-page layout (sticky nav + live preview),
-  // so we suppress the global dashboard header AND onboarding banner there.
   const hideHeaderRoutes = ["/dashboard/counselor-dashboard/settings"];
   const shouldHideHeader = hideHeaderRoutes.includes(pathname);
 
@@ -92,6 +99,9 @@ export default function CounselorLayout({ children }) {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* NEW: Blocking plan selection modal — renders over everything when trial ends */}
+      <PlanSelectionModal />
+
       {/* Sidebar */}
       <CounselorSidebar />
 
@@ -105,9 +115,10 @@ export default function CounselorLayout({ children }) {
         )}
 
         <main className="flex-1">
-          {/* <div className="px-4 sm:px-6 lg:px-8 pt-4">
-            <SaasBanner />
-          </div> */}
+          {/* NEW: Partner subscription warning banner (trial ending, settlement due) */}
+          {!shouldHideHeader && (
+            <SubscriptionBanner dashboardPath="/dashboard/counselor-dashboard" />
+          )}
 
           {/* Onboarding banner — only on non-settings pages, self-hides after 2 logins */}
           {!shouldHideHeader && <OnboardingBanner />}

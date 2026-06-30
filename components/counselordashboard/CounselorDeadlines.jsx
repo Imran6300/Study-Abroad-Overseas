@@ -103,7 +103,7 @@ export default function CounselorPipeline() {
           {STAGE_ORDER.slice(0, 7).map((_, i) => (
             <div
               key={i}
-              className="h-8 bg-slate-100 rounded-xl animate-pulse"
+              className="h-8 bg-slate-100  rounded-xl animate-pulse"
             />
           ))}
         </div>
@@ -140,7 +140,7 @@ export default function CounselorPipeline() {
                           duration: 0.7,
                           ease: [0.4, 0, 0.2, 1],
                         }}
-                        className={`h-full bg-gradient-to-r ${item.config.color} rounded-xl flex items-center justify-end pr-3`}
+                        className={`h-full bg-gradient-to-r ${item.config.color} rounded-xl flex items-center justify-end pr-0.5`}
                       >
                         <span className="text-white text-xs font-bold">
                           {item.count}

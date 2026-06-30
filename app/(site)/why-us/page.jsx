@@ -69,7 +69,7 @@ export const revalidate = 86400;
 export default async function WhyChooseUs() {
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/testimonials`,
-    { next: { revalidate: 60 } },
+    { next: { revalidate: 86400 } },
   );
 
   const data = await res.json();

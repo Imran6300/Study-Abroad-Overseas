@@ -8,6 +8,7 @@ import { useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useEffect } from "react";
+import { getDashboardPath } from "@/lib/roleRouting";
 
 import {
   selectIsCounselorStudent,
@@ -32,13 +33,8 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
     if (!authChecked) return;
     if (!isStaff) return;
 
-    if (role === "admin" || role === "super_admin") {
-      router.replace("/dashboard/admin-dashboard");
-    } else if (role === "counselor") {
-      router.replace("/dashboard/counselor-dashboard");
-    } else if (role === "editor") {
-      router.replace("/admin/universities");
-    }
+    // Centralized role-based redirect — getDashboardPath is the single source of truth
+    router.replace(getDashboardPath(role));
   }, [authChecked, isStaff, role, router]);
 
   // ✅ FIX: Never return null. While auth is being checked, render the

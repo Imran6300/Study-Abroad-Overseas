@@ -9,6 +9,7 @@ import { authStart, authSuccess, authFail } from "@/store/authSlice";
 import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
 import MessageBox from "@/components/ui/MessageBox";
+import { getDashboardPath } from "@/lib/roleRouting";
 
 export default function LoginPage() {
   const dispatch = useDispatch();
@@ -17,7 +18,6 @@ export default function LoginPage() {
 
   const searchParams = useSearchParams();
   const activated = searchParams.get("activated") === "true";
-  // NEW: show success message if redirected here after password reset
   const passwordReset = searchParams.get("reset") === "true";
 
   const [messageStatus, setMessageStatus] = useState(
@@ -41,12 +41,14 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [isSuspended, setIsSuspended] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (loading) return;
 
     setErrorMsg("");
+    setIsSuspended(false);
     dispatch(authStart());
 
     try {
@@ -63,6 +65,13 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (!res.ok) {
+        if (data?.code === "ACCOUNT_SUSPENDED") {
+          dispatch(authFail("Account suspended"));
+          setIsSuspended(true);
+          setErrorMsg("");
+          return;
+        }
+
         const msg =
           data?.errors?.[0] || data?.message || "Invalid email or password";
         dispatch(authFail(msg));
@@ -72,17 +81,10 @@ export default function LoginPage() {
 
       dispatch(authSuccess(data.user));
 
-      const role = data.user.role;
-
-      if (role === "admin" || role === "super_admin") {
-        router.replace("/dashboard/admin-dashboard");
-      } else if (role === "counselor") {
-        router.replace("/dashboard/counselor-dashboard");
-      } else if (role === "editor") {
-        router.replace("/admin/universities");
-      } else {
-        router.replace("/dashboard/user");
-      }
+      // ── CENTRALIZED role-based redirect ──────────────────────────────────
+      // getDashboardPath() is the ONLY place that maps role → path.
+      // Never duplicate this logic elsewhere.
+      router.replace(getDashboardPath(data.user.role));
     } catch (error) {
       dispatch(authFail("Server error"));
       setErrorMsg("Server error. Please try again.");
@@ -125,9 +127,42 @@ export default function LoginPage() {
           Continue your study abroad journey
         </p>
 
-        {/* ERROR MESSAGE */}
+        {/* ── SUSPENDED ACCOUNT BANNER ─────────────────────────────────── */}
         <AnimatePresence>
-          {errorMsg && (
+          {isSuspended && (
+            <motion.div
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              className="mb-4 rounded-lg border border-orange-200 bg-orange-50 px-4 py-3"
+            >
+              <div className="flex items-start gap-3">
+                <span className="text-xl flex-shrink-0 mt-0.5">🔒</span>
+                <div>
+                  <p className="text-sm font-semibold text-orange-800">
+                    Account Suspended
+                  </p>
+                  <p className="text-xs text-orange-700 mt-1 leading-relaxed">
+                    Your account has been suspended by your organization
+                    administrator. Please contact your admin for assistance or
+                    reach out to{" "}
+                    <a
+                      href="mailto:support@khizaroverseas.in"
+                      className="font-semibold underline underline-offset-2"
+                    >
+                      support@khizaroverseas.in
+                    </a>
+                    .
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* GENERIC ERROR MESSAGE */}
+        <AnimatePresence>
+          {errorMsg && !isSuspended && (
             <motion.div
               initial={{ opacity: 0, y: -6 }}
               animate={{ opacity: 1, y: 0 }}
@@ -157,12 +192,10 @@ export default function LoginPage() {
 
           {/* PASSWORD */}
           <div>
-            {/* Label row with inline Forgot Password link */}
             <div className="flex items-center justify-between mb-1">
               <label className="text-sm font-medium text-gray-700">
                 Password
               </label>
-              {/* NEW: Forgot password link */}
               <Link
                 href="/forgot-password"
                 className="text-xs text-[#4A6BFF] hover:underline font-medium"

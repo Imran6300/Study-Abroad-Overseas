@@ -3,24 +3,20 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // FILE: app/dashboard/user/layout.jsx
 //
-// WHAT THIS DOES:
-//   1. Guards the route (redirect to /login if not authenticated)
-//   2. Detects if the student belongs to a counselor (user.counselorOwner)
-//   3. If yes → dispatches fetchCounselorBranding(counselorOwner) from Redux
-//      which hits GET /api/branding/:counselorId and loads colors/logo/name
-//   4. Injects the resolved brand colors as CSS variables on the root element
-//      so EVERY child component can use var(--brand-primary) etc.
-//   5. Joins the Socket.IO room for real-time notifications
-//   6. Renders branded sidebar + branded footer
+// Auth guard: only role === "user" can access this area.
+// All other roles are redirected to their own dashboard via getDashboardPath().
 //
-// FIX: counselorOwner is a Mongoose ObjectId. When passed to Redux it may be
-// an object or string depending on how the auth response serializes it.
-// We now coerce it to string with String() to ensure the URL is clean.
+// Also handles:
+//   - Counselor branding fetch (for counselor-assigned students)
+//   - CSS variable injection for brand colors
+//   - Favicon swap (premium feature)
+//   - Socket.IO room join for real-time notifications
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
+import { getDashboardPath } from "@/lib/roleRouting";
 
 import Header from "@/components/Header/nav-bar";
 import BrandedSidebar from "@/components/userdashboard/DashboardSidebar";
@@ -46,8 +42,17 @@ export default function DashboardLayout({ children }) {
 
   // ── 1. Auth guard ────────────────────────────────────────────────────────
   useEffect(() => {
-    if (authChecked && !user) {
+    if (!authChecked) return;
+
+    if (!user) {
       router.replace("/login");
+      return;
+    }
+
+    // Only role === "user" is allowed here.
+    // All other authenticated roles go to their own dashboard.
+    if (user.role !== "user") {
+      router.replace(getDashboardPath(user.role));
     }
   }, [authChecked, user, router]);
 
@@ -56,12 +61,9 @@ export default function DashboardLayout({ children }) {
     if (!user) return;
 
     if (user.counselorOwner) {
-      // FIX: Coerce counselorOwner to string in case it's a Mongo ObjectId object.
-      // The URL /api/branding/:counselorId requires a plain string.
       const counselorId = String(user.counselorOwner);
       dispatch(fetchCounselorBranding(counselorId));
     }
-    // If no counselorOwner, the slice keeps DEFAULT_BRANDING — no fetch needed
   }, [user?.counselorOwner, dispatch]);
 
   // ── 3. Apply CSS variables to <html> so they cascade everywhere ──────────
@@ -74,7 +76,6 @@ export default function DashboardLayout({ children }) {
     root.style.setProperty("--brand-bg", branding.secondaryColor || "#0A192F");
     root.style.setProperty("--brand-accent", branding.accentColor || "#ffffff");
 
-    // Cleanup: reset to defaults on unmount
     return () => {
       root.style.setProperty("--brand-primary", "#22c55e");
       root.style.setProperty("--brand-bg", "#0A192F");
@@ -113,10 +114,9 @@ export default function DashboardLayout({ children }) {
     );
   }
 
-  if (!user) return null;
+  if (!user || user.role !== "user") return null;
 
   // ── Show a brief loading state while branding fetch is in-flight ──────────
-  // This prevents a flash of default colors before counselor branding loads.
   if (isCounselorStudent && !brandingFetched) {
     return (
       <div

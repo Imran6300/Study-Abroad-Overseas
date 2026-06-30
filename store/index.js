@@ -1,4 +1,4 @@
-// store/index.js
+// store/index.js  —  UPDATED: registers orgAdminReducer
 import { configureStore } from "@reduxjs/toolkit";
 
 import authReducer from "./authSlice";
@@ -14,7 +14,13 @@ import deadlineReducer from "./deadlineSlice";
 import visaReducer from "./visaSlice";
 import counselorReducer from "./counselorSlice";
 import khizarApplicationsReducer from "./KhizarApplicationslice";
-import notificationReducer from "./notificationSlice"; // ← notifications
+import notificationReducer from "./notificationSlice";
+
+// NEW: White-Label Admin (Organization) slice
+import orgAdminReducer from "./orgAdminSlice";
+
+// NEW: Partner Subscription Engine slice
+import partnerSubscriptionReducer from "./partnerSubscriptionSlice";
 
 export const store = configureStore({
   reducer: {
@@ -29,6 +35,10 @@ export const store = configureStore({
     branding: brandingReducer,
     counselor: counselorReducer,
     khizarApplications: khizarApplicationsReducer,
-    notifications: notificationReducer, // ← notifications
+    notifications: notificationReducer,
+    // NEW
+    orgAdmin: orgAdminReducer,
+    // NEW: Partner Subscription Engine
+    partnerSubscription: partnerSubscriptionReducer,
   },
 });

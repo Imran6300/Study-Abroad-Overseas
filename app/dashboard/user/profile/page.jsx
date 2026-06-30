@@ -44,7 +44,22 @@ export default function ProfilePage() {
   const [imageError, setImageError] = useState(""); // ← NEW: for showing error message
 
   const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState(null);
+  const [formData, setFormData] = useState({
+    fullName: "",
+    email: "",
+    phone: "",
+    qualification: "",
+    fieldOfStudy: "",
+    graduationYear: "",
+    gpa: "",
+    preferredCountry: "",
+    intendedIntake: "",
+    dateOfBirth: "",
+    gender: "",
+    nationality: "",
+    passportNumber: "",
+    passportExpiry: "",
+  });
 
   const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB in bytes
 
@@ -524,7 +539,7 @@ function Field({
         options ? (
           <select
             name={name}
-            value={value}
+            value={value ?? ""}
             onChange={onChange}
             className={`w-full bg-white/10 border ${
               error ? "border-red-500" : "border-white/20"
@@ -541,7 +556,7 @@ function Field({
           <input
             type={type}
             name={name}
-            value={value}
+            value={value ?? ""}
             onChange={onChange}
             className={`w-full bg-white/10 border ${
               error ? "border-red-500" : "border-white/20"
