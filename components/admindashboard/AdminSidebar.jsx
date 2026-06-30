@@ -214,7 +214,7 @@ export default function AdminSidebar() {
 
 function SidebarItem({ icon, label, href, expanded, isActive = false }) {
   return (
-    <Link href={href}>
+    <Link href={href} prefetch={false}>
       <motion.div
         whileHover={{ scale: 1.03, x: expanded ? 4 : 0 }}
         whileTap={{ scale: 0.98 }}
