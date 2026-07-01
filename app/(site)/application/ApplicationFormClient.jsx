@@ -76,6 +76,7 @@ export default function ApplicationForm() {
   const [message, setMessage] = useState("");
 
   const saveTimeoutRef = useRef(null);
+  const submittedRef = useRef(false); // guards against stale autosave firing after submit
 
   // Check access
   useEffect(() => {
@@ -225,6 +226,14 @@ export default function ApplicationForm() {
 
   // Debounced auto-save draft
   const saveDraft = useCallback(async () => {
+    // Never autosave a draft once the application has been (or is being) submitted.
+    // Without this guard, a debounce timer scheduled just before submit can fire
+    // a few seconds later and upsert a brand-new draft right after the backend
+    // deleted it, which is the "draft comes back after submit" bug.
+    if (submittedRef.current) {
+      return;
+    }
+
     if (
       !formData.fullName.trim() &&
       !formData.email.trim() &&
@@ -302,7 +311,7 @@ export default function ApplicationForm() {
   }, [formData, universitySlug]);
 
   useEffect(() => {
-    if (checkingAccess) return;
+    if (checkingAccess || submittedRef.current) return;
 
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
@@ -331,6 +340,16 @@ export default function ApplicationForm() {
   }, []);
 
   const submitApplication = async () => {
+    // Kill any pending autosave timer immediately. Without this, a debounce
+    // timer scheduled by the last keystroke/checkbox change can still be
+    // in-flight and fire a few seconds after this submit completes, which
+    // recreates a draft via upsert right after the backend deletes it.
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+      saveTimeoutRef.current = null;
+    }
+    submittedRef.current = true;
+
     try {
       const payload = {
         ...formData,
@@ -354,6 +373,9 @@ export default function ApplicationForm() {
       const result = await res.json();
 
       if (!res.ok || !result.success) {
+        // Submission failed — re-enable autosave so the user's progress
+        // keeps being saved as a draft if they keep editing.
+        submittedRef.current = false;
         throw new Error(result.message || "Submission failed");
       }
 
