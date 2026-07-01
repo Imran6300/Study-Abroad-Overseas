@@ -56,10 +56,23 @@ export default function BrandedSidebar({ isCounselorStudent }) {
   return (
     <>
       {/* Mobile toggle button */}
+      {/*
+        FIX: was `absolute top-4 left-4 z-[100]`.
+        The main site Header (nav-bar.jsx) renders a fixed, opaque, full-width
+        bar (h-[85px]) inside a z-[1000] wrapper. That completely covered this
+        button — both visually and for clicks — whenever Header is shown,
+        i.e. for a plain (non-counselor) Khizar Overseas student. Counselor/org
+        students never noticed because their layout hides the main Header.
+        Fix: use `fixed` (not `absolute`, so it doesn't scroll away), push it
+        below the 85px header when Header is present, and give it a z-index
+        above the header's z-[1000] as a safety margin.
+      */}
       {!open && (
         <button
           onClick={() => setOpen(true)}
-          className="lg:hidden absolute top-4 left-4 z-[100] w-10 h-10 flex items-center justify-center rounded-lg text-black text-lg shadow-md"
+          className={`lg:hidden fixed left-4 z-[1050] w-10 h-10 flex items-center justify-center rounded-lg text-black text-lg shadow-md ${
+            isCounselorStudent ? "top-4" : "top-[97px]"
+          }`}
           style={{ background: primary }}
         >
           ➜
@@ -67,19 +80,29 @@ export default function BrandedSidebar({ isCounselorStudent }) {
       )}
 
       {/* Backdrop overlay */}
+      {/* z-index raised above the header's z-[1000] — same reasoning as the toggle button above */}
       {open && (
         <div
           onClick={() => setOpen(false)}
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] lg:hidden"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[1040] lg:hidden"
         />
       )}
 
       {/* Sidebar */}
+      {/*
+        z-index is elevated ONLY below the lg breakpoint (mobile drawer),
+        so the open mobile sidebar isn't stuck underneath the fixed header.
+        At lg+ we revert to the original z-[80] — on desktop the sidebar and
+        header intentionally overlap in the top-left corner, with the header
+        painting on top (z-[1000]). Elevating z-index at lg+ too would make
+        the sidebar cover the header's logo/nav there instead, which is the
+        desktop regression this fixes.
+      */}
       <aside
         className={`
           fixed top-0 left-0 h-screen w-72
           ${isCounselorStudent ? "pt-10" : "pt-24"}
-          border-r transform transition-transform duration-300 z-[80]
+          border-r transform transition-transform duration-300 z-[1045] lg:z-[80]
           ${open ? "translate-x-0" : "-translate-x-full"}
           lg:translate-x-0
         `}

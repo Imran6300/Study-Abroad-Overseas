@@ -26,6 +26,7 @@ import {
   fetchCounselorBranding,
   selectActiveBranding,
   selectBrandingFetched,
+  resetBranding,
 } from "@/store/brandingSlice";
 import { getSocket } from "@/lib/socket";
 
@@ -57,12 +58,19 @@ export default function DashboardLayout({ children }) {
   }, [authChecked, user, router]);
 
   // ── 2. Fetch counselor branding when user is confirmed ───────────────────
+  // IMPORTANT: this must also handle the "no counselor" case. Without the
+  // else branch, a plain Khizar Overseas student inherits whatever branding
+  // is still sitting in the Redux store from a previous login in the same
+  // browser session (e.g. someone logged out of a counselor-branded student
+  // account and logged back in as a direct student without a full reload).
   useEffect(() => {
     if (!user) return;
 
     if (user.counselorOwner) {
       const counselorId = String(user.counselorOwner);
       dispatch(fetchCounselorBranding(counselorId));
+    } else {
+      dispatch(resetBranding());
     }
   }, [user?.counselorOwner, dispatch]);
 

@@ -23,6 +23,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { logout } from "./authSlice";
 
 // ── Default brand (fallback when no counselor / standard plan) ───────────────
 export const DEFAULT_BRANDING = {
@@ -151,6 +152,21 @@ const brandingSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
+    // ── Clear branding on logout ───────────────────────────────────────────
+    // Defense-in-depth: the SPA reuses one Redux store across logins in the
+    // same browser session, so any per-user state (like branding) has to be
+    // explicitly cleared on logout or it silently carries over to whoever
+    // logs in next. Listening for authSlice's logout action here means this
+    // reset happens no matter which layout/page triggers the logout.
+    builder.addCase(logout, (state) => {
+      state.active = { ...DEFAULT_BRANDING };
+      state.raw = null;
+      state.fetched = false;
+      state.loading = false;
+      state.saving = false;
+      state.error = null;
+    });
+
     // ── fetchCounselorBranding (student side) ──────────────────────────────
     builder
       .addCase(fetchCounselorBranding.pending, (state) => {
