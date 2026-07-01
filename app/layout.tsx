@@ -29,7 +29,6 @@ import Script from "next/script";
 import UniversityInitializer from "@/components/UniversityInitializer";
 import RecaptchaProvider from "@/components/RecaptchaProvider";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
-import ProductHuntBanner from "@/components/ProductHuntBanner";
 
 
 const BASE_URL = "https://www.khizaroverseas.in"; // single source of truth
@@ -200,7 +199,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <AuthInitializer>
             <UniversityInitializer>
               <RecaptchaProvider>
-                <ProductHuntBanner />
                 <AuthGate>{children}</AuthGate>
               </RecaptchaProvider>
             </UniversityInitializer>
