@@ -1,5 +1,4 @@
 // app/layout.tsx
-//
 // BUGS FIXED:
 // 1. metadataBase was "https://khizaroverseas.in" (no www) but ALL page
 //    canonical URLs use "https://www.khizaroverseas.in" (with www).
