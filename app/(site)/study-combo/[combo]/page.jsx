@@ -15,7 +15,7 @@
 //   6. Returns { seo, jsonLd, course, country, universitiesInCountry }
 //   7. ComboClient renders the page content
 
-export const revalidate = 3600;
+export const revalidate = 86400;
 
 // Allow unknown combo slugs to still render (on-demand ISR for new combos
 // added after the last build). Set to false if you want a hard 404 for
@@ -62,7 +62,7 @@ async function getComboPage(combo) {
   if (!API_URL) return null;
   try {
     const res = await fetch(`${API_URL}/api/public/combo/${combo}`, {
-      next: { revalidate: 3600 },
+      next: { revalidate: 86400 },
     });
     if (!res.ok) return null;
     const json = await res.json();

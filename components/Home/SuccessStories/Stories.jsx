@@ -1,14 +1,12 @@
 import SuccessCard from "./SuccessCard";
 
-export const revalidate = 60;
-
 export default async function Stories() {
   let students = [];
   try {
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/testimonials`,
       {
-        next: { revalidate: 60 },
+        next: { revalidate: 3600 }, // match the rest of the homepage — testimonials don't need 60s freshness
       },
     );
     if (res.ok) {
