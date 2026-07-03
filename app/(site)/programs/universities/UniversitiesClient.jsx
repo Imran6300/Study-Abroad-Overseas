@@ -417,7 +417,7 @@ export default function UniversitiesClient({
     const fetchData = async () => {
       try {
         const endpoint = searchTerm.trim()
-          ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/universities?page=${encodeURIComponent(searchTerm)}`
+          ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/universities/search?q=${encodeURIComponent(searchTerm)}`
           : `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/universities`;
         const res = await fetch(endpoint);
         const data = await res.json();
@@ -437,7 +437,7 @@ export default function UniversitiesClient({
       setLoadingMore(true);
       const nextPage = page + 1;
       const endpoint = searchTerm.trim()
-        ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/universities/search?q=${searchTerm}&page=${nextPage}`
+        ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/universities/search?q=${encodeURIComponent(searchTerm)}&page=${nextPage}`
         : `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/universities?page=${nextPage}`;
       const res = await fetch(endpoint);
       const data = await res.json();
