@@ -23,7 +23,7 @@ export default function HeroSearch() {
 
       const data = await res.json();
       if (data.type === "country") {
-        router.push(`/all-countries/${data.data.slug}`);
+        router.push(`/study-in-${data.data.slug}`);
         return;
       }
 

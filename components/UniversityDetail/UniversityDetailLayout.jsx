@@ -184,7 +184,7 @@ export default function UniversityDetailLayout({ uni, similarUniversities }) {
           </h1>
           <p>
             <Link
-              href={`/all-countries/${uni.country?.slug}`}
+              href={`/study-in-${uni.country?.slug}`}
               className="text-blue-400 underline"
             >
               Study in {smartText(uni.country?.name, "Unknown Country")}

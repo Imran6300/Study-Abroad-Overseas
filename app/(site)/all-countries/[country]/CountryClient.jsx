@@ -687,7 +687,7 @@ export default function CountryDetail({ country, universities = [] }) {
         "@type": "WebPage",
         name: `Study in ${name} 2026 – Top Universities, Visa, Scholarships for Indian Students`,
         description: `Complete 2026 guide to studying in ${name}: top universities, ${visaSuccessRate}% visa success rate, popular courses, scholarships, eligibility, post-study work & career opportunities for Indian students.`,
-        url: `${process.env.NEXT_PUBLIC_FRONTEND_URL}/all-countries/${slug}`,
+        url: `${process.env.NEXT_PUBLIC_FRONTEND_URL}/study-in-${slug}`,
         publisher: {
           "@type": "Organization",
           name: "Khizar Overseas",
@@ -728,7 +728,7 @@ export default function CountryDetail({ country, universities = [] }) {
             "@type": "ListItem",
             position: 3,
             name: `Study in ${name} 2026`,
-            item: `${process.env.NEXT_PUBLIC_FRONTEND_URL}/all-countries/${slug}`,
+            item: `${process.env.NEXT_PUBLIC_FRONTEND_URL}/study-in-${slug}`,
           },
         ],
       },

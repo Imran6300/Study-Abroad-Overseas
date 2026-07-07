@@ -315,7 +315,7 @@ const NavItem = ({ label, link }) => (
 const DesktopDropdown = ({ type, label, active, onToggle, items }) => {
   const getHref = (item) => {
     if (type === "countries") {
-      return item.slug ? `/all-countries/${item.slug}` : "/all-countries";
+      return item.slug ? `/study-in-${item.slug}` : "/all-countries";
     }
 
     if (type === "courses") {
@@ -444,7 +444,7 @@ const MobileMenu = ({ open, onClose, isLoggedIn, handleLogout, user }) => {
                   { name: "All Countries", slug: "" },
                 ]}
                 getHref={(item) =>
-                  item.slug ? `/all-countries/${item.slug}` : "/all-countries"
+                  item.slug ? `/study-in-${item.slug}` : "/all-countries"
                 }
                 onClose={onClose}
               />

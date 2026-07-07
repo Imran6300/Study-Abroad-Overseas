@@ -135,7 +135,7 @@ export default function ProfileEvaluation() {
               {COUNTRIES.map((c) => (
                 <Link
                   key={c}
-                  href={`/all-countries/${toSlug(c)}`}
+                  href={`/study-in-${toSlug(c)}`}
                   className="px-5 py-2.5 rounded-full bg-blue-50 text-blue-700
                              text-sm font-medium hover:bg-blue-100
                              hover:scale-105 transition-all"
