@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -40,43 +39,24 @@ const cardHover = {
 };
 
 export default function Blog({
-  posts: initialPosts,
+  posts,
   initialTotal = 0,
   pageSize = 12,
+  currentPage = 1,
+  totalPages = 1,
 }) {
-  // FIX: "Load More Articles" previously had no onClick handler at all —
-  // it was a dead button. Combined with the backend's default limit=10,
-  // any post beyond the most recent page had no internal link path from
-  // /blog. Now it actually paginates against GET /api/blogs.
-  const [posts, setPosts] = useState(initialPosts || []);
-  const [page, setPage] = useState(1);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [total, setTotal] = useState(initialTotal);
+  // FIX (2026-07): "Load More Articles" was previously a client-only fetch
+  // with no backing URL — posts beyond page 1 had no <a href> anywhere in
+  // server-rendered HTML for Googlebot to follow, and no independent URL to
+  // discover or index. Replaced with real /blog?page=N navigation via
+  // next/link, so every page of results (and every post on it) is reachable
+  // through a normal crawlable link, not just the sitemap.
+  const total = initialTotal;
 
-  const hasMore = posts.length < total;
-
-  const loadMore = async () => {
-    if (loadingMore || !hasMore) return;
-    setLoadingMore(true);
-    try {
-      const nextPage = page + 1;
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/blogs?page=${nextPage}&limit=${pageSize}&sort=published`,
-      );
-      if (!res.ok) return;
-      const json = await res.json();
-      setPosts((prev) => [...prev, ...(json.data || [])]);
-      setPage(nextPage);
-      if (typeof json.total === "number") setTotal(json.total);
-    } catch (err) {
-      console.error("[blog] load more error:", err.message);
-    } finally {
-      setLoadingMore(false);
-    }
-  };
-
-  const featuredPost = posts?.[0] || null;
-  const recentPosts = posts?.slice(1) || [];
+  // Only spotlight a "featured" post on page 1 — on later pages every post
+  // renders in the regular grid.
+  const featuredPost = currentPage === 1 ? posts?.[0] || null : null;
+  const recentPosts = currentPage === 1 ? posts?.slice(1) || [] : posts || [];
   const categories = [
     "Country Guides",
     "Visa Guidance",
@@ -315,16 +295,50 @@ export default function Blog({
               </motion.div>
             )}
 
-            {hasMore && (
-              <div className="text-center mt-12">
-                <button
-                  onClick={loadMore}
-                  disabled={loadingMore}
-                  className="bg-[#0f2a5f] hover:bg-[#091d42] disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold px-12 py-5 rounded-xl shadow-lg transition transform hover:scale-[1.03]"
-                >
-                  {loadingMore ? "Loading..." : "Load More Articles"}
-                </button>
-              </div>
+            {totalPages > 1 && (
+              <nav
+                aria-label="Blog pagination"
+                className="flex items-center justify-center flex-wrap gap-2 mt-12"
+              >
+                {currentPage > 1 && (
+                  <Link
+                    href={
+                      currentPage - 1 === 1
+                        ? "/blog"
+                        : `/blog?page=${currentPage - 1}`
+                    }
+                    className="px-5 py-3 rounded-xl bg-white border border-gray-200 text-[#0f2a5f] font-medium hover:bg-gray-50 transition"
+                  >
+                    ← Previous
+                  </Link>
+                )}
+
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  (p) => (
+                    <Link
+                      key={p}
+                      href={p === 1 ? "/blog" : `/blog?page=${p}`}
+                      aria-current={p === currentPage ? "page" : undefined}
+                      className={`px-5 py-3 rounded-xl font-semibold transition ${
+                        p === currentPage
+                          ? "bg-[#0f2a5f] text-white"
+                          : "bg-white border border-gray-200 text-[#0f2a5f] hover:bg-gray-50"
+                      }`}
+                    >
+                      {p}
+                    </Link>
+                  ),
+                )}
+
+                {currentPage < totalPages && (
+                  <Link
+                    href={`/blog?page=${currentPage + 1}`}
+                    className="px-5 py-3 rounded-xl bg-[#0f2a5f] text-white font-semibold hover:bg-[#091d42] transition"
+                  >
+                    Next →
+                  </Link>
+                )}
+              </nav>
             )}
           </div>
 
