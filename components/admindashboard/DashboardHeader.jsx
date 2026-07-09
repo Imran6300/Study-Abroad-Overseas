@@ -1,12 +1,13 @@
 // components/dashboard/DashboardHeader.jsx
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { LogOut } from "lucide-react";
+import { LogOut, Menu } from "lucide-react";
 
 import { useDispatch } from "react-redux";
 import { logout } from "@/store/authSlice";
 import { useRouter } from "next/navigation";
 import { disconnectSocket } from "@/lib/socket"; // adjust path
+import { toggleMobileSidebar } from "@/components/admindashboard/mobileSidebarStore";
 
 export default function DashboardHeader({
   title = "Dashboard",
@@ -75,13 +76,30 @@ export default function DashboardHeader({
     >
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 sm:h-18">
-          {/* Left: Title */}
+          {/* Left: Menu toggle (mobile only) + Title */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, ease: "easeOut" }}
             className="flex items-center gap-3 min-w-0"
           >
+            <button
+              type="button"
+              onClick={toggleMobileSidebar}
+              aria-label="Open menu"
+              className="
+                md:hidden
+                -ml-1 mr-1
+                w-10 h-10 shrink-0
+                flex items-center justify-center
+                rounded-lg text-gray-700
+                hover:bg-gray-100 active:bg-gray-200
+                transition-colors
+              "
+            >
+              <Menu size={22} />
+            </button>
+
             <h1
               className="
                 text-xl sm:text-2xl lg:text-3xl 

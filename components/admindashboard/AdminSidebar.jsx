@@ -1,12 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useSelector, useDispatch } from "react-redux";
 import { logout } from "@/store/authSlice";
 import { disconnectSocket } from "@/lib/socket";
+import {
+  useMobileSidebarOpen,
+  closeMobileSidebar,
+} from "@/components/admindashboard/mobileSidebarStore";
 
 export default function AdminSidebar() {
   const user = useSelector((state) => state.auth.user);
@@ -16,6 +20,14 @@ export default function AdminSidebar() {
   const router = useRouter();
   const pathname = usePathname();
   const [expanded, setExpanded] = useState(false);
+
+  // Mobile drawer open/close state (desktop behavior below is untouched)
+  const mobileOpen = useMobileSidebarOpen();
+
+  // Close the mobile drawer automatically whenever the route changes
+  useEffect(() => {
+    closeMobileSidebar();
+  }, [pathname]);
 
   const Handlelogout = async () => {
     await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/logout`, {
@@ -130,12 +142,13 @@ export default function AdminSidebar() {
           damping: 28,
         }}
         className={`
+          hidden md:flex
           fixed top-0 left-0 z-40
           h-screen
           bg-gradient-to-b from-[#0b1220] to-[#0f1a36]
           border-r border-sky-600/20
           text-slate-300
-          flex flex-col
+          md:flex-col
           shadow-2xl shadow-black/40
           overflow-hidden           // keep this - prevents sidebar itself from scrolling weirdly
         `}
@@ -208,13 +221,107 @@ export default function AdminSidebar() {
           ${expanded ? "w-[260px]" : "w-[68px]"}
         `}
       />
+
+      {/* ===================== MOBILE DRAWER (below md only) ===================== */}
+      <div className="md:hidden">
+        {/* Backdrop */}
+        <AnimatePresence>
+          {mobileOpen && (
+            <motion.div
+              key="sidebar-backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={closeMobileSidebar}
+              className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
+            />
+          )}
+        </AnimatePresence>
+
+        {/* Sliding panel */}
+        <motion.aside
+          initial={false}
+          animate={{ x: mobileOpen ? 0 : "-100%" }}
+          transition={{ type: "spring", stiffness: 260, damping: 30 }}
+          className="
+            fixed top-0 left-0 z-50
+            h-screen w-[78vw] max-w-[280px]
+            bg-gradient-to-b from-[#0b1220] to-[#0f1a36]
+            border-r border-sky-600/20
+            text-slate-300
+            flex flex-col
+            shadow-2xl shadow-black/40
+          "
+          aria-hidden={!mobileOpen}
+        >
+          {/* Header / Logo */}
+          <div className="flex items-center justify-between px-4 pt-6 pb-8 shrink-0">
+            <h2 className="text-xl font-bold tracking-wider text-sky-400">
+              OVERSEAS ADMIN
+            </h2>
+            <button
+              onClick={closeMobileSidebar}
+              aria-label="Close menu"
+              className="
+                w-9 h-9 flex items-center justify-center rounded-lg
+                text-slate-300 hover:text-white hover:bg-white/10
+                transition-colors
+              "
+            >
+              ✕
+            </button>
+          </div>
+
+          <nav className="flex-1 px-3 space-y-1.5 overflow-y-auto">
+            {filteredMenu.map((item) => (
+              <SidebarItem
+                key={item.href}
+                icon={item.icon}
+                label={item.label}
+                href={item.href}
+                expanded
+                onNavigate={closeMobileSidebar}
+                isActive={
+                  pathname === item.href || pathname.startsWith(item.href + "/")
+                }
+              />
+            ))}
+          </nav>
+
+          {/* Logout */}
+          <div className="px-3 pb-6 mt-auto shrink-0">
+            <button
+              onClick={Handlelogout}
+              className="
+                w-full flex items-center gap-3
+                px-3 py-3 rounded-xl
+                text-red-400 hover:text-red-300
+                hover:bg-red-950/40
+                transition-colors duration-200
+                text-sm font-medium
+              "
+            >
+              <span className="text-xl min-w-[24px]">⏻</span>
+              <span>Logout</span>
+            </button>
+          </div>
+        </motion.aside>
+      </div>
     </>
   );
 }
 
-function SidebarItem({ icon, label, href, expanded, isActive = false }) {
+function SidebarItem({
+  icon,
+  label,
+  href,
+  expanded,
+  isActive = false,
+  onNavigate,
+}) {
   return (
-    <Link href={href} prefetch={false}>
+    <Link href={href} prefetch={false} onClick={onNavigate}>
       <motion.div
         whileHover={{ scale: 1.03, x: expanded ? 4 : 0 }}
         whileTap={{ scale: 0.98 }}

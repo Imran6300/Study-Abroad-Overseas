@@ -20,6 +20,44 @@ import {
 const STATUS_OPTIONS = ["Lead", "Applied", "Enrolled", "Closed"];
 const CONTACTED_STAGES = ["contacted", "qualified", "applied", "enrolled"];
 
+// NEW: human-readable labels + colors for every form a lead can come from.
+// Keep this in sync with the `leadSource` enum in models/assessment.js and
+// the `source` values passed to syncLeadFromForm() across controllers.
+const SOURCE_LABELS = {
+  homepage: {
+    label: "Country Interest",
+    className: "bg-cyan-100 text-cyan-700",
+  },
+  assessment: {
+    label: "Assessment",
+    className: "bg-indigo-100 text-indigo-700",
+  },
+  scholarship: {
+    label: "Scholarship",
+    className: "bg-amber-100 text-amber-700",
+  },
+  khizar_application: {
+    label: "Application",
+    className: "bg-emerald-100 text-emerald-700",
+  },
+  partner: { label: "Partner", className: "bg-fuchsia-100 text-fuchsia-700" },
+  referral: { label: "Referral", className: "bg-teal-100 text-teal-700" },
+  manual: { label: "Manual", className: "bg-gray-100 text-gray-700" },
+  profile_completion: {
+    label: "Profile Completed",
+    className: "bg-sky-100 text-sky-700",
+  },
+};
+
+function sourceBadge(sourceKey) {
+  return (
+    SOURCE_LABELS[sourceKey] || {
+      label: sourceKey || "Unknown",
+      className: "bg-gray-100 text-gray-700",
+    }
+  );
+}
+
 export default function StudentsAdminPage() {
   const router = useRouter();
   const { user } = useSelector((state) => state.auth);
@@ -55,18 +93,33 @@ export default function StudentsAdminPage() {
             ? data
             : [];
 
-        const formatted = leadsArray.map((lead) => ({
-          id: lead.user || null,
-          leadId: lead._id,
+        const formatted = leadsArray.map((lead) => {
+          // NEW: collect every distinct form this person has submitted
+          // (sourceForms is populated by services/leadSync/syncLeadFromForm
+          // on the backend). Falls back to the single leadSource for older
+          // leads created before sourceForms existed, so nothing on screen
+          // regresses for pre-existing data.
+          const formTypes =
+            Array.isArray(lead.sourceForms) && lead.sourceForms.length
+              ? [...new Set(lead.sourceForms.map((f) => f.type))]
+              : lead.leadSource
+                ? [lead.leadSource]
+                : [];
 
-          name: lead.name,
-          email: lead.email,
-          phone: lead.phone,
-          target: lead.preferredCountry,
-          status: lead.counselorStage,
-          counselor: lead.assignedCounselor || "Unassigned",
-          created: new Date(lead.createdAt).toISOString().split("T")[0],
-        }));
+          return {
+            id: lead.user || null,
+            leadId: lead._id,
+
+            name: lead.name,
+            email: lead.email,
+            phone: lead.phone,
+            target: lead.preferredCountry,
+            status: lead.counselorStage,
+            counselor: lead.assignedCounselor || "Unassigned",
+            created: new Date(lead.createdAt).toISOString().split("T")[0],
+            sources: formTypes,
+          };
+        });
 
         setStudents(formatted);
       } catch (err) {
@@ -175,7 +228,7 @@ export default function StudentsAdminPage() {
     <div className="flex min-h-screen bg-gray-50">
       <AdminSidebar />
 
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0">
         <DashboardHeader
           title={
             mode === "add"
@@ -311,6 +364,9 @@ export default function StudentsAdminPage() {
                         <th className="px-4 py-3 sm:px-6 sm:py-4 text-left text-xs sm:text-sm font-semibold text-gray-700 whitespace-nowrap hidden md:table-cell">
                           Target Country
                         </th>
+                        <th className="px-4 py-3 sm:px-6 sm:py-4 text-left text-xs sm:text-sm font-semibold text-gray-700 whitespace-nowrap hidden lg:table-cell">
+                          Submitted Forms
+                        </th>
                         <th className="px-4 py-3 sm:px-6 sm:py-4 text-left text-xs sm:text-sm font-semibold text-gray-700 whitespace-nowrap">
                           Status
                         </th>
@@ -339,6 +395,25 @@ export default function StudentsAdminPage() {
                           </td>
                           <td className="px-4 py-3 sm:px-6 sm:py-4 text-sm text-gray-600 hidden md:table-cell">
                             {student.target}
+                          </td>
+                          <td className="px-4 py-3 sm:px-6 sm:py-4 hidden lg:table-cell">
+                            <div className="flex flex-wrap gap-1">
+                              {student.sources.length === 0 ? (
+                                <span className="text-xs text-gray-400">—</span>
+                              ) : (
+                                student.sources.map((src) => {
+                                  const badge = sourceBadge(src);
+                                  return (
+                                    <span
+                                      key={src}
+                                      className={`inline-block px-2 py-0.5 text-xs font-medium rounded-full whitespace-nowrap ${badge.className}`}
+                                    >
+                                      {badge.label}
+                                    </span>
+                                  );
+                                })
+                              )}
+                            </div>
                           </td>
                           <td className="px-4 py-3 sm:px-6 sm:py-4">
                             <span
