@@ -206,7 +206,17 @@ export default function StudentsAdminPage() {
                           className="hover:bg-gray-50 transition-colors"
                         >
                           <td className="px-4 py-3 sm:px-6 sm:py-4 text-sm font-medium text-gray-900">
-                            {student.name}
+                            <div className="flex items-center gap-2">
+                              <span>{student.name}</span>
+                              {!student.isRegistered && (
+                                <span
+                                  title="This student hasn't created an account yet"
+                                  className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold rounded-full bg-gray-100 text-gray-500 border border-gray-200 whitespace-nowrap"
+                                >
+                                  No account
+                                </span>
+                              )}
+                            </div>
                           </td>
                           <td className="px-4 py-3 sm:px-6 sm:py-4 text-sm text-gray-600 hidden sm:table-cell">
                             {student.email}
@@ -256,18 +266,16 @@ export default function StudentsAdminPage() {
 
                           <td className="px-4 py-3 sm:px-6 sm:py-4 text-sm font-medium whitespace-nowrap">
                             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-                              {student.id && (
-                                <button
-                                  onClick={() =>
-                                    router.push(
-                                      `/dashboard/counselor-dashboard/students/${student.id}`,
-                                    )
-                                  }
-                                  className="text-sky-600 hover:text-sky-800 text-sm"
-                                >
-                                  View
-                                </button>
-                              )}
+                              <button
+                                onClick={() =>
+                                  router.push(
+                                    `/dashboard/counselor-dashboard/students/${student.leadId}`,
+                                  )
+                                }
+                                className="text-sky-600 hover:text-sky-800 text-sm"
+                              >
+                                View
+                              </button>
                               <button
                                 onClick={() => {
                                   setStudentToDelete(student);

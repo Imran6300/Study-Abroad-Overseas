@@ -30,6 +30,7 @@ import {
   resetApplications,
 } from "@/store/applicationSlice";
 import { fetchStudentDeadlines, resetDeadlines } from "@/store/deadlineSlice";
+import { counselorApi } from "@/lib/counselorApi";
 
 import {
   ArrowLeft,
@@ -90,6 +91,13 @@ export default function KhizarApplicationDetailPage() {
   const [loadingActivities, setLoadingActivities] = useState(false);
   const [loadingDeadlines, setLoadingDeadlines] = useState(false);
   const [savingDeadline, setSavingDeadline] = useState(false);
+
+  // ── Lead record (always resolvable via leadId, whether or not the
+  // student has created an account) — used to gate the user-account-only
+  // data fetches below and to power the "no account yet" experience.
+  const [leadRecord, setLeadRecord] = useState(null);
+  const [loadingLeadRecord, setLoadingLeadRecord] = useState(true);
+  const isRegistered = !!leadRecord?.user;
 
   const fetchNotes = async () => {
     // Wait until application is loaded
@@ -437,13 +445,65 @@ export default function KhizarApplicationDetailPage() {
     dispatch(resetDeadlines());
     dispatch(clearSelectedApplication());
 
-    dispatch(fetchApplicationById(id));
+    setLeadRecord(null);
+    setLoadingLeadRecord(true);
+
+    let cancelled = false;
+
+    (async () => {
+      try {
+        // `id` here is always the leadId — works whether or not the
+        // student has registered, since this endpoint is keyed on the Lead.
+        const res = await counselorApi.getStudentDetail(id);
+        if (cancelled) return;
+
+        const lead = res?.data?.lead || null;
+        setLeadRecord(lead);
+
+        // Only registered students have a User account to fetch
+        // applications / profile / deadlines against.
+        if (lead?.user) {
+          dispatch(fetchApplicationById(lead.user));
+        }
+      } catch (err) {
+        console.error("[fetchLeadRecord]", err);
+      } finally {
+        if (!cancelled) setLoadingLeadRecord(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [id, dispatch]);
 
   useEffect(() => {
+    // Student hasn't created an account yet — build a lead-only view and
+    // skip the user-scoped fetches below (there's no User to fetch against).
+    if (leadRecord && !leadRecord.user) {
+      setApplication({
+        _id: id,
+        appId: "N/A",
+        student: {
+          _id: null,
+          userId: null,
+          name: leadRecord.name || "",
+          email: leadRecord.email || "",
+        },
+        status: "Submitted",
+        managedBy: "",
+        processor: "Not Assigned",
+        offerLetters: [],
+        activityLog: [],
+        documents: [],
+      });
+      return;
+    }
+
     if (!selectedApplication) return;
 
     const firstApp = selectedApplication.applications?.[0] || null;
+    const userId = leadRecord?.user || firstApp?.user?._id || id;
 
     const appData = firstApp
       ? {
@@ -451,8 +511,8 @@ export default function KhizarApplicationDetailPage() {
           appId: firstApp.appId || firstApp._id,
 
           student: {
-            _id: firstApp.user?._id || id,
-            userId: firstApp.user?._id || id,
+            _id: firstApp.user?._id || userId,
+            userId: firstApp.user?._id || userId,
             name: firstApp.personalInfo?.fullName || firstApp.user?.name || "",
             email: firstApp.personalInfo?.email || firstApp.user?.email || "",
           },
@@ -468,12 +528,12 @@ export default function KhizarApplicationDetailPage() {
           documents: firstApp.documents || [],
         }
       : {
-          _id: id,
+          _id: userId,
           appId: "N/A",
 
           student: {
-            _id: id,
-            userId: id,
+            _id: userId,
+            userId: userId,
           },
 
           status: "Submitted",
@@ -491,8 +551,6 @@ export default function KhizarApplicationDetailPage() {
 
     setApplication(appData);
 
-    const userId = firstApp?.user?._id || id;
-
     dispatch(fetchStudentProfile(userId));
     dispatch(fetchStudentApplications(userId));
     dispatch(fetchStudentDeadlines(userId));
@@ -500,9 +558,39 @@ export default function KhizarApplicationDetailPage() {
     if (appData?._id) {
       fetchActivities(appData._id);
     }
-  }, [selectedApplication, dispatch, id]);
+  }, [selectedApplication, leadRecord, dispatch, id]);
 
-  if (loadingApplication) {
+  if (loadingLeadRecord) {
+    return (
+      <div className="min-h-screen bg-[#f4f6fb] flex items-center justify-center">
+        <div className="flex items-center gap-3 text-slate-500">
+          <Loader2 size={20} className="animate-spin" />
+          <span className="text-sm font-medium">Loading student…</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!leadRecord) {
+    return (
+      <div className="min-h-screen bg-[#f4f6fb] flex items-center justify-center">
+        <div className="text-center">
+          <AlertCircle size={40} className="text-slate-400 mx-auto mb-3" />
+          <p className="text-slate-600 font-medium">
+            Student not found or not assigned to you.
+          </p>
+          <button
+            onClick={() => router.back()}
+            className="mt-4 text-indigo-600 text-sm font-semibold hover:underline"
+          >
+            ← Go back
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (isRegistered && loadingApplication) {
     return (
       <div className="min-h-screen bg-[#f4f6fb] flex items-center justify-center">
         <div className="flex items-center gap-3 text-slate-500">
@@ -513,18 +601,12 @@ export default function KhizarApplicationDetailPage() {
     );
   }
 
-  if (!loadingApplication && !application) {
+  if (!application) {
     return (
       <div className="min-h-screen bg-[#f4f6fb] flex items-center justify-center">
-        <div className="text-center">
-          <AlertCircle size={40} className="text-slate-400 mx-auto mb-3" />
-          <p className="text-slate-600 font-medium">Application not found.</p>
-          <button
-            onClick={() => router.back()}
-            className="mt-4 text-indigo-600 text-sm font-semibold hover:underline"
-          >
-            ← Go back
-          </button>
+        <div className="flex items-center gap-3 text-slate-500">
+          <Loader2 size={20} className="animate-spin" />
+          <span className="text-sm font-medium">Loading student…</span>
         </div>
       </div>
     );
@@ -625,6 +707,22 @@ export default function KhizarApplicationDetailPage() {
           isKhizarManaged={isKhizarManaged}
         />
 
+        {/* ── No-account notice ── */}
+        {!isRegistered && (
+          <div className="mb-6 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4">
+            <AlertCircle size={18} className="text-amber-500 mt-0.5 shrink-0" />
+            <p className="text-sm text-amber-800">
+              <span className="font-semibold">
+                This student hasn't created an account yet.
+              </span>{" "}
+              Applications, Visa progress, and student-driven deadlines will
+              become available once they register. In the meantime you can still
+              add notes and upload documents on their behalf from the{" "}
+              <span className="font-semibold">Documents</span> tab.
+            </p>
+          </div>
+        )}
+
         {/* ── Status Timeline Card ── */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
@@ -650,6 +748,7 @@ export default function KhizarApplicationDetailPage() {
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           leadId={id}
+          isRegistered={isRegistered}
           application={application}
           profile={profile}
           overviewApplication={overviewApplication}

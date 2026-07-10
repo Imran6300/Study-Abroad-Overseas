@@ -12,6 +12,7 @@ export default function DeadlinesTab({
   handleCreateDeadline,
   handleToggleDeadline,
   handleDeleteDeadline,
+  isRegistered = true,
 }) {
   const [showForm, setShowForm] = useState(false);
 
@@ -39,14 +40,30 @@ export default function DeadlinesTab({
 
         <button
           onClick={() => setShowForm((v) => !v)}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition-all"
+          disabled={!isRegistered}
+          title={
+            !isRegistered
+              ? "The student needs to create an account before they can receive and fulfill a deadline request"
+              : undefined
+          }
+          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed text-white text-xs font-semibold transition-all"
         >
           <Plus size={13} />
           Add Deadline
         </button>
       </div>
 
-      {showForm && (
+      {!isRegistered && (
+        <div className="text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3">
+          Requesting a document via a deadline requires the student to log in
+          and upload it themselves, so this is only available once they've
+          created an account. To get a document from this student right now,
+          upload it on their behalf from the{" "}
+          <span className="font-semibold">Documents</span> tab instead.
+        </div>
+      )}
+
+      {showForm && isRegistered && (
         <DeadlineForm
           mode="add"
           initialData={null}

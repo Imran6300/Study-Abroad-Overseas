@@ -14,6 +14,7 @@ export default function TabsBar({
   activeTab,
   setActiveTab,
   leadId,
+  isRegistered,
   application,
   profile,
   overviewApplication,
@@ -105,6 +106,8 @@ export default function TabsBar({
         {/* ── DOCUMENTS ── */}
         {activeTab === "documents" && (
           <DocumentsTab
+            leadId={leadId}
+            isRegistered={isRegistered}
             applicationDocuments={applicationDocuments}
             visaDocuments={visaDocuments}
             financialDocuments={financialDocuments}
@@ -120,6 +123,7 @@ export default function TabsBar({
             handleCreateDeadline={handleCreateDeadline}
             handleToggleDeadline={handleToggleDeadline}
             handleDeleteDeadline={handleDeleteDeadline}
+            isRegistered={isRegistered}
           />
         )}
         {/* ── APPLICATIONS ── */}
