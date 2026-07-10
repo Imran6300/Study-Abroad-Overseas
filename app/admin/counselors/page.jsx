@@ -285,7 +285,7 @@ function ApplicationRow({
 }
 
 // ─── Counselor Row (table) ────────────────────────────────────────────────────
-function CounselorRow({ counselor, openDeleteConfirm }) {
+function CounselorRow({ counselor, openView, openDeleteConfirm }) {
   const initials = counselor.name
     .split(" ")
     .map((w) => w[0])
@@ -374,13 +374,22 @@ function CounselorRow({ counselor, openDeleteConfirm }) {
 
       {/* Actions */}
       <td className="px-4 sm:px-6 py-4">
-        <button
-          onClick={() => openDeleteConfirm(counselor)}
-          className="inline-flex items-center gap-1 text-xs font-medium text-red-600 hover:text-red-800 hover:bg-red-50 px-2.5 py-1.5 rounded-lg transition-colors"
-        >
-          <Trash2 size={13} />
-          <span className="hidden sm:inline">Delete</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => openView(counselor)}
+            className="inline-flex items-center gap-1 text-xs font-medium text-sky-600 hover:text-sky-800 hover:bg-sky-50 px-2.5 py-1.5 rounded-lg transition-colors"
+          >
+            <Eye size={13} />
+            <span className="hidden sm:inline">View</span>
+          </button>
+          <button
+            onClick={() => openDeleteConfirm(counselor)}
+            className="inline-flex items-center gap-1 text-xs font-medium text-red-600 hover:text-red-800 hover:bg-red-50 px-2.5 py-1.5 rounded-lg transition-colors"
+          >
+            <Trash2 size={13} />
+            <span className="hidden sm:inline">Delete</span>
+          </button>
+        </div>
       </td>
     </motion.tr>
   );
@@ -416,7 +425,18 @@ function SectionHeader({ title, count, countColor = "text-gray-500" }) {
 }
 
 // ─── Application Detail Modal ─────────────────────────────────────────────────
-function ApplicationModal({ application, onClose, onApprove, onReject }) {
+// NEW: readOnly=true is used when this is opened from the Active Partners
+// table (an already-approved counselor) — the admin can always look up the
+// original submission here, but Approve/Reject no longer apply since that
+// decision has already been made. readOnly defaults to false so pending
+// applications keep behaving exactly as before.
+function ApplicationModal({
+  application,
+  onClose,
+  onApprove,
+  onReject,
+  readOnly = false,
+}) {
   // Trap scroll
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -444,7 +464,7 @@ function ApplicationModal({ application, onClose, onApprove, onReject }) {
         <div className="flex items-center justify-between px-5 sm:px-7 py-4 sm:py-5 border-b border-gray-100 flex-shrink-0">
           <div>
             <h2 className="text-lg sm:text-xl font-bold text-gray-900">
-              Partner Application
+              {readOnly ? "Partner Details" : "Partner Application"}
             </h2>
             <p className="text-xs text-gray-400 mt-0.5">
               Submitted {application.submittedAt}
@@ -528,18 +548,29 @@ function ApplicationModal({ application, onClose, onApprove, onReject }) {
 
         {/* Footer */}
         <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-3 px-5 sm:px-7 py-4 sm:py-5 border-t border-gray-100 bg-gray-50/50 flex-shrink-0">
-          <button
-            onClick={() => onReject(application.id)}
-            className="flex items-center justify-center gap-2 bg-white border border-red-200 text-red-600 hover:bg-red-600 hover:text-white hover:border-red-600 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200"
-          >
-            <XCircle size={15} /> Reject Application
-          </button>
-          <button
-            onClick={() => onApprove(application)}
-            className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 shadow-sm"
-          >
-            <CheckCircle size={15} /> Approve Partner
-          </button>
+          {readOnly ? (
+            <button
+              onClick={onClose}
+              className="flex items-center justify-center gap-2 bg-white border border-gray-200 text-gray-700 hover:bg-gray-100 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200"
+            >
+              Close
+            </button>
+          ) : (
+            <>
+              <button
+                onClick={() => onReject(application.id)}
+                className="flex items-center justify-center gap-2 bg-white border border-red-200 text-red-600 hover:bg-red-600 hover:text-white hover:border-red-600 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200"
+              >
+                <XCircle size={15} /> Reject Application
+              </button>
+              <button
+                onClick={() => onApprove(application)}
+                className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 shadow-sm"
+              >
+                <CheckCircle size={15} /> Approve Partner
+              </button>
+            </>
+          )}
         </div>
       </motion.div>
     </motion.div>
@@ -603,6 +634,33 @@ export default function CounselorsAdminPage() {
           successRate: "0%",
 
           status: "Active",
+
+          // NEW: carry over the original application fields so the same
+          // detail modal used for reviewing pending applications can also
+          // be opened (read-only) from the Active Partners table — the
+          // counselor's original submission should always be viewable,
+          // not just during the one-time approve/reject decision.
+          fullName: partner.fullName,
+
+          country: partner.country,
+
+          city: partner.city,
+
+          website: partner.website,
+
+          agencyType: partner.agencyType,
+
+          studentsPerMonth: partner.studentsPerMonth,
+
+          countries: partner.specializationCountries || [],
+
+          services: partner.services || [],
+
+          wantsBrandedPortal: partner.wantsBrandedPortal,
+
+          brandingName: partner.brandingName,
+
+          submittedAt: new Date(partner.createdAt).toLocaleDateString(),
         }));
 
       // Pending applications
@@ -984,6 +1042,7 @@ export default function CounselorsAdminPage() {
                       <CounselorRow
                         key={counselor.id}
                         counselor={counselor}
+                        openView={(c) => setSelectedApplication(c)}
                         openDeleteConfirm={openDeleteConfirm}
                       />
                     ))}
@@ -1031,6 +1090,7 @@ export default function CounselorsAdminPage() {
             onClose={() => setSelectedApplication(null)}
             onApprove={handleApprove}
             onReject={handleReject}
+            readOnly={selectedApplication.status === "Active"}
           />
         )}
       </AnimatePresence>

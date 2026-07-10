@@ -58,6 +58,30 @@ function sourceBadge(sourceKey) {
   );
 }
 
+// NEW: tells the super_admin at a glance whether a student is:
+//  - an org lead (belongs to a White-Label org/agency)      → 🏢 org name
+//  - an independent counselor's lead                        → 👤 counselor name
+//  - a direct/organic khizaroverseas.in lead (neither)       → no badge
+function ownerBadge(student) {
+  if (student.orgName) {
+    return {
+      icon: "🏢",
+      label: student.orgName,
+      className: "bg-purple-100 text-purple-700",
+    };
+  }
+
+  if (student.counselorName) {
+    return {
+      icon: "👤",
+      label: student.counselorName,
+      className: "bg-blue-100 text-blue-700",
+    };
+  }
+
+  return null;
+}
+
 export default function StudentsAdminPage() {
   const router = useRouter();
   const { user } = useSelector((state) => state.auth);
@@ -115,7 +139,14 @@ export default function StudentsAdminPage() {
             phone: lead.phone,
             target: lead.preferredCountry,
             status: lead.counselorStage,
-            counselor: lead.assignedCounselor || "Unassigned",
+            counselor: lead.assignedCounselor?.name || "Unassigned",
+            // NEW: orgName comes pre-resolved from the backend (Organization
+            // lookup by adminId). counselorName only applies when the lead
+            // has an assignedCounselor but no org — an independent counselor.
+            orgName: lead.orgName || null,
+            counselorName: !lead.orgName
+              ? lead.assignedCounselor?.name || null
+              : null,
             created: new Date(lead.createdAt).toISOString().split("T")[0],
             sources: formTypes,
           };
@@ -173,7 +204,9 @@ export default function StudentsAdminPage() {
       (s.name || "").toLowerCase().includes(term) ||
       (s.email || "").toLowerCase().includes(term) ||
       (s.phone || "").toLowerCase().includes(term) ||
-      (s.status || "").toLowerCase().includes(term)
+      (s.status || "").toLowerCase().includes(term) ||
+      (s.orgName || "").toLowerCase().includes(term) ||
+      (s.counselorName || "").toLowerCase().includes(term)
     );
   });
 
@@ -385,7 +418,25 @@ export default function StudentsAdminPage() {
                           className="hover:bg-gray-50 transition-colors"
                         >
                           <td className="px-4 py-3 sm:px-6 sm:py-4 text-sm font-medium text-gray-900">
-                            {student.name}
+                            <div className="flex flex-col gap-1">
+                              <span>{student.name}</span>
+                              {(() => {
+                                const badge = ownerBadge(student);
+                                return badge ? (
+                                  <span
+                                    className={`inline-flex items-center gap-1 w-fit px-2 py-0.5 text-xs font-medium rounded-full whitespace-nowrap ${badge.className}`}
+                                    title={
+                                      student.orgName
+                                        ? "Belongs to organization"
+                                        : "Belongs to counselor"
+                                    }
+                                  >
+                                    <span>{badge.icon}</span>
+                                    <span>{badge.label}</span>
+                                  </span>
+                                ) : null;
+                              })()}
+                            </div>
                           </td>
                           <td className="px-4 py-3 sm:px-6 sm:py-4 text-sm text-gray-600 hidden sm:table-cell">
                             {student.email}
