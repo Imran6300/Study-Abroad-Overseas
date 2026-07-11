@@ -19,9 +19,13 @@ export async function generateStaticParams() {
   }
 }
 
-// Allow unknown slugs to still render on-demand (e.g. newly added courses
-// after the last deploy). Set to false for a hard 404 on unknown slugs.
-export const dynamicParams = true;
+// FIX (Vercel ISR write overage, July 2026): same issue as the combo route —
+// dynamicParams=true let any guessed/scraped slug trigger an on-demand ISR
+// write. generateStaticParams() above already builds every real course
+// page from the DB at deploy time, so an unmatched slug is not a real
+// course and should 404. Use the on-demand revalidate route to add a new
+// course page immediately after creation instead of relying on this.
+export const dynamicParams = false;
 
 async function getCourse(slug) {
   try {

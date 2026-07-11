@@ -125,14 +125,22 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
+  // FIX (Vercel Edge Requests overage, July 2026): the previous matcher
+  // ("everything except a few static extensions") ran this middleware on
+  // every single public SEO page — universities, courses, blog, combo,
+  // study-in, all-countries — even though the logic inside only ever does
+  // anything for /dashboard/* and /admin/*. That meant every crawler hit,
+  // every organic visit, and every bot request across 16,000+ indexed
+  // pages was executing an Edge Function invocation for nothing.
+  //
+  // Scoping the matcher to only the routes that actually need auth
+  // checking removes all of that dead invocation volume with zero change
+  // to behavior: public pages never needed this middleware to begin with.
   matcher: [
-    /*
-     * Match all request paths EXCEPT:
-     * - _next/static (static files)
-     * - _next/image (image optimization)
-     * - favicon.ico
-     * - public folder files
-     */
-    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap|images|fonts|icons).*)",
+    "/dashboard/:path*",
+    "/admin/:path*",
+    "/login",
+    "/signup",
+    "/forgot-password",
   ],
 };

@@ -17,10 +17,22 @@
 
 export const revalidate = 86400;
 
-// Allow unknown combo slugs to still render (on-demand ISR for new combos
-// added after the last build). Set to false if you want a hard 404 for
-// any combo that wasn't pre-built by generateStaticParams.
-export const dynamicParams = true;
+// FIX (Vercel ISR write overage, July 2026): this was previously `true`,
+// which meant ANY slug matching /study-:combo — including bot-guessed,
+// scraped, or malformed combos never returned by generateStaticParams —
+// would trigger an on-demand render-and-write to the ISR cache. Since this
+// route has the largest URL surface in the app (course x country), that
+// was the single biggest driver of ISR Writes blowing past the Vercel plan
+// limit. generateStaticParams() below already builds every legitimate
+// combo from Course.comboPageSlugs, so anything outside that list is not
+// a real page and should 404, not silently manufacture a new cache entry.
+//
+// If you add a new course/country relationship and want its combo page
+// live immediately (without waiting for the next deploy), call the
+// on-demand revalidation route (see app/api/revalidate/route.js) from the
+// backend after the relationship is created, instead of flipping this
+// back to true.
+export const dynamicParams = false;
 
 import ComboClient from "./ComboClient";
 import { notFound } from "next/navigation";
