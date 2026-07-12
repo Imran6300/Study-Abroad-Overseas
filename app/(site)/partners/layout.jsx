@@ -1,5 +1,3 @@
-import Script from "next/script";
-
 export const metadata = {
   title: "Partner With Us – White-Label Study Abroad Platform for Agencies",
 
@@ -163,11 +161,16 @@ export default function PartnersLayout({ children }) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
 
-      {/* reCAPTCHA */}
-      <Script
-        src={`https://www.google.com/recaptcha/api.js?render=${process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}`}
-        strategy="afterInteractive"
-      />
+      {/* reCAPTCHA: intentionally NOT loaded here anymore. The root
+          app/layout.tsx already wraps every page (including this one) in
+          <RecaptchaProvider>, which loads
+          https://www.google.com/recaptcha/api.js?render=<SITE_KEY> once,
+          site-wide. Loading it a second time here (as a raw <Script> tag)
+          was corrupting window.grecaptcha and causing "Could not connect
+          to the reCAPTCHA service" errors on this page. The
+          window.grecaptcha.execute(...) call in page.jsx still works fine
+          since the script is already loaded globally by the time this
+          page's form submits. */}
 
       <div className="min-h-screen bg-[#071226] text-white overflow-hidden">
         {/* Background Effects */}
