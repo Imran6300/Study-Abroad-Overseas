@@ -124,6 +124,12 @@ export default function AdminSidebar() {
       href: "/admin/logs",
       roles: ["admin", "super_admin"],
     },
+    {
+      icon: "📧",
+      label: "Emails",
+      href: "/admin/emails",
+      roles: ["admin", "super_admin"],
+    },
   ];
 
   const filteredMenu = menuItems.filter(
