@@ -16,6 +16,7 @@ import {
 // Tiptap imports
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import Link from "@tiptap/extension-link";
 
 export default function BlogPostForm({
   mode = "add",
@@ -60,6 +61,14 @@ export default function BlogPostForm({
           levels: [1, 2, 3],
         },
       }),
+      Link.configure({
+        openOnClick: false,
+        autolink: true,
+        linkOnPaste: true,
+        HTMLAttributes: {
+          rel: "noopener noreferrer",
+        },
+      }),
     ],
     content: safeData.content || "<p>Start writing your article here...</p>",
     immediatelyRender: false, // ← Critical: prevents SSR + hydration mismatch
@@ -79,6 +88,32 @@ export default function BlogPostForm({
       }
     };
   }, [previewUrl]);
+
+  // Prompts for a URL and applies it to the current selection as a link.
+  // If the selection already has a link, pre-fills the prompt with the
+  // existing URL so it's easy to edit rather than re-type.
+  const handleSetLink = () => {
+    if (!editor) return;
+
+    const previousUrl = editor.getAttributes("link").href || "";
+    const url = window.prompt("Enter URL", previousUrl);
+
+    // Cancelled prompt
+    if (url === null) return;
+
+    // Empty string clears the link
+    if (url === "") {
+      editor.chain().focus().extendMarkRange("link").unsetLink().run();
+      return;
+    }
+
+    editor
+      .chain()
+      .focus()
+      .extendMarkRange("link")
+      .setLink({ href: url, target: "_blank" })
+      .run();
+  };
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -578,6 +613,27 @@ export default function BlogPostForm({
               className="px-2 py-1 border rounded"
             >
               Number List
+            </button>
+
+            <button
+              type="button"
+              onClick={handleSetLink}
+              className={`px-2 py-1 border rounded ${
+                editor?.isActive("link") ? "bg-sky-100 border-sky-400" : ""
+              }`}
+            >
+              Link
+            </button>
+
+            <button
+              type="button"
+              onClick={() =>
+                editor.chain().focus().extendMarkRange("link").unsetLink().run()
+              }
+              disabled={!editor?.isActive("link")}
+              className="px-2 py-1 border rounded disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Unlink
             </button>
           </div>
 
