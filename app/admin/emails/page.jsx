@@ -17,6 +17,9 @@ import {
   Send,
   X,
   Loader2,
+  KeyRound,
+  Clock,
+  AlertTriangle,
 } from "lucide-react";
 import {
   containerVariants,
@@ -351,6 +354,184 @@ function ComposeModal({ onClose, onSent }) {
 }
 
 /* ─────────────────────────────────────────────────────────────
+   PENDING ACTIVATIONS — expired counselor password-set links
+   super_admin only. Lets them resend a fresh 24-hour activation link
+   to a counselor (created after a partner approval) who never set
+   their password before the original link expired.
+───────────────────────────────────────────────────────────── */
+function formatDateShort(dateStr) {
+  if (!dateStr) return "—";
+  return new Date(dateStr).toLocaleString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function PendingActivationsPanel() {
+  const [counselors, setCounselors] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [expanded, setExpanded] = useState(true);
+  const [resendingId, setResendingId] = useState(null);
+  const [rowMessage, setRowMessage] = useState({}); // { [id]: { type, text } }
+
+  const fetchPending = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
+    try {
+      const res = await fetch(`${BASE}/api/admin/emails/pending-activations`, {
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (data.success) setCounselors(data.counselors || []);
+    } catch (err) {
+      console.error("[PendingActivations] fetch:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchPending();
+  }, [fetchPending]);
+
+  const handleResend = async (id) => {
+    setResendingId(id);
+    setRowMessage((m) => ({ ...m, [id]: null }));
+    try {
+      const res = await fetch(
+        `${BASE}/api/admin/emails/pending-activations/${id}/resend`,
+        { method: "POST", credentials: "include" },
+      );
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || "Failed to resend link");
+      }
+      // A fresh, non-expired link means this counselor no longer belongs
+      // in the "expired" list — drop them and let a background refetch
+      // confirm it.
+      setCounselors((prev) => prev.filter((c) => c._id !== id));
+      fetchPending(true);
+    } catch (err) {
+      setRowMessage((m) => ({
+        ...m,
+        [id]: { type: "error", text: err.message || "Failed to resend link" },
+      }));
+    } finally {
+      setResendingId(null);
+    }
+  };
+
+  if (!loading && counselors.length === 0) return null;
+
+  return (
+    <motion.div
+      variants={itemVariants}
+      className="bg-white rounded-xl border border-amber-200 shadow-sm overflow-hidden"
+    >
+      <button
+        type="button"
+        onClick={() => setExpanded((e) => !e)}
+        className="w-full flex items-center justify-between px-4 py-3.5 sm:px-6 bg-amber-50 hover:bg-amber-100/70 transition-colors"
+      >
+        <div className="flex items-center gap-2.5">
+          <AlertTriangle size={18} className="text-amber-600" />
+          <div className="text-left">
+            <p className="text-sm font-bold text-gray-900">
+              Pending Counselor Activations
+            </p>
+            <p className="text-xs text-gray-500">
+              Counselors who haven't set a password yet — their activation link
+              has expired
+            </p>
+          </div>
+        </div>
+        <span className="text-xs font-semibold text-amber-700 bg-amber-100 px-2.5 py-1 rounded-full">
+          {loading ? "…" : counselors.length}
+        </span>
+      </button>
+
+      {expanded && (
+        <div className="overflow-x-auto">
+          {loading ? (
+            <div className="py-8 text-center text-gray-400 text-sm flex items-center justify-center gap-2">
+              <Loader2 size={16} className="animate-spin" /> Loading…
+            </div>
+          ) : (
+            <table className="min-w-full divide-y divide-gray-100">
+              <thead className="bg-gray-50">
+                <tr>
+                  {["Counselor", "Agency", "Link Expired", "Action"].map(
+                    (h) => (
+                      <th
+                        key={h}
+                        className="px-4 py-2.5 sm:px-6 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap"
+                      >
+                        {h}
+                      </th>
+                    ),
+                  )}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {counselors.map((c) => (
+                  <tr
+                    key={c._id}
+                    className="hover:bg-gray-50 transition-colors"
+                  >
+                    <td className="px-4 py-3 sm:px-6">
+                      <p className="text-sm font-medium text-gray-800 whitespace-nowrap">
+                        {c.name}
+                      </p>
+                      <p className="text-xs text-gray-400">{c.email}</p>
+                    </td>
+                    <td className="px-4 py-3 sm:px-6 text-sm text-gray-600 whitespace-nowrap">
+                      {c.agencyName || "—"}
+                    </td>
+                    <td className="px-4 py-3 sm:px-6 text-xs text-gray-500 whitespace-nowrap">
+                      <span className="inline-flex items-center gap-1.5">
+                        <Clock size={12} className="text-red-400" />
+                        {formatDateShort(c.linkExpiredAt)}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 sm:px-6">
+                      <button
+                        type="button"
+                        disabled={resendingId === c._id}
+                        onClick={() => handleResend(c._id)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-amber-600 hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        {resendingId === c._id ? (
+                          <>
+                            <Loader2 size={13} className="animate-spin" />
+                            Sending…
+                          </>
+                        ) : (
+                          <>
+                            <KeyRound size={13} />
+                            Resend Password Set Link
+                          </>
+                        )}
+                      </button>
+                      {rowMessage[c._id] && (
+                        <p className="text-xs text-red-500 mt-1 max-w-[200px]">
+                          {rowMessage[c._id].text}
+                        </p>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────
    MAIN PAGE
 ───────────────────────────────────────────────────────────── */
 export default function EmailsPage() {
@@ -516,6 +697,9 @@ export default function EmailsPage() {
                 />
               </motion.div>
             )}
+
+            {/* Pending counselor activations — super_admin only */}
+            {user?.role === "super_admin" && <PendingActivationsPanel />}
 
             {/* Filters row */}
             <motion.div

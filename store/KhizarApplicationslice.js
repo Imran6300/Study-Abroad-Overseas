@@ -49,7 +49,10 @@ export const fetchKhizarStats = createAsyncThunk(
 /**
  * GET /api/khizar-applications/students
  * Returns counselor's students list for "New Application" dropdown.
- * Shape: [{ _id, name, email }]
+ * Sourced from the counselor's Leads (same records as the main Students
+ * table), so every student the counselor has added shows up here whether
+ * or not they've created their own account yet.
+ * Shape: [{ _id, name, email, phone, isRegistered, user }]
  */
 export const fetchKhizarStudents = createAsyncThunk(
   "khizarApplications/fetchStudents",

@@ -1000,7 +1000,7 @@ function StudentSelectorModal({ students, loading, onClose, onSelect }) {
             ) : filtered.length === 0 ? (
               <div className="text-center py-12 text-slate-400 text-sm">
                 {students.length === 0
-                  ? "No registered students found."
+                  ? "No students found. Add a student from your dashboard first."
                   : "No students match your search."}
               </div>
             ) : (
