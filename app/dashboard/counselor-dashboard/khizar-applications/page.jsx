@@ -23,6 +23,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
 import { useDebounce } from "use-debounce";
+import { counselorApi } from "@/lib/counselorApi";
 
 import {
   fetchKhizarStats,
@@ -247,6 +248,236 @@ const emptyForm = {
   visaHistory: "",
   remarks: "",
 };
+
+// ─── Auto-fill mapping (Select Existing Student) ──────────────────────────────
+/**
+ * The form's dropdowns use fixed option lists that don't always match the
+ * free-text / enum values stored on the Lead, Profile, or Application
+ * records. These lookups are kept in sync with the option arrays used by
+ * Step1–Step3 below and are only used to *normalize* source data into a
+ * value the relevant <select> actually recognizes. If nothing matches, the
+ * field is simply left blank so the counselor picks it manually — we never
+ * guess a value into a dropdown that could silently misrepresent the
+ * student.
+ */
+const QUALIFICATION_OPTIONS = [
+  "High School / O-levels",
+  "Intermediate / A-levels",
+  "Bachelor's Degree",
+  "Master's Degree",
+  "PhD",
+  "Diploma",
+];
+const EDUCATION_LEVEL_OPTIONS = [
+  "Bachelor's",
+  "Master's",
+  "Diploma / PG Diploma",
+  "PhD",
+  "Foundation",
+];
+const COUNTRY_OPTIONS = [
+  "Canada",
+  "Australia",
+  "UK",
+  "USA",
+  "Germany",
+  "New Zealand",
+  "Ireland",
+  "Netherlands",
+  "France",
+  "Dubai / UAE",
+];
+const INTAKE_OPTIONS = [
+  "Fall 2025",
+  "Spring 2026",
+  "Fall 2026",
+  "Spring 2027",
+  "Fall 2027",
+];
+const BUDGET_OPTIONS = [
+  "Under $10,000",
+  "$10,000–$20,000",
+  "$20,000–$35,000",
+  "$35,000–$50,000",
+  "$50,000+",
+];
+const BACKLOG_OPTIONS = ["None", "1–2", "3–5", "5+"];
+
+const GENDER_OPTIONS = ["Male", "Female", "Other", "Prefer not to say"];
+
+/** yyyy-mm-dd for <input type="date">. Returns "" for anything invalid. */
+function toDateInputValue(value) {
+  if (!value) return "";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toISOString().slice(0, 10);
+}
+
+/** Exact (case/space-insensitive) match against a fixed option list. */
+function matchOption(value, options) {
+  if (!value) return "";
+  const norm = String(value).trim().toLowerCase();
+  const hit = options.find((o) => o.toLowerCase() === norm);
+  return hit || "";
+}
+
+/** Keyword-based normalization for qualification-style free text. */
+function normalizeQualification(value, options) {
+  if (!value) return "";
+  const exact = matchOption(value, options);
+  if (exact) return exact;
+  const v = String(value).toLowerCase();
+  if (v.includes("phd") || v.includes("doctor")) return options.find((o) => /phd/i.test(o)) || "";
+  if (v.includes("master")) return options.find((o) => /master/i.test(o)) || "";
+  if (v.includes("bachelor") || v.includes("b.tech") || v.includes("b.sc") || v.includes("b.a"))
+    return options.find((o) => /bachelor/i.test(o)) || "";
+  if (v.includes("diploma")) return options.find((o) => /diploma/i.test(o)) || "";
+  if (v.includes("intermediate") || v.includes("a-level") || v.includes("a level"))
+    return options.find((o) => /intermediate/i.test(o)) || "";
+  if (v.includes("high school") || v.includes("o-level") || v.includes("o level") || v.includes("secondary"))
+    return options.find((o) => /high school/i.test(o)) || "";
+  return "";
+}
+
+const COUNTRY_SYNONYMS = {
+  "united states": "USA",
+  "united states of america": "USA",
+  us: "USA",
+  "u.s.a": "USA",
+  "u.s.": "USA",
+  "united kingdom": "UK",
+  england: "UK",
+  britain: "UK",
+  "great britain": "UK",
+  "united arab emirates": "Dubai / UAE",
+  uae: "Dubai / UAE",
+  dubai: "Dubai / UAE",
+};
+
+function normalizeCountry(value) {
+  if (!value) return "";
+  const exact = matchOption(value, COUNTRY_OPTIONS);
+  if (exact) return exact;
+  const v = String(value).trim().toLowerCase();
+  if (COUNTRY_SYNONYMS[v]) return COUNTRY_SYNONYMS[v];
+  const hit = COUNTRY_OPTIONS.find(
+    (o) => v.includes(o.toLowerCase()) || o.toLowerCase().includes(v),
+  );
+  return hit || "";
+}
+
+function normalizeIntake(value) {
+  if (!value) return "";
+  const exact = matchOption(value, INTAKE_OPTIONS);
+  if (exact) return exact;
+  // Season-only values (e.g. profile.intendedIntake = "Fall") — pick the
+  // nearest upcoming option with a matching season rather than guessing a year.
+  const v = String(value).toLowerCase();
+  const season = ["fall", "spring", "summer", "winter"].find((s) =>
+    v.includes(s),
+  );
+  if (!season) return "";
+  const hit = INTAKE_OPTIONS.find((o) => o.toLowerCase().startsWith(season));
+  return hit || "";
+}
+
+function normalizeBudget(value) {
+  return matchOption(value, BUDGET_OPTIONS);
+}
+
+function normalizeBacklogs(value) {
+  if (value === undefined || value === null || value === "") return "";
+  const v = String(value).trim().toLowerCase();
+  if (["none", "0", "no", "nil"].includes(v)) return "None";
+  const num = parseInt(v, 10);
+  if (!Number.isNaN(num)) {
+    if (num <= 0) return "None";
+    if (num <= 2) return "1–2";
+    if (num <= 5) return "3–5";
+    return "5+";
+  }
+  return matchOption(value, BACKLOG_OPTIONS);
+}
+
+/** Best-effort slug -> readable title (e.g. "university-of-toronto" -> "University Of Toronto"). */
+function slugToTitle(slug) {
+  if (!slug) return "";
+  return String(slug)
+    .replace(/[-_]+/g, " ")
+    .trim()
+    .split(" ")
+    .filter(Boolean)
+    .map((w) => w[0].toUpperCase() + w.slice(1))
+    .join(" ");
+}
+
+/**
+ * Combines the counselor's own student record (Lead), the student's
+ * self-completed profile (Profile — only exists once the student has
+ * registered), and their most recent Application (if any) into one set of
+ * form values — the same information shown on the student's detail page.
+ * Later sources in the priority order only fill gaps left by earlier ones.
+ */
+function mapStudentDetailToForm({ lead, profile, application, fallback }) {
+  const personal = application?.personalInfo || {};
+  const education = application?.education || {};
+  const tests = application?.tests || {};
+  const program = application?.programPreference || {};
+  const finance = application?.finance || {};
+
+  const values = { ...emptyForm };
+
+  // ── Student Info ──
+  values.studentName =
+    profile?.fullName || personal.fullName || lead?.name || fallback?.name || "";
+  values.email =
+    profile?.email || personal.email || lead?.email || fallback?.email || "";
+  values.phone =
+    profile?.phone || personal.mobile || lead?.phone || fallback?.phone || "";
+  values.dob = toDateInputValue(profile?.dateOfBirth || personal.dob);
+  values.gender = matchOption(profile?.gender || personal.gender, GENDER_OPTIONS);
+  values.nationality = profile?.nationality || personal.nationality || "";
+  values.passportNo = profile?.passportNumber || personal.passportNumber || "";
+  values.currentCity = personal.address || "";
+
+  // ── Academic ──
+  values.qualification = normalizeQualification(
+    profile?.qualification || education.qualification || lead?.qualification,
+    QUALIFICATION_OPTIONS,
+  );
+  values.institution = education.school || "";
+  values.graduationYear =
+    profile?.graduationYear || education.passingYear || lead?.passingYear || "";
+  values.cgpa = profile?.gpa || education.cgpa || "";
+  values.backlogs = normalizeBacklogs(education.backlogs);
+
+  // ── Test Scores ──
+  const englishTest = String(tests.englishTest || "").toLowerCase();
+  if (englishTest.includes("ielts")) values.ielts = tests.score || "";
+  else if (englishTest.includes("toefl")) values.toefl = tests.score || "";
+  else if (englishTest.includes("pte")) values.pte = tests.score || "";
+  else if (englishTest.includes("duolingo")) values.duolingo = tests.score || "";
+
+  // ── Preferences ──
+  values.preferredCountry = normalizeCountry(
+    profile?.preferredCountry || lead?.preferredCountry,
+  );
+  values.universityName = slugToTitle(program.universitySlug);
+  values.preferredCourse = program.field || lead?.field || "";
+  values.preferredIntake = normalizeIntake(
+    program.intake || lead?.preferredIntake || profile?.intendedIntake,
+  );
+  values.educationLevel = normalizeQualification(
+    program.studyLevel,
+    EDUCATION_LEVEL_OPTIONS,
+  );
+  values.budgetRange = normalizeBudget(
+    lead?.budget || program.budget || finance.funds,
+  );
+  values.sponsorAvailable = finance.sponsor ? "Yes" : "";
+
+  return values;
+}
 
 // ─── Reusable field components ────────────────────────────────────────────────
 const Label = ({ children, required }) => (
@@ -926,9 +1157,10 @@ function Step5({ form }) {
 }
 
 // ─── Student Selector Modal ────────────────────────────────────────────────────
-function StudentSelectorModal({ students, loading, onClose, onSelect }) {
+function StudentSelectorModal({ students, loading, selectingId, onClose, onSelect }) {
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState(null);
+  const isFetchingDetail = !!selectingId;
 
   const filtered = students.filter(
     (s) =>
@@ -1009,12 +1241,13 @@ function StudentSelectorModal({ students, loading, onClose, onSelect }) {
                   <button
                     key={student._id}
                     type="button"
+                    disabled={isFetchingDetail}
                     onClick={() =>
                       setSelected(
                         selected?._id === student._id ? null : student,
                       )
                     }
-                    className={`w-full text-left p-3.5 rounded-xl border transition-all ${selected?._id === student._id ? "bg-indigo-50 border-indigo-300" : "bg-slate-50 border-slate-200 hover:border-indigo-200"}`}
+                    className={`w-full text-left p-3.5 rounded-xl border transition-all ${selected?._id === student._id ? "bg-indigo-50 border-indigo-300" : "bg-slate-50 border-slate-200 hover:border-indigo-200"} ${isFetchingDetail ? "opacity-60 cursor-wait" : ""}`}
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-400 to-violet-500 flex items-center justify-center text-white font-bold text-xs shrink-0">
@@ -1030,11 +1263,18 @@ function StudentSelectorModal({ students, loading, onClose, onSelect }) {
                           <p className="text-sm font-semibold text-slate-800 truncate">
                             {student.name}
                           </p>
-                          {selected?._id === student._id && (
-                            <Check
+                          {selectingId === student._id ? (
+                            <Loader2
                               size={13}
-                              className="text-indigo-600 shrink-0"
+                              className="text-indigo-500 animate-spin shrink-0"
                             />
+                          ) : (
+                            selected?._id === student._id && (
+                              <Check
+                                size={13}
+                                className="text-indigo-600 shrink-0"
+                              />
+                            )
                           )}
                         </div>
                         <p className="text-xs text-slate-500 truncate">
@@ -1057,14 +1297,23 @@ function StudentSelectorModal({ students, loading, onClose, onSelect }) {
             </button>
             <button
               type="button"
-              disabled={!selected}
+              disabled={!selected || isFetchingDetail}
               onClick={() => selected && onSelect(selected)}
-              className={`flex-1 py-2.5 rounded-xl font-bold text-sm transition-all ${selected ? "bg-gradient-to-r from-indigo-500 to-violet-600 text-white" : "bg-slate-100 text-slate-400 cursor-not-allowed"}`}
+              className={`flex-1 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-1.5 ${selected && !isFetchingDetail ? "bg-gradient-to-r from-indigo-500 to-violet-600 text-white" : "bg-slate-100 text-slate-400 cursor-not-allowed"}`}
             >
-              {selected
-                ? `Select ${selected.name?.split(" ")[0]}`
-                : "Select Student"}
-              {selected && <ArrowRight size={13} className="inline ml-1" />}
+              {isFetchingDetail ? (
+                <>
+                  <Loader2 size={13} className="animate-spin" /> Loading
+                  profile…
+                </>
+              ) : selected ? (
+                <>
+                  {`Select ${selected.name?.split(" ")[0]}`}
+                  <ArrowRight size={13} />
+                </>
+              ) : (
+                "Select Student"
+              )}
             </button>
           </div>
         </div>
@@ -1165,7 +1414,7 @@ function HowToContinueModal({ onClose, onSelectExisting, onCreateNew }) {
 }
 
 // ─── Application Modal ────────────────────────────────────────────────────────
-function ApplicationModal({ onClose, prefillStudent }) {
+function ApplicationModal({ onClose, prefillStudent, prefillDetail, prefillLoading }) {
   const dispatch = useDispatch();
   const createLoading = useSelector(selectKhizarCreateLoading);
   const createError = useSelector(selectKhizarCreateError);
@@ -1176,14 +1425,28 @@ function ApplicationModal({ onClose, prefillStudent }) {
   const [form, setForm] = useState({ ...emptyForm });
 
   useEffect(() => {
-    if (prefillStudent) {
+    if (!prefillStudent) return;
+
+    if (prefillDetail) {
+      // Full student detail (lead + profile + application) available —
+      // auto-fill every field we can confidently map, exactly like the
+      // student's detail page shows it.
+      setForm((f) => ({
+        ...f,
+        ...mapStudentDetailToForm({ ...prefillDetail, fallback: prefillStudent }),
+      }));
+    } else {
+      // Detail fetch hasn't resolved yet (or failed) — fall back to the
+      // basic info already available from the student list so the modal
+      // never opens fully empty.
       setForm((f) => ({
         ...f,
         studentName: prefillStudent.name || "",
         email: prefillStudent.email || "",
+        phone: prefillStudent.phone || "",
       }));
     }
-  }, [prefillStudent]);
+  }, [prefillStudent, prefillDetail]);
 
   useEffect(() => {
     if (createSuccess) onClose();
@@ -1579,6 +1842,9 @@ export default function KhizarApplicationsPage() {
   const [viewMode, setViewMode] = useState("list");
   const [flowState, setFlowState] = useState(null);
   const [prefillStudent, setPrefillStudent] = useState(null);
+  const [prefillDetail, setPrefillDetail] = useState(null);
+  const [prefillLoading, setPrefillLoading] = useState(false);
+  const [selectingStudentId, setSelectingStudentId] = useState(null);
   const [showToast, setShowToast] = useState(false);
 
   // Initial load
@@ -1629,17 +1895,44 @@ export default function KhizarApplicationsPage() {
 
   const handleCreateNew = () => {
     setPrefillStudent(null);
+    setPrefillDetail(null);
     setFlowState("form");
   };
 
-  const handleStudentSelected = (student) => {
+  const handleStudentSelected = async (student) => {
     setPrefillStudent(student);
-    setFlowState("form");
+    setPrefillDetail(null);
+    setSelectingStudentId(student._id);
+    setPrefillLoading(true);
+    try {
+      // Same endpoint that powers the student's detail page — returns the
+      // Lead record, their self-completed Profile (if registered), and
+      // their most recent Application, so the "New Managed Application"
+      // form can be filled from exactly the same data the counselor sees
+      // on that page.
+      const res = await counselorApi.getStudentDetail(student._id);
+      setPrefillDetail({
+        lead: res?.data?.lead || null,
+        profile: res?.data?.profile || null,
+        application: res?.data?.application || null,
+      });
+    } catch (err) {
+      console.error("[KhizarApplications] getStudentDetail failed:", err);
+      // Non-fatal — the modal still opens and falls back to the basic
+      // name/email/phone already available from the student list.
+    } finally {
+      setPrefillLoading(false);
+      setSelectingStudentId(null);
+      setFlowState("form");
+    }
   };
 
   const handleCloseAll = () => {
     setFlowState(null);
     setPrefillStudent(null);
+    setPrefillDetail(null);
+    setPrefillLoading(false);
+    setSelectingStudentId(null);
     dispatch(resetAllDocumentUploads());
   };
 
@@ -2071,6 +2364,7 @@ export default function KhizarApplicationsPage() {
           <StudentSelectorModal
             students={students}
             loading={studentsLoading}
+            selectingId={selectingStudentId}
             onClose={handleCloseAll}
             onSelect={handleStudentSelected}
           />
@@ -2079,6 +2373,8 @@ export default function KhizarApplicationsPage() {
           <ApplicationModal
             onClose={handleModalClose}
             prefillStudent={prefillStudent}
+            prefillDetail={prefillDetail}
+            prefillLoading={prefillLoading}
           />
         )}
       </AnimatePresence>

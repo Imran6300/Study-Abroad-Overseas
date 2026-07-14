@@ -157,6 +157,17 @@ export default function CounselorDashboardHeader({
     [dispatch],
   );
 
+  const handleNotificationClick = useCallback(
+    (notif) => {
+      if (!notif.isRead) dispatch(markCounselorNotifRead(notif._id));
+      if (notif.actionUrl) {
+        setShowNotifications(false);
+        router.push(notif.actionUrl);
+      }
+    },
+    [dispatch, router],
+  );
+
   const handleMarkAllRead = useCallback(() => {
     dispatch(markAllCounselorNotifsRead());
   }, [dispatch]);
@@ -297,9 +308,7 @@ export default function CounselorDashboardHeader({
                           initial={{ opacity: 0, x: 10 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: i * 0.04 }}
-                          onClick={() =>
-                            !notif.isRead && handleMarkRead(notif._id)
-                          }
+                          onClick={() => handleNotificationClick(notif)}
                           className={`px-5 py-3.5 border-b border-slate-50 hover:bg-slate-50/80 transition-colors cursor-pointer group ${
                             !notif.isRead ? "bg-sky-50/30" : ""
                           }`}

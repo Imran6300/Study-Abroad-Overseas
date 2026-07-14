@@ -54,6 +54,9 @@ import {
   Loader2,
   ChevronDown,
   ExternalLink,
+  Send,
+  Download,
+  CheckCircle2,
 } from "lucide-react";
 
 import AdminSidebar from "@/components/admindashboard/AdminSidebar";
@@ -352,6 +355,208 @@ function DocumentItem({ doc, applicationId, index, onView }) {
         <Eye size={12} /> View
       </button>
     </div>
+  );
+}
+
+function LiveDocumentItem({ doc }) {
+  const sizeLabel = doc.size ? `${(doc.size / 1024 / 1024).toFixed(1)} MB` : "";
+  return (
+    <div className="flex items-center justify-between py-2.5 border-b border-gray-50 last:border-0">
+      <div className="flex items-center gap-3 min-w-0">
+        <div className="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center flex-shrink-0">
+          <FileText size={14} className="text-emerald-500" />
+        </div>
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-gray-800 truncate">
+            {doc.title || doc.fileName || "Document"}
+          </p>
+          <p className="text-xs text-gray-400 capitalize">
+            {doc.category || "other"}
+            {sizeLabel ? ` · ${sizeLabel}` : ""}
+            {doc.uploadedAt
+              ? ` · ${new Date(doc.uploadedAt).toLocaleDateString()}`
+              : ""}
+          </p>
+        </div>
+      </div>
+      {doc.url && (
+        <a
+          href={doc.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 px-2.5 py-1.5 rounded-lg transition-colors flex-shrink-0 ml-3"
+        >
+          <Download size={12} /> Download
+        </a>
+      )}
+    </div>
+  );
+}
+
+// Live document list (Lead.counselorDocuments — always current, including
+// anything the counselor uploads later from the student detail page) plus
+// the "Request a Document" form the Khizar team uses to ask for something
+// extra. Both live inside the existing Documents tab — no new tab, no new
+// page, just more capability where the documents already are.
+function LiveDocumentsSection({ app, showToast, onRequestSent }) {
+  const [documents, setDocuments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [documentName, setDocumentName] = useState("");
+  const [note, setNote] = useState("");
+  const [sending, setSending] = useState(false);
+
+  const loadDocuments = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(
+        `${API}/api/khizar-applications/${app._id}/lead-documents`,
+        { credentials: "include" },
+      );
+      const data = await res.json();
+      if (data.success) setDocuments(data.data || []);
+    } catch (err) {
+      console.error("[LiveDocumentsSection] load error:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [app._id]);
+
+  useEffect(() => {
+    loadDocuments();
+  }, [loadDocuments]);
+
+  const handleRequestDocument = async (e) => {
+    e.preventDefault();
+    if (!documentName.trim()) {
+      showToast("Enter a document name first.", "info");
+      return;
+    }
+    try {
+      setSending(true);
+      const res = await fetch(
+        `${API}/api/khizar-applications/${app._id}/request-document`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ documentName, note }),
+        },
+      );
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Request failed");
+      showToast(`Requested "${documentName}" from the counselor.`, "success");
+      setDocumentName("");
+      setNote("");
+      onRequestSent(data.data);
+    } catch (err) {
+      showToast(err.message || "Failed to send request.", "error");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <>
+      {/* Live documents — reflects anything uploaded on the student detail
+          page at any time, not just what was attached at submission. */}
+      <SectionCard
+        title="Live Documents (Student Detail Page)"
+        icon={FileText}
+        accent="emerald"
+      >
+        {loading ? (
+          <div className="py-6 text-center text-gray-400 text-sm">Loading…</div>
+        ) : documents.length === 0 ? (
+          <div className="py-8 text-center text-gray-400 text-sm">
+            No documents uploaded on the student detail page yet.
+          </div>
+        ) : (
+          documents.map((doc, i) => (
+            <LiveDocumentItem key={doc._id || i} doc={doc} />
+          ))
+        )}
+      </SectionCard>
+
+      {/* Request a document from the counselor */}
+      <SectionCard title="Request a Document" icon={Send} accent="amber">
+        <form
+          onSubmit={handleRequestDocument}
+          className="flex flex-col sm:flex-row sm:items-end gap-3"
+        >
+          <div className="flex-1">
+            <label className="block text-xs font-semibold text-gray-500 mb-1">
+              Document needed
+            </label>
+            <input
+              type="text"
+              value={documentName}
+              onChange={(e) => setDocumentName(e.target.value)}
+              placeholder="e.g. Updated bank statement"
+              className="w-full px-3 py-2 text-sm bg-white border border-gray-200 rounded-lg outline-none focus:border-amber-400"
+            />
+          </div>
+          <div className="flex-1">
+            <label className="block text-xs font-semibold text-gray-500 mb-1">
+              Note (optional)
+            </label>
+            <input
+              type="text"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="Any extra detail for the counselor"
+              className="w-full px-3 py-2 text-sm bg-white border border-gray-200 rounded-lg outline-none focus:border-amber-400"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={sending}
+            className="flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 disabled:opacity-60 text-white text-xs font-semibold whitespace-nowrap transition-all"
+          >
+            {sending ? (
+              <Loader2 size={13} className="animate-spin" />
+            ) : (
+              <Send size={13} />
+            )}
+            {sending ? "Sending…" : "Send Request"}
+          </button>
+        </form>
+
+        {(app.documentRequests || []).length > 0 && (
+          <div className="mt-4 space-y-2">
+            {[...app.documentRequests].reverse().map((reqItem) => (
+              <div
+                key={reqItem._id}
+                className="flex items-center justify-between gap-3 bg-gray-50 border border-gray-100 rounded-lg px-3 py-2.5"
+              >
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-gray-800 truncate">
+                    {reqItem.documentName}
+                  </p>
+                  {reqItem.note && (
+                    <p className="text-xs text-gray-400 truncate">
+                      {reqItem.note}
+                    </p>
+                  )}
+                  <p className="text-[11px] text-gray-400 mt-0.5">
+                    Requested {fmt(reqItem.requestedAt)}
+                  </p>
+                </div>
+                <span
+                  className={`flex items-center gap-1 text-[11px] font-semibold px-2 py-1 rounded-full flex-shrink-0 ${
+                    reqItem.status === "fulfilled"
+                      ? "bg-emerald-50 text-emerald-600"
+                      : "bg-amber-50 text-amber-600"
+                  }`}
+                >
+                  {reqItem.status === "fulfilled" && <CheckCircle2 size={11} />}
+                  {reqItem.status === "fulfilled" ? "Fulfilled" : "Pending"}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </SectionCard>
+    </>
   );
 }
 
@@ -1039,27 +1244,43 @@ function ApplicationDetailPanel({
 
           {/* ── DOCUMENTS ── */}
           {activeTab === "documents" && (
-            <SectionCard
-              title="Uploaded Documents"
-              icon={FileText}
-              accent="sky"
-            >
-              {(app.documents || []).length === 0 ? (
-                <div className="py-8 text-center text-gray-400 text-sm">
-                  No documents uploaded yet.
-                </div>
-              ) : (
-                app.documents.map((doc, i) => (
-                  <DocumentItem
-                    key={i}
-                    doc={doc}
-                    applicationId={app._id}
-                    index={i}
-                    onView={handleViewDocument}
-                  />
-                ))
-              )}
-            </SectionCard>
+            <>
+              <SectionCard
+                title="Uploaded Documents"
+                icon={FileText}
+                accent="sky"
+              >
+                {(app.documents || []).length === 0 ? (
+                  <div className="py-8 text-center text-gray-400 text-sm">
+                    No documents uploaded yet.
+                  </div>
+                ) : (
+                  app.documents.map((doc, i) => (
+                    <DocumentItem
+                      key={i}
+                      doc={doc}
+                      applicationId={app._id}
+                      index={i}
+                      onView={handleViewDocument}
+                    />
+                  ))
+                )}
+              </SectionCard>
+
+              <LiveDocumentsSection
+                app={app}
+                showToast={showToast}
+                onRequestSent={(newRequest) =>
+                  setCurrentApp((prev) => ({
+                    ...prev,
+                    documentRequests: [
+                      ...(prev.documentRequests || []),
+                      newRequest,
+                    ],
+                  }))
+                }
+              />
+            </>
           )}
 
           {/* ── HISTORY ── */}
@@ -1514,9 +1735,8 @@ export default function AdminKhizarApplicationsPage() {
                         avatarColors[studentName.length % avatarColors.length];
 
                       return (
-                        <motion.tr
+                        <tr
                           key={app._id}
-                          variants={itemVariants}
                           className="hover:bg-gray-50/70 transition-colors group cursor-pointer"
                           onClick={() => setSelectedApp(app)}
                         >
@@ -1603,7 +1823,7 @@ export default function AdminKhizarApplicationsPage() {
                               </button>
                             </div>
                           </td>
-                        </motion.tr>
+                        </tr>
                       );
                     })}
                   </tbody>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import DocumentsTab from "@/components/counselorApplicationDetail/documents/DocumentsTab";
 import NotesTab from "@/components/counselorApplicationDetail/notes/NotesTab";
@@ -71,10 +71,24 @@ export default function KhizarApplicationDetailPage() {
   const { studentDeadlines } = useSelector((state) => state.deadline);
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const id = params.id;
 
   const [application, setApplication] = useState(null);
-  const [activeTab, setActiveTab] = useState("overview");
+  // Supports deep-linking straight into a tab (e.g. a "Document Requested"
+  // notification links to `?tab=documents` so the counselor lands right on
+  // the upload option instead of the Overview tab).
+  const [activeTab, setActiveTab] = useState(
+    searchParams.get("tab") || "overview",
+  );
+
+  useEffect(() => {
+    const requestedTab = searchParams.get("tab");
+    if (requestedTab) setActiveTab(requestedTab);
+    // Only react to the URL changing — activeTab itself is user-controlled
+    // afterwards via the tab bar, so it's intentionally left out below.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   const [notes, setNotes] = useState([]);
   const [noteTitle, setNoteTitle] = useState("");
@@ -98,6 +112,11 @@ export default function KhizarApplicationDetailPage() {
   const [leadRecord, setLeadRecord] = useState(null);
   const [loadingLeadRecord, setLoadingLeadRecord] = useState(true);
   const isRegistered = !!leadRecord?.user;
+  // Most recent Khizar-managed application for this student, if the
+  // counselor has ever submitted one through Khizar Overseas. Drives the
+  // "Managed by Khizar" badge and the Processor pill so they always agree
+  // with each other instead of showing contradictory info.
+  const [khizarApp, setKhizarApp] = useState(null);
 
   const fetchNotes = async () => {
     // Wait until application is loaded
@@ -447,6 +466,7 @@ export default function KhizarApplicationDetailPage() {
 
     setLeadRecord(null);
     setLoadingLeadRecord(true);
+    setKhizarApp(null);
 
     let cancelled = false;
 
@@ -459,6 +479,7 @@ export default function KhizarApplicationDetailPage() {
 
         const lead = res?.data?.lead || null;
         setLeadRecord(lead);
+        setKhizarApp(res?.data?.khizarApplication || null);
 
         // Only registered students have a User account to fetch
         // applications / profile / deadlines against.
@@ -478,6 +499,15 @@ export default function KhizarApplicationDetailPage() {
   }, [id, dispatch]);
 
   useEffect(() => {
+    // A Khizar-managed application always overrides the regular
+    // self-service Application's status for these two fields — Khizar
+    // Overseas' own processing team owns the application the moment it's
+    // submitted through that flow, regardless of what (if anything) the
+    // student has going on in the self-service Application model.
+    const khizarStatus = khizarApp
+      ? { managedBy: "khizar", processor: "Khizar Overseas Team" }
+      : null;
+
     // Student hasn't created an account yet — build a lead-only view and
     // skip the user-scoped fetches below (there's no User to fetch against).
     if (leadRecord && !leadRecord.user) {
@@ -491,8 +521,8 @@ export default function KhizarApplicationDetailPage() {
           email: leadRecord.email || "",
         },
         status: "Submitted",
-        managedBy: "",
-        processor: "Not Assigned",
+        managedBy: khizarStatus?.managedBy || "",
+        processor: khizarStatus?.processor || "Not Assigned",
         offerLetters: [],
         activityLog: [],
         documents: [],
@@ -519,9 +549,10 @@ export default function KhizarApplicationDetailPage() {
 
           status: firstApp.status || "Submitted",
 
-          managedBy: firstApp.managedBy || "",
+          managedBy: khizarStatus?.managedBy || firstApp.managedBy || "",
 
-          processor: firstApp.processor || "Not Assigned",
+          processor:
+            khizarStatus?.processor || firstApp.processor || "Not Assigned",
 
           offerLetters: firstApp.offerLetters || [],
 
@@ -538,9 +569,9 @@ export default function KhizarApplicationDetailPage() {
 
           status: "Submitted",
 
-          managedBy: "",
+          managedBy: khizarStatus?.managedBy || "",
 
-          processor: "Not Assigned",
+          processor: khizarStatus?.processor || "Not Assigned",
 
           offerLetters: [],
 
@@ -558,7 +589,7 @@ export default function KhizarApplicationDetailPage() {
     if (appData?._id) {
       fetchActivities(appData._id);
     }
-  }, [selectedApplication, leadRecord, dispatch, id]);
+  }, [selectedApplication, leadRecord, khizarApp, dispatch, id]);
 
   if (loadingLeadRecord) {
     return (
@@ -638,7 +669,9 @@ export default function KhizarApplicationDetailPage() {
 
           intake: applications[0]?.programPreference?.intake || "N/A",
 
-          processor: "Not Assigned",
+          processor: khizarApp
+            ? "Khizar Overseas Team"
+            : applications[0]?.processor || "Not Assigned",
         }
       : null;
 

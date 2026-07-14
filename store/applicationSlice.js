@@ -1,7 +1,17 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import { createSlice } from "@reduxjs/toolkit";
+import apiClient from "../lib/apiClient";
+import { createApiThunk } from "../lib/createApiThunk";
 
-const API = process.env.NEXT_PUBLIC_BACKEND_URL;
+/**
+ * REFACTORED — see /refactor/README.md "Pattern 2".
+ *
+ * Every action type string, every request URL/method/body, every
+ * fulfilled payload, and every rejected fallback message below is
+ * unchanged from the original applicationSlice.js. extraReducers is
+ * untouched byte-for-byte. What's gone is the 5x-repeated
+ * `axios.<verb>(`${API}/...`, { withCredentials: true })` +
+ * try/catch/rejectWithValue block — that's now one line per thunk.
+ */
 
 const initialState = {
   applications: [],
@@ -14,94 +24,61 @@ const initialState = {
 // Uses the admin endpoint GET /api/admin/applications/:userId which returns
 // fully-populated application documents with university name, country, etc.
 // This is called from the counselor's student detail page.
-export const fetchStudentApplications = createAsyncThunk(
+export const fetchStudentApplications = createApiThunk(
   "applications/fetchStudentApplications",
-  async (userId, thunkAPI) => {
-    try {
-      const response = await axios.get(
-        `${API}/api/admin/applications/${userId}`,
-        { withCredentials: true },
-      );
-      return response.data.applications;
-    } catch (error) {
-      return thunkAPI.rejectWithValue(
-        error.response?.data?.message || "Failed to fetch applications",
-      );
-    }
+  (userId) => apiClient.get(`/api/admin/applications/${userId}`),
+  {
+    select: (data) => data.applications,
+    fallbackError: "Failed to fetch applications",
   },
 );
 
 // ─── Admin/Counselor creates an application for a student ────────────────────
-export const createStudentApplication = createAsyncThunk(
+export const createStudentApplication = createApiThunk(
   "applications/createStudentApplication",
-  async ({ studentId, payload }, thunkAPI) => {
-    try {
-      const response = await axios.post(
-        `${API}/api/admin/applications`,
-        { ...payload, userId: studentId },
-        { withCredentials: true },
-      );
-      return response.data.application;
-    } catch (error) {
-      return thunkAPI.rejectWithValue(
-        error.response?.data?.message || "Failed to create application",
-      );
-    }
+  ({ studentId, payload }) =>
+    apiClient.post("/api/admin/applications", {
+      ...payload,
+      userId: studentId,
+    }),
+  {
+    select: (data) => data.application,
+    fallbackError: "Failed to create application",
   },
 );
 
 // ─── Admin/Counselor updates an application ──────────────────────────────────
-export const updateStudentApplication = createAsyncThunk(
+export const updateStudentApplication = createApiThunk(
   "applications/updateStudentApplication",
-  async ({ applicationId, payload }, thunkAPI) => {
-    try {
-      const response = await axios.put(
-        `${API}/api/admin/applications/${applicationId}`,
-        payload,
-        { withCredentials: true },
-      );
-      return response.data.application;
-    } catch (error) {
-      return thunkAPI.rejectWithValue(
-        error.response?.data?.message || "Failed to update application",
-      );
-    }
+  ({ applicationId, payload }) =>
+    apiClient.put(`/api/admin/applications/${applicationId}`, payload),
+  {
+    select: (data) => data.application,
+    fallbackError: "Failed to update application",
   },
 );
 
 // ─── Admin/Counselor deletes an application ──────────────────────────────────
-export const deleteStudentApplication = createAsyncThunk(
+export const deleteStudentApplication = createApiThunk(
   "applications/deleteStudentApplication",
-  async (applicationId, thunkAPI) => {
-    try {
-      await axios.delete(`${API}/api/admin/applications/${applicationId}`, {
-        withCredentials: true,
-      });
-      return applicationId;
-    } catch (error) {
-      return thunkAPI.rejectWithValue(
-        error.response?.data?.message || "Failed to delete application",
-      );
-    }
+  (applicationId) =>
+    apiClient.delete(`/api/admin/applications/${applicationId}`),
+  {
+    // original thunk ignored the response body and resolved with the id
+    // it was called with — `select` receives (data, arg), so just echo arg.
+    select: (_data, applicationId) => applicationId,
+    fallbackError: "Failed to delete application",
   },
 );
 
 // ─── Admin/Counselor updates application status ──────────────────────────────
-export const updateApplicationStatus = createAsyncThunk(
+export const updateApplicationStatus = createApiThunk(
   "applications/updateApplicationStatus",
-  async ({ applicationId, payload }, thunkAPI) => {
-    try {
-      const response = await axios.put(
-        `${API}/api/admin/applications/${applicationId}`,
-        payload,
-        { withCredentials: true },
-      );
-      return response.data.application;
-    } catch (error) {
-      return thunkAPI.rejectWithValue(
-        error.response?.data?.message || "Failed to update status",
-      );
-    }
+  ({ applicationId, payload }) =>
+    apiClient.put(`/api/admin/applications/${applicationId}`, payload),
+  {
+    select: (data) => data.application,
+    fallbackError: "Failed to update status",
   },
 );
 
