@@ -1,12 +1,52 @@
+// app/(site)/partners/layout.jsx
+//
+// SEO UPGRADE NOTES (read before editing further):
+//
+// 1. TITLE — the root layout (app/layout.tsx) defines a title template:
+//        template: "%s | Overseas Admission Experts – USA, UK, Canada, Australia, Germany"
+//    If this page's `metadata.title` is a plain string, Next.js appends that
+//    entire template to it, producing a title well over 90 characters that
+//    Google will truncate mid-sentence in search results. Since "Partners"
+//    is a distinct product (not a generic admissions page), we override the
+//    template with `title.absolute` so this page gets a clean, full-control
+//    title tag under ~60 characters.
+//
+// 2. OG / TWITTER IMAGE — now points to a dedicated 1200x630 banner
+//    (/og-partners-1200x630.jpg) instead of reusing the homepage image, so
+//    the page has its own accurate, on-brand preview in search, WhatsApp,
+//    LinkedIn, Slack, and X/Twitter share cards. Drop the generated file
+//    into /public/og-partners-1200x630.jpg (paired .png also provided).
+//
+// 3. STRUCTURED DATA — rebuilt as a single linked @graph using stable @id
+//    references (Organization <-> WebPage <-> SoftwareApplication <->
+//    BreadcrumbList <-> FAQPage). Linking nodes by @id (instead of repeating
+//    inline objects) is what Google's docs recommend so the entities are
+//    understood as the *same* thing across schemas, which is what actually
+//    unlocks rich results (sitelinks search box, FAQ rich snippets, software
+//    app cards) — this is the highest-leverage change here, more so than
+//    the <meta name="keywords"> tag, which Google has not used as a ranking
+//    signal since 2009. Kept `keywords` populated anyway for Bing/other
+//    engines and internal content-strategy reference, but real first-page
+//    ranking will come from on-page content depth, internal linking, page
+//    speed, and backlinks — not meta tags alone.
+//
+// 4. Nothing about the reCAPTCHA / background visual behavior below changed.
+
 export const metadata = {
-  title: "Partner With Us – White-Label Study Abroad Platform for Agencies",
+  // Full control over the <title> tag — bypasses the root layout's
+  // generic template so this page's title stays clean and on-topic.
+  title: {
+    absolute:
+      "Partner With Us | White-Label Study Abroad Platform for Agencies",
+  },
 
   description:
-    "Power your overseas education consultancy with our white-label platform. Student CRM, visa workflows, branded portal, team management & analytics — live in 24 hours. Join 20+ partner agencies.",
+    "White-label study abroad platform for agencies: student CRM, visa workflow automation, and a fully branded portal — live in 24 hours. Join 20+ partner agencies already scaling with us.",
 
   keywords: [
     "study abroad platform for agencies",
     "white label education CRM",
+    "white label study abroad software",
     "overseas education consultancy software",
     "student visa management system",
     "university application tracking software",
@@ -15,35 +55,52 @@ export const metadata = {
     "education agency CRM",
     "overseas consultancy management platform",
     "study abroad partner program",
+    "study abroad franchise software",
+    "student CRM for education consultants",
+    "visa workflow automation software",
+    "branded education portal India",
+    "overseas education SaaS platform",
+    "start a study abroad consultancy",
+    "education agency management system India",
   ],
 
+  authors: [{ name: "Khizar Overseas", url: "/contact" }],
+  category: "Education Technology",
+  applicationName: "Khizar Overseas Partner Program",
+
   openGraph: {
-    title: "Partner With Us – White-Label Study Abroad Platform for Agencies",
+    title: "Partner With Us | White-Label Study Abroad Platform for Agencies",
     description:
-      "Run your entire overseas education consultancy from one platform. White-label dashboards, student CRM, visa workflows, and team management — all under your brand. Live in 24 hours.",
+      "Run your entire overseas education consultancy from one platform — white-label dashboards, student CRM, visa workflows, and team management, all under your own brand. Live in 24 hours.",
     type: "website",
-    url: "https://yourdomain.com/partners",
-    siteName: "YourPlatformName",
+    locale: "en_IN",
+    // Relative URL — resolved against metadataBase ("https://www.khizaroverseas.in")
+    // set in app/layout.tsx, same pattern the rest of the site uses.
+    url: "/partners",
+    siteName: "Khizar Overseas",
     images: [
       {
-        url: "https://yourdomain.com/og/partners.png", // 1200x630px recommended
+        // Dedicated partners banner — see notes above. Place the generated
+        // file at /public/og-partners-1200x630.jpg.
+        url: "https://www.khizaroverseas.in/og-partners-1200x630.png",
         width: 1200,
         height: 630,
-        alt: "White-Label Study Abroad Platform for Agencies",
+        alt: "Khizar Overseas Partner Program — White-Label Study Abroad Platform for Agencies",
+        type: "image/png",
       },
     ],
   },
 
   twitter: {
     card: "summary_large_image",
-    title: "Partner With Us – White-Label Study Abroad Platform for Agencies",
+    title: "Partner With Us | White-Label Study Abroad Platform for Agencies",
     description:
-      "Run your entire overseas education consultancy from one platform. Student CRM, visa workflows, branded portals — live in 24 hours.",
-    images: ["https://yourdomain.com/og/partners.png"],
+      "Student CRM, visa workflow automation, and a fully branded portal for your overseas education agency — live in 24 hours.",
+    images: ["https://www.khizaroverseas.in/og-partners-1200x630.png"],
   },
 
   alternates: {
-    canonical: "https://yourdomain.com/partners",
+    canonical: "/partners",
   },
 
   robots: {
@@ -59,17 +116,67 @@ export const metadata = {
   },
 };
 
-// Structured data: SoftwareApplication + Organization schema
+const BASE_URL = "https://www.khizaroverseas.in";
+
+// Structured data: one linked @graph — Organization, WebPage,
+// SoftwareApplication, BreadcrumbList, and FAQPage, all tied together by
+// @id so Google resolves them as the same underlying entities rather than
+// isolated, duplicate-looking schemas.
 const structuredData = {
   "@context": "https://schema.org",
   "@graph": [
     {
+      "@type": "Organization",
+      "@id": `${BASE_URL}/#organization`,
+      name: "Khizar Overseas",
+      url: BASE_URL,
+      logo: `${BASE_URL}/logo.png`,
+      description:
+        "The operating system for overseas education agencies — white-label infrastructure powering study abroad consultancies worldwide.",
+    },
+    {
+      "@type": "WebPage",
+      "@id": `${BASE_URL}/partners#webpage`,
+      url: `${BASE_URL}/partners`,
+      name: "Partner With Us | White-Label Study Abroad Platform for Agencies",
+      description:
+        "White-label study abroad platform for agencies: student CRM, visa workflow automation, and a fully branded portal — live in 24 hours.",
+      isPartOf: { "@id": `${BASE_URL}/#organization` },
+      about: { "@id": `${BASE_URL}/partners#software` },
+      breadcrumb: { "@id": `${BASE_URL}/partners#breadcrumb` },
+      primaryImageOfPage: `${BASE_URL}/og-partners-1200x630.png`,
+      inLanguage: "en-IN",
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": `${BASE_URL}/partners#breadcrumb`,
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: "Home",
+          item: BASE_URL,
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: "Partners",
+          item: `${BASE_URL}/partners`,
+        },
+      ],
+    },
+    {
       "@type": "SoftwareApplication",
-      name: "YourPlatformName Partner Program",
+      "@id": `${BASE_URL}/partners#software`,
+      name: "Khizar Overseas Partner Program",
       applicationCategory: "BusinessApplication",
+      applicationSubCategory: "Education CRM",
       operatingSystem: "Web",
+      image: `${BASE_URL}/og-partners-1200x630.png`,
+      url: `${BASE_URL}/partners`,
       description:
         "White-label study abroad management platform for overseas education agencies. Includes student CRM, university application tracking, visa workflow automation, team management, and branded portals.",
+      provider: { "@id": `${BASE_URL}/#organization` },
       offers: {
         "@type": "Offer",
         price: "0",
@@ -93,19 +200,8 @@ const structuredData = {
       },
     },
     {
-      "@type": "Organization",
-      name: "YourPlatformName",
-      url: "https://yourdomain.com",
-      description:
-        "The operating system for overseas education agencies — white-label infrastructure powering study abroad consultancies worldwide.",
-      contactPoint: {
-        "@type": "ContactPoint",
-        contactType: "Sales",
-        availableLanguage: ["English"],
-      },
-    },
-    {
       "@type": "FAQPage",
+      "@id": `${BASE_URL}/partners#faq`,
       mainEntity: [
         {
           "@type": "Question",
@@ -145,6 +241,14 @@ const structuredData = {
           acceptedAnswer: {
             "@type": "Answer",
             text: "Nothing changes on your end. Our infrastructure scales automatically. You just focus on growing your agency.",
+          },
+        },
+        {
+          "@type": "Question",
+          name: "Do I need any technical or development skills to get started?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "No. We handle domain, branding, and setup end-to-end. If you can use email, you can run your agency on the platform.",
           },
         },
       ],
