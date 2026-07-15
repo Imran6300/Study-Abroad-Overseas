@@ -14,7 +14,7 @@ const CountryCard = memo(function CountryCard({
   capital,
   visaSuccessRate,
   visaSuccessRateEstimated,
-  hrefPrefix = "/all-countries",
+  hrefPrefix = "/study-in-",
   buttonText = "Explore Programs",
   priority = false,
   variant = "default",
@@ -25,7 +25,7 @@ const CountryCard = memo(function CountryCard({
       : "bg-[#0B0F1A] border-white/[0.08]";
 
   return (
-    <Link href={`${hrefPrefix}/${slug}`} className="group block">
+    <Link href={`${hrefPrefix}${slug}`} className="group block">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
