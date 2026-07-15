@@ -69,6 +69,7 @@ const RECIPIENT_TYPE_LABELS = {
   org_admin: "Org Admin",
   partner: "Partner",
   admin: "Admin",
+  business_owner: "Business Owner",
   other: "Other",
 };
 
