@@ -724,14 +724,18 @@ export default function CounselorsAdminPage() {
 
   const handleDeleteConfirmed = useCallback(async () => {
     try {
-      await axios.delete(
+      const response = await axios.delete(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/partners/${counselorToDelete.id}`,
         {
           withCredentials: true,
         },
       );
 
-      showToast(`${counselorToDelete.name} removed successfully.`, "success");
+      showToast(
+        response.data?.message ||
+          `${counselorToDelete.name} removed successfully.`,
+        "success",
+      );
 
       await fetchPartners();
 
@@ -741,7 +745,11 @@ export default function CounselorsAdminPage() {
     } catch (err) {
       console.error(err);
 
-      showToast("Failed to delete partner.", "error");
+      showToast(
+        err.response?.data?.message ||
+          `Failed to remove ${counselorToDelete?.name || "partner"}.`,
+        "error",
+      );
     }
   }, [counselorToDelete, fetchPartners, showToast]);
 
