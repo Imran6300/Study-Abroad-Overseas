@@ -1,4 +1,5 @@
 import BlogClient from "@/components/BlogClient";
+import { buildItemListJsonLd } from "@/lib/structuredData";
 
 const BASE_URL = "https://www.khizaroverseas.in";
 
@@ -66,13 +67,38 @@ export default async function BlogPage({ searchParams }) {
   const currentPage = Math.max(1, parseInt(params?.page) || 1);
   const { posts, total, pages } = await getBlogs(currentPage);
 
+  // ItemList JSON-LD (Step 4 fix) — /blog had no structured data before.
+  // Same shared builder used on /courses, /programs/universities and
+  // /all-countries.
+  const structuredData = buildItemListJsonLd(posts, {
+    name:
+      currentPage === 1
+        ? "Study Abroad Blogs | Khizar Overseas"
+        : `Study Abroad Blogs — Page ${currentPage}`,
+    description:
+      "Expert guides on studying abroad, visa tips, scholarships, and top universities for 2026.",
+    url: `${BASE_URL}/blog`,
+    toListItem: (post, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: post.title,
+      url: `${BASE_URL}/blog/${post.slug}`,
+    }),
+  });
+
   return (
-    <BlogClient
-      posts={posts}
-      initialTotal={total}
-      pageSize={PAGE_SIZE}
-      currentPage={currentPage}
-      totalPages={pages}
-    />
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
+      <BlogClient
+        posts={posts}
+        initialTotal={total}
+        pageSize={PAGE_SIZE}
+        currentPage={currentPage}
+        totalPages={pages}
+      />
+    </>
   );
 }

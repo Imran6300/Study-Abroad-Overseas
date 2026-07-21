@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import * as gtag from "@/lib/gtag";
 import UniversityCard from "@/components/ui/UniversityCard";
 import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
@@ -331,18 +333,99 @@ function InlineCTABanner({ onOpen }) {
   );
 }
 
+// ── PAGINATION NAV ────────────────────────────────────────────────────────────
+// FIX (Organic Growth Audit, Section 12/14, item #2): replaces the old
+// "Load More Universities" client-fetch button. Every page now has a real
+// /programs/universities?page=N (and &search=... when filtering) URL with
+// a server-rendered <Link href>, so Googlebot can discover, crawl, and
+// index every page of the directory independently — mirrors the pattern
+// already working on /blog (see BlogClient.jsx).
+function buildPageHref(basePath, search, page) {
+  const query = new URLSearchParams();
+  if (search) query.set("search", search);
+  if (page > 1) query.set("page", String(page));
+  const qs = query.toString();
+  return qs ? `${basePath}?${qs}` : basePath;
+}
+
+function PaginationNav({ search, currentPage, totalPages }) {
+  if (totalPages <= 1) return null;
+  const basePath = "/programs/universities";
+
+  return (
+    <nav
+      aria-label="Universities pagination"
+      className="flex items-center justify-center flex-wrap gap-2 mt-10"
+    >
+      {currentPage > 1 && (
+        <Link
+          href={buildPageHref(basePath, search, currentPage - 1)}
+          className="px-5 py-3 rounded-xl bg-gray-900 border border-gray-800 text-gray-200 font-medium hover:bg-gray-800 transition"
+        >
+          ← Previous
+        </Link>
+      )}
+
+      {Array.from({ length: totalPages }, (_, i) => i + 1)
+        // For very large page counts, don't render a link for every single
+        // page — show first, last, and a window around the current page.
+        .filter(
+          (p) => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 2,
+        )
+        .reduce((acc, p, idx, arr) => {
+          if (idx > 0 && p - arr[idx - 1] > 1) acc.push("ellipsis-" + p);
+          acc.push(p);
+          return acc;
+        }, [])
+        .map((p) =>
+          typeof p === "string" ? (
+            <span key={p} className="px-2 text-gray-600">
+              …
+            </span>
+          ) : (
+            <Link
+              key={p}
+              href={buildPageHref(basePath, search, p)}
+              aria-current={p === currentPage ? "page" : undefined}
+              className={`px-5 py-3 rounded-xl font-semibold transition ${
+                p === currentPage
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-900 border border-gray-800 text-gray-200 hover:bg-gray-800"
+              }`}
+            >
+              {p}
+            </Link>
+          ),
+        )}
+
+      {currentPage < totalPages && (
+        <Link
+          href={buildPageHref(basePath, search, currentPage + 1)}
+          className="px-5 py-3 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-500 transition"
+        >
+          Next →
+        </Link>
+      )}
+    </nav>
+  );
+}
+
 // ── MAIN COMPONENT ────────────────────────────────────────────────────────────
 export default function UniversitiesClient({
   universities,
   initialSearch = "",
+  currentPage = 1,
+  totalPages = 1,
 }) {
-  const [searchTerm, setSearchTerm] = useState(initialSearch);
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const router = useRouter();
 
-  const [results, setResults] = useState(universities ?? []);
-  const [page, setPage] = useState(1);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
+  // Search box is local UI state only — committing a search (debounced)
+  // navigates to a real ?search=...&page=1 URL, which the server component
+  // re-fetches and re-renders. This replaces the old pattern where search
+  // AND "load more" both ran as client-only fetches that never touched the
+  // URL, so neither the directory nor the search results were crawlable.
+  const [searchTerm, setSearchTerm] = useState(initialSearch);
+  const [debouncedSearch, setDebouncedSearch] = useState(initialSearch);
   const [modalOpen, setModalOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [messageStatus, setMessageStatus] = useState("");
@@ -362,22 +445,29 @@ export default function UniversitiesClient({
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (!searchTerm.trim()) return;
-
       setDebouncedSearch(searchTerm);
-    }, 800);
-
+    }, 500);
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
+  // Navigate (server re-fetch) once the debounced value actually changes
+  // from what the server already rendered.
   useEffect(() => {
-    if (!debouncedSearch) return;
+    if (debouncedSearch === initialSearch) return;
 
     gtag.event({
       action: "search_used",
       category: "search",
       label: debouncedSearch,
     });
+
+    router.push(
+      debouncedSearch.trim()
+        ? `/programs/universities?search=${encodeURIComponent(debouncedSearch.trim())}`
+        : "/programs/universities",
+      { scroll: false },
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedSearch]);
 
   // ── Auto-open: only once per user ──
@@ -411,53 +501,6 @@ export default function UniversitiesClient({
     }, 4000);
     return () => clearTimeout(t);
   }, [message]);
-
-  // Search effect
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const endpoint = searchTerm.trim()
-          ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/universities/search?q=${encodeURIComponent(searchTerm)}`
-          : `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/universities`;
-        const res = await fetch(endpoint);
-        const data = await res.json();
-        setResults(data?.universities ?? []);
-        setPage(1);
-        setHasMore(true);
-      } catch (err) {
-        console.error(err);
-      }
-    };
-    const timer = setTimeout(fetchData, 300);
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
-
-  const loadMore = async () => {
-    try {
-      setLoadingMore(true);
-      const nextPage = page + 1;
-      const endpoint = searchTerm.trim()
-        ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/universities/search?q=${encodeURIComponent(searchTerm)}&page=${nextPage}`
-        : `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/universities?page=${nextPage}`;
-      const res = await fetch(endpoint);
-      const data = await res.json();
-      const newUniversities = data?.universities ?? [];
-      setResults((prev) => {
-        const map = new Map();
-        [...prev, ...newUniversities].forEach((u) => {
-          if (!u) return;
-          map.set(u._id ?? u.slug ?? JSON.stringify(u), u);
-        });
-        return Array.from(map.values());
-      });
-      setPage(nextPage);
-      if (newUniversities.length === 0) setHasMore(false);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoadingMore(false);
-    }
-  };
 
   const BANNER_AFTER_INDEX = 7; // inject after the 8th card (0-indexed: 7)
 
@@ -585,14 +628,14 @@ export default function UniversitiesClient({
           </div>
 
           {/* ── RESULTS ── */}
-          {results.length === 0 ? (
+          {universities.length === 0 ? (
             <div className="text-center py-24 text-gray-500 text-lg">
               No universities match your search
             </div>
           ) : (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
-                {results.map((uni, i) => (
+                {universities.map((uni, i) => (
                   <div
                     key={uni?._id ?? uni?.slug ?? `uni-${i}`}
                     className="opacity-100 transition-all duration-500"
@@ -603,23 +646,17 @@ export default function UniversitiesClient({
               </div>
 
               {/* Inline CTA after 8 results — rendered outside the grid */}
-              {results.length > BANNER_AFTER_INDEX && (
+              {universities.length > BANNER_AFTER_INDEX && (
                 <PublicOnly>
                   <InlineCTABanner onOpen={openModal} />
                 </PublicOnly>
               )}
 
-              {hasMore && (
-                <div className="flex justify-center mt-8 mb-10">
-                  <button
-                    onClick={loadMore}
-                    disabled={loadingMore}
-                    className="px-10 py-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold shadow-lg shadow-blue-900/30 disabled:opacity-50 transition-all duration-200 text-lg"
-                  >
-                    {loadingMore ? "Loading..." : "Load More Universities"}
-                  </button>
-                </div>
-              )}
+              <PaginationNav
+                search={initialSearch}
+                currentPage={currentPage}
+                totalPages={totalPages}
+              />
             </>
           )}
 

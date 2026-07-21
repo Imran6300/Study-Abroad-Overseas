@@ -1,219 +1,144 @@
-"use client";
+// app/(site)/courses/page.jsx
+//
+// FIX (Organic Growth Audit, Section 2/14, item #1):
+// This page was previously 100% client-rendered — "use client", data
+// fetched client-side via Redux (fetchCourses), no generateMetadata
+// export. Googlebot got an empty shell on first paint and this page
+// inherited the generic root title/description instead of its own.
+// That's a real problem specifically HERE because /courses is one of
+// the highest-authority internal-linking hubs in the site (closest to
+// homepage, meant to distribute link equity to every course page).
+//
+// Fix mirrors the pattern already working correctly in
+// programs/universities/page.jsx and all-countries/page.jsx:
+//   - Server component fetches data once (ISR, 24h — same cadence as
+//     every other entity page in this app).
+//   - generateMetadata gives this page its own real title/description.
+//   - A crawlable <ul><li><Link>...</Link></li></ul> list (sr-only) is
+//     rendered server-side so Googlebot has actual <a href> anchors to
+//     every course page even before any client JS runs.
+//   - ItemList JSON-LD added (Section 12, item #6 / Section 9).
+//   - Interactive search/category filtering moves into CoursesClient.jsx
+//     (a client component) which receives the already-fetched course
+//     list as a prop — no client-side fetch, no Redux dependency.
+//
+// The backend endpoint (GET /api/courses) already returns the full,
+// unpaginated course list — same one study-combo/[combo]/page.jsx
+// already uses at build time via generateStaticParams. Course counts in
+// this niche run in the dozens/low hundreds, not thousands, so a single
+// fetch (no pagination) is correct here — unlike /programs/universities
+// and /all-countries, which paginate because they run into the
+// thousands.
 
-import { useState, useMemo, useEffect } from "react";
-import { motion } from "framer-motion";
-import { debounce } from "lodash";
-import { useSearchParams } from "next/navigation";
-import { useRouter } from "next/navigation";
-import CourseCard from "@/components/ui/CourseCard";
-import React from "react";
+import Link from "next/link";
+import CoursesClient from "./CoursesClient";
+import { buildItemListJsonLd } from "@/lib/structuredData";
 
-/* ================= DATA ================= */
-import { useDispatch, useSelector } from "react-redux";
-import { fetchCourses } from "@/store/courseSlice";
+const BASE_URL = "https://www.khizaroverseas.in";
+const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
-const CATEGORY_META = {
-  all: { label: "All Courses", color: "from-gray-500 to-gray-600" },
-  engineering: {
-    label: "Engineering & Technology",
-    color: "from-indigo-500 to-blue-500",
-  },
-  business: {
-    label: "Business & Management",
-    color: "from-orange-500 to-amber-500",
-  },
-  healthcare: {
-    label: "Healthcare & Medicine",
-    color: "from-emerald-500 to-teal-500",
-  },
-};
-
-const CATEGORY_FIELD_MAP = {
-  engineering: ["computer science", "engineering", "it"],
-  business: ["business", "management", "mba"],
-  healthcare: ["medicine", "healthcare", "nursing"],
-};
-
-/* ================= OPTIMIZED ANIMATION VARIANTS ================= */
-const heroVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: "easeOut" } },
-};
-
-const cardVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0 },
-  hover: { y: -8, transition: { duration: 0.3 } },
-};
-
-const staggerContainer = {
-  visible: {
-    transition: {
-      staggerChildren: 0.08,
-    },
-  },
-};
-
-/* ================= PAGE COMPONENT ================= */
-export default function Courses() {
-  const router = useRouter();
-
-  const searchParams = useSearchParams();
-
-  const [rawSearch, setRawSearch] = useState("");
-
-  const queryCategory = searchParams.get("category") || "all";
-  const [activeCategory, setActiveCategory] = useState(queryCategory);
-
-  const dispatch = useDispatch();
-  const { courses, loading, error } = useSelector((state) => state.courses);
-
-  useEffect(() => {
-    if (!courses.length) {
-      dispatch(fetchCourses());
+async function getCourses() {
+  if (!API_URL) return [];
+  try {
+    const res = await fetch(`${API_URL}/api/courses`, {
+      next: { revalidate: 86400 },
+    });
+    if (!res.ok) {
+      console.error(`[courses] fetch failed: ${res.status}`);
+      return [];
     }
-  }, [dispatch, courses.length]);
+    const json = await res.json();
+    return json?.courses || [];
+  } catch (err) {
+    console.error("[courses] fetch error:", err.message);
+    return [];
+  }
+}
 
-  useEffect(() => {
-    const categoryFromUrl = searchParams.get("category") || "all";
-    setActiveCategory(categoryFromUrl);
-  }, [searchParams.toString()]);
+// ─── generateMetadata ───────────────────────────────────────────────────────
+// Static (not dynamic per-searchParams) is fine here: unlike /blog's
+// ?page=N, the category chips on this page are a client-side filter over
+// an already-fetched list, not a distinct server-rendered page of
+// results — so there's one canonical URL for the hub, matching how
+// programs/universities/page.jsx treats ?search= (no separate canonical
+// per query). If category filtering is ever converted to real
+// server-rendered ?category=X routes with distinct content, revisit this
+// the same way /blog handles ?page=N.
+export const metadata = {
+  title:
+    "Study Abroad Courses 2026 | Engineering, Business & Healthcare Programs",
+  description:
+    "Browse study abroad programs in engineering, business, healthcare and more. Compare duration, fees and top universities. Free counseling from Khizar Overseas, Hyderabad.",
+  keywords: [
+    "study abroad courses 2026",
+    "engineering courses abroad for indian students",
+    "mba abroad for indian students",
+    "healthcare courses abroad",
+    "study abroad course fees",
+    "study abroad consultants hyderabad",
+  ],
+  alternates: {
+    canonical: `${BASE_URL}/courses`,
+  },
+  openGraph: {
+    title: "Study Abroad Courses 2026 | Khizar Overseas",
+    description:
+      "Compare study abroad programs across engineering, business, healthcare and more — fees, duration and top universities. Free counseling from Khizar Overseas.",
+    url: `${BASE_URL}/courses`,
+    siteName: "Khizar Overseas",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Study Abroad Courses 2026 | Khizar Overseas",
+    description:
+      "Compare study abroad programs across engineering, business, healthcare and more. Free counseling from Khizar Overseas.",
+  },
+};
 
-  // Debounce search input
-  const [search, setSearch] = useState("");
-  useEffect(() => {
-    const handler = debounce(() => {
-      setSearch(rawSearch);
-    }, 300);
-    handler();
-    return () => handler.cancel();
-  }, [rawSearch]);
+export default async function Courses() {
+  const courses = await getCourses();
 
-  // Filter based on search & category
-  const filteredCourses = useMemo(() => {
-    let result = courses;
-
-    // Category filter
-    if (activeCategory !== "all") {
-      result = result.filter((course) => {
-        const field = course.field?.toLowerCase() || "";
-        const keywords = CATEGORY_FIELD_MAP[activeCategory] || [];
-
-        return keywords.some((keyword) => field.includes(keyword));
-      });
-    }
-
-    // Search filter
-    if (search.trim()) {
-      const searchLower = search.toLowerCase();
-      result = result.filter((course) =>
-        course.title.toLowerCase().includes(searchLower),
-      );
-    }
-
-    return result;
-  }, [search, activeCategory, courses]);
+  // ItemList JSON-LD — now built via the shared helper (Step 4 fix) so this
+  // page produces the exact same shape as /programs/universities,
+  // /all-countries and /blog instead of a bespoke inline object.
+  const structuredData = buildItemListJsonLd(courses.slice(0, 50), {
+    name: "Study Abroad Courses | Khizar Overseas",
+    description:
+      "Programmatic list of study abroad courses across engineering, business, healthcare and more.",
+    url: `${BASE_URL}/courses`,
+    toListItem: (course, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: course.title,
+      url: `${BASE_URL}/courses/${course.slug}`,
+    }),
+  });
 
   return (
-    <section className="min-h-screen bg-[#0b0f1a] text-white">
-      {/* HERO SECTION */}
-      <div className="relative border-b border-white/10 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-indigo-900/10 to-transparent pointer-events-none" />
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
 
-        <div className="relative max-w-7xl mx-auto px-6 pt-32 pb-24 text-center">
-          <motion.h1
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, ease: "easeOut" }}
-            className="text-5xl md:text-6xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-300"
-          >
-            Find Your Global Career Path
-          </motion.h1>
-
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.8 }}
-            className="mt-6 text-lg md:text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed"
-          >
-            Discover world-class programs in engineering, business, healthcare,
-            and beyond — designed for international success.
-          </motion.p>
-
-          {/* Search Bar */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4, duration: 0.7 }}
-            className="mt-10 max-w-2xl mx-auto"
-          >
-            <input
-              type="text"
-              placeholder="Search programs (e.g., Cybersecurity, MBA, Nursing...)"
-              value={rawSearch}
-              onChange={(e) => setRawSearch(e.target.value)}
-              className="w-full px-8 py-5 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 
-                         text-white placeholder-gray-500 focus:outline-none focus:ring-4 focus:ring-indigo-500/50 
-                         focus:border-indigo-500 transition-all duration-300 text-lg"
-            />
-          </motion.div>
-
-          {/* Category Chips */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.6 }}
-            className="mt-12 flex flex-wrap justify-center gap-4"
-          >
-            {Object.entries(CATEGORY_META).map(([key, { label, color }]) => (
-              <button
-                key={key}
-                onClick={() => {
-                  setActiveCategory(key);
-                  router.push(
-                    key === "all" ? "/courses" : `/courses?category=${key}`,
-                    { scroll: false },
-                  );
-                }}
-                className={`px-6 py-3 rounded-full text-sm font-semibold transition-all duration-300
-                  ${
-                    activeCategory === key
-                      ? `bg-gradient-to-r ${color} text-white shadow-lg scale-105`
-                      : "bg-white/5 text-gray-300 hover:bg-white/10 border border-white/10"
-                  }`}
-              >
-                {label}
-              </button>
-            ))}
-          </motion.div>
-        </div>
+      {/* Crawlable link list — server-rendered, present before any client
+          JS runs. Mirrors the sr-only list already used on
+          programs/universities/page.jsx. */}
+      <div className="sr-only">
+        <h2>All Study Abroad Courses</h2>
+        <ul>
+          {courses.map((course) => (
+            <li key={course._id || course.slug}>
+              <Link href={`/courses/${course.slug}`}>
+                {course.title} — {course.duration}, {course.field}
+              </Link>
+            </li>
+          ))}
+        </ul>
       </div>
 
-      {/* COURSES GRID */}
-      <div className="max-w-7xl mx-auto px-6 py-24">
-        {loading ? (
-          <p className="text-center text-gray-400 text-lg py-20">
-            Loading courses...
-          </p>
-        ) : filteredCourses.length === 0 ? (
-          <p className="text-center text-gray-400 text-lg py-20">
-            No courses found.
-          </p>
-        ) : (
-          <motion.div
-            variants={staggerContainer}
-            initial="hidden"
-            animate="visible"
-            className="grid sm:grid-cols-2 lg:grid-cols-3 gap-10"
-          >
-            {filteredCourses.map((course, i) => (
-              <React.Fragment key={course._id}>
-                <CourseCard course={course} />
-              </React.Fragment>
-            ))}
-          </motion.div>
-        )}
-      </div>
-    </section>
+      <CoursesClient initialCourses={courses} />
+    </>
   );
 }

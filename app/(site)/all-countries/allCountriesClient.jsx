@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { LazyMotion, m } from "framer-motion";
 import {
   Search,
@@ -346,41 +348,134 @@ function InlineCTABanner({ onOpen }) {
   );
 }
 
+// ── PAGINATION NAV ────────────────────────────────────────────────────────────
+// FIX (Organic Growth Audit, Section 12/14, item #3): replaces the old
+// "Load More Countries" client-fetch button. Every page now has a real
+// /all-countries?page=N (and &region=...&search=... when filtering) URL
+// with a server-rendered <Link href>, so page 2+ of the 200-country
+// directory is independently crawlable — same fix pattern as /blog and
+// /programs/universities.
+function buildCountriesHref(search, region, page) {
+  const query = new URLSearchParams();
+  if (search) query.set("search", search);
+  if (region && region !== "All Regions") query.set("region", region);
+  if (page > 1) query.set("page", String(page));
+  const qs = query.toString();
+  return qs ? `/all-countries?${qs}` : "/all-countries";
+}
+
+function PaginationNav({ search, region, currentPage, totalPages }) {
+  if (totalPages <= 1) return null;
+
+  return (
+    <nav
+      aria-label="Countries pagination"
+      className="flex items-center justify-center flex-wrap gap-2 mt-10"
+    >
+      {currentPage > 1 && (
+        <Link
+          href={buildCountriesHref(search, region, currentPage - 1)}
+          className="px-5 py-3 rounded-2xl bg-white/5 border border-white/10 text-gray-200 font-medium hover:bg-white/10 transition"
+        >
+          ← Previous
+        </Link>
+      )}
+
+      {Array.from({ length: totalPages }, (_, i) => i + 1)
+        .filter(
+          (p) => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 2,
+        )
+        .reduce((acc, p, idx, arr) => {
+          if (idx > 0 && p - arr[idx - 1] > 1) acc.push("ellipsis-" + p);
+          acc.push(p);
+          return acc;
+        }, [])
+        .map((p) =>
+          typeof p === "string" ? (
+            <span key={p} className="px-2 text-gray-600">
+              …
+            </span>
+          ) : (
+            <Link
+              key={p}
+              href={buildCountriesHref(search, region, p)}
+              aria-current={p === currentPage ? "page" : undefined}
+              className={`px-5 py-3 rounded-2xl font-semibold transition ${
+                p === currentPage
+                  ? "bg-gradient-to-r from-cyan-400 to-blue-500 text-[#020617]"
+                  : "bg-white/5 border border-white/10 text-gray-200 hover:bg-white/10"
+              }`}
+            >
+              {p}
+            </Link>
+          ),
+        )}
+
+      {currentPage < totalPages && (
+        <Link
+          href={buildCountriesHref(search, region, currentPage + 1)}
+          className="px-5 py-3 rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-500 text-[#020617] font-bold hover:scale-105 transition-transform"
+        >
+          Next →
+        </Link>
+      )}
+    </nav>
+  );
+}
+
 // ── MAIN COMPONENT ────────────────────────────────────────────────────────────
 export default function CountriesClient({
   initialCountries = [],
-  initialPagination,
+  initialPagination = {},
+  initialSearch = "",
+  initialRegion = "All Regions",
 }) {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedRegion, setSelectedRegion] = useState("All Regions");
-  const [countries, setCountries] = useState(initialCountries);
-  const [page, setPage] = useState(initialPagination.page);
-  const [hasNextPage, setHasNextPage] = useState(initialPagination.hasNextPage);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+
+  // Data + pagination now come straight from the server-rendered props —
+  // no client-side fetch duplicates the initial page load, and no
+  // "load more" appends pages invisibly into local state. Changing the
+  // search box or region filter below navigates to a new
+  // /all-countries?... URL instead, which page.jsx re-fetches server-side.
+  const countries = initialCountries;
+  const currentPage = initialPagination.page || 1;
+  const totalPages = initialPagination.totalPages || 1;
+
+  const [searchTerm, setSearchTerm] = useState(initialSearch);
+  const [selectedRegion, setSelectedRegion] = useState(initialRegion);
   const [modalOpen, setModalOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [messageStatus, setMessageStatus] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState(initialSearch);
   const isCounselorStudent = useSelector(selectIsCounselorStudent);
+
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (!searchTerm.trim()) return;
-
       setDebouncedSearch(searchTerm);
-    }, 800);
-
+    }, 500);
     return () => clearTimeout(timer);
   }, [searchTerm]);
-  useEffect(() => {
-    if (!debouncedSearch) return;
 
-    gtag.event({
-      action: "search_used",
-      category: "search",
-      label: debouncedSearch,
+  // Navigate (server re-fetch + real URL) once the debounced search or the
+  // region filter actually changes from what the server already rendered.
+  useEffect(() => {
+    if (debouncedSearch === initialSearch && selectedRegion === initialRegion) {
+      return;
+    }
+
+    if (debouncedSearch) {
+      gtag.event({
+        action: "search_used",
+        category: "search",
+        label: debouncedSearch,
+      });
+    }
+
+    router.push(buildCountriesHref(debouncedSearch.trim(), selectedRegion, 1), {
+      scroll: false,
     });
-  }, [debouncedSearch]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearch, selectedRegion]);
 
   // Ref so the exit-intent handler closure always sees the latest value
   // without needing to be re-attached every render
@@ -436,47 +531,7 @@ export default function CountriesClient({
     return () => clearTimeout(t);
   }, [message]);
 
-  const fetchCountries = async (reset = false) => {
-    try {
-      if (reset) setLoading(true);
-      const targetPage = reset ? 1 : page + 1;
-      const regionQuery =
-        selectedRegion !== "All Regions"
-          ? `&continent=${encodeURIComponent(selectedRegion)}`
-          : "";
-      const searchQuery = searchTerm
-        ? `&search=${encodeURIComponent(searchTerm)}`
-        : "";
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/countries?page=${targetPage}&limit=20${regionQuery}${searchQuery}`,
-      );
-      const data = await res.json();
-      if (reset) {
-        setCountries(data.data);
-      } else {
-        setCountries((prev) => [...prev, ...data.data]);
-      }
-      setPage(data.pagination.page);
-      setHasNextPage(data.pagination.hasNextPage);
-    } catch (error) {
-      console.error("Fetch countries error:", error);
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
-    }
-  };
-
-  useEffect(() => {
-    const delay = setTimeout(() => fetchCountries(true), 400);
-    return () => clearTimeout(delay);
-  }, [searchTerm, selectedRegion]);
-
   const clearSearch = () => setSearchTerm("");
-
-  const loadMoreCountries = async () => {
-    setLoadingMore(true);
-    await fetchCountries(false);
-  };
 
   const regions = [
     "All Regions",
@@ -653,11 +708,7 @@ export default function CountriesClient({
         {/* ── COUNTRY GRID ── */}
         <m.section className="py-24 px-6">
           <div className="max-w-7xl mx-auto">
-            {loading ? (
-              <div className="text-center py-16 text-gray-400 text-xl">
-                Searching countries...
-              </div>
-            ) : countries.length === 0 ? (
+            {countries.length === 0 ? (
               <div className="text-center py-16 text-gray-400 text-xl">
                 No countries found matching your search.
               </div>
@@ -685,17 +736,12 @@ export default function CountriesClient({
                   <InlineCTABanner onOpen={openModal} />
                 )}
 
-                {hasNextPage && (
-                  <div className="flex justify-center mt-8">
-                    <button
-                      onClick={loadMoreCountries}
-                      disabled={loadingMore}
-                      className="px-8 py-4 rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-500 text-[#020617] font-bold hover:scale-105 transition-transform disabled:opacity-50"
-                    >
-                      {loadingMore ? "Loading..." : "Load More Countries"}
-                    </button>
-                  </div>
-                )}
+                <PaginationNav
+                  search={initialSearch}
+                  region={selectedRegion}
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                />
               </>
             )}
           </div>

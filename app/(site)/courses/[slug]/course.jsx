@@ -40,6 +40,7 @@ import {
 import Link from "next/link";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchCourseBySlug, clearSelectedCourse } from "@/store/courseSlice";
+import CareerSalaryPanel from "@/components/ui/CareerSalaryPanel";
 
 export default function CourseDetailPage({ slug }) {
   const [activeTab, setActiveTab] = useState("overview");
@@ -161,7 +162,11 @@ export default function CourseDetailPage({ slug }) {
             {
               icon: Award,
               label: "Scholarships",
-              value: course.scholarships || "Up to 100%",
+              // FIX (Step 6): this previously fell back to a hardcoded
+              // "Up to 100%" when course.scholarships was empty — showing
+              // a fabricated figure on every course missing real data.
+              // Now shows an honest "Available" label instead.
+              value: course.scholarships || "Available",
             },
             {
               icon: Users,
@@ -335,40 +340,18 @@ export default function CourseDetailPage({ slug }) {
                   Career Outcomes
                 </h2>
                 <div className="bg-gradient-to-br from-indigo-900/20 to-blue-900/10 backdrop-blur-xl rounded-3xl p-10 border border-indigo-500/20">
-                  <div className="grid md:grid-cols-2 gap-10">
-                    <div>
-                      <h3 className="text-2xl font-bold mb-6">
-                        Popular Job Roles
-                      </h3>
-                      <ul className="space-y-4">
-                        {course.careerOutcomes.slice(0, 4).map((role, i) => (
-                          <li
-                            key={i}
-                            className="flex items-center gap-3 text-lg"
-                          >
-                            <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                            {role}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                    <div>
-                      <h3 className="text-2xl font-bold mb-6">
-                        Salary Expectations
-                      </h3>
-                      <p className="text-4xl font-bold text-emerald-400 mb-2">
-                        {program.avgSalary ? `$${program.avgSalary}` : "—"}
-                      </p>
-
-                      <p className="text-gray-300">
-                        Average starting salary (US/Europe)
-                      </p>
-                      <p className="mt-6 text-gray-400 text-sm">
-                        Highest salaries in USA, UK, Switzerland, Australia,
-                        Singapore
-                      </p>
-                    </div>
-                  </div>
+                  {/* FIX (Step 6): this used to be hardcoded placeholder
+                      copy — "Average starting salary (US/Europe)" and
+                      "Highest salaries in USA, UK, Switzerland, Australia,
+                      Singapore" — identical on every course page regardless
+                      of the actual course. program.salaryExpectations and
+                      program.salariesInCountries already existed on the
+                      Course schema and were never read anywhere in the UI.
+                      CareerSalaryPanel renders the real per-course data
+                      (falling back gracefully per-field when something is
+                      genuinely missing) and is shared with the new
+                      university×course combo page from Step 5. */}
+                  <CareerSalaryPanel course={program} theme="dark" />
                 </div>
               </div>
             )}
