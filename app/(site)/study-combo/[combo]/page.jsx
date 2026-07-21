@@ -69,18 +69,55 @@ export async function generateStaticParams() {
 }
 
 // ─── Data fetcher ─────────────────────────────────────────────────────────────
-
-async function getComboPage(combo) {
+//
+// FIX (Organic Growth Audit — silent 404 bake-in, July 2026): this used to
+// catch ANY failure (network timeout, dropped connection, backend briefly
+// overloaded) and return null identically to "this combo genuinely doesn't
+// exist" — which triggers notFound(). During a build statically generating
+// ~1,885 of these pages, each firing its own live fetch, transient backend
+// hiccups under that concurrency got permanently baked in as wrong 404
+// pages (confirmed via curl: x-nextjs-prerender:1 + 200 status, but
+// not-found content — i.e. the static file itself is wrong, not a cache or
+// data problem). With dynamicParams=false there's no self-healing; a page
+// generated wrong stays wrong until the next successful build.
+//
+// Retries a genuine network/5xx failure a few times with backoff before
+// giving up. A real 404 (res.status === 404) or an explicit
+// { success: false } from the API still returns null immediately — this
+// only protects against transient failures, not real "doesn't exist" cases.
+async function getComboPage(combo, attempt = 1) {
   if (!API_URL) return null;
+  const MAX_ATTEMPTS = 3;
   try {
     const res = await fetch(`${API_URL}/api/public/combo/${combo}`, {
       next: { revalidate: 86400 },
     });
-    if (!res.ok) return null;
+
+    if (res.status === 404) return null; // genuine "doesn't exist" — don't retry
+
+    if (!res.ok) {
+      if (attempt < MAX_ATTEMPTS) {
+        await new Promise((r) => setTimeout(r, attempt * 500));
+        return getComboPage(combo, attempt + 1);
+      }
+      console.error(
+        `[study-combo] "${combo}" failed after ${MAX_ATTEMPTS} attempts: HTTP ${res.status}`,
+      );
+      return null;
+    }
+
     const json = await res.json();
-    if (!json.success) return null;
+    if (!json.success) return null; // genuine API-level "not found"
     return json; // { seo, jsonLd, course, country, universitiesInCountry }
-  } catch {
+  } catch (err) {
+    if (attempt < MAX_ATTEMPTS) {
+      await new Promise((r) => setTimeout(r, attempt * 500));
+      return getComboPage(combo, attempt + 1);
+    }
+    console.error(
+      `[study-combo] "${combo}" failed after ${MAX_ATTEMPTS} attempts:`,
+      err.message,
+    );
     return null;
   }
 }

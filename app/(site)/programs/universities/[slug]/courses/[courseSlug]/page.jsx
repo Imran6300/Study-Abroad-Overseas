@@ -74,19 +74,47 @@ export async function generateStaticParams() {
 }
 
 // ─── Data fetcher ───────────────────────────────────────────────────────────
+//
+// FIX (Organic Growth Audit — silent 404 bake-in, July 2026): same issue as
+// study-combo/[combo]/page.jsx's getComboPage — a transient network/backend
+// hiccup during the concurrent build was silently treated as "doesn't
+// exist" and baked in as a wrong static page. Retries transient failures;
+// a genuine 404 or { success: false } still returns null immediately.
 
-async function getUniversityCourse(uniSlug, courseSlug) {
+async function getUniversityCourse(uniSlug, courseSlug, attempt = 1) {
   if (!API_URL) return null;
+  const MAX_ATTEMPTS = 3;
   try {
     const res = await fetch(
       `${API_URL}/api/universities/${uniSlug}/courses/${courseSlug}`,
       { next: { revalidate: 86400 } },
     );
-    if (!res.ok) return null;
+
+    if (res.status === 404) return null; // genuine "doesn't exist" — don't retry
+
+    if (!res.ok) {
+      if (attempt < MAX_ATTEMPTS) {
+        await new Promise((r) => setTimeout(r, attempt * 500));
+        return getUniversityCourse(uniSlug, courseSlug, attempt + 1);
+      }
+      console.error(
+        `[uni-course] "${uniSlug}/${courseSlug}" failed after ${MAX_ATTEMPTS} attempts: HTTP ${res.status}`,
+      );
+      return null;
+    }
+
     const json = await res.json();
     if (!json.success) return null;
     return json; // { seo, jsonLd, university, course, offersThisCourse }
-  } catch {
+  } catch (err) {
+    if (attempt < MAX_ATTEMPTS) {
+      await new Promise((r) => setTimeout(r, attempt * 500));
+      return getUniversityCourse(uniSlug, courseSlug, attempt + 1);
+    }
+    console.error(
+      `[uni-course] "${uniSlug}/${courseSlug}" failed after ${MAX_ATTEMPTS} attempts:`,
+      err.message,
+    );
     return null;
   }
 }

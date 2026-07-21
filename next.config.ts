@@ -7,6 +7,23 @@ const withBundleAnalyzer = require("@next/bundle-analyzer")({
 const nextConfig = {
   reactStrictMode: true,
 
+  // FIX (Organic Growth Audit — silent 404 bake-in, July 2026): the
+  // combined 1,885 (course×country) + ~8,091 (university×course hot set)
+  // programmatic pages each fire their own live fetch to the backend
+  // during generateStaticParams. Uncapped, Next.js runs a large number of
+  // these concurrently, which briefly overwhelmed the backend during a
+  // recent build — transient failures were silently caught and treated as
+  // "page doesn't exist," permanently baking wrong 404s into otherwise-real
+  // pages. staticGenerationMaxConcurrency caps how many pages generate at
+  // once per worker; staticGenerationRetryCount adds a framework-level
+  // retry on top of the manual retries already added to getComboPage() /
+  // getUniversityCourse(). Two layers because a build-breaking failure is
+  // far more expensive to diagnose than a slightly slower build.
+  experimental: {
+    staticGenerationMaxConcurrency: 4,
+    staticGenerationRetryCount: 2,
+  },
+
   async redirects() {
     return [
       // Existing university redirect
