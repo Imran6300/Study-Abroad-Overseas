@@ -16,15 +16,29 @@
 // one param name, and programs/universities/[slug]/page.jsx already claims
 // "slug" for the university detail page at that level.
 //
-// Static-params + dynamicParams=false mirrors the exact fix already applied
-// to study-combo/[combo]/page.jsx after the Vercel ISR-write-overage
-// incident: only pre-build the combos that
-// GET /api/public/university-course-slugs actually returns (i.e. real
-// University.comboPageSlugs relationships) — everything else 404s instead
-// of silently manufacturing a new ISR cache entry for bot-guessed URLs.
-
+// FIX (Organic Growth Audit — 48K-page OOM build, July 2026):
+// dynamicParams=false + generateStaticParams pulling ALL 48,038
+// university×course combos meant every deploy tried to pre-render all
+// 48K pages up front, each with its own live fetch during the build —
+// that's what OOM'd the Vercel build.
+//
+// Course×country (study-combo/[combo]/page.jsx) stays dynamicParams=false
+// as-is: only ~1,885 combos, cheap to fully pre-build, no change needed.
+//
+// University×course is a different scale problem, so it gets a different
+// fix: pre-build only the "hot set" (universities with a real qsRanking —
+// a reasonable proxy for search-traffic-worthy) at deploy time, and let
+// dynamicParams=true generate everything else on first real visit/crawl,
+// caching for 24h same as the pre-built pages after that. The sitemap
+// still lists all 48,038 real URLs unchanged — Google discovers and
+// crawls them over time, and each first real hit is what triggers that
+// page's one-time on-demand generation. getUniversityCourse's own
+// university/course-existence + offersThisCourse checks are what protect
+// against bot-guessed junk URLs generating garbage cache entries — not a
+// hard-coded static list — so this doesn't reopen the original
+// ISR-write-overage problem that dynamicParams=false was added to solve.
 export const revalidate = 86400;
-export const dynamicParams = false;
+export const dynamicParams = true;
 
 import UniversityCourseClient from "./UniversityCourseClient";
 import { notFound } from "next/navigation";
@@ -32,14 +46,17 @@ import { notFound } from "next/navigation";
 const BASE_URL = "https://www.khizaroverseas.in";
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
-// ─── Static params (pre-build every known university×course combo) ────────
+// ─── Static params (pre-build only the qsRanking'd hot set) ───────────────
 
 export async function generateStaticParams() {
   if (!API_URL) return [];
   try {
-    const res = await fetch(`${API_URL}/api/public/university-course-slugs`, {
-      cache: "no-store", // always fetch fresh at build time
-    });
+    const res = await fetch(
+      `${API_URL}/api/public/university-course-slugs?rankedOnly=true`,
+      {
+        cache: "no-store", // always fetch fresh at build time
+      },
+    );
     if (!res.ok) return [];
     const json = await res.json();
     const universities = json.universities || [];
