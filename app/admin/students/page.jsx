@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X } from "lucide-react";
+import { X, ChevronDown } from "lucide-react";
 
 import AdminSidebar from "@/components/admindashboard/AdminSidebar";
 import DashboardHeader from "@/components/admindashboard/DashboardHeader";
@@ -93,6 +93,13 @@ export default function StudentsAdminPage() {
   const [search, setSearch] = useState("");
   const [justAdded, setJustAdded] = useState(false);
 
+  // NEW: counselor assignment (super_admin only) — list of independent
+  // counselors to assign a student to, and which row is currently saving.
+  const [counselors, setCounselors] = useState([]);
+  const [assigningLeadId, setAssigningLeadId] = useState(null);
+  const [assignMessage, setAssignMessage] = useState("");
+  const isSuperAdmin = user?.role === "super_admin";
+
   const [mode, setMode] = useState(null);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
@@ -147,6 +154,8 @@ export default function StudentsAdminPage() {
             counselorName: !lead.orgName
               ? lead.assignedCounselor?.name || null
               : null,
+            // NEW: raw id, used to pre-select and update the assign dropdown
+            assignedCounselorId: lead.assignedCounselor?._id || null,
             created: new Date(lead.createdAt).toISOString().split("T")[0],
             sources: formTypes,
           };
@@ -162,6 +171,82 @@ export default function StudentsAdminPage() {
 
     fetchLeads();
   }, []);
+
+  // NEW: super_admin-only — load independent counselors (no adminId, i.e.
+  // not tied to a White-Label org) to populate the assign dropdown. Reuses
+  // the existing /host/admin-users endpoint instead of adding a new one.
+  // (adminRoutes.js is mounted at app.use("/host", adminRouter) in app.js,
+  // not "/api" — unlike leadRouter, which is mounted at "/api".)
+  useEffect(() => {
+    if (!isSuperAdmin) return;
+
+    const fetchCounselors = async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/host/admin-users`,
+          { credentials: "include" },
+        );
+        const data = await res.json();
+        const independentCounselors = (data?.users || []).filter(
+          (u) => u.role === "counselor" && !u.adminId,
+        );
+        setCounselors(independentCounselors);
+      } catch (err) {
+        console.error("Failed to fetch counselors:", err);
+      }
+    };
+
+    fetchCounselors();
+  }, [isSuperAdmin]);
+
+  // NEW: assign / reassign / unassign a student's counselor.
+  const assignCounselor = async (leadId, counselorId) => {
+    try {
+      setAssigningLeadId(leadId);
+
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/lead/${leadId}/assign-counselor`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ counselorId: counselorId || null }),
+        },
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || "Failed to assign counselor");
+        return;
+      }
+
+      setStudents((prev) =>
+        prev.map((s) =>
+          s.leadId === leadId
+            ? {
+                ...s,
+                assignedCounselorId: data.assignedCounselor?._id || null,
+                counselor: data.assignedCounselor?.name || "Unassigned",
+                counselorName: data.assignedCounselor?.name || null,
+              }
+            : s,
+        ),
+      );
+
+      setAssignMessage(
+        data.khizarApplicationCreated
+          ? `${data.message} — a Khizar-managed application was started for them.`
+          : data.message || "Counselor updated",
+      );
+      setTimeout(() => setAssignMessage(""), 4000);
+    } catch (error) {
+      console.error("Assign counselor error:", error);
+      alert("Something went wrong while assigning the counselor");
+    } finally {
+      setAssigningLeadId(null);
+    }
+  };
 
   const deleteStudent = async (leadId) => {
     try {
@@ -345,6 +430,20 @@ export default function StudentsAdminPage() {
             )}
           </AnimatePresence>
 
+          {/* NEW: Counselor assignment toast */}
+          <AnimatePresence>
+            {assignMessage && (
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="mb-6 mx-2 sm:mx-0 p-4 bg-green-50 border border-green-200 text-green-800 rounded-xl text-center font-medium shadow-sm"
+              >
+                {assignMessage}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {/* Content */}
           <motion.div
             variants={containerVariants}
@@ -400,6 +499,11 @@ export default function StudentsAdminPage() {
                         <th className="px-4 py-3 sm:px-6 sm:py-4 text-left text-xs sm:text-sm font-semibold text-gray-700 whitespace-nowrap hidden lg:table-cell">
                           Submitted Forms
                         </th>
+                        {isSuperAdmin && (
+                          <th className="px-4 py-3 sm:px-6 sm:py-4 text-left text-xs sm:text-sm font-semibold text-gray-700 whitespace-nowrap">
+                            Counselor
+                          </th>
+                        )}
                         <th className="px-4 py-3 sm:px-6 sm:py-4 text-left text-xs sm:text-sm font-semibold text-gray-700 whitespace-nowrap">
                           Status
                         </th>
@@ -466,6 +570,48 @@ export default function StudentsAdminPage() {
                               )}
                             </div>
                           </td>
+                          {isSuperAdmin && (
+                            <td className="px-4 py-3 sm:px-6 sm:py-4 text-sm text-gray-600 whitespace-nowrap">
+                              {student.orgName ? (
+                                <span className="text-xs text-gray-400">
+                                  Org-managed
+                                </span>
+                              ) : (
+                                <div className="relative w-full min-w-[140px] max-w-[180px]">
+                                  <select
+                                    value={student.assignedCounselorId || ""}
+                                    disabled={
+                                      assigningLeadId === student.leadId
+                                    }
+                                    onChange={(e) =>
+                                      assignCounselor(
+                                        student.leadId,
+                                        e.target.value || null,
+                                      )
+                                    }
+                                    className="w-full appearance-none px-3 py-2 pr-8 text-xs sm:text-sm rounded-lg border border-gray-300 bg-white text-gray-700 truncate cursor-pointer transition-colors hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent disabled:opacity-60 disabled:cursor-not-allowed"
+                                  >
+                                    <option value="">Unassigned</option>
+                                    {counselors.map((c) => (
+                                      <option key={c._id} value={c._id}>
+                                        {c.name}
+                                      </option>
+                                    ))}
+                                  </select>
+                                  <ChevronDown
+                                    size={14}
+                                    strokeWidth={2.5}
+                                    className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400"
+                                  />
+                                  {assigningLeadId === student.leadId && (
+                                    <span className="absolute -bottom-4 left-0 text-[10px] text-sky-600 whitespace-nowrap">
+                                      Saving...
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                            </td>
+                          )}
                           <td className="px-4 py-3 sm:px-6 sm:py-4">
                             <span
                               className={`inline-block px-2.5 py-1 text-xs font-semibold rounded-full ${
