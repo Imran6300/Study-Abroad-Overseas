@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { Phone, Mail, User, Globe2, Send, MessageCircle } from "lucide-react";
 import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 import MessageBox from "@/components/ui/MessageBox";
+import { validatePhone } from "@/lib/phoneValidation";
 
 export default function FinalCTASection() {
   const router = useRouter();
@@ -23,6 +24,9 @@ export default function FinalCTASection() {
     phone: "",
     country: "",
   });
+
+  const [phoneError, setPhoneError] = useState(null);
+  const [phoneTouched, setPhoneTouched] = useState(false);
 
   useEffect(() => {
     if (authChecked && isLoggedIn && user) {
@@ -44,6 +48,16 @@ export default function FinalCTASection() {
 
     if (!isLoggedIn) {
       router.push(`/login?redirect=${encodeURIComponent(pathname)}`);
+      return;
+    }
+
+    // Validate the phone number (and force a country code) before hitting
+    // the API — same check the field already does on blur, repeated here
+    // so a submit via Enter key can't skip it.
+    const phoneCheck = validatePhone(form.phone);
+    if (!phoneCheck.valid) {
+      setPhoneTouched(true);
+      setPhoneError(phoneCheck.error || "Phone number is required");
       return;
     }
 
@@ -84,6 +98,8 @@ export default function FinalCTASection() {
         phone: user?.phone || "",
         country: "",
       });
+      setPhoneError(null);
+      setPhoneTouched(false);
     } catch (err) {
       setMessageBox({
         status: "error",
@@ -94,6 +110,18 @@ export default function FinalCTASection() {
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handlePhoneChange = (e) => {
+    handleChange(e);
+    if (phoneTouched) {
+      setPhoneError(validatePhone(e.target.value).error);
+    }
+  };
+
+  const handlePhoneBlur = (e) => {
+    setPhoneTouched(true);
+    setPhoneError(validatePhone(e.target.value).error);
   };
 
   return (
@@ -165,18 +193,25 @@ export default function FinalCTASection() {
               </div>
 
               {/* Phone */}
-              <div className="relative">
-                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 h-5 w-5 pointer-events-none" />
-                <input
-                  name="phone"
-                  type="tel"
-                  required
-                  pattern="[0-9]{10}"
-                  placeholder="Phone Number"
-                  value={form.phone}
-                  onChange={handleChange}
-                  className="input-dark w-full pl-12 pr-4 py-4 bg-white/5 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:border-[#32CD32] focus:ring-2 focus:ring-[#32CD32]/30 outline-none transition text-base"
-                />
+              <div>
+                <div className="relative">
+                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 h-5 w-5 pointer-events-none" />
+                  <input
+                    name="phone"
+                    type="tel"
+                    required
+                    placeholder="Phone Number (e.g. +91XXXXXXXXXX)"
+                    value={form.phone}
+                    onChange={handlePhoneChange}
+                    onBlur={handlePhoneBlur}
+                    className="input-dark w-full pl-12 pr-4 py-4 bg-white/5 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:border-[#32CD32] focus:ring-2 focus:ring-[#32CD32]/30 outline-none transition text-base"
+                  />
+                </div>
+                {phoneTouched && phoneError && (
+                  <p className="text-red-400 text-sm mt-1.5 pl-1">
+                    {phoneError}
+                  </p>
+                )}
               </div>
 
               {/* Country */}

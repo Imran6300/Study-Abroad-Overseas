@@ -8,6 +8,7 @@ import UniversityCard from "@/components/ui/UniversityCard";
 import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 import { PublicOnly } from "@/components/shared/PortalVisibility";
 import axios from "axios";
+import { validatePhone } from "@/lib/phoneValidation";
 import {
   GraduationCap,
   MessageCircle,
@@ -51,9 +52,32 @@ const modalPanel = {
 function LeadModal({ onClose, setMessage, setMessageStatus }) {
   const { executeRecaptcha } = useGoogleReCaptcha();
   const [loading, setLoading] = useState(false);
+  const [phoneValue, setPhoneValue] = useState("");
+  const [phoneError, setPhoneError] = useState(null);
+  const [phoneTouched, setPhoneTouched] = useState(false);
+
+  const handlePhoneChange = (e) => {
+    setPhoneValue(e.target.value);
+    if (phoneTouched) {
+      setPhoneError(validatePhone(e.target.value).error);
+    }
+  };
+
+  const handlePhoneBlur = (e) => {
+    setPhoneTouched(true);
+    setPhoneError(validatePhone(e.target.value).error);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const phoneCheck = validatePhone(phoneValue);
+    if (!phoneCheck.valid) {
+      setPhoneTouched(true);
+      setPhoneError(phoneCheck.error || "Phone number is required");
+      return;
+    }
+
     try {
       setLoading(true);
 
@@ -97,6 +121,9 @@ function LeadModal({ onClose, setMessage, setMessageStatus }) {
         setMessageStatus("success");
         setMessage("We'll call you within 24 hours!");
         e.target.reset();
+        setPhoneValue("");
+        setPhoneError(null);
+        setPhoneTouched(false);
         onClose();
       }
     } catch (error) {
@@ -167,14 +194,22 @@ function LeadModal({ onClose, setMessage, setMessageStatus }) {
             autoComplete="name"
             className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-blue-400 transition-colors text-sm"
           />
-          <input
-            type="tel"
-            name="phone"
-            placeholder="WhatsApp Number"
-            required
-            autoComplete="tel"
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-blue-400 transition-colors text-sm"
-          />
+          <div>
+            <input
+              type="tel"
+              name="phone"
+              placeholder="WhatsApp Number (e.g. +91XXXXXXXXXX)"
+              required
+              autoComplete="tel"
+              value={phoneValue}
+              onChange={handlePhoneChange}
+              onBlur={handlePhoneBlur}
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-blue-400 transition-colors text-sm"
+            />
+            {phoneTouched && phoneError && (
+              <p className="text-red-400 text-xs mt-1 pl-1">{phoneError}</p>
+            )}
+          </div>
           <input
             type="email"
             name="email"

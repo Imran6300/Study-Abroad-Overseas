@@ -1,24 +1,28 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+/**
+ * store/leadSlice.js
+ *
+ * Refactor notes (see ARCHITECTURE_REVIEW.md §3, §8, §9): this slice used
+ * raw `fetch()` directly against `process.env.NEXT_PUBLIC_BACKEND_URL` —
+ * one of three different HTTP-calling conventions coexisting across the 17
+ * store slices (the others being raw axios, and the shared apiClient).
+ * Migrated to the shared `apiClient` + `createApiThunk` (already written,
+ * already used elsewhere, just not adopted here) as the reference
+ * implementation for rolling the same change out to the remaining slices.
+ *
+ * No behavior change: same action type ("lead/fetchMyLead"), same
+ * endpoint ("/api/lead/me"), same fulfilled payload (`lead`), same
+ * rejected payload ("Failed to fetch lead" on a non-2xx response, or the
+ * underlying error message on a network failure), same reducers/state
+ * shape.
+ */
+import { createSlice } from "@reduxjs/toolkit";
+import apiClient from "../lib/apiClient";
+import { createApiThunk } from "../lib/createApiThunk";
 
-export const fetchMyLead = createAsyncThunk(
+export const fetchMyLead = createApiThunk(
   "lead/fetchMyLead",
-  async (_, { rejectWithValue }) => {
-    try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/lead/me`,
-        { credentials: "include" },
-      );
-
-      if (!res.ok) {
-        return rejectWithValue("Failed to fetch lead");
-      }
-
-      const data = await res.json();
-      return data.lead;
-    } catch (err) {
-      return rejectWithValue(err.message);
-    }
-  },
+  () => apiClient.get("/api/lead/me"),
+  { select: (data) => data.lead, fallbackError: "Failed to fetch lead" },
 );
 
 const leadSlice = createSlice({

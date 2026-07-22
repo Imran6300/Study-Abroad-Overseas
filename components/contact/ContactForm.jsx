@@ -5,6 +5,7 @@ import { useSelector } from "react-redux";
 import { useRouter, usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { CheckCircle } from "lucide-react";
+import { validatePhone } from "@/lib/phoneValidation";
 
 const ContactForm = () => {
   const router = useRouter();
@@ -24,6 +25,9 @@ const ContactForm = () => {
     message: "",
   });
 
+  const [phoneError, setPhoneError] = useState(null);
+  const [phoneTouched, setPhoneTouched] = useState(false);
+
   /* ✅ Safe prefill */
   useEffect(() => {
     if (!authChecked || !isLoggedIn || !user) return;
@@ -40,6 +44,18 @@ const ContactForm = () => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  const handlePhoneChange = (e) => {
+    handleChange(e);
+    if (phoneTouched) {
+      setPhoneError(validatePhone(e.target.value).error);
+    }
+  };
+
+  const handlePhoneBlur = (e) => {
+    setPhoneTouched(true);
+    setPhoneError(validatePhone(e.target.value).error);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -47,6 +63,16 @@ const ContactForm = () => {
 
     if (!isLoggedIn) {
       router.push(`/login?redirect=${encodeURIComponent(pathname)}`);
+      return;
+    }
+
+    // Validate phone (and force a country code) before hitting the API —
+    // same check the field does on blur, repeated here so submitting via
+    // Enter can't skip it.
+    const phoneCheck = validatePhone(form.phone);
+    if (!phoneCheck.valid) {
+      setPhoneTouched(true);
+      setPhoneError(phoneCheck.error || "Phone number is required");
       return;
     }
 
@@ -107,15 +133,21 @@ const ContactForm = () => {
 
         {/* Phone + Destination */}
         <div className="grid grid-cols-1 gap-5">
-          <input
-            name="phone"
-            value={form.phone}
-            onChange={handleChange}
-            type="tel"
-            placeholder="Phone Number *"
-            required
-            className="input"
-          />
+          <div>
+            <input
+              name="phone"
+              value={form.phone}
+              onChange={handlePhoneChange}
+              onBlur={handlePhoneBlur}
+              type="tel"
+              placeholder="Phone Number (e.g. +91XXXXXXXXXX) *"
+              required
+              className="input"
+            />
+            {phoneTouched && phoneError && (
+              <p className="text-red-500 text-sm mt-1">{phoneError}</p>
+            )}
+          </div>
 
           <select
             name="destination"

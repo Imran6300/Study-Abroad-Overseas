@@ -158,6 +158,11 @@ export default function StudentsAdminPage() {
             assignedCounselorId: lead.assignedCounselor?._id || null,
             created: new Date(lead.createdAt).toISOString().split("T")[0],
             sources: formTypes,
+            // NEW: detected server-side from the submitter's IP address at
+            // submission time — not a form field, never shown to the person.
+            submissionCountry: lead.submissionCountry || null,
+            submissionCountryCode: lead.submissionCountryCode || null,
+            submissionCountryGuess: lead.submissionCountryGuess || null,
           };
         });
 
@@ -291,7 +296,8 @@ export default function StudentsAdminPage() {
       (s.phone || "").toLowerCase().includes(term) ||
       (s.status || "").toLowerCase().includes(term) ||
       (s.orgName || "").toLowerCase().includes(term) ||
-      (s.counselorName || "").toLowerCase().includes(term)
+      (s.counselorName || "").toLowerCase().includes(term) ||
+      (s.submissionCountry || "").toLowerCase().includes(term)
     );
   });
 
@@ -499,6 +505,12 @@ export default function StudentsAdminPage() {
                         <th className="px-4 py-3 sm:px-6 sm:py-4 text-left text-xs sm:text-sm font-semibold text-gray-700 whitespace-nowrap hidden lg:table-cell">
                           Submitted Forms
                         </th>
+                        <th
+                          className="px-4 py-3 sm:px-6 sm:py-4 text-left text-xs sm:text-sm font-semibold text-gray-700 whitespace-nowrap hidden md:table-cell"
+                          title="Detected from the submitter's IP address, not a form field"
+                        >
+                          Submitted From
+                        </th>
                         {isSuperAdmin && (
                           <th className="px-4 py-3 sm:px-6 sm:py-4 text-left text-xs sm:text-sm font-semibold text-gray-700 whitespace-nowrap">
                             Counselor
@@ -569,6 +581,24 @@ export default function StudentsAdminPage() {
                                 })
                               )}
                             </div>
+                          </td>
+                          <td className="px-4 py-3 sm:px-6 sm:py-4 text-sm text-gray-600 hidden md:table-cell whitespace-nowrap">
+                            {student.submissionCountry ? (
+                              <span title={student.submissionCountryCode || ""}>
+                                {student.submissionCountry}
+                              </span>
+                            ) : student.submissionCountryGuess ? (
+                              <span
+                                className="text-gray-400 italic"
+                                title="Guessed from phone number's calling code — not confirmed"
+                              >
+                                {student.submissionCountryGuess}?
+                              </span>
+                            ) : (
+                              <span className="text-xs text-gray-400">
+                                Unknown
+                              </span>
+                            )}
                           </td>
                           {isSuperAdmin && (
                             <td className="px-4 py-3 sm:px-6 sm:py-4 text-sm text-gray-600 whitespace-nowrap">

@@ -7,6 +7,7 @@ import Link from "next/link";
 
 import axios from "axios";
 import * as gtag from "@/lib/gtag";
+import { validatePhone } from "@/lib/phoneValidation";
 
 import MessageBox from "@/components/ui/MessageBox";
 
@@ -146,9 +147,34 @@ const LeadModal = memo(function LeadModal({
   const { executeRecaptcha } = useGoogleReCaptcha();
 
   const [loading, setLoading] = useState(false);
+  const [phoneValue, setPhoneValue] = useState("");
+  const [phoneError, setPhoneError] = useState(null);
+  const [phoneTouched, setPhoneTouched] = useState(false);
+
+  const handlePhoneChange = (e) => {
+    setPhoneValue(e.target.value);
+    if (phoneTouched) {
+      setPhoneError(validatePhone(e.target.value).error);
+    }
+  };
+
+  const handlePhoneBlur = (e) => {
+    setPhoneTouched(true);
+    setPhoneError(validatePhone(e.target.value).error);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Validate (and force a country code on) the phone number before
+    // hitting the API — same check the field does on blur, repeated here
+    // so a submit via Enter key can't skip it.
+    const phoneCheck = validatePhone(phoneValue);
+    if (!phoneCheck.valid) {
+      setPhoneTouched(true);
+      setPhoneError(phoneCheck.error || "Phone number is required");
+      return;
+    }
 
     try {
       setLoading(true);
@@ -192,6 +218,9 @@ const LeadModal = memo(function LeadModal({
         setMessage("Lead submitted successfully!");
 
         e.target.reset();
+        setPhoneValue("");
+        setPhoneError(null);
+        setPhoneTouched(false);
 
         onClose();
       }
@@ -254,14 +283,22 @@ const LeadModal = memo(function LeadModal({
             autoComplete="name"
             className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition-colors text-sm"
           />
-          <input
-            type="tel"
-            name="phone"
-            placeholder="WhatsApp Number"
-            required
-            autoComplete="tel"
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition-colors text-sm"
-          />
+          <div>
+            <input
+              type="tel"
+              name="phone"
+              placeholder="WhatsApp Number (e.g. +91XXXXXXXXXX)"
+              required
+              autoComplete="tel"
+              value={phoneValue}
+              onChange={handlePhoneChange}
+              onBlur={handlePhoneBlur}
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition-colors text-sm"
+            />
+            {phoneTouched && phoneError && (
+              <p className="text-red-400 text-xs mt-1 pl-1">{phoneError}</p>
+            )}
+          </div>
           <input
             type="email"
             name="email"
