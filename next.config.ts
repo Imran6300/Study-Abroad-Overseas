@@ -99,10 +99,10 @@ const nextConfig = {
     remotePatterns: [
       { protocol: "https", hostname: "res.cloudinary.com" },
       { protocol: "https", hostname: "images.unsplash.com" },
-      { protocol: "https", hostname: "previews.123rf.com" },
-      { protocol: "https", hostname: "www.shutterstock.com" },
-      { protocol: "https", hostname: "shutterstock.com" },
-      { protocol: "https", hostname: "media.istockphoto.com" },
+      // previews.123rf.com, www.shutterstock.com, shutterstock.com, and
+      // media.istockphoto.com removed (Organic Growth Audit, item #7).
+      // Confirmed via scripts/auditStockImageCdns.js that no DB field or
+      // blog content anywhere references these CDNs — safe to drop.
       { protocol: "https", hostname: "logo.clearbit.com" },
       { protocol: "https", hostname: "placehold.co" },
     ],
