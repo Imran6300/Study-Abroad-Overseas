@@ -15,16 +15,27 @@
  *  - deleteKhizarApplication     DELETE /:id        (admin only)
  *  - uploadKhizarDocument        POST /upload
  *  - getDocumentUrl              GET /:applicationId/document/:documentIndex
+ *
+ * ── Refactor note (no functional change) ────────────────────────────────
+ * This file used to create its own local axios instance:
+ *   const api = axios.create({ baseURL: process.env.NEXT_PUBLIC_BACKEND_URL, withCredentials: true })
+ * — the exact duplication lib/apiClient.js's header comment documents
+ * across 15+ slices (same baseURL env var, same withCredentials flag,
+ * re-declared per file, no shared place to add e.g. a 401 interceptor).
+ * This was also the one slice that didn't even go through the shared
+ * `createApiThunk` try/catch/rejectWithValue factory that the other
+ * migrated slices use — every thunk below hand-rolled that boilerplate.
+ *
+ * Both are swapped for the existing app/lib/apiClient.js instance and
+ * app/lib/createApiThunk.js factory. Same base URL, same
+ * withCredentials:true, same relative paths, same fulfilled payload shape
+ * per thunk (see `select`), same rejected payload (a string message, same
+ * fallback text as before). Reducers/initialState/selectors are untouched.
  */
 
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
-
-// ─── Axios instance ───────────────────────────────────────────────────────────
-const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_BACKEND_URL || "",
-  withCredentials: true,
-});
+import { createSlice } from "@reduxjs/toolkit";
+import apiClient from "../lib/apiClient";
+import { createApiThunk } from "../lib/createApiThunk";
 
 // ─── Thunks ───────────────────────────────────────────────────────────────────
 
@@ -32,18 +43,10 @@ const api = axios.create({
  * GET /api/khizar-applications/stats
  * Returns: { total, offersReceived, visaProcessing, visaApproved, enrolled, uniqueUniversities }
  */
-export const fetchKhizarStats = createAsyncThunk(
+export const fetchKhizarStats = createApiThunk(
   "khizarApplications/fetchStats",
-  async (_, { rejectWithValue }) => {
-    try {
-      const { data } = await api.get("/api/khizar-applications/stats");
-      return data.data;
-    } catch (err) {
-      return rejectWithValue(
-        err.response?.data?.message || "Failed to fetch stats",
-      );
-    }
-  },
+  () => apiClient.get("/api/khizar-applications/stats"),
+  { select: (data) => data.data, fallbackError: "Failed to fetch stats" },
 );
 
 /**
@@ -54,18 +57,10 @@ export const fetchKhizarStats = createAsyncThunk(
  * or not they've created their own account yet.
  * Shape: [{ _id, name, email, phone, isRegistered, user }]
  */
-export const fetchKhizarStudents = createAsyncThunk(
+export const fetchKhizarStudents = createApiThunk(
   "khizarApplications/fetchStudents",
-  async (_, { rejectWithValue }) => {
-    try {
-      const { data } = await api.get("/api/khizar-applications/students");
-      return data.data;
-    } catch (err) {
-      return rejectWithValue(
-        err.response?.data?.message || "Failed to fetch students",
-      );
-    }
-  },
+  () => apiClient.get("/api/khizar-applications/students"),
+  { select: (data) => data.data, fallbackError: "Failed to fetch students" },
 );
 
 /**
@@ -73,36 +68,20 @@ export const fetchKhizarStudents = createAsyncThunk(
  * Query params: page, limit, status, counselorId
  * Returns: { data: [], pagination: { total, page, limit, totalPages } }
  */
-export const fetchKhizarApplications = createAsyncThunk(
+export const fetchKhizarApplications = createApiThunk(
   "khizarApplications/fetchList",
-  async (params = {}, { rejectWithValue }) => {
-    try {
-      const { data } = await api.get("/api/khizar-applications", { params });
-      return data;
-    } catch (err) {
-      return rejectWithValue(
-        err.response?.data?.message || "Failed to fetch applications",
-      );
-    }
-  },
+  (params = {}) => apiClient.get("/api/khizar-applications", { params }),
+  { fallbackError: "Failed to fetch applications" },
 );
 
 /**
  * GET /api/khizar-applications/:id
  * Returns single application (with statusHistory, populated student + counselor)
  */
-export const fetchKhizarApplicationById = createAsyncThunk(
+export const fetchKhizarApplicationById = createApiThunk(
   "khizarApplications/fetchById",
-  async (id, { rejectWithValue }) => {
-    try {
-      const { data } = await api.get(`/api/khizar-applications/${id}`);
-      return data.data;
-    } catch (err) {
-      return rejectWithValue(
-        err.response?.data?.message || "Failed to fetch application",
-      );
-    }
-  },
+  (id) => apiClient.get(`/api/khizar-applications/${id}`),
+  { select: (data) => data.data, fallbackError: "Failed to fetch application" },
 );
 
 /**
@@ -119,17 +98,12 @@ export const fetchKhizarApplicationById = createAsyncThunk(
  *   documents: [{ type, fileName, supabasePath }]
  * }
  */
-export const createKhizarApplication = createAsyncThunk(
+export const createKhizarApplication = createApiThunk(
   "khizarApplications/create",
-  async (payload, { rejectWithValue }) => {
-    try {
-      const { data } = await api.post("/api/khizar-applications", payload);
-      return data.data;
-    } catch (err) {
-      return rejectWithValue(
-        err.response?.data?.message || "Failed to create application",
-      );
-    }
+  (payload) => apiClient.post("/api/khizar-applications", payload),
+  {
+    select: (data) => data.data,
+    fallbackError: "Failed to create application",
   },
 );
 
@@ -138,39 +112,25 @@ export const createKhizarApplication = createAsyncThunk(
  * Body: { status, note?, internalNote? }
  * Admin / super_admin only.
  */
-export const updateKhizarStatus = createAsyncThunk(
+export const updateKhizarStatus = createApiThunk(
   "khizarApplications/updateStatus",
-  async ({ id, status, note, internalNote }, { rejectWithValue }) => {
-    try {
-      const { data } = await api.patch(
-        `/api/khizar-applications/${id}/status`,
-        { status, note, internalNote },
-      );
-      return data.data;
-    } catch (err) {
-      return rejectWithValue(
-        err.response?.data?.message || "Failed to update status",
-      );
-    }
-  },
+  ({ id, status, note, internalNote }) =>
+    apiClient.patch(`/api/khizar-applications/${id}/status`, {
+      status,
+      note,
+      internalNote,
+    }),
+  { select: (data) => data.data, fallbackError: "Failed to update status" },
 );
 
 /**
  * DELETE /api/khizar-applications/:id
  * Soft-delete. Admin / super_admin only.
  */
-export const deleteKhizarApplication = createAsyncThunk(
+export const deleteKhizarApplication = createApiThunk(
   "khizarApplications/delete",
-  async (id, { rejectWithValue }) => {
-    try {
-      await api.delete(`/api/khizar-applications/${id}`);
-      return id;
-    } catch (err) {
-      return rejectWithValue(
-        err.response?.data?.message || "Failed to delete application",
-      );
-    }
-  },
+  (id) => apiClient.delete(`/api/khizar-applications/${id}`),
+  { select: (_data, id) => id, fallbackError: "Failed to delete application" },
 );
 
 /**
@@ -178,47 +138,36 @@ export const deleteKhizarApplication = createAsyncThunk(
  * Multipart form: file + folder
  * Returns: { fileName, supabasePath }
  */
-export const uploadKhizarDocument = createAsyncThunk(
+export const uploadKhizarDocument = createApiThunk(
   "khizarApplications/uploadDocument",
-  async ({ file, folder = "khizar-docs" }, { rejectWithValue }) => {
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("folder", folder);
-
-      const { data } = await api.post(
-        "/api/khizar-applications/upload",
-        formData,
-        {
-          headers: { "Content-Type": "multipart/form-data" },
-        },
-      );
-      return data.data; // { fileName, supabasePath }
-    } catch (err) {
-      return rejectWithValue(
-        err.response?.data?.message || "Failed to upload document",
-      );
-    }
+  ({ file, folder = "khizar-docs" }) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("folder", folder);
+    return apiClient.post("/api/khizar-applications/upload", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
   },
+  { select: (data) => data.data, fallbackError: "Failed to upload document" },
 );
 
 /**
  * GET /api/khizar-applications/:applicationId/document/:documentIndex
  * Returns: { url: signedUrl }
  */
-export const getDocumentUrl = createAsyncThunk(
+export const getDocumentUrl = createApiThunk(
   "khizarApplications/getDocumentUrl",
-  async ({ applicationId, documentIndex }, { rejectWithValue }) => {
-    try {
-      const { data } = await api.get(
-        `/api/khizar-applications/${applicationId}/document/${documentIndex}`,
-      );
-      return { applicationId, documentIndex, url: data.url };
-    } catch (err) {
-      return rejectWithValue(
-        err.response?.data?.message || "Failed to get document URL",
-      );
-    }
+  ({ applicationId, documentIndex }) =>
+    apiClient.get(
+      `/api/khizar-applications/${applicationId}/document/${documentIndex}`,
+    ),
+  {
+    select: (data, { applicationId, documentIndex }) => ({
+      applicationId,
+      documentIndex,
+      url: data.url,
+    }),
+    fallbackError: "Failed to get document URL",
   },
 );
 
