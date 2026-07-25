@@ -41,7 +41,7 @@ export const metadata = {
   },
 
   description:
-    "White-label study abroad platform for agencies: student CRM, visa workflow automation, and a fully branded portal — live in 24 hours. Join 20+ partner agencies already scaling with us.",
+    "White-label study abroad CRM and partner platform for agencies and counselors: student CRM, commission-based student lead sharing, visa workflow automation, and a fully branded portal — live in 24 hours. Join 20+ partner agencies already scaling with us.",
 
   keywords: [
     "study abroad platform for agencies",
@@ -51,8 +51,10 @@ export const metadata = {
     "student visa management system",
     "university application tracking software",
     "study abroad agency tools",
+    "study abroad tools for counselors",
     "white label student portal",
     "education agency CRM",
+    "CRM for study abroad consultants",
     "overseas consultancy management platform",
     "study abroad partner program",
     "study abroad franchise software",
@@ -62,6 +64,11 @@ export const metadata = {
     "overseas education SaaS platform",
     "start a study abroad consultancy",
     "education agency management system India",
+    "commission based student leads",
+    "commission based student leads for agencies",
+    "student lead sharing platform",
+    "study abroad lead generation for agencies",
+    "buy student leads overseas education",
   ],
 
   authors: [{ name: "Khizar Overseas", url: "/contact" }],
@@ -140,7 +147,7 @@ const structuredData = {
       url: `${BASE_URL}/partners`,
       name: "Partner With Us | White-Label Study Abroad Platform for Agencies",
       description:
-        "White-label study abroad platform for agencies: student CRM, visa workflow automation, and a fully branded portal — live in 24 hours.",
+        "White-label study abroad CRM and partner platform for agencies and counselors: student CRM, commission-based student lead sharing, visa workflow automation, and a fully branded portal — live in 24 hours.",
       isPartOf: { "@id": `${BASE_URL}/#organization` },
       about: { "@id": `${BASE_URL}/partners#software` },
       breadcrumb: { "@id": `${BASE_URL}/partners#breadcrumb` },
@@ -186,6 +193,7 @@ const structuredData = {
       featureList: [
         "White-label branded portal",
         "Student CRM system",
+        "Commission-based student lead sharing",
         "University application tracking",
         "Visa workflow automation",
         "Multi-counselor team management",
@@ -249,6 +257,22 @@ const structuredData = {
           acceptedAnswer: {
             "@type": "Answer",
             text: "No. We handle domain, branding, and setup end-to-end. If you can use email, you can run your agency on the platform.",
+          },
+        },
+        {
+          "@type": "Question",
+          name: "Do you provide commission-based student leads to partner agencies?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "Yes. Beyond the CRM, partner agencies and counselors can opt into our student lead-sharing network — you only pay a commission on students you actually enroll. No retainers, no upfront lead-buying cost.",
+          },
+        },
+        {
+          "@type": "Question",
+          name: "Is this a CRM, a study abroad tool, or both?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "Both. It's a white-label student CRM and a full set of study abroad tools — application tracking, visa workflows, and analytics — built specifically for overseas education agencies and counselors, not a generic sales CRM.",
           },
         },
       ],

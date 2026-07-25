@@ -1501,6 +1501,57 @@ function HeroDashboard() {
 }
 
 /* ─── SCALABILITY VISUAL ─── */
+function LeadShareVisual() {
+  const steps = [
+    { label: "Lead Shared", icon: <FaUserGraduate />, color: BLUE },
+    { label: "You Counsel", icon: <FaUsers />, color: GREEN },
+    { label: "Student Enrolls", icon: <FaCheckCircle />, color: ORANGE },
+    { label: "You Earn Commission", icon: <FaChartLine />, color: "#32CD32" },
+  ];
+  return (
+    <div className="bg-white/5 border border-white/10 rounded-2xl sm:rounded-3xl p-6 sm:p-8">
+      <p className="text-sm font-semibold text-[#dcdcdc]/60 mb-4 sm:mb-6">
+        How Student Lead Sharing Works
+      </p>
+      <div className="space-y-3 sm:space-y-4">
+        {steps.map((s, i) => (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, x: -15 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.4, delay: i * 0.12 }}
+            className="flex items-center gap-3 sm:gap-4 bg-white/5 border border-white/10 rounded-xl sm:rounded-2xl p-3 sm:p-4"
+          >
+            <div
+              className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center flex-shrink-0 text-sm sm:text-base"
+              style={{ background: `${s.color}20`, color: s.color }}
+            >
+              {s.icon}
+            </div>
+            <p className="text-xs sm:text-sm font-semibold text-[#dcdcdc]/90">
+              {s.label}
+            </p>
+            {i < steps.length - 1 && (
+              <span className="ml-auto text-[#dcdcdc]/20 text-xs flex-shrink-0">
+                ↓
+              </span>
+            )}
+          </motion.div>
+        ))}
+      </div>
+      <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-[#32CD32]/10 border border-[#32CD32]/20 rounded-xl sm:rounded-2xl text-center">
+        <p className="text-xs sm:text-sm text-[#dcdcdc]/70">
+          You keep the relationship.{" "}
+          <span className="text-[#32CD32] font-bold">
+            We keep the leads flowing.
+          </span>
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function ScalabilityVisual() {
   const tiers = [
     {
@@ -1602,6 +1653,14 @@ export default function PartnersPage() {
       q: "What happens as I scale from 50 to 5,000 students?",
       a: "Nothing changes on your end. Our infrastructure scales automatically. You just focus on growing your agency.",
     },
+    {
+      q: "Do you provide commission-based student leads to partner agencies?",
+      a: "Yes. Beyond the CRM, partner agencies and counselors can opt into our student lead-sharing network — you only pay a commission on students you actually enroll. No retainers, no upfront lead-buying cost.",
+    },
+    {
+      q: "Is this a CRM, a study abroad tool, or both?",
+      a: "Both. It's a white-label student CRM and a full set of study abroad tools — application tracking, visa workflows, and analytics — built specifically for overseas education agencies and counselors, not a generic sales CRM.",
+    },
   ];
 
   return (
@@ -1626,7 +1685,7 @@ export default function PartnersPage() {
           >
             <div className="inline-flex items-center gap-2 bg-[#4169E1]/15 border border-[#4169E1]/30 rounded-full px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm text-[#9bb2ff] text-center">
               <div className="w-2 h-2 rounded-full bg-[#32CD32] animate-pulse flex-shrink-0" />
-              The Operating System for Overseas Education Agencies
+              The CRM &amp; Study Abroad Platform for Education Agencies
             </div>
           </motion.div>
 
@@ -1645,9 +1704,10 @@ export default function PartnersPage() {
               <span className="block text-[#FF8C00]">One Platform.</span>
             </h1>
             <p className="mt-5 sm:mt-8 text-base sm:text-lg md:text-xl text-[#dcdcdc]/70 leading-relaxed max-w-3xl mx-auto px-2">
-              White-label infrastructure that puts your brand front and center.
-              Student CRM, university applications, visa workflows, team
-              management — all powered by AI, all under your name.
+              A white-label study abroad CRM built for overseas education
+              agencies and counselors — student pipeline, university
+              applications, visa workflows, and commission-based student lead
+              sharing, all powered by AI, all under your own brand.
             </p>
             <div className="mt-8 sm:mt-12 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
               <motion.button
@@ -1723,9 +1783,10 @@ export default function PartnersPage() {
                   <span className="text-[#4169E1]">We own the tech.</span>
                 </h2>
                 <p className="mt-4 sm:mt-6 text-[#dcdcdc]/70 leading-relaxed text-base sm:text-lg">
-                  We're not a consultancy. We're the invisible technology layer
-                  that powers your consultancy. Your students never see us —
-                  they see you.
+                  We're not a consultancy. We're the invisible study abroad CRM
+                  and tooling layer that powers your consultancy — used today by
+                  overseas education agencies and independent counselors across
+                  15+ countries. Your students never see us — they see you.
                 </p>
               </div>
               <div className="grid grid-cols-2 gap-3 sm:gap-4">
@@ -2032,6 +2093,96 @@ export default function PartnersPage() {
                 </div>
               </div>
               <ScalabilityVisual />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── COMMISSION-BASED STUDENT LEADS ── */}
+      <section className="px-4 sm:px-6 md:px-14 py-16 sm:py-20 md:py-24">
+        <div className="max-w-7xl mx-auto">
+          <div className="relative overflow-hidden bg-gradient-to-br from-[#0a0f1e] to-[#0d1428] border border-white/10 rounded-2xl sm:rounded-[40px] p-6 sm:p-12 md:p-20">
+            <div className="absolute -top-24 -left-24 w-60 sm:w-80 h-60 sm:h-80 bg-[#32CD32]/15 blur-[100px] rounded-full" />
+            <div className="relative grid grid-cols-1 md:grid-cols-2 gap-10 sm:gap-16 items-center">
+              <div>
+                <div className="inline-flex items-center gap-2 bg-[#32CD32]/15 border border-[#32CD32]/30 rounded-full px-4 py-2 text-xs sm:text-sm text-[#a6f0b8] mb-6 sm:mb-8">
+                  <FaUserGraduate />
+                  For Agencies &amp; Counselors
+                </div>
+                <h2 className="text-3xl sm:text-4xl md:text-6xl font-black leading-tight">
+                  Commission-based
+                  <br />
+                  <span className="text-[#32CD32]">student leads,</span> not
+                  cold outreach.
+                </h2>
+                <p className="mt-6 sm:mt-8 text-[#dcdcdc]/70 leading-relaxed text-sm sm:text-lg">
+                  Beyond the CRM and study abroad tools, joining our partner
+                  network gives agencies access to a growing pool of
+                  pre-qualified student leads on a commission-based model — you
+                  counsel and close, we help you find students to counsel. No
+                  retainers, no upfront lead-buying costs, and no long-term
+                  lock-in. You only pay out on students you actually enroll.
+                </p>
+                <p className="mt-4 sm:mt-6 text-[#dcdcdc]/60 leading-relaxed text-sm sm:text-base">
+                  It's the same white-label platform whether you're a solo
+                  counselor exploring{" "}
+                  <Link
+                    href="/study-in"
+                    className="text-[#4169E1] underline underline-offset-4 hover:text-[#6a8bff]"
+                  >
+                    study-in-country guides
+                  </Link>{" "}
+                  for your first students, or a multi-branch overseas education
+                  agency scaling commission-based student lead sharing across
+                  counselors. Have questions on structure or payouts? Check our{" "}
+                  <Link
+                    href="/blog"
+                    className="text-[#4169E1] underline underline-offset-4 hover:text-[#6a8bff]"
+                  >
+                    partner resources on the blog
+                  </Link>{" "}
+                  or reach out directly.
+                </p>
+                <div className="mt-6 sm:mt-10 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  {[
+                    {
+                      label: "Pre-qualified student lead sharing",
+                      icon: <FaUserGraduate />,
+                    },
+                    {
+                      label: "Transparent commission tracking",
+                      icon: <FaChartLine />,
+                    },
+                    {
+                      label: "No upfront lead-buying cost",
+                      icon: <FaShieldAlt />,
+                    },
+                    {
+                      label: "Built-in CRM to manage every lead",
+                      icon: <FaLayerGroup />,
+                    },
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-center gap-3">
+                      <span className="text-[#32CD32] text-sm flex-shrink-0">
+                        {item.icon}
+                      </span>
+                      <p className="text-sm text-[#dcdcdc]/80">{item.label}</p>
+                    </div>
+                  ))}
+                </div>
+                <motion.button
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={openForm}
+                  className="mt-8 sm:mt-10 group bg-[#32CD32] hover:bg-[#2bb52b] text-[#071226] px-6 sm:px-8 py-3.5 sm:py-4 rounded-2xl font-bold text-base sm:text-lg transition-all shadow-[0_12px_48px_rgba(50,205,50,0.3)]"
+                >
+                  <span className="flex items-center justify-center gap-3">
+                    Get Student Leads
+                    <FaArrowRight className="group-hover:translate-x-1.5 transition-transform" />
+                  </span>
+                </motion.button>
+              </div>
+              <LeadShareVisual />
             </div>
           </div>
         </div>
