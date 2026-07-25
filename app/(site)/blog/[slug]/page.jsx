@@ -80,7 +80,13 @@ export async function generateMetadata({ params }) {
   ].filter(Boolean);
 
   return {
-    title,
+    // Bypass the root layout's title template ("%s | Overseas Admission
+    // Experts – USA, UK, Canada, Australia, Germany"), which was blindly
+    // appending ~70 extra characters to every blog post title and pushing
+    // it well past Google's ~60-char display limit, truncating it
+    // mid-sentence in search results. Same fix already applied on
+    // app/(site)/partners/layout.jsx.
+    title: { absolute: title },
     description,
     alternates: { canonical },
     robots: { index: !blog.noIndex, follow: true },

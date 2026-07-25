@@ -2136,10 +2136,10 @@ export default function PartnersPage() {
                   agency scaling commission-based student lead sharing across
                   counselors. Have questions on structure or payouts? Check our{" "}
                   <Link
-                    href="/blog"
+                    href="/blog/commission-based-student-leads-for-study-abroad-agencies-how-it-works"
                     className="text-[#4169E1] underline underline-offset-4 hover:text-[#6a8bff]"
                   >
-                    partner resources on the blog
+                    full guide to commission-based student leads
                   </Link>{" "}
                   or reach out directly.
                 </p>
