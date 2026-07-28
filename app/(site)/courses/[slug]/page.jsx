@@ -82,10 +82,10 @@ export async function generateMetadata({ params }) {
   const image =
     program.seo?.socialMeta?.ogImage?.url ||
     program.bgImage?.url ||
-    "https://khizaroverseas.in/og-courses.jpg";
+    "https://www.khizaroverseas.in/og-courses.jpg";
 
   return {
-    metadataBase: new URL("https://khizaroverseas.in"),
+    metadataBase: new URL("https://www.khizaroverseas.in"),
 
     title,
     description,
@@ -125,7 +125,7 @@ export async function generateMetadata({ params }) {
       images: [
         program.seo?.socialMeta?.ogImage?.url ||
           program.bgImage?.url ||
-          "https://khizaroverseas.in/og-courses.jpg",
+          "https://www.khizaroverseas.in/og-courses.jpg",
       ],
     },
 

@@ -20,11 +20,15 @@ export const metadata = {
     "study abroad from India",
   ].join(", "),
 
+  alternates: {
+    canonical: "https://www.khizaroverseas.in/courses",
+  },
+
   openGraph: {
     title: "Best Study Abroad Courses & Programs 2025–2026",
     description:
       "Explore popular international courses in Engineering, Business, IT, Medicine & more. Find top universities, scholarships, eligibility & application guidance.",
-    url: "https://khizaroverseas.in/courses",
+    url: "https://www.khizaroverseas.in/courses",
     siteName: "Khizar Overseas",
     images: [
       {
