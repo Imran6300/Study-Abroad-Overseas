@@ -37,7 +37,13 @@
 // against bot-guessed junk URLs generating garbage cache entries — not a
 // hard-coded static list — so this doesn't reopen the original
 // ISR-write-overage problem that dynamicParams=false was added to solve.
-export const revalidate = 86400;
+// FIX (ISR write overage, staying on Hobby, July 2026): this is the
+// highest-page-count route (48,038 combos). Going 24h → 7 days cuts
+// regeneration-triggered writes on this route alone to roughly 1/7th.
+// Fee/course data at this level doesn't change often enough to need
+// daily freshness. Use the on-demand revalidate route for anything that
+// needs to go live immediately (new course added, fee updated).
+export const revalidate = 604800; // 7 days (was 86400)
 export const dynamicParams = true;
 
 import UniversityCourseClient from "./UniversityCourseClient";

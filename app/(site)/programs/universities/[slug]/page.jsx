@@ -35,7 +35,7 @@ const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 // Page-level revalidate: all fetches on this route revalidate every 24h.
 // University data changes rarely — no need to regenerate every hour.
-export const revalidate = 86400;
+export const revalidate = 259200; // 3 days (was 86400) — ISR write overage fix, July 2026
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 

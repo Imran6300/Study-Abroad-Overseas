@@ -24,7 +24,7 @@
 //   6. Returns { seo, jsonLd, country }
 //   7. CountryClient renders the full country landing page
 
-export const revalidate = 86400;
+export const revalidate = 259200; // 3 days (was 86400) — ISR write overage fix, July 2026
 
 import CountryClient from "../../all-countries/[country]/CountryClient";
 import { notFound } from "next/navigation";

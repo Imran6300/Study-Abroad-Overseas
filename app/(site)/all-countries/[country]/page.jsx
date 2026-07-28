@@ -18,7 +18,7 @@
 //
 // 5. seo.secondaryKeywords from the model was never spread into keywords array.
 
-export const revalidate = 86400;
+export const revalidate = 259200; // 3 days (was 86400) — ISR write overage fix, July 2026
 
 import CountryClient from "./CountryClient";
 import { notFound } from "next/navigation";

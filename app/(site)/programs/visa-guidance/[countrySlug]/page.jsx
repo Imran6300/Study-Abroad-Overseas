@@ -9,7 +9,7 @@
 // country (#10) pages — server fetch + generateMetadata +
 // generateStaticParams + notFound() for genuinely missing data.
 
-export const revalidate = 86400;
+export const revalidate = 259200; // 3 days (was 86400) — ISR write overage fix, July 2026
 
 import { notFound } from "next/navigation";
 import VisaGuideCountryClient from "./VisaGuideCountryClient";
@@ -62,10 +62,9 @@ async function getVisaGuideByCountry(countrySlug, attempt = 1) {
 export async function generateStaticParams() {
   if (!API_URL) return [];
   try {
-    const res = await fetch(
-      `${API_URL}/api/public/visa-guide-country-slugs`,
-      { cache: "no-store" },
-    );
+    const res = await fetch(`${API_URL}/api/public/visa-guide-country-slugs`, {
+      cache: "no-store",
+    });
     if (!res.ok) return [];
     const json = await res.json();
     return (json.slugs || []).map((slug) => ({ countrySlug: slug }));
