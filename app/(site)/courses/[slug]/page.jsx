@@ -27,6 +27,15 @@ export async function generateStaticParams() {
 // course page immediately after creation instead of relying on this.
 export const dynamicParams = false;
 
+// FIX (ISR write overage, on-demand-only, July 2026): this page had no
+// explicit page-level revalidate, so it was implicitly picking up the
+// getCourse() fetch's `next: { revalidate: 86400 }` as its timer.
+// courseController.updateCourse already calls triggerRevalidate("course",
+// slug) on every real save, so the timer is redundant — revalidate=false
+// here overrides the fetch-level value and caches indefinitely until a
+// real edit or the next deploy.
+export const revalidate = false;
+
 async function getCourse(slug) {
   try {
     const res = await fetch(

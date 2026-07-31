@@ -24,7 +24,12 @@
 //   6. Returns { seo, jsonLd, country }
 //   7. CountryClient renders the full country landing page
 
-export const revalidate = 259200; // 3 days (was 86400) — ISR write overage fix, July 2026
+// FIX (ISR write overage, on-demand-only, July 2026): countryController
+// already calls triggerRevalidate("country", slug) on every real save,
+// which refreshes both /study-in/{slug} and /all-countries/{slug}. A
+// timer on top of that only adds redundant writes as this page is
+// re-crawled. revalidate=false caches indefinitely until a real edit.
+export const revalidate = false;
 
 import CountryClient from "../../all-countries/[country]/CountryClient";
 import { notFound } from "next/navigation";

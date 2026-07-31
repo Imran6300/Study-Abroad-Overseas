@@ -15,7 +15,12 @@
 //   6. Returns { seo, jsonLd, course, country, universitiesInCountry }
 //   7. ComboClient renders the page content
 
-export const revalidate = 86400;
+// FIX (ISR write overage, on-demand-only, July 2026): 1,885 combo pages on
+// a 24h timer still bill a write every time a page is revisited after its
+// window. courseController.updateCourse already calls triggerRevalidate()
+// for every comboPageSlugs entry on save, so the timer is redundant.
+// revalidate=false caches each page indefinitely until a real edit.
+export const revalidate = false;
 
 // FIX (Vercel ISR write overage, July 2026): this was previously `true`,
 // which meant ANY slug matching /study-:combo — including bot-guessed,

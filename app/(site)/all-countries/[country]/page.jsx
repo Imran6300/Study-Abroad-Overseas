@@ -18,7 +18,12 @@
 //
 // 5. seo.secondaryKeywords from the model was never spread into keywords array.
 
-export const revalidate = 259200; // 3 days (was 86400) — ISR write overage fix, July 2026
+// FIX (ISR write overage, on-demand-only, July 2026): same country data as
+// /study-in/[slug] — countryController.triggerRevalidate("country", slug)
+// already refreshes this path on every real save. revalidate=false drops
+// the redundant timer-driven writes; this route is slated for retirement
+// in favor of /study-in/ anyway.
+export const revalidate = false;
 
 import CountryClient from "./CountryClient";
 import { notFound } from "next/navigation";

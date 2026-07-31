@@ -37,13 +37,17 @@
 // against bot-guessed junk URLs generating garbage cache entries — not a
 // hard-coded static list — so this doesn't reopen the original
 // ISR-write-overage problem that dynamicParams=false was added to solve.
-// FIX (ISR write overage, staying on Hobby, July 2026): this is the
-// highest-page-count route (48,038 combos). Going 24h → 7 days cuts
-// regeneration-triggered writes on this route alone to roughly 1/7th.
-// Fee/course data at this level doesn't change often enough to need
-// daily freshness. Use the on-demand revalidate route for anything that
-// needs to go live immediately (new course added, fee updated).
-export const revalidate = 604800; // 7 days (was 86400)
+// FIX (ISR write overage, on-demand-only, July 2026): this is the
+// highest-page-count route (48,038 combos) and the single biggest driver
+// of ISR Writes on the Hobby plan — 24h and even 7-day timers still mean
+// every one of these pages that gets revisited after its window elapses
+// bills a write, and at this scale that alone burns most of the monthly
+// budget. courseController.updateCourse already calls triggerRevalidate()
+// on every real save (course + combo paths), so there's no need for a
+// timer at all: revalidate=false makes each page cache indefinitely once
+// generated, and it only regenerates when the on-demand route actually
+// fires. A page still self-heals on the next real deploy either way.
+export const revalidate = false;
 export const dynamicParams = true;
 
 import UniversityCourseClient from "./UniversityCourseClient";

@@ -33,9 +33,13 @@ import { notFound } from "next/navigation";
 const BASE_URL = "https://www.khizaroverseas.in";
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
-// Page-level revalidate: all fetches on this route revalidate every 24h.
-// University data changes rarely — no need to regenerate every hour.
-export const revalidate = 259200; // 3 days (was 86400) — ISR write overage fix, July 2026
+// FIX (ISR write overage, on-demand-only, July 2026): 8,983 pages on a
+// timer still bills a write every time a page is revisited after its
+// window — universityController.updateUniversity already calls
+// triggerRevalidate("university", slug) on every real save, so a timer
+// is redundant. revalidate=false caches each page indefinitely once
+// generated; only a real edit (or the next deploy) regenerates it.
+export const revalidate = false;
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
