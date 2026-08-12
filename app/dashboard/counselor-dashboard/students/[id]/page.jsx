@@ -696,6 +696,8 @@ export default function KhizarApplicationDetailPage() {
       deadlineTitle: deadline.title,
 
       category: deadline.category,
+
+      createdByType: deadline.createdByType,
     }));
   };
 

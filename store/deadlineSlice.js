@@ -77,6 +77,32 @@ export const uploadDeadlineDocumentAsync = createAsyncThunk(
   },
 );
 
+// ================= SELF-SUBMIT A DOCUMENT =================
+// Lets the student add their own document slot (no counselor-created
+// deadline needed). Capped server-side at 15 per student.
+
+export const createSelfDocumentAsync = createAsyncThunk(
+  "deadline/createSelfDocument",
+
+  async ({ title, documentType }, thunkAPI) => {
+    try {
+      const response = await axios.post(
+        `${BACKEND_URL}/user/my-deadline/self-document`,
+        { title, documentType },
+        {
+          withCredentials: true,
+        },
+      );
+
+      return response.data;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(
+        error.response?.data?.message || "Failed to add document",
+      );
+    }
+  },
+);
+
 export const deleteDeadlineDocumentAsync = createAsyncThunk(
   "deadline/deleteDocument",
 
@@ -218,6 +244,22 @@ const deadlineSlice = createSlice({
 
       .addCase(markDeadlineCompleteAsync.fulfilled, (state) => {
         state.loading = false;
+      })
+
+      // ================= SELF-SUBMIT A DOCUMENT =================
+
+      .addCase(createSelfDocumentAsync.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+
+      .addCase(createSelfDocumentAsync.fulfilled, (state) => {
+        state.loading = false;
+      })
+
+      .addCase(createSelfDocumentAsync.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       });
   },
 });

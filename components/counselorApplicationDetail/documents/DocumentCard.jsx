@@ -45,7 +45,15 @@ export default function DocumentCard({ doc }) {
         </div>
 
         <div>
-          <h4 className="text-sm font-semibold text-slate-700">{doc.name}</h4>
+          <div className="flex items-center gap-2">
+            <h4 className="text-sm font-semibold text-slate-700">{doc.name}</h4>
+
+            {doc.createdByType === "student" && (
+              <span className="text-[10px] font-medium bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded">
+                Self-submitted
+              </span>
+            )}
+          </div>
 
           <div className="flex items-center gap-3 mt-1 text-xs text-slate-400">
             <span>{doc.size}</span>

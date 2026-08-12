@@ -49,9 +49,15 @@ export default function DocumentsPage() {
           >
             Note:
           </span>{" "}
-          The document upload option will appear here only after your counselor
-          requests the required documents. Once requested, you'll be able to
-          upload them directly from this page.
+          Documents your counselor requests will appear here automatically. You
+          can also add and upload your own documents any time using the{" "}
+          <span
+            className="font-semibold"
+            style={{ color: "var(--brand-accent)" }}
+          >
+            Add Document
+          </span>{" "}
+          button below — up to 15 self-submitted documents.
         </p>
       </div>
 

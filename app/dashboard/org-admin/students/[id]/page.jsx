@@ -429,6 +429,7 @@ export default function OrgAdminStudentDetailPage() {
       type: d.requiredDocumentType,
       deadlineTitle: d.title,
       category: d.category,
+      createdByType: d.createdByType,
     }));
 
   const withDoc = (cat) =>

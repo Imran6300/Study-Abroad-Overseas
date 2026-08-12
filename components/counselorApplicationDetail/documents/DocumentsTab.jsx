@@ -23,8 +23,8 @@ export default function DocumentsTab({
         </h3>
         <p className="text-xs text-slate-400 mb-4">
           {isRegistered
-            ? "Documents the student uploaded themselves against a deadline you set."
-            : "Available once the student creates an account and can log in to upload documents against a deadline."}
+            ? 'Documents the student uploaded themselves — either against a deadline you set, or self-submitted on their own (marked "Self-submitted", capped at 15).'
+            : "Available once the student creates an account and can log in to upload documents."}
         </p>
 
         {/* APPLICATION DOCS */}
