@@ -110,21 +110,41 @@ export default function StudentsAdminPage() {
   useEffect(() => {
     const fetchLeads = async () => {
       try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/lead`,
-          { credentials: "include" },
-        );
+        // The backend paginates this endpoint (default 10 per page, hard
+        // ceiling of 100 — see paginationParams in leadController.js) and
+        // returns { leads, total, page, pages }. This page was calling
+        // `/api/lead` with no query params at all, so it silently only
+        // ever got page 1 (10 leads) no matter how many leads actually
+        // exist. Loop through every page at the max page size (100) and
+        // accumulate the full list — the search box below already filters
+        // client-side over the whole `students` array, so it expects the
+        // complete set to be in memory, not just one page of it.
+        const allLeads = [];
+        let page = 1;
+        let totalPages = 1;
 
-        const data = await res.json();
+        do {
+          const res = await fetch(
+            `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/lead?page=${page}&limit=100`,
+            { credentials: "include" },
+          );
 
-        // SAFE CHECK
-        const leadsArray = Array.isArray(data?.leads)
-          ? data.leads
-          : Array.isArray(data)
-            ? data
-            : [];
+          const data = await res.json();
 
-        const formatted = leadsArray.map((lead) => {
+          // SAFE CHECK
+          const leadsArray = Array.isArray(data?.leads)
+            ? data.leads
+            : Array.isArray(data)
+              ? data
+              : [];
+
+          allLeads.push(...leadsArray);
+
+          totalPages = Number.isFinite(data?.pages) ? data.pages : 1;
+          page += 1;
+        } while (page <= totalPages);
+
+        const formatted = allLeads.map((lead) => {
           // NEW: collect every distinct form this person has submitted
           // (sourceForms is populated by services/leadSync/syncLeadFromForm
           // on the backend). Falls back to the single leadSource for older
